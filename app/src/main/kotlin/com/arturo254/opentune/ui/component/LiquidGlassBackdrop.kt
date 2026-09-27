@@ -1,6 +1,5 @@
 package com.arturo254.opentune.ui.component
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import com.skydoves.cloudy.Sky
 import com.skydoves.cloudy.cloudy
 import com.skydoves.cloudy.liquidGlass
+import com.skydoves.cloudy.LiquidGlassDefaults
 
 val LocalSky = androidx.compose.runtime.staticCompositionLocalOf<Sky?> { null }
 
@@ -84,6 +84,7 @@ fun Modifier.liquidGlassSurface(
                     contrast = 1.012f,
                     tint = Color.Transparent,
                     edge = edge,
+                    glow = LiquidGlassDefaults.NoGlow,
                 )
             } else {
                 Modifier
@@ -92,7 +93,7 @@ fun Modifier.liquidGlassSurface(
         .border(
             width = 1.dp,
             color = Color.White.copy(
-                alpha = if (pureBlack) 0.13f else 0.18f
+                alpha = if (pureBlack) 0.12f else 0.16f
             ),
             shape = shape,
         )
