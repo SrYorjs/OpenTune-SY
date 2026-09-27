@@ -117,7 +117,7 @@ fun FloatingNavigationToolbar(
                     refraction = 0.075f,
                     curve = 0.16f,
                     dispersion = 0.004f,
-                    edge = 0.11f,
+                    edge = 0.06f,
                 )
                 .padding(horizontal = 5.dp, vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
