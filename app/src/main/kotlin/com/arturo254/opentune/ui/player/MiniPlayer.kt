@@ -81,7 +81,7 @@ private fun NewMiniPlayer(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(64.dp)
+                .height(68.dp)
                 .offset { IntOffset(offsetX.roundToInt(), 0) }
                 .background(
                     color = if (LocalEnableLiquidGlass.current) {
@@ -92,12 +92,12 @@ private fun NewMiniPlayer(
                     }
                 )
                 .liquidGlassSurface(
-                    shape = RoundedCornerShape(32.dp),
+                    shape = RoundedCornerShape(34.dp),
                     pureBlack = pureBlack,
-                    blurRadius = 10,
-                    refraction = 0.075f,
-                    curve = 0.16f,
-                    dispersion = 0.005f,
+                    blurRadius = 8,
+                    refraction = 0.07f,
+                    curve = 0.15f,
+                    dispersion = 0.004f,
                     edge = 0.10f,
                 )
         ) {
