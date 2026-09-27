@@ -91,7 +91,7 @@ private fun NewMiniPlayer(
                     }
                 )
                 .liquidGlassSurface(
-                    shape = RoundedCornerShape(34.dp),
+                    shape = RoundedCornerShape(32.dp),
                     pureBlack = pureBlack,
                     blurRadius = 8,
                     refraction = 0.07f,
@@ -107,12 +107,12 @@ private fun NewMiniPlayer(
                     .offset { IntOffset(offsetX.roundToInt(), 0) }
             ) {
                 NewMiniPlayerContent(
-                pureBlack = pureBlack,
+                    pureBlack = pureBlack,
                 position = position,
                 duration = duration,
                 playerConnection = playerConnection,
                 navController = navController,
-                state = state
+                    state = state
                 )
             }
         }
