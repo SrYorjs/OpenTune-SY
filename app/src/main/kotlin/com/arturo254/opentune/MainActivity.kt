@@ -680,6 +680,9 @@ class MainActivity : ComponentActivity() {
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val (previousTab) = rememberSaveable { mutableStateOf("home") }
                     val currentRoute = navBackStackEntry?.destination?.route
+                    LaunchedEffect(currentRoute) {
+                        liquidGlassSky.invalidate(durationMillis = 180)
+                    }
                     val isYearInMusicScreen = currentRoute == "year_in_music"
                     val isAlwaysOnDisplayScreen = currentRoute == "always_on_display"
 
@@ -1826,10 +1829,7 @@ class MainActivity : ComponentActivity() {
                                                 { navController.navigate(MusicRecognitionRoute) }
                                             } else null,
                                             musicRecognitionContentDescription = if (shouldShowHomeShuffleButton) stringResource(R.string.music_recognition) else "",
-                                            isSelected = { screen ->
-                                                navBackStackEntry?.destination?.hierarchy?.any { it.route == screen.route } ==
-                                                        true
-                                            },
+                                            selectedRoute = currentRoute,
                                             onItemClick = { screen, isSelected ->
                                                 if (screen.route == Screens.Search.route) {
                                                     onActiveChange(true)
