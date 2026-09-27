@@ -97,8 +97,8 @@ fun FloatingNavigationToolbar(
 
         Row(
             modifier = Modifier
-                .widthIn(max = 500.dp)
-                .height(64.dp)
+                .widthIn(max = 440.dp)
+                .height(60.dp)
                 .clip(barShape)
                 .background(
                     if (liquidGlass) {
