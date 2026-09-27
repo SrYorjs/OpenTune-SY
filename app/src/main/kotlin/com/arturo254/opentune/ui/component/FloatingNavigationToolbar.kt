@@ -15,6 +15,7 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -345,19 +346,13 @@ private fun FloatingNavigationToolbarItem(
         } else {
             Color.Transparent
         },
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioNoBouncy,
-            stiffness = Spring.StiffnessMediumLow,
-        ),
+        animationSpec = tween(durationMillis = 110),
         label = "selectedContainer",
     )
 
     val horizontalPadding by animateDpAsState(
         targetValue = if (selected && showLabel) 13.dp else 10.dp,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioNoBouncy,
-            stiffness = Spring.StiffnessMediumLow,
-        ),
+        animationSpec = tween(durationMillis = 110),
         label = "itemPadding",
     )
 
@@ -407,10 +402,7 @@ private fun FloatingNavigationToolbarItem(
     ) {
         Crossfade(
             targetState = selected,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness = Spring.StiffnessMediumLow,
-            ),
+            animationSpec = tween(durationMillis = 90),
             label = "iconCrossfade",
             modifier = Modifier.scale(iconScale),
         ) { isSelected ->
@@ -426,28 +418,12 @@ private fun FloatingNavigationToolbarItem(
 
         AnimatedVisibility(
             visible = showLabel,
-            enter = fadeIn(
-                spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessMediumLow,
-                )
-            ) + expandHorizontally(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessMediumLow,
-                ),
+            enter = fadeIn(tween(80)) + expandHorizontally(
+                animationSpec = tween(110),
                 expandFrom = Alignment.Start,
             ),
-            exit = fadeOut(
-                spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessMediumLow,
-                )
-            ) + shrinkHorizontally(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessMediumLow,
-                ),
+            exit = fadeOut(tween(70)) + shrinkHorizontally(
+                animationSpec = tween(90),
                 shrinkTowards = Alignment.Start,
             ),
         ) {
