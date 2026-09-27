@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune
 
 import android.annotation.SuppressLint
@@ -353,7 +345,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
     override fun onStart() {
         super.onStart()
         isMusicServiceBound =
@@ -384,8 +375,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // Only clear/stop presence when the activity is actually finishing (not on rotation)
-        // and do not clear it for transient configuration changes.
         if (isFinishing && !isChangingConfigurations) {
             try { DiscordPresenceManager.stop() } catch (_: Exception) {}
         }
@@ -404,10 +393,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-
-
-
-
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
@@ -417,7 +402,6 @@ class MainActivity : ComponentActivity() {
             pendingIntent = intent
         }
     }
-
 
     @RequiresApi(Build.VERSION_CODES.R)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -499,17 +483,13 @@ class MainActivity : ComponentActivity() {
                 UpdateNotificationManager.checkForUpdates(this@MainActivity)
             }
 
-            // Use remembered instances so the same state object is used everywhere
-            // (previously retrieving the composition local directly created different
-            // instances in different composition scopes which caused the update
-            // bottom sheet to not appear and overlay interactions to be blocked).
             val bottomSheetPageState = remember { BottomSheetPageState() }
             val (liquidGlassNavBar) = rememberPreference(LiquidGlassNavBarKey, defaultValue = false)
             val liquidGlassSky = rememberSky()
             val menuState = remember { MenuState() }
             val uriHandler = LocalUriHandler.current
             val releaseNotesState = remember { mutableStateOf<String?>(null) }
-            val updateSheetContent: @Composable ColumnScope.() -> Unit = { // receiver: ColumnScope
+            val updateSheetContent: @Composable ColumnScope.() -> Unit = {
                 Text(
                     text = stringResource(R.string.new_update_available),
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
@@ -566,7 +546,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            // fetch release notes and show sheet when a new version is detected
             LaunchedEffect(latestVersionName) {
                 if (!Updater.isSameVersion(latestVersionName, BuildConfig.VERSION_NAME)) {
                     Updater.getLatestReleaseNotes().onSuccess {
@@ -704,7 +683,6 @@ class MainActivity : ComponentActivity() {
                     val isYearInMusicScreen = currentRoute == "year_in_music"
                     val isAlwaysOnDisplayScreen = currentRoute == "always_on_display"
 
-
                     val haptic = LocalHapticFeedback.current
                     val (enableHapticFeedback) = rememberPreference(EnableHapticFeedbackKey, true)
                     val customHaptic = remember(haptic, enableHapticFeedback) {
@@ -762,8 +740,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-
-
 
                     var searchSource by rememberEnumPreference(SearchSourceKey, SearchSource.ONLINE)
 
@@ -863,7 +839,6 @@ class MainActivity : ComponentActivity() {
 
                     var yearInMusicSavedPlayerAnchor by rememberSaveable { mutableStateOf(-1) }
 
-
                     val (playerFullscreen) = rememberPreference(
                         PlayerFullscreenKey,
                         defaultValue = false
@@ -935,8 +910,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-
-
 
                     val playerAwareWindowInsets =
                         remember(
@@ -1139,7 +1112,6 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-
                     val currentTitleRes = remember(navBackStackEntry) {
                         when (navBackStackEntry?.destination?.route) {
                             Screens.Home.route -> R.string.home
@@ -1150,8 +1122,6 @@ class MainActivity : ComponentActivity() {
                     }
 
                     var showAccountDialog by remember { mutableStateOf(false) }
-
-
 
                     CompositionLocalProvider(
                         LocalDatabase provides database,
@@ -1167,64 +1137,68 @@ class MainActivity : ComponentActivity() {
                         LocalBottomSheetPageState provides bottomSheetPageState,
                         LocalMenuState provides menuState,
                     ) {
-                        Row {
-                            AnimatedVisibility(useRail && shouldShowNavigationBar) {
-                                NavigationRail(
-                                    containerColor = if(pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
-                                    contentColor = if(pureBlack) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    header = { Spacer(Modifier.height(24.dp)) }
+                        Row rowScope@ {
+                            Box {
+                                this@rowScope.AnimatedVisibility(
+                                    visible = useRail && shouldShowNavigationBar
                                 ) {
-                                    navigationItems.fastForEach { screen ->
-                                        val isSelected =
-                                            navBackStackEntry?.destination?.hierarchy?.any { it.route == screen.route } == true
+                                    NavigationRail(
+                                        containerColor = if(pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
+                                        contentColor = if(pureBlack) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        header = { Spacer(Modifier.height(24.dp)) }
+                                    ) {
+                                        navigationItems.fastForEach { screen ->
+                                            val isSelected =
+                                                navBackStackEntry?.destination?.hierarchy?.any { it.route == screen.route } == true
 
-                                        NavigationRailItem(
-                                            selected = isSelected,
-                                            icon = {
-                                                Icon(
-                                                    painter = painterResource(
-                                                        id = if (isSelected) screen.iconIdActive else screen.iconIdInactive
-                                                    ),
-                                                    contentDescription = null,
-                                                )
-                                            },
-                                            label = {
-                                                if (!slimNav) {
-                                                    Text(
-                                                        text = stringResource(screen.titleId),
-                                                        maxLines = 1,
-                                                        overflow = TextOverflow.Ellipsis
+                                            NavigationRailItem(
+                                                selected = isSelected,
+                                                icon = {
+                                                    Icon(
+                                                        painter = painterResource(
+                                                            id = if (isSelected) screen.iconIdActive else screen.iconIdInactive
+                                                        ),
+                                                        contentDescription = null,
                                                     )
-                                                }
-
-                                            },
-                                            onClick = {
-                                                val wasPlayerActive = playerBottomSheetState.isExpanded
-
-                                                if(wasPlayerActive) {
-                                                    playerBottomSheetState.collapse(spring())
-                                                }
-
-                                                if (screen.route == Screens.Search.route) {
-                                                    onActiveChange(true)
-                                                } else if (isSelected) {
-                                                    if(wasPlayerActive) return@NavigationRailItem
-
-                                                    navController.currentBackStackEntry?.savedStateHandle?.set("scrollToTop", true)
-                                                    coroutineScope.launch {
-                                                        searchBarScrollBehavior.state.resetHeightOffset()
+                                                },
+                                                label = {
+                                                    if (!slimNav) {
+                                                        Text(
+                                                            text = stringResource(screen.titleId),
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis
+                                                        )
                                                     }
-                                                } else {
-                                                    navController.navigate(screen.route) {
-                                                        popUpTo(navController.graph.startDestinationId) {
-                                                            saveState = true
+
+                                                },
+                                                onClick = {
+                                                    val wasPlayerActive = playerBottomSheetState.isExpanded
+
+                                                    if(wasPlayerActive) {
+                                                        playerBottomSheetState.collapse(spring())
+                                                    }
+
+                                                    if (screen.route == Screens.Search.route) {
+                                                        onActiveChange(true)
+                                                    } else if (isSelected) {
+                                                        if(wasPlayerActive) return@NavigationRailItem
+
+                                                        navController.currentBackStackEntry?.savedStateHandle?.set("scrollToTop", true)
+                                                        coroutineScope.launch {
+                                                            searchBarScrollBehavior.state.resetHeightOffset()
                                                         }
-                                                        launchSingleTop = true
-                                                        restoreState = true
+                                                    } else {
+                                                        navController.navigate(screen.route) {
+                                                            popUpTo(navController.graph.startDestinationId) {
+                                                                saveState = true
+                                                            }
+                                                            launchSingleTop = true
+                                                            restoreState = true
+                                                        }
                                                     }
-                                                }
-                                            },
-                                        )
+                                                },
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -1255,7 +1229,6 @@ class MainActivity : ComponentActivity() {
                                                     )
                                                 }
                                             ) {
-                                                // Gradient shadow background
                                                 if (shouldShowBlurBackground) {
                                                     Box(
                                                         modifier = Modifier
@@ -1430,7 +1403,7 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             }
                                         }
-                                        AnimatedVisibility(
+                                        androidx.compose.animation.AnimatedVisibility(
                                             visible = active || navBackStackEntry?.destination?.route?.startsWith("search/") == true,
                                             enter = fadeIn(animationSpec = tween(durationMillis = 300)),
                                             exit = fadeOut(animationSpec = tween(durationMillis = 200))
