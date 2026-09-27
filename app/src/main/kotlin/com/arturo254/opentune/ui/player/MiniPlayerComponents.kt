@@ -91,6 +91,7 @@ import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.together.TogetherSessionState
 import com.arturo254.opentune.ui.component.BottomSheetState
+import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
 import com.arturo254.opentune.utils.rememberHaptic
 import com.arturo254.opentune.utils.rememberPreference
 import kotlin.math.absoluteValue
@@ -346,11 +347,17 @@ private fun MiniPlayerTransportButton(
     enabled: Boolean = true,
     isPrimary: Boolean = false
 ) {
-    val containerColor =
-        if (isPrimary) MaterialTheme.colorScheme.surface else Color.Transparent
-    val borderColor =
-        if (enabled) MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-        else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+    val liquidGlass = LocalEnableLiquidGlass.current
+    val containerColor = when {
+        liquidGlass && isPrimary -> Color.White.copy(alpha = 0.18f)
+        isPrimary -> MaterialTheme.colorScheme.surface
+        else -> Color.Transparent
+    }
+    val borderColor = when {
+        liquidGlass && enabled -> Color.White.copy(alpha = 0.22f)
+        enabled -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+        else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+    }
     val iconTint =
         if (enabled) MaterialTheme.colorScheme.onSurface
         else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
