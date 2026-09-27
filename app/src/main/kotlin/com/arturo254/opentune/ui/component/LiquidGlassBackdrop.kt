@@ -1,5 +1,6 @@
 package com.arturo254.opentune.ui.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,61 +24,64 @@ val LocalSky = androidx.compose.runtime.staticCompositionLocalOf<Sky?> { null }
 val LocalEnableLiquidGlass = androidx.compose.runtime.staticCompositionLocalOf { false }
 
 /**
- * Shared Liquid Glass surface used by the navigation bar and MiniPlayer.
+ * Shared glass material for the two floating player/navigation surfaces.
  *
- * Keeping the material in one place is important: both floating surfaces should
- * have the same optical treatment, and duplicating the blur pipeline makes the
- * UI heavier than necessary.
+ * The blur is deliberately restrained. Cloudy refreshes backdrop captures while
+ * scrolling, so a smaller radius keeps the effect responsive and avoids the
+ * bright flash/jank that a heavy frosted layer can produce.
  */
 @Composable
 fun Modifier.liquidGlassSurface(
     shape: RoundedCornerShape,
     pureBlack: Boolean,
-    blurRadius: Int = 12,
-    refraction: Float = 0.085f,
-    curve: Float = 0.17f,
-    dispersion: Float = 0.006f,
-    edge: Float = 0.12f,
+    blurRadius: Int = 8,
+    refraction: Float = 0.07f,
+    curve: Float = 0.15f,
+    dispersion: Float = 0.004f,
+    edge: Float = 0.10f,
 ): Modifier {
     val sky = LocalSky.current
     val enabled = LocalEnableLiquidGlass.current
     var surfaceSize by remember { mutableStateOf(Size.Zero) }
 
+    if (!enabled || sky == null) return this
+
     val center = remember(surfaceSize) {
         Offset(
-            x = surfaceSize.width / 2f,
-            y = surfaceSize.height / 2f,
+            x = surfaceSize.width * 0.5f,
+            y = surfaceSize.height * 0.5f,
         )
     }
 
-    if (!enabled || sky == null) return this
-
     return this
-        .onSizeChanged {
-            surfaceSize = Size(it.width.toFloat(), it.height.toFloat())
+        .onSizeChanged { size ->
+            val nextSize = Size(size.width.toFloat(), size.height.toFloat())
+            if (nextSize != surfaceSize) {
+                surfaceSize = nextSize
+            }
         }
         .clip(shape)
         .cloudy(
             sky = sky,
             radius = blurRadius,
             shape = shape,
-            tint = if (pureBlack) {
-                Color.White.copy(alpha = 0.055f)
-            } else {
-                Color.White.copy(alpha = 0.13f)
-            },
+            // Do not use a white scrim here. It was the source of the
+            // "flash white while scrolling" behavior on bright content.
+            tint = Color.Black.copy(
+                alpha = if (pureBlack) 0.075f else 0.045f
+            ),
         )
         .then(
             if (surfaceSize != Size.Zero) {
                 Modifier.liquidGlass(
                     lensCenter = center,
                     lensSize = surfaceSize,
-                    cornerRadius = 28f,
+                    cornerRadius = 30f,
                     refraction = refraction,
                     curve = curve,
                     dispersion = dispersion,
-                    saturation = 1.035f,
-                    contrast = 1.018f,
+                    saturation = 1.025f,
+                    contrast = 1.012f,
                     tint = Color.Transparent,
                     edge = edge,
                 )
@@ -87,7 +91,9 @@ fun Modifier.liquidGlassSurface(
         )
         .border(
             width = 1.dp,
-            color = Color.White.copy(alpha = if (pureBlack) 0.15f else 0.24f),
+            color = Color.White.copy(
+                alpha = if (pureBlack) 0.13f else 0.18f
+            ),
             shape = shape,
         )
 }
