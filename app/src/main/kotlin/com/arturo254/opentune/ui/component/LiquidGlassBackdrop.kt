@@ -38,7 +38,7 @@ fun Modifier.liquidGlassSurface(
     refraction: Float = 0.07f,
     curve: Float = 0.15f,
     dispersion: Float = 0.004f,
-    edge: Float = 0.10f,
+    edge: Float = 0.06f,
 ): Modifier {
     val sky = LocalSky.current
     val enabled = LocalEnableLiquidGlass.current
