@@ -24,6 +24,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -65,8 +66,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.layout.onSizeChanged
 import com.skydoves.cloudy.cloudy
+import com.skydoves.cloudy.liquidGlass
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
@@ -110,10 +116,54 @@ fun FloatingNavigationToolbar(
     val hasOverflowAction = onShuffleClick != null && shuffleIconRes != null
     val hasFabAction = onFabClick != null && fabIconRes != null
 
+    val liquidGlassShape = RoundedCornerShape(28.dp)
+    var liquidGlassSize by remember { mutableStateOf(Size.Zero) }
+    val liquidGlassCenter = remember(liquidGlassSize) {
+        Offset(
+            x = liquidGlassSize.width / 2f,
+            y = liquidGlassSize.height / 2f,
+        )
+    }
+
     val liquidGlassModifier = if (enableLiquidGlass && sky != null) {
         Modifier
-            .clip(CircleShape)
-            .cloudy(sky = sky, radius = 24, shape = CircleShape, tint = Color.White.copy(alpha = 0.08f))
+            .onSizeChanged {
+                liquidGlassSize = Size(it.width.toFloat(), it.height.toFloat())
+            }
+            .clip(liquidGlassShape)
+            .cloudy(
+                sky = sky,
+                radius = 14,
+                shape = liquidGlassShape,
+                tint = if (pureBlack) {
+                    Color.White.copy(alpha = 0.055f)
+                } else {
+                    Color.White.copy(alpha = 0.16f)
+                },
+            )
+            .then(
+                if (liquidGlassSize != Size.Zero) {
+                    Modifier.liquidGlass(
+                        lensCenter = liquidGlassCenter,
+                        lensSize = liquidGlassSize,
+                        cornerRadius = 28f,
+                        refraction = 0.10f,
+                        curve = 0.18f,
+                        dispersion = 0.008f,
+                        saturation = 1.04f,
+                        contrast = 1.02f,
+                        tint = Color.Transparent,
+                        edge = 0.14f,
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .border(
+                width = 1.dp,
+                color = Color.White.copy(alpha = if (pureBlack) 0.14f else 0.28f),
+                shape = liquidGlassShape,
+            )
     } else {
         Modifier
     }
@@ -235,7 +285,11 @@ private fun ToolbarItemsContainer(
                     .width(slidingPillWidth)
                     .fillMaxHeight()
                     .background(
-                        color = floatingToolbarSelectedItemContainerColor(pureBlack),
+                        color = if (LocalEnableLiquidGlass.current) {
+                            Color.White.copy(alpha = if (pureBlack) 0.13f else 0.24f)
+                        } else {
+                            floatingToolbarSelectedItemContainerColor(pureBlack)
+                        },
                         shape = RoundedCornerShape(24.dp)
                     )
             )
@@ -518,22 +572,30 @@ private fun floatingToolbarContainerColor(pureBlack: Boolean): Color {
 
 @Composable
 private fun floatingToolbarFabContainerColor(pureBlack: Boolean): Color {
-    return if (pureBlack) Color.White.copy(alpha = 0.12f) else MaterialTheme.colorScheme.tertiaryContainer
+    return if (LocalEnableLiquidGlass.current) {
+        Color.White.copy(alpha = if (pureBlack) 0.13f else 0.22f)
+    } else if (pureBlack) Color.White.copy(alpha = 0.12f) else MaterialTheme.colorScheme.tertiaryContainer
 }
 
 @Composable
 private fun floatingToolbarFabContentColor(pureBlack: Boolean): Color {
-    return if (pureBlack) Color.White else MaterialTheme.colorScheme.onTertiaryContainer
+    return if (LocalEnableLiquidGlass.current) {
+        if (pureBlack) Color.White else MaterialTheme.colorScheme.onSurface
+    } else if (pureBlack) Color.White else MaterialTheme.colorScheme.onTertiaryContainer
 }
 
 @Composable
 private fun floatingToolbarSelectedItemContainerColor(pureBlack: Boolean): Color {
-    return if (pureBlack) Color.White.copy(alpha = 0.12f) else MaterialTheme.colorScheme.secondaryContainer
+    return if (LocalEnableLiquidGlass.current) {
+        Color.White.copy(alpha = if (pureBlack) 0.13f else 0.24f)
+    } else if (pureBlack) Color.White.copy(alpha = 0.12f) else MaterialTheme.colorScheme.secondaryContainer
 }
 
 @Composable
 private fun floatingToolbarSelectedItemContentColor(pureBlack: Boolean): Color {
-    return if (pureBlack) Color.White else MaterialTheme.colorScheme.onSecondaryContainer
+    return if (LocalEnableLiquidGlass.current) {
+        if (pureBlack) Color.White else MaterialTheme.colorScheme.onSurface
+    } else if (pureBlack) Color.White else MaterialTheme.colorScheme.onSecondaryContainer
 }
 
 @Composable
