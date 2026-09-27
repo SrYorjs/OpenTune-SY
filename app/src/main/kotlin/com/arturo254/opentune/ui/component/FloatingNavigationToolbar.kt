@@ -80,7 +80,7 @@ fun FloatingNavigationToolbar(
     onMusicRecognitionClick: (() -> Unit)? = null,
     musicRecognitionContentDescription: String = "",
     scrollBehavior: FloatingToolbarScrollBehavior? = null,
-    isSelected: (Screens) -> Boolean,
+    selectedRoute: String?,
     onItemClick: (Screens, Boolean) -> Unit,
 ) {
     // scrollBehavior is kept in the public API because the host screen owns
@@ -117,7 +117,7 @@ fun FloatingNavigationToolbar(
                     dispersion = 0.004f,
                     edge = 0.11f,
                 )
-                .padding(horizontal = 6.dp, vertical = 6.dp),
+                .padding(horizontal = 5.dp, vertical = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
@@ -125,7 +125,7 @@ fun FloatingNavigationToolbar(
                 items = items,
                 pureBlack = pureBlack,
                 showSelectedLabels = showSelectedLabels,
-                isSelected = isSelected,
+                selectedRoute = selectedRoute,
                 onItemClick = onItemClick,
                 modifier = Modifier.weight(1f),
             )
@@ -162,7 +162,7 @@ private fun ToolbarItemsContainer(
     items: List<Screens>,
     pureBlack: Boolean,
     showSelectedLabels: Boolean,
-    isSelected: (Screens) -> Boolean,
+    selectedRoute: String?,
     onItemClick: (Screens, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -172,7 +172,7 @@ private fun ToolbarItemsContainer(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         items.forEach { screen ->
-            val selected = isSelected(screen)
+            val selected = selectedRoute == screen.route
             FloatingNavigationToolbarItem(
                 screen = screen,
                 selected = selected,
@@ -217,7 +217,7 @@ private fun FloatingToolbarAction(
 
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(44.dp)
                     .scale(scale)
                     .clip(CircleShape)
                     .background(
@@ -391,7 +391,7 @@ private fun FloatingNavigationToolbarItem(
 
     Row(
         modifier = modifier
-            .height(52.dp)
+            .height(50.dp)
             .scale(pressScale)
             .clip(shape)
             .background(selectedContainer)
