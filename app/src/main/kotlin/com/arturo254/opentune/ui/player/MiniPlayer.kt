@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.preferredFrameRate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.IntOffset
@@ -82,6 +83,7 @@ private fun NewMiniPlayer(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp)
+                .preferredFrameRate(120f)
                 .background(
                     color = if (LocalEnableLiquidGlass.current) {
                         Color.Transparent
