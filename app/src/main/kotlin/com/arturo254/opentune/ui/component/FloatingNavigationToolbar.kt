@@ -24,7 +24,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -58,7 +57,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -67,11 +65,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.layout.onSizeChanged
-import com.skydoves.cloudy.cloudy
-import com.skydoves.cloudy.liquidGlass
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
@@ -103,7 +96,6 @@ fun FloatingNavigationToolbar(
     onItemClick: (Screens, Boolean) -> Unit,
 ) {
     val enableLiquidGlass = LocalEnableLiquidGlass.current
-    val sky = LocalSky.current
     val toolbarContainerColor = if (enableLiquidGlass) {
         Color.Transparent
     } else {
@@ -115,57 +107,15 @@ fun FloatingNavigationToolbar(
     val hasOverflowAction = onShuffleClick != null && shuffleIconRes != null
     val hasFabAction = onFabClick != null && fabIconRes != null
 
-    val liquidGlassShape = RoundedCornerShape(28.dp)
-    var liquidGlassSize by remember { mutableStateOf(Size.Zero) }
-    val liquidGlassCenter = remember(liquidGlassSize) {
-        Offset(
-            x = liquidGlassSize.width / 2f,
-            y = liquidGlassSize.height / 2f,
-        )
-    }
-
-    val liquidGlassModifier = if (enableLiquidGlass && sky != null) {
-        Modifier
-            .onSizeChanged {
-                liquidGlassSize = Size(it.width.toFloat(), it.height.toFloat())
-            }
-            .clip(liquidGlassShape)
-            .cloudy(
-                sky = sky,
-                radius = 14,
-                shape = liquidGlassShape,
-                tint = if (pureBlack) {
-                    Color.White.copy(alpha = 0.055f)
-                } else {
-                    Color.White.copy(alpha = 0.16f)
-                },
-            )
-            .then(
-                if (liquidGlassSize != Size.Zero) {
-                    Modifier.liquidGlass(
-                        lensCenter = liquidGlassCenter,
-                        lensSize = liquidGlassSize,
-                        cornerRadius = 28f,
-                        refraction = 0.10f,
-                        curve = 0.18f,
-                        dispersion = 0.008f,
-                        saturation = 1.04f,
-                        contrast = 1.02f,
-                        tint = Color.Transparent,
-                        edge = 0.14f,
-                    )
-                } else {
-                    Modifier
-                }
-            )
-            .border(
-                width = 1.dp,
-                color = Color.White.copy(alpha = if (pureBlack) 0.14f else 0.28f),
-                shape = liquidGlassShape,
-            )
-    } else {
-        Modifier
-    }
+    val liquidGlassModifier = Modifier.liquidGlassSurface(
+        shape = RoundedCornerShape(30.dp),
+        pureBlack = pureBlack,
+        blurRadius = 12,
+        refraction = 0.09f,
+        curve = 0.18f,
+        dispersion = 0.006f,
+        edge = 0.13f,
+    )
 
     BoxWithConstraints(
         modifier = modifier.fillMaxWidth(),
