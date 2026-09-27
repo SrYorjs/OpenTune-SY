@@ -590,11 +590,7 @@ private fun MiniPlayerPlayPauseButton(
         MaterialTheme.colorScheme.primary
     }
     val iconColor = if (liquidGlass) {
-        if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
-            MaterialTheme.colorScheme.onSurface
-        } else {
-            Color.White
-        }
+        MaterialTheme.colorScheme.onSurface
     } else {
         MaterialTheme.colorScheme.onPrimary
     }
@@ -624,11 +620,7 @@ private fun MiniPlayerPlayPauseButton(
             CircularProgressIndicator(
                 modifier = Modifier.size(19.dp),
                 color = if (liquidGlass) {
-                    if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
-                        MaterialTheme.colorScheme.onSurface
-                    } else {
-                        Color.White
-                    }
+                    MaterialTheme.colorScheme.onSurface
                 } else {
                     MaterialTheme.colorScheme.onPrimary
                 },
