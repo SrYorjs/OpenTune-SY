@@ -99,7 +99,7 @@ private fun NewMiniPlayer(
                     refraction = 0.07f,
                     curve = 0.15f,
                     dispersion = 0.004f,
-                    edge = 0.08f,
+                    edge = 0.05f,
                 )
         ) {
             Box(
