@@ -49,15 +49,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -573,63 +569,88 @@ private fun MiniPlayerPlayPauseButton(
     isLoading: Boolean,
     playerConnection: PlayerConnection,
 ) {
-    // Animación de escala del botón
-    val buttonScale by animateFloatAsState(
-        targetValue = 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium,
-            visibilityThreshold = 0.01f
-        ),
-        label = "buttonScale"
-    )
-
-    val animationKey by rememberUpdatedState(isPlaying)
     val (enableHaptic) = rememberPreference(EnableHapticFeedbackKey, true)
     val haptic = rememberHaptic(enabled = enableHaptic)
 
-    FilledIconButton(
-        onClick = {
-            haptic.click()
-            if (!isLoading) playerConnection.player.togglePlayPause()
-        },
-        modifier = Modifier
-            .size(48.dp)
-            .graphicsLayer {
-                scaleX = buttonScale
-                scaleY = buttonScale
-            },
-        shape = MaterialShapes.Cookie9Sided.toShape(),
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val buttonScale by animateFloatAsState(
+        targetValue = if (pressed) 0.91f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
         ),
-        enabled = !isLoading,
+        label = "miniPlayPressScale",
+    )
+
+    val liquidGlass = LocalEnableLiquidGlass.current
+    val containerColor = if (liquidGlass) {
+        Color.White.copy(alpha = 0.20f)
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+    val iconColor = if (liquidGlass) {
+        if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
+            MaterialTheme.colorScheme.onSurface
+        } else {
+            Color.White
+        }
+    } else {
+        MaterialTheme.colorScheme.onPrimary
+    }
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(46.dp)
+            .scale(buttonScale)
+            .clip(CircleShape)
+            .background(containerColor)
+            .border(
+                width = 1.dp,
+                color = Color.White.copy(alpha = if (liquidGlass) 0.24f else 0.0f),
+                shape = CircleShape,
+            )
+            .clickable(
+                enabled = !isLoading,
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+            ) {
+                haptic.click()
+                playerConnection.player.togglePlayPause()
+            },
     ) {
         if (isLoading) {
             CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(19.dp),
+                color = if (liquidGlass) {
+                    if (MaterialTheme.colorScheme.surface.luminance() > 0.5f) {
+                        MaterialTheme.colorScheme.onSurface
+                    } else {
+                        Color.White
+                    }
+                } else {
+                    MaterialTheme.colorScheme.onPrimary
+                },
                 strokeWidth = 2.dp,
             )
         } else {
             AnimatedContent(
                 targetState = isPlaying,
                 transitionSpec = {
-                    // Efecto Expressive: el icono entrante escala desde el centro
-                    // mientras el saliente escala hacia afuera
-                    (fadeIn(animationSpec = tween(150)) +
+                    (fadeIn(animationSpec = tween(130)) +
                             scaleIn(
-                                initialScale = 0.4f, animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioLowBouncy,
-                                    stiffness = Spring.StiffnessLow
+                                initialScale = 0.65f,
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessMedium,
                                 )
-                            )
-                            ).togetherWith(
-                            fadeOut(animationSpec = tween(100)) +
-                                    scaleOut(targetScale = 1.6f, animationSpec = tween(100))
+                            )).togetherWith(
+                            fadeOut(animationSpec = tween(90)) +
+                                    scaleOut(
+                                        targetScale = 0.75f,
+                                        animationSpec = tween(90),
+                                    )
                         )
                 },
                 label = "playPauseIcon",
@@ -639,7 +660,8 @@ private fun MiniPlayerPlayPauseButton(
                         if (playing) R.drawable.pause else R.drawable.play
                     ),
                     contentDescription = null,
-                    modifier = Modifier.size(22.dp),
+                    tint = iconColor,
+                    modifier = Modifier.size(21.dp),
                 )
             }
         }
