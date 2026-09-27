@@ -10,8 +10,7 @@ package com.arturo254.opentune.ui.player
 
 import androidx.compose.foundation.background
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
-import com.arturo254.opentune.ui.component.LocalSky
-import com.skydoves.cloudy.cloudy
+import com.arturo254.opentune.ui.component.liquidGlassSurface
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.IntOffset
@@ -85,17 +83,23 @@ private fun NewMiniPlayer(
                 .fillMaxWidth()
                 .height(64.dp)
                 .offset { IntOffset(offsetX.roundToInt(), 0) }
-                .clip(RoundedCornerShape(32.dp))
                 .then(
-                    if (LocalEnableLiquidGlass.current && LocalSky.current != null) {
-                        Modifier.cloudy(
-                            sky = LocalSky.current!!,
-                            radius = 24,
-                            shape = RoundedCornerShape(32.dp),
-                            tint = Color.White.copy(alpha = 0.08f),
-                        )
+                    Modifier.liquidGlassSurface(
+                        shape = RoundedCornerShape(32.dp),
+                        pureBlack = pureBlack,
+                        blurRadius = 10,
+                        refraction = 0.075f,
+                        curve = 0.16f,
+                        dispersion = 0.005f,
+                        edge = 0.10f,
+                    )
+                )
+                .background(
+                    color = if (LocalEnableLiquidGlass.current) {
+                        Color.Transparent
                     } else {
-                        Modifier.background(color = MaterialTheme.colorScheme.surfaceContainer)
+                        if (pureBlack) Color.Black.copy(alpha = 0.82f)
+                        else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.88f)
                     }
                 )
         ) {
