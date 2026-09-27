@@ -81,8 +81,7 @@ private fun NewMiniPlayer(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(68.dp)
-                .offset { IntOffset(offsetX.roundToInt(), 0) }
+                .height(64.dp)
                 .background(
                     color = if (LocalEnableLiquidGlass.current) {
                         Color.Transparent
@@ -98,17 +97,24 @@ private fun NewMiniPlayer(
                     refraction = 0.07f,
                     curve = 0.15f,
                     dispersion = 0.004f,
-                    edge = 0.10f,
+                    edge = 0.08f,
                 )
         ) {
-            NewMiniPlayerContent(
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .offset { IntOffset(offsetX.roundToInt(), 0) }
+            ) {
+                NewMiniPlayerContent(
                 pureBlack = pureBlack,
                 position = position,
                 duration = duration,
                 playerConnection = playerConnection,
                 navController = navController,
                 state = state
-            )
+                )
+            }
         }
     }
 }
