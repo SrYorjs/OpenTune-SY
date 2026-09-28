@@ -10,6 +10,7 @@ package com.arturo254.opentune.ui.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Spring
@@ -20,6 +21,8 @@ import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -49,8 +52,10 @@ import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
@@ -90,6 +95,13 @@ fun FloatingNavigationToolbar(
     // fewer animated layout passes means smoother scrolling.
     val liquidGlass = LocalEnableLiquidGlass.current
     val barShape = RoundedCornerShape(30.dp)
+    val selectedIndex = items.indexOfFirst { it.route == selectedRoute }.coerceAtLeast(0)
+    var previousSelectedIndex by remember { mutableIntStateOf(selectedIndex) }
+    val slideFromEnd = selectedIndex >= previousSelectedIndex
+
+    LaunchedEffect(selectedIndex) {
+        previousSelectedIndex = selectedIndex
+    }
 
     BoxWithConstraints(
         modifier = modifier.fillMaxWidth(),
@@ -102,6 +114,12 @@ fun FloatingNavigationToolbar(
                 .wrapContentWidth()
                 .height(58.dp)
                 .preferredFrameRate(120f)
+                .animateContentSize(
+                    animationSpec = spring(
+                        dampingRatio = 0.82f,
+                        stiffness = 520f,
+                    )
+                )
                 .clip(barShape)
                 .background(
                     if (liquidGlass) {
@@ -129,6 +147,7 @@ fun FloatingNavigationToolbar(
                 pureBlack = pureBlack,
                 showSelectedLabels = showSelectedLabels,
                 selectedRoute = selectedRoute,
+                slideFromEnd = slideFromEnd,
                 onItemClick = onItemClick,
                 modifier = Modifier,
             )
@@ -166,6 +185,7 @@ private fun ToolbarItemsContainer(
     pureBlack: Boolean,
     showSelectedLabels: Boolean,
     selectedRoute: String?,
+    slideFromEnd: Boolean,
     onItemClick: (Screens, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -180,6 +200,7 @@ private fun ToolbarItemsContainer(
                 screen = screen,
                 selected = selected,
                 showSelectedLabel = showSelectedLabels,
+                slideFromEnd = slideFromEnd,
                 pureBlack = pureBlack,
                 onClick = { onItemClick(screen, selected) },
                 modifier = Modifier,
@@ -339,6 +360,7 @@ private fun FloatingNavigationToolbarItem(
     screen: Screens,
     selected: Boolean,
     showSelectedLabel: Boolean,
+    slideFromEnd: Boolean,
     pureBlack: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -393,6 +415,12 @@ private fun FloatingNavigationToolbarItem(
     Row(
         modifier = modifier
             .height(48.dp)
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = 0.80f,
+                    stiffness = 560f,
+                )
+            )
             .scale(pressScale)
             .clip(shape)
             .background(selectedContainer)
@@ -424,14 +452,33 @@ private fun FloatingNavigationToolbarItem(
 
         AnimatedVisibility(
             visible = showLabel,
-            enter = fadeIn(tween(70)) + expandHorizontally(
-                animationSpec = tween(105),
-                expandFrom = Alignment.Start,
-            ),
-            exit = fadeOut(tween(60)) + shrinkHorizontally(
-                animationSpec = tween(90),
-                shrinkTowards = Alignment.Start,
-            ),
+            enter =
+                fadeIn(tween(70)) +
+                    slideInHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = 0.82f,
+                            stiffness = 620f,
+                        ),
+                        initialOffsetX = { width ->
+                            if (slideFromEnd) width / 2 else -width / 2
+                        },
+                    ) +
+                    expandHorizontally(
+                        animationSpec = tween(105),
+                        expandFrom = if (slideFromEnd) Alignment.End else Alignment.Start,
+                    ),
+            exit =
+                fadeOut(tween(60)) +
+                    slideOutHorizontally(
+                        animationSpec = tween(90),
+                        targetOffsetX = { width ->
+                            if (slideFromEnd) -width / 3 else width / 3
+                        },
+                    ) +
+                    shrinkHorizontally(
+                        animationSpec = tween(90),
+                        shrinkTowards = if (slideFromEnd) Alignment.Start else Alignment.End,
+                    ),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Spacer(modifier = Modifier.width(6.dp))
