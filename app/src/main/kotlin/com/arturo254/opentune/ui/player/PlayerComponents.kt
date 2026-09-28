@@ -114,6 +114,8 @@ import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.ui.component.BottomSheetPageState
 import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.ui.component.MenuState
+import com.arturo254.opentune.ui.component.LiquidGlassControlCluster
+import com.arturo254.opentune.ui.component.LiquidGlassIconButton
 import com.arturo254.opentune.ui.component.PlayerSliderTrack
 import com.arturo254.opentune.ui.component.ResizableIconButton
 import com.arturo254.opentune.ui.menu.PlayerMenu
@@ -3177,15 +3179,14 @@ fun V8VolumeSlider(
     activeColor: Color,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = modifier
+    LiquidGlassControlCluster(
+        modifier = modifier,
+        horizontalSpacing = 10.dp,
     ) {
         Icon(
             painter = painterResource(R.drawable.volume_off),
             contentDescription = null,
-            tint = activeColor.copy(alpha = 0.6f),
+            tint = activeColor.copy(alpha = 0.66f),
             modifier = Modifier.size(16.dp)
         )
 
@@ -3201,7 +3202,7 @@ fun V8VolumeSlider(
                     .coerceIn(0f, 1f)
                 GlassTrack(
                     fraction = fraction,
-                    trackHeight = 10.dp,
+                    trackHeight = 8.dp,
                     tint = activeColor,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -3209,12 +3210,11 @@ fun V8VolumeSlider(
             modifier = Modifier.weight(1f)
         )
 
-        // Icono grande (volumen alto) a la derecha
         Icon(
             painter = painterResource(R.drawable.volume_up),
             contentDescription = null,
-            tint = activeColor.copy(alpha = 0.6f),
-            modifier = Modifier.size(22.dp)
+            tint = activeColor.copy(alpha = 0.72f),
+            modifier = Modifier.size(20.dp)
         )
     }
 }
@@ -3231,84 +3231,102 @@ fun V8PlaybackControls(
     playerConnection: PlayerConnection,
     shuffleModeEnabled: Boolean
 ) {
-    Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = PlayerHorizontalPadding)
+    LiquidGlassControlCluster(
+        horizontalSpacing = 14.dp,
+        modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
     ) {
-        // Skip Previous
-        Surface(
-            onClick = { playerConnection.seekToPrevious() },
-            enabled = canSkipPrevious,
-            shape = CircleShape,
-            color = Color.Transparent,
-            modifier = Modifier.size(56.dp)
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(52.dp)
+                .clip(CircleShape)
+                .clickable(enabled = canSkipPrevious) {
+                    playerConnection.seekToPrevious()
+                }
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Icon(
-                    painter = painterResource(R.drawable.skip_previous),
-                    contentDescription = null,
-                    tint = textBackgroundColor.copy(alpha = if (canSkipPrevious) 1f else 0.4f),
-                    modifier = Modifier.size(38.dp)
-                )
-            }
+            Icon(
+                painter = painterResource(R.drawable.skip_previous),
+                contentDescription = null,
+                tint = textBackgroundColor.copy(alpha = if (canSkipPrevious) 0.92f else 0.34f),
+                modifier = Modifier.size(32.dp)
+            )
         }
 
-        // Play/Pause - SIN FONDO (como Apple Music)
-        Surface(
-            onClick = {
-                if (playbackState == Player.STATE_ENDED) {
-                    playerConnection.player.seekTo(0, 0)
-                    playerConnection.player.playWhenReady = true
-                } else {
-                    playerConnection.player.togglePlayPause()
+        val playInteraction = remember { MutableInteractionSource() }
+        val playPressed by playInteraction.collectIsPressedAsState()
+        val playScale by animateFloatAsState(
+            targetValue = if (playPressed) 0.90f else 1f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMedium,
+            ),
+            label = "v8PlayPress",
+        )
+
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(64.dp)
+                .graphicsLayer {
+                    scaleX = playScale
+                    scaleY = playScale
                 }
-            },
-            shape = CircleShape,
-            color = Color.Transparent,
-            modifier = Modifier.size(72.dp)
+                .clip(CircleShape)
+                .background(textBackgroundColor.copy(alpha = 0.13f))
+                .clickable(
+                    interactionSource = playInteraction,
+                    indication = null,
+                ) {
+                    if (playbackState == Player.STATE_ENDED) {
+                        playerConnection.player.seekTo(0, 0)
+                        playerConnection.player.playWhenReady = true
+                    } else {
+                        playerConnection.player.togglePlayPause()
+                    }
+                }
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                if (isLoading) {
-                    CircularWavyProgressIndicator(
-                        modifier = Modifier.size(36.dp),
-                        color = textBackgroundColor,
-                    )
-                } else {
+            if (isLoading) {
+                CircularWavyProgressIndicator(
+                    modifier = Modifier.size(32.dp),
+                    color = textBackgroundColor,
+                )
+            } else {
+                AnimatedContent(
+                    targetState = isPlaying,
+                    transitionSpec = { fadeIn(tween(90)) togetherWith fadeOut(tween(70)) },
+                    label = "v8PlayPause",
+                ) { playing ->
                     Icon(
                         painter = painterResource(
                             when {
                                 playbackState == Player.STATE_ENDED -> R.drawable.replay
-                                isPlaying -> R.drawable.pause
+                                playing -> R.drawable.pause
                                 else -> R.drawable.play
                             }
                         ),
                         contentDescription = null,
                         tint = textBackgroundColor,
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(42.dp)
                     )
                 }
             }
         }
 
-        // Skip Next
-        Surface(
-            onClick = { playerConnection.seekToNext() },
-            enabled = canSkipNext,
-            shape = CircleShape,
-            color = Color.Transparent,
-            modifier = Modifier.size(56.dp)
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(52.dp)
+                .clip(CircleShape)
+                .clickable(enabled = canSkipNext) {
+                    playerConnection.seekToNext()
+                }
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Icon(
-                    painter = painterResource(R.drawable.skip_next),
-                    contentDescription = null,
-                    tint = textBackgroundColor.copy(alpha = if (canSkipNext) 1f else 0.4f),
-                    modifier = Modifier.size(38.dp)
-                )
-            }
+            Icon(
+                painter = painterResource(R.drawable.skip_next),
+                contentDescription = null,
+                tint = textBackgroundColor.copy(alpha = if (canSkipNext) 0.92f else 0.34f),
+                modifier = Modifier.size(32.dp)
+            )
         }
     }
 }
