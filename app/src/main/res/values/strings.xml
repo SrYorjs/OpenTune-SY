@@ -853,4 +853,24 @@ OpenTune will only extract your token, and everything else is stored locally.</s
     <string name="select_option">Select</string>
     <string name="enter_value">Enter Value</string>
     <string name="enable_netease_lyrics">Enable NetEase synchronized LRC</string>
+
+    <string name="playlist_mix_title">Mix playlist</string>
+    <string name="playlist_mix_smart">Smart Mix</string>
+    <string name="playlist_mix_manual">Manual</string>
+    <string name="playlist_mix_smart_description">Analyzes tempo and loudness to reduce abrupt changes between tracks.</string>
+    <string name="playlist_mix_manual_description">Keep your playlist order and choose the transition curve and overlap time.</string>
+    <string name="playlist_mix_analyze">Analyze mix</string>
+    <string name="playlist_mix_analyzing">Analyzing tempo and energy…</string>
+    <string name="playlist_mix_ready">Mix ready</string>
+    <string name="playlist_mix_start">Start mix</string>
+    <string name="playlist_mix_duration">Transition</string>
+    <string name="playlist_mix_curve">Curve</string>
+    <string name="playlist_mix_bpm_unknown">BPM —</string>
+    <string name="playlist_mix_no_key">Harmonic key is not exposed by the current catalog, so OpenTune does not invent one.</string>
+    <string name="playlist_mix_fade">Fade</string>
+    <string name="playlist_mix_blend">Blend</string>
+    <string name="playlist_mix_rise">Rise</string>
+    <string name="playlist_mix_melt">Melt</string>
+    <string name="playlist_mix_seconds">%1$d s</string>
+
 </resources>
