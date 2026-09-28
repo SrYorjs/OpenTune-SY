@@ -179,6 +179,7 @@ fun PlaylistMixSheet(
                     PlaylistMixMode.SMART ->
                         SmartMixPanel(
                             analysis = analysisResults,
+                            transitions = smartPlan?.transitions.orEmpty(),
                             analyzing = analyzing,
                         )
 
@@ -325,6 +326,7 @@ private fun MixModeButton(
 @Composable
 private fun SmartMixPanel(
     analysis: List<MixTrackAnalysis>,
+    transitions: List<MixTransition>,
     analyzing: Boolean,
 ) {
     val knownTempo = analysis.count { it.bpm != null }
@@ -437,13 +439,30 @@ private fun SmartMixPanel(
                                     overflow = TextOverflow.Ellipsis,
                                 )
                             }
-                            Text(
-                                text = item.bpm?.roundToInt()?.let { it.toString() + " BPM" } ?: "—",
-                                style = MaterialTheme.typography.labelMedium,
-                                color =
-                                    if (item.bpm != null) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.End,
+                                verticalArrangement = Arrangement.spacedBy(2.dp),
+                            ) {
+                                Text(
+                                    text = item.bpm?.roundToInt()?.let { it.toString() + " BPM" } ?: "—",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color =
+                                        if (item.bpm != null) MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                transitions.getOrNull(index)?.let { transition ->
+                                    Text(
+                                        text =
+                                            transition.curve.name.lowercase()
+                                                .replaceFirstChar { it.uppercase() } +
+                                                " · " +
+                                                (transition.durationMs / 1000).toString() +
+                                                "s",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
