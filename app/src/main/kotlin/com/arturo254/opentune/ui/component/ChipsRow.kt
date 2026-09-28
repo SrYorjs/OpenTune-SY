@@ -85,81 +85,48 @@ fun <E> ChipsRow(
         chips.forEach { (value, label) ->
             val selected = currentValue == value
             val iconRes = icons[value]
-            val interactionSource = remember { MutableInteractionSource() }
-            val pressed by interactionSource.collectIsPressedAsState()
-            val scale by animateFloatAsState(
-                targetValue = if (pressed) 0.95f else 1f,
-                animationSpec = spring(
-                    dampingRatio = 0.82f,
-                    stiffness = 650f,
-                ),
-                label = "filterPress",
-            )
-            val backgroundColor by androidx.compose.animation.animateColorAsState(
-                targetValue =
-                    if (selected) {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                    } else {
-                        MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.64f)
-                    },
-                animationSpec = tween(130),
-                label = "filterBackground",
-            )
-            val foregroundColor by androidx.compose.animation.animateColorAsState(
-                targetValue =
-                    if (selected) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurfaceVariant,
-                animationSpec = tween(130),
-                label = "filterForeground",
-            )
-            val shape = RoundedCornerShape(50)
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .scale(scale)
-                    .clip(shape)
-                    .background(backgroundColor)
-                    .border(
-                        width = 0.75.dp,
-                        color =
-                            if (selected) {
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.26f)
-                            } else {
-                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f)
-                            },
-                        shape = shape,
-                    )
-                    .clickable(
-                        interactionSource = interactionSource,
-                        indication = null,
-                    ) {
-                        onValueUpdate(value)
-                    }
-                    .padding(horizontal = 14.dp, vertical = 9.dp),
+            LiquidGlassPillButton(
+                onClick = { onValueUpdate(value) },
+                selected = selected,
+                horizontalPadding = 14.dp,
             ) {
-                if (selected) {
-                    Icon(
-                        painter = painterResource(R.drawable.done),
-                        contentDescription = null,
-                        tint = foregroundColor,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(Modifier.width(7.dp))
-                } else if (iconRes != null) {
-                    Icon(
-                        painter = painterResource(iconRes),
-                        contentDescription = null,
-                        tint = foregroundColor,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Spacer(Modifier.width(7.dp))
+                AnimatedContent(
+                    targetState = selected,
+                    transitionSpec = {
+                        fadeIn(tween(90)) + slideInHorizontally { -it / 3 } togetherWith
+                            fadeOut(tween(70)) + slideOutHorizontally { it / 3 }
+                    },
+                    label = "chipIcon",
+                ) { isSelected ->
+                    when {
+                        isSelected ->
+                            Icon(
+                                painter = painterResource(R.drawable.done),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp),
+                            )
+
+                        iconRes != null ->
+                            Icon(
+                                painter = painterResource(iconRes),
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(16.dp),
+                            )
+                    }
                 }
 
                 Text(
                     text = label,
                     style = MaterialTheme.typography.labelLarge,
-                    color = foregroundColor,
+                    color =
+                        if (selected) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
                     maxLines = 1,
                 )
             }
