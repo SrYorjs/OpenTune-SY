@@ -229,6 +229,7 @@ import com.arturo254.opentune.constants.TogetherDisplayNameKey
 import com.arturo254.opentune.ui.component.BottomSheetPageState
 import com.arturo254.opentune.ui.component.MenuState
 import com.arturo254.opentune.ui.component.TopSearch
+import com.arturo254.opentune.ui.component.SearchSourceSelector
 import com.arturo254.opentune.ui.component.rememberBottomSheetState
 import com.arturo254.opentune.ui.component.shimmer.ShimmerTheme
 import com.arturo254.opentune.ui.menu.YouTubeSongMenu
@@ -1511,22 +1512,6 @@ class MainActivity : ComponentActivity() {
                                                                     )
                                                                 }
                                                             }
-                                                            IconButton(
-                                                                onClick = {
-                                                                    searchSource = searchSource.toggle()
-                                                                },
-                                                            ) {
-                                                                Icon(
-                                                                    painter = painterResource(
-                                                                        when (searchSource) {
-                                                                            SearchSource.LOCAL -> R.drawable.library_music
-                                                                            SearchSource.ONLINE -> R.drawable.language
-                                                                            SearchSource.AUDIUS -> R.drawable.graphic_eq
-                                                                        },
-                                                                    ),
-                                                                    contentDescription = null,
-                                                                )
-                                                            }
                                                         }
                                                     }
                                                 },
@@ -1555,6 +1540,16 @@ class MainActivity : ComponentActivity() {
                                                     )
                                                 }
                                             ) {
+                                                SearchSourceSelector(
+                                                    selected = searchSource,
+                                                    onSelected = { source ->
+                                                        searchSource = source
+                                                    },
+                                                    modifier = Modifier
+                                                        .align(Alignment.CenterHorizontally)
+                                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                                )
+
                                                 AnimatedContent(
                                                     targetState = searchSource,
                                                     transitionSpec = {
