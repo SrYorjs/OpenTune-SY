@@ -29,6 +29,9 @@
     <string name="integrations">Integrations</string>
     <string name="internal_subcategory_settings">Internal &amp; subcategory settings</string>
     <string name="search_try_different">Try a different search term</string>\n    <string name="search_audius">Search Audius</string>
+    <string name="provider_local">Library</string>
+    <string name="provider_youtube">YouTube Music</string>
+    <string name="provider_audius">Audius</string>
     <!-- History -->
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
