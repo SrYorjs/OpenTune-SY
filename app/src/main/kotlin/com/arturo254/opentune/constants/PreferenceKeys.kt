@@ -451,12 +451,14 @@ val SwipeSensitivityKey = floatPreferencesKey("swipeSensitivity")
 enum class SearchSource {
     LOCAL,
     ONLINE,
+    AUDIUS,
     ;
 
     fun toggle() =
         when (this) {
             LOCAL -> ONLINE
-            ONLINE -> LOCAL
+            ONLINE -> AUDIUS
+            AUDIUS -> LOCAL
         }
 }
 
