@@ -109,6 +109,8 @@ fun TopSearch(
     leftFocusRequester: FocusRequester? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    val glassEnabled = LocalEnableLiquidGlass.current && !active
+
     val animationProgress: Float by animateFloatAsState(
         targetValue = if (active) 1f else 0f,
         animationSpec = tween(durationMillis = AnimationDurationMillis),
@@ -181,21 +183,41 @@ fun TopSearch(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(topInset + AppBarHeight)
-                .background(color = MaterialTheme.colorScheme.surface)
+                .background(
+                    color = if (glassEnabled) Color.Transparent else MaterialTheme.colorScheme.surface
+                )
         )
+
+        val compactGlassShape = RoundedCornerShape(SearchBarCornerRadius)
+        val actualContainerColor = if (glassEnabled) Color.Transparent else colors.containerColor
 
         Surface(
             shape = animatedShape,
-            color = colors.containerColor,
-            contentColor = contentColorFor(colors.containerColor),
-            tonalElevation = tonalElevation,
+            color = actualContainerColor,
+            contentColor = contentColorFor(actualContainerColor),
+            tonalElevation = if (glassEnabled) 0.dp else tonalElevation,
             modifier = Modifier
                 .padding(
                     top = animatedSurfaceTopPadding,
                     start = startPadding,
                     end = endPadding,
                 )
-                .size(width = width, height = height),
+                .size(width = width, height = height)
+                .then(
+                    if (glassEnabled) {
+                        Modifier.liquidGlassSurface(
+                            shape = compactGlassShape,
+                            pureBlack = false,
+                            blurRadius = 4,
+                            refraction = 0.045f,
+                            curve = 0.10f,
+                            dispersion = 0.0015f,
+                            edge = 0f,
+                        )
+                    } else {
+                        Modifier
+                    }
+                ),
         ) {
             Column {
                 SearchBarInputField(
