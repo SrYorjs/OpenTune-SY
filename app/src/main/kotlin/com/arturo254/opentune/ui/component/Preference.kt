@@ -111,8 +111,8 @@ private val expressiveBadgeShape: Shape = RoundedCornerShape(
 )
 
 private val expressiveBottomSheetShape: Shape = RoundedCornerShape(
-    topStart = 32.dp,
-    topEnd = 32.dp,
+    topStart = 34.dp,
+    topEnd = 34.dp,
     bottomStart = 0.dp,
     bottomEnd = 0.dp
 )
@@ -887,8 +887,8 @@ fun ExpressiveActionBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         shape = expressiveBottomSheetShape,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 6.dp,
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+        tonalElevation = 0.dp,
         dragHandle = {
             Box(
                 modifier = Modifier
@@ -981,8 +981,8 @@ fun <T> ExpressiveListBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         shape = expressiveBottomSheetShape,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 6.dp,
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+        tonalElevation = 0.dp,
         dragHandle = {
             Box(
                 modifier = Modifier
@@ -1058,8 +1058,8 @@ fun ExpressiveTextFieldBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         shape = expressiveBottomSheetShape,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 6.dp,
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+        tonalElevation = 0.dp,
         dragHandle = {
             Box(
                 modifier = Modifier
