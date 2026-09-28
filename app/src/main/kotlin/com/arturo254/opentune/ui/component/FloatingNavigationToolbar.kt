@@ -370,11 +370,13 @@ private fun FloatingNavigationToolbarItem(
 
     val selectedContainer by animateColorAsState(
         targetValue = if (selected) {
-            Color.White.copy(alpha = if (pureBlack) 0.11f else 0.14f)
+            MaterialTheme.colorScheme.primary.copy(
+                alpha = if (pureBlack) 0.16f else 0.13f
+            )
         } else {
             Color.Transparent
         },
-        animationSpec = tween(durationMillis = 90),
+        animationSpec = tween(durationMillis = 110),
         label = "selectedContainer",
     )
 
@@ -406,9 +408,9 @@ private fun FloatingNavigationToolbarItem(
 
     val contentColor =
         if (selected) {
-            if (pureBlack) Color.White else MaterialTheme.colorScheme.onSurface
+            MaterialTheme.colorScheme.primary
         } else {
-            if (pureBlack) Color.White.copy(alpha = 0.72f)
+            if (pureBlack) Color.White.copy(alpha = 0.70f)
             else MaterialTheme.colorScheme.onSurfaceVariant
         }
 
