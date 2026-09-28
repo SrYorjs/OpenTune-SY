@@ -38,7 +38,12 @@ object Audius {
         mediaId.removePrefix(MEDIA_PREFIX)
 
     fun streamUrl(mediaId: String): String =
-        BASE_URL + "/tracks/" + rawTrackId(mediaId) + "/stream"
+        (BASE_URL + "/tracks/" + rawTrackId(mediaId) + "/stream")
+            .toHttpUrl()
+            .newBuilder()
+            .addQueryParameter("app_name", "OpenTune-SY")
+            .build()
+            .toString()
 
     suspend fun searchTracks(
         query: String,
@@ -51,6 +56,7 @@ object Audius {
                         .toHttpUrl()
                         .newBuilder()
                         .addQueryParameter("query", query)
+                        .addQueryParameter("app_name", "OpenTune-SY")
                         .addQueryParameter("limit", limit.coerceIn(1, 50).toString())
                         .addQueryParameter("sort_method", "relevant")
                         .build()
@@ -66,6 +72,7 @@ object Audius {
                     (BASE_URL + "/tracks/trending")
                         .toHttpUrl()
                         .newBuilder()
+                        .addQueryParameter("app_name", "OpenTune-SY")
                         .addQueryParameter("limit", limit.coerceIn(1, 50).toString())
                         .addQueryParameter("time", "week")
                         .build()
