@@ -7,6 +7,8 @@ import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -14,29 +16,115 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.preferredFrameRate
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastCoerceAtMost
+import androidx.compose.ui.util.lerp
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.tanh
 
 /**
- * Small reusable design system for the app-wide Liquid Glass redesign.
- * These components intentionally reuse the same optical material as the
- * navigation bar and mini-player instead of creating nested blur stacks.
+ * Shared premium glass controls.
+ *
+ * The press deformation follows the same interaction model used by Kyant's
+ * LiquidButton sample: a subtle elastic translation plus directional stretch
+ * toward the touch point. The optical surface itself still falls back safely on
+ * devices where a live Backdrop is not available.
  */
+@Composable
+private fun Modifier.elasticLiquidPress(
+    interactionSource: MutableInteractionSource,
+    enabled: Boolean,
+): Modifier {
+    val pressed by interactionSource.collectIsPressedAsState()
+    val progress by animateFloatAsState(
+        targetValue = if (pressed) 1f else 0f,
+        animationSpec = spring(
+            dampingRatio = 0.78f,
+            stiffness = 620f,
+        ),
+        label = "liquidElasticPress",
+    )
+    var touchOffset by remember { mutableStateOf(Offset.Zero) }
+
+    return this
+        .pointerInput(enabled) {
+            if (!enabled) return@pointerInput
+            awaitEachGesture {
+                val down = awaitFirstDown(requireUnconsumed = false)
+                val center = Offset(size.width * 0.5f, size.height * 0.5f)
+                touchOffset = down.position - center
+
+                do {
+                    val event = awaitPointerEvent()
+                    val change = event.changes.firstOrNull()
+                    if (change != null) {
+                        touchOffset = change.position - center
+                    }
+                } while (event.changes.any { it.pressed })
+
+                touchOffset = Offset.Zero
+            }
+        }
+        .graphicsLayer {
+            val width = size.width.coerceAtLeast(1f)
+            val height = size.height.coerceAtLeast(1f)
+            val maxOffset = size.minDimension.coerceAtLeast(1f)
+
+            val baseScale = lerp(
+                1f,
+                1f + 4.dp.toPx() / height,
+                progress,
+            )
+
+            val dx = touchOffset.x * progress
+            val dy = touchOffset.y * progress
+
+            translationX =
+                maxOffset * tanh(0.05f * dx / maxOffset)
+            translationY =
+                maxOffset * tanh(0.05f * dy / maxOffset)
+
+            val maxDragScale = 4.dp.toPx() / height
+            val offsetAngle = atan2(dy, dx)
+
+            scaleX =
+                baseScale +
+                    maxDragScale *
+                        abs(cos(offsetAngle) * dx / size.maxDimension.coerceAtLeast(1f)) *
+                        (width / height).fastCoerceAtMost(1f)
+
+            scaleY =
+                baseScale +
+                    maxDragScale *
+                        abs(sin(offsetAngle) * dy / size.maxDimension.coerceAtLeast(1f)) *
+                        (height / width).fastCoerceAtMost(1f)
+        }
+}
+
 @Composable
 fun LiquidGlassIconButton(
     onClick: () -> Unit,
@@ -49,15 +137,6 @@ fun LiquidGlassIconButton(
 ) {
     val glass = LocalEnableLiquidGlass.current
     val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed) 0.91f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium,
-        ),
-        label = "liquidControlPress",
-    )
     val shape = RoundedCornerShape(50)
     val baseColor =
         if (glass) {
@@ -76,7 +155,10 @@ fun LiquidGlassIconButton(
         modifier = modifier
             .size(size)
             .preferredFrameRate(120f)
-            .scale(scale)
+            .elasticLiquidPress(
+                interactionSource = interactionSource,
+                enabled = enabled,
+            )
             .clip(shape)
             .background(baseColor)
             .then(
@@ -98,9 +180,69 @@ fun LiquidGlassIconButton(
                 enabled = enabled,
                 role = Role.Button,
                 interactionSource = interactionSource,
-                indication = LocalIndication.current,
+                indication = if (glass) null else LocalIndication.current,
                 onClick = onClick,
             ),
+        content = content,
+    )
+}
+
+@Composable
+fun LiquidGlassPillButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    selected: Boolean = false,
+    pureBlack: Boolean = false,
+    horizontalPadding: Dp = 16.dp,
+    content: @Composable RowScope.() -> Unit,
+) {
+    val glass = LocalEnableLiquidGlass.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val shape = RoundedCornerShape(50)
+    val baseColor =
+        when {
+            glass && selected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)
+            glass -> Color.Transparent
+            selected -> MaterialTheme.colorScheme.primaryContainer
+            else -> MaterialTheme.colorScheme.surfaceContainerHigh
+        }
+
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .height(48.dp)
+            .preferredFrameRate(120f)
+            .elasticLiquidPress(
+                interactionSource = interactionSource,
+                enabled = enabled,
+            )
+            .clip(shape)
+            .background(baseColor)
+            .then(
+                if (glass) {
+                    Modifier.liquidGlassSurface(
+                        shape = shape,
+                        pureBlack = pureBlack,
+                        blurRadius = 6,
+                        refraction = 0.078f,
+                        curve = 0.17f,
+                        dispersion = 0.004f,
+                        edge = 0.48f,
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .clickable(
+                enabled = enabled,
+                interactionSource = interactionSource,
+                indication = if (glass) null else LocalIndication.current,
+                role = Role.Button,
+                onClick = onClick,
+            )
+            .padding(horizontal = horizontalPadding),
         content = content,
     )
 }
@@ -163,34 +305,27 @@ fun LiquidGlassCard(
             .clip(shape)
             .background(
                 if (glass) {
-                    Color.Black.copy(alpha = if (pureBlack) 0.085f else 0.045f)
+                    Color.Black.copy(alpha = if (pureBlack) 0.07f else 0.032f)
                 } else {
                     MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.90f)
                 }
             )
-            .then(
-                if (glass) {
-                    // Cards can appear many times in a scrolling grid/list. Keep
-                    // them translucent and outlined instead of launching a
-                    // backdrop shader for every visible cell.
-                    Modifier.border(
-                        width = 1.dp,
-                        color = Color.White.copy(alpha = 0.11f),
-                        shape = shape,
-                    )
-                } else {
-                    Modifier
-                }
+            .border(
+                width = 0.75.dp,
+                color =
+                    if (glass) {
+                        Color.White.copy(alpha = if (pureBlack) 0.15f else 0.12f)
+                    } else {
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f)
+                    },
+                shape = shape,
             ),
         content = content,
     )
 }
 
-
 /**
  * Lightweight shared background for the redesigned top-level screens.
- * A single gradient replaces several stacked radial draw passes, keeping the
- * interface visually rich without adding continuous blur work while scrolling.
  */
 @Composable
 fun Modifier.liquidGlassScreenBackground(
@@ -203,9 +338,9 @@ fun Modifier.liquidGlassScreenBackground(
     return this.background(
         Brush.verticalGradient(
             colors = listOf(
-                primary.copy(alpha = if (pureBlack) 0.07f else 0.11f),
-                surface.copy(alpha = 0.98f),
-                tertiary.copy(alpha = if (pureBlack) 0.035f else 0.055f),
+                primary.copy(alpha = if (pureBlack) 0.075f else 0.115f),
+                surface.copy(alpha = 0.985f),
+                tertiary.copy(alpha = if (pureBlack) 0.04f else 0.06f),
                 surface,
             )
         )
