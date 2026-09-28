@@ -12,6 +12,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -45,6 +46,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.arturo254.opentune.LocalPlayerAwareWindowInsets
 import com.arturo254.opentune.R
+import com.arturo254.opentune.ui.component.LiquidGlassCard
 import com.arturo254.opentune.ui.component.NavigationTitle
 import com.arturo254.opentune.ui.component.shimmer.ShimmerHost
 import com.arturo254.opentune.ui.component.shimmer.TextPlaceholder
@@ -130,38 +132,48 @@ fun MoodAndGenresButton(
 ) {
     val base = Color(stripeColor)
     val darkVariant = Color(
-        red = (base.red * 0.65f).coerceIn(0f, 1f),
-        green = (base.green * 0.65f).coerceIn(0f, 1f),
-        blue = (base.blue * 0.65f).coerceIn(0f, 1f),
+        red = (base.red * 0.58f).coerceIn(0f, 1f),
+        green = (base.green * 0.58f).coerceIn(0f, 1f),
+        blue = (base.blue * 0.58f).coerceIn(0f, 1f),
     )
-    val gradient = Brush.linearGradient(
-        colors = listOf(base, darkVariant),
+    val accentGlass = Brush.linearGradient(
+        colors = listOf(
+            base.copy(alpha = 0.34f),
+            darkVariant.copy(alpha = 0.16f),
+            Color.Transparent,
+        ),
         start = Offset(0f, 0f),
         end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
     )
-    Box(
-        contentAlignment = Alignment.BottomStart,
+
+    LiquidGlassCard(
+        cornerRadius = 22.dp,
         modifier = modifier
             .height(MoodAndGenresButtonHeight)
-            .clip(RoundedCornerShape(16.dp))
-            .background(gradient)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+            .clickable(onClick = onClick),
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall.copy(
-                fontWeight = FontWeight.Bold,
-                shadow = Shadow(
-                    color = Color.Black.copy(alpha = 0.35f),
-                    offset = Offset(0f, 1f),
-                    blurRadius = 4f,
+        Box(
+            contentAlignment = Alignment.BottomStart,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(accentGlass)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    shadow = Shadow(
+                        color = Color.Black.copy(alpha = 0.24f),
+                        offset = Offset(0f, 1f),
+                        blurRadius = 3f,
+                    ),
                 ),
-            ),
-            color = Color.White,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
+                color = Color.White,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 
