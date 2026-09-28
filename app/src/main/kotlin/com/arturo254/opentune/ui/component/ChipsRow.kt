@@ -11,6 +11,7 @@ package com.arturo254.opentune.ui.component
 import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandIn
@@ -76,9 +77,27 @@ fun <E> ChipsRow(
             val isSelected = currentValue == value
             val iconRes = icons[value]
 
+            val chipShape = RoundedCornerShape(18.dp)
             FilterChip(
                 selected = isSelected,
                 onClick = { onValueUpdate(value) },
+                modifier = Modifier
+                    .animateContentSize()
+                    .then(
+                        if (LocalEnableLiquidGlass.current) {
+                            Modifier.liquidGlassSurface(
+                                shape = chipShape,
+                                pureBlack = false,
+                                blurRadius = 3,
+                                refraction = 0.035f,
+                                curve = 0.075f,
+                                dispersion = 0.001f,
+                                edge = 0f,
+                            )
+                        } else {
+                            Modifier
+                        }
+                    ),
                 label = { Text(label) },
                 leadingIcon = {
                     if (isSelected) {
@@ -95,10 +114,10 @@ fun <E> ChipsRow(
                         )
                     }
                 },
-                shape = RoundedCornerShape(16.dp),
+                shape = chipShape,
                 border = null,
                 colors = FilterChipDefaults.filterChipColors(
-                    containerColor = containerColor,
+                    containerColor = if (LocalEnableLiquidGlass.current) Color.Transparent else containerColor,
                 ),
             )
 
@@ -135,7 +154,21 @@ fun <Int> ChoiceChipsRow(
         var expanded by remember { mutableStateOf(false) }
 
         Column {
+            val optionShape = RoundedCornerShape(18.dp)
             AssistChip(
+                modifier = Modifier.then(
+                    if (LocalEnableLiquidGlass.current) {
+                        Modifier.liquidGlassSurface(
+                            shape = optionShape,
+                            pureBlack = false,
+                            blurRadius = 3,
+                            refraction = 0.035f,
+                            curve = 0.075f,
+                            dispersion = 0.001f,
+                            edge = 0f,
+                        )
+                    } else Modifier
+                ),
                 onClick = {
                     expanded = !expanded
                     expandIconDegree -= 180
@@ -158,10 +191,10 @@ fun <Int> ChoiceChipsRow(
                         modifier = Modifier.graphicsLayer(rotationZ = rotationAnimation),
                     )
                 },
-                shape = RoundedCornerShape(16.dp),
+                shape = optionShape,
                 border = null,
                 colors = AssistChipDefaults.assistChipColors(
-                    containerColor = containerColor,
+                    containerColor = if (LocalEnableLiquidGlass.current) Color.Transparent else containerColor,
                     labelColor = MaterialTheme.colorScheme.onSurface
                 )
             )
@@ -207,14 +240,30 @@ fun <Int> ChoiceChipsRow(
                 chips.forEach { (value, label) ->
                     Spacer(Modifier.width(8.dp))
 
+                    val chipShape = RoundedCornerShape(18.dp)
                     FilterChip(
                         label = { Text(label) },
                         selected = currentValue == value,
+                        modifier = Modifier
+                            .animateContentSize()
+                            .then(
+                                if (LocalEnableLiquidGlass.current) {
+                                    Modifier.liquidGlassSurface(
+                                        shape = chipShape,
+                                        pureBlack = false,
+                                        blurRadius = 3,
+                                        refraction = 0.035f,
+                                        curve = 0.075f,
+                                        dispersion = 0.001f,
+                                        edge = 0f,
+                                    )
+                                } else Modifier
+                            ),
                         colors = FilterChipDefaults.filterChipColors(
-                            containerColor = containerColor,
+                            containerColor = if (LocalEnableLiquidGlass.current) Color.Transparent else containerColor,
                         ),
                         onClick = { onValueUpdate(value) },
-                        shape = RoundedCornerShape(16.dp),
+                        shape = chipShape,
                         border = null
                     )
                 }
