@@ -2973,22 +2973,15 @@ fun V8PlayerControlsContent(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Botones superiores: Like + Menú (38dp, ~10% menos que V7)
+            // Top actions share the same transparent Liquid Glass language as the bars.
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Like
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (currentSongLiked) textBackgroundColor.copy(alpha = 0.2f)
-                            else Color.Transparent
-                        )
-                        .clickable { playerConnection.toggleLike() },
-                    contentAlignment = Alignment.Center
+                LiquidGlassIconButton(
+                    onClick = { playerConnection.toggleLike() },
+                    size = 44.dp,
+                    selected = currentSongLiked,
                 ) {
                     Icon(
                         painter = painterResource(
@@ -2996,37 +2989,33 @@ fun V8PlayerControlsContent(
                             else R.drawable.favorite_outline
                         ),
                         contentDescription = null,
-                        tint = textBackgroundColor.copy(alpha = if (currentSongLiked) 1f else 0.7f),
-                        modifier = Modifier.size(30.dp)
+                        tint = textBackgroundColor.copy(alpha = if (currentSongLiked) 1f else 0.78f),
+                        modifier = Modifier.size(24.dp)
                     )
                 }
 
-                // Menú
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .clickable {
-                            menuState.show {
-                                PlayerMenu(
-                                    mediaMetadata = mediaMetadata,
-                                    navController = navController,
-                                    playerBottomSheetState = state,
-                                    onShowDetailsDialog = {
-                                        bottomSheetPageState.show {
-                                            ShowMediaInfo(mediaMetadata.id)
-                                        }
-                                    },
-                                    onDismiss = menuState::dismiss
-                                )
-                            }
-                        },
-                    contentAlignment = Alignment.Center
+                LiquidGlassIconButton(
+                    onClick = {
+                        menuState.show {
+                            PlayerMenu(
+                                mediaMetadata = mediaMetadata,
+                                navController = navController,
+                                playerBottomSheetState = state,
+                                onShowDetailsDialog = {
+                                    bottomSheetPageState.show {
+                                        ShowMediaInfo(mediaMetadata.id)
+                                    }
+                                },
+                                onDismiss = menuState::dismiss
+                            )
+                        }
+                    },
+                    size = 44.dp,
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.more_horiz),
                         contentDescription = null,
-                        tint = textBackgroundColor.copy(alpha = 0.7f),
+                        tint = textBackgroundColor.copy(alpha = 0.78f),
                         modifier = Modifier.size(22.dp)
                     )
                 }
