@@ -16,7 +16,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateDpAsState
@@ -28,6 +28,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -1545,9 +1546,27 @@ class MainActivity : ComponentActivity() {
                                                     )
                                                 }
                                             ) {
-                                                Crossfade(
+                                                AnimatedContent(
                                                     targetState = searchSource,
-                                                    label = "",
+                                                    transitionSpec = {
+                                                        val direction =
+                                                            if (targetState == SearchSource.ONLINE) 1 else -1
+                                                        (
+                                                            slideInHorizontally(
+                                                                animationSpec = spring(
+                                                                    dampingRatio = 0.90f,
+                                                                    stiffness = 560f,
+                                                                ),
+                                                                initialOffsetX = { width -> direction * width / 6 },
+                                                            ) + fadeIn(tween(120))
+                                                        ) togetherWith (
+                                                            slideOutHorizontally(
+                                                                animationSpec = tween(140),
+                                                                targetOffsetX = { width -> -direction * width / 8 },
+                                                            ) + fadeOut(tween(100))
+                                                        )
+                                                    },
+                                                    label = "searchSourceSlide",
                                                     modifier =
                                                         Modifier
                                                             .fillMaxSize()
