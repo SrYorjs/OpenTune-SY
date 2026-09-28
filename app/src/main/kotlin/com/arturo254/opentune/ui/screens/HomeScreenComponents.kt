@@ -89,7 +89,6 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import kotlinx.coroutines.CoroutineScope
 import com.arturo254.opentune.R
-import com.arturo254.opentune.audius.AudiusTrack
 import com.arturo254.opentune.constants.GridThumbnailHeight
 import com.arturo254.opentune.constants.ListItemHeight
 import com.arturo254.opentune.constants.ListThumbnailSize
@@ -146,6 +145,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.arturo254.opentune.viewmodels.AudiusSearchViewModel
 import com.arturo254.opentune.viewmodels.HomeViewModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AudiusTrendingHomeSection(
     playerConnection: PlayerConnection,
