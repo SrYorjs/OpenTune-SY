@@ -240,7 +240,7 @@ import com.arturo254.opentune.ui.screens.Screens
 import com.arturo254.opentune.ui.screens.buildLoginRoute
 import com.arturo254.opentune.ui.screens.musicrecognition.MusicRecognitionRoute
 import com.arturo254.opentune.ui.screens.navigationBuilder
-import com.arturo254.opentune.ui.screens.search.AudiusSearchScreen
+import com.arturo254.opentune.ui.screens.search.DeezerSearchScreen
 import com.arturo254.opentune.ui.screens.search.LocalSearchScreen
 import com.arturo254.opentune.ui.screens.search.OnlineSearchScreen
 import com.arturo254.opentune.ui.screens.settings.DarkMode
@@ -783,7 +783,7 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 SearchSource.LOCAL,
-                                SearchSource.AUDIUS -> {
+                                SearchSource.DEEZER -> {
                                     focusManager.clearFocus()
                                 }
                             }
@@ -1441,7 +1441,7 @@ class MainActivity : ComponentActivity() {
                                                             when (searchSource) {
                                                                 SearchSource.LOCAL -> R.string.search_library
                                                                 SearchSource.ONLINE -> R.string.search_yt_music
-                                                                SearchSource.AUDIUS -> R.string.search_audius
+                                                                SearchSource.DEEZER -> R.string.search_deezer
                                                             }
                                                         ),
                                                     )
@@ -1594,8 +1594,8 @@ class MainActivity : ComponentActivity() {
                                                                 pureBlack = pureBlack
                                                             )
 
-                                                        SearchSource.AUDIUS ->
-                                                            AudiusSearchScreen(
+                                                        SearchSource.DEEZER ->
+                                                            DeezerSearchScreen(
                                                                 query = query.text,
                                                                 pureBlack = pureBlack,
                                                             )
