@@ -3197,78 +3197,126 @@ fun V8PlaybackControls(
     playerConnection: PlayerConnection,
     shuffleModeEnabled: Boolean,
 ) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(18.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
     ) {
-        LiquidGlassIconButton(
-            onClick = playerConnection::seekToPrevious,
-            enabled = canSkipPrevious,
-            size = 58.dp,
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(18.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                painter = painterResource(R.drawable.skip_previous),
-                contentDescription = null,
-                tint = textBackgroundColor.copy(alpha = if (canSkipPrevious) 0.96f else 0.34f),
-                modifier = Modifier.size(30.dp),
-            )
-        }
-
-        LiquidGlassIconButton(
-            onClick = {
-                if (playbackState == Player.STATE_ENDED) {
-                    playerConnection.player.seekTo(0, 0)
-                    playerConnection.player.playWhenReady = true
-                } else {
-                    playerConnection.player.togglePlayPause()
-                }
-            },
-            enabled = !isLoading,
-            selected = isPlaying,
-            size = 72.dp,
-        ) {
-            if (isLoading) {
-                CircularWavyProgressIndicator(
-                    modifier = Modifier.size(31.dp),
-                    color = textBackgroundColor,
+            LiquidGlassIconButton(
+                onClick = playerConnection::seekToPrevious,
+                enabled = canSkipPrevious,
+                size = 58.dp,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.skip_previous),
+                    contentDescription = null,
+                    tint = textBackgroundColor.copy(alpha = if (canSkipPrevious) 0.96f else 0.34f),
+                    modifier = Modifier.size(30.dp),
                 )
-            } else {
-                AnimatedContent(
-                    targetState = isPlaying,
-                    transitionSpec = {
-                        fadeIn(tween(110)) togetherWith fadeOut(tween(80))
-                    },
-                    label = "v8PlayPause",
-                ) { playing ->
-                    Icon(
-                        painter =
-                            painterResource(
-                                when {
-                                    playbackState == Player.STATE_ENDED -> R.drawable.replay
-                                    playing -> R.drawable.pause
-                                    else -> R.drawable.play
-                                }
-                            ),
-                        contentDescription = null,
-                        tint = textBackgroundColor,
-                        modifier = Modifier.size(38.dp),
+            }
+
+            LiquidGlassIconButton(
+                onClick = {
+                    if (playbackState == Player.STATE_ENDED) {
+                        playerConnection.player.seekTo(0, 0)
+                        playerConnection.player.playWhenReady = true
+                    } else {
+                        playerConnection.player.togglePlayPause()
+                    }
+                },
+                enabled = !isLoading,
+                selected = isPlaying,
+                size = 72.dp,
+            ) {
+                if (isLoading) {
+                    CircularWavyProgressIndicator(
+                        modifier = Modifier.size(31.dp),
+                        color = textBackgroundColor,
                     )
+                } else {
+                    AnimatedContent(
+                        targetState = isPlaying,
+                        transitionSpec = {
+                            fadeIn(tween(110)) togetherWith fadeOut(tween(80))
+                        },
+                        label = "v8PlayPause",
+                    ) { playing ->
+                        Icon(
+                            painter =
+                                painterResource(
+                                    when {
+                                        playbackState == Player.STATE_ENDED -> R.drawable.replay
+                                        playing -> R.drawable.pause
+                                        else -> R.drawable.play
+                                    }
+                                ),
+                            contentDescription = null,
+                            tint = textBackgroundColor,
+                            modifier = Modifier.size(38.dp),
+                        )
+                    }
                 }
+            }
+
+            LiquidGlassIconButton(
+                onClick = playerConnection::seekToNext,
+                enabled = canSkipNext,
+                size = 58.dp,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.skip_next),
+                    contentDescription = null,
+                    tint = textBackgroundColor.copy(alpha = if (canSkipNext) 0.96f else 0.34f),
+                    modifier = Modifier.size(30.dp),
+                )
             }
         }
 
-        LiquidGlassIconButton(
-            onClick = playerConnection::seekToNext,
-            enabled = canSkipNext,
-            size = 58.dp,
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(18.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(
-                painter = painterResource(R.drawable.skip_next),
-                contentDescription = null,
-                tint = textBackgroundColor.copy(alpha = if (canSkipNext) 0.96f else 0.34f),
-                modifier = Modifier.size(30.dp),
-            )
+            LiquidGlassIconButton(
+                onClick = {
+                    playerConnection.player.shuffleModeEnabled = !shuffleModeEnabled
+                },
+                selected = shuffleModeEnabled,
+                size = 42.dp,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.shuffle),
+                    contentDescription = null,
+                    tint = textBackgroundColor.copy(alpha = if (shuffleModeEnabled) 1f else 0.72f),
+                    modifier = Modifier.size(19.dp),
+                )
+            }
+
+            LiquidGlassIconButton(
+                onClick = { playerConnection.player.toggleRepeatMode() },
+                selected = repeatMode != Player.REPEAT_MODE_OFF,
+                size = 42.dp,
+            ) {
+                Icon(
+                    painter =
+                        painterResource(
+                            if (repeatMode == Player.REPEAT_MODE_ONE) {
+                                R.drawable.repeat_one
+                            } else {
+                                R.drawable.repeat
+                            }
+                        ),
+                    contentDescription = null,
+                    tint =
+                        textBackgroundColor.copy(
+                            alpha = if (repeatMode == Player.REPEAT_MODE_OFF) 0.72f else 1f
+                        ),
+                    modifier = Modifier.size(19.dp),
+                )
+            }
         }
     }
 }
