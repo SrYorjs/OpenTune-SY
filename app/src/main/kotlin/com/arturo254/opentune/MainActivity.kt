@@ -224,6 +224,7 @@ import com.arturo254.opentune.ui.component.LocalBottomSheetPageState
 import com.arturo254.opentune.ui.component.LocalMenuState
 import com.arturo254.opentune.ui.component.LocalSky
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
+import com.arturo254.opentune.ui.component.LiquidGlassControlCluster
 import com.mikepenz.markdown.m3.Markdown
 import com.arturo254.opentune.constants.TogetherDisplayNameKey
 import com.arturo254.opentune.ui.component.BottomSheetPageState
@@ -1292,92 +1293,69 @@ class MainActivity : ComponentActivity() {
                                                         }) + WindowInsetsSides.Top
                                                     ),
                                                     title = {
-                                                        val googleSans = FontFamily(
-                                                            Font(
-                                                                R.font.anybody,
-                                                                variationSettings = FontVariation.Settings(
-                                                                    FontVariation.weight(650),
-                                                                    FontVariation.width(110f),
-                                                                    FontVariation.slant(-4f)
-                                                                )
-                                                            )
-                                                        )
-
-                                                        Row(
-                                                            verticalAlignment = Alignment.CenterVertically,
-                                                            horizontalArrangement = Arrangement.spacedBy(
-                                                                6.dp
-                                                            )
+                                                        Column(
+                                                            verticalArrangement = Arrangement.spacedBy(1.dp),
                                                         ) {
-
-                                                            Box(
-                                                                modifier = Modifier
-                                                                    .size(40.dp)
-                                                                    .clip(RoundedCornerShape(14.dp))
-                                                                    .background(
-                                                                        MaterialTheme.colorScheme.secondaryContainer.copy(
-                                                                            alpha = 0.5f
-                                                                        )
-                                                                    ),
-                                                                contentAlignment = Alignment.Center
-                                                            ) {
-                                                                Icon(
-                                                                    painter = painterResource(R.drawable.opentune),
-                                                                    contentDescription = null,
-                                                                    tint = Color.Unspecified,
-                                                                    modifier = Modifier.size(28.dp)
-                                                                )
-                                                            }
-
                                                             Text(
                                                                 text = stringResource(R.string.app_name),
-                                                                style = MaterialTheme.typography.headlineSmallEmphasized.copy(
-                                                                    fontFamily = googleSans,
-                                                                    fontWeight = FontWeight.ExtraBold
-                                                                ),
+                                                                style = MaterialTheme.typography.headlineMedium,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = MaterialTheme.colorScheme.onSurface,
                                                                 maxLines = 1,
-                                                                overflow = TextOverflow.Ellipsis
+                                                                overflow = TextOverflow.Ellipsis,
+                                                            )
+                                                            Text(
+                                                                text = "MUSIC",
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = MaterialTheme.colorScheme.primary,
+                                                                maxLines = 1,
                                                             )
                                                         }
                                                     },
                                                     actions = {
-
-                                                        IconButton(
-                                                            modifier = Modifier.size(40.dp),
-                                                            onClick = { navController.navigate("history") }
+                                                        LiquidGlassControlCluster(
+                                                            pureBlack = pureBlack,
+                                                            horizontalSpacing = 0.dp,
+                                                            modifier = Modifier.padding(end = 6.dp),
                                                         ) {
-                                                            Icon(
-                                                                painter = painterResource(R.drawable.history),
-                                                                contentDescription = stringResource(R.string.history),
-                                                                modifier = Modifier.size(22.dp)
-                                                            )
+                                                            androidx.compose.material3.IconButton(
+                                                                modifier = Modifier.size(34.dp),
+                                                                onClick = { navController.navigate("history") },
+                                                            ) {
+                                                                Icon(
+                                                                    painter = painterResource(R.drawable.history),
+                                                                    contentDescription = stringResource(R.string.history),
+                                                                    modifier = Modifier.size(19.dp),
+                                                                )
+                                                            }
+
+                                                            androidx.compose.material3.IconButton(
+                                                                modifier = Modifier.size(34.dp),
+                                                                onClick = { navController.navigate("stats") },
+                                                            ) {
+                                                                Icon(
+                                                                    painter = painterResource(R.drawable.stats),
+                                                                    contentDescription = stringResource(R.string.stats),
+                                                                    modifier = Modifier.size(19.dp),
+                                                                )
+                                                            }
+
+                                                            androidx.compose.material3.IconButton(
+                                                                modifier = Modifier.size(34.dp),
+                                                                onClick = { navController.navigate("new_release") },
+                                                            ) {
+                                                                Icon(
+                                                                    painter = painterResource(R.drawable.notifications),
+                                                                    contentDescription = stringResource(R.string.new_release_albums),
+                                                                    modifier = Modifier.size(19.dp),
+                                                                )
+                                                            }
                                                         }
 
-                                                        IconButton(
-                                                            modifier = Modifier.size(40.dp),
-                                                            onClick = { navController.navigate("stats") }
-                                                        ) {
-                                                            Icon(
-                                                                painter = painterResource(R.drawable.stats),
-                                                                contentDescription = stringResource(R.string.stats),
-                                                                modifier = Modifier.size(22.dp)
-                                                            )
-                                                        }
-
-                                                        IconButton(
-                                                            modifier = Modifier.size(40.dp),
-                                                            onClick = { navController.navigate("new_release") }
-                                                        ) {
-                                                            Icon(
-                                                                painter = painterResource(R.drawable.notifications),
-                                                                contentDescription = stringResource(R.string.new_release_albums),
-                                                                modifier = Modifier.size(22.dp)
-                                                            )
-                                                        }
-
-                                                        IconButton(
-                                                            modifier = Modifier.size(40.dp),
-                                                            onClick = { showAccountDialog = true }
+                                                        androidx.compose.material3.IconButton(
+                                                            modifier = Modifier.size(42.dp),
+                                                            onClick = { showAccountDialog = true },
                                                         ) {
                                                             BadgedBox(
                                                                 badge = {
@@ -1395,15 +1373,26 @@ class MainActivity : ComponentActivity() {
                                                                         model = accountImageUrl,
                                                                         contentDescription = stringResource(R.string.account),
                                                                         modifier = Modifier
-                                                                            .size(30.dp)
-                                                                            .clip(CircleShape)
+                                                                            .size(32.dp)
+                                                                            .clip(CircleShape),
                                                                     )
                                                                 } else {
-                                                                    Icon(
-                                                                        painter = painterResource(R.drawable.account),
-                                                                        contentDescription = stringResource(R.string.account),
-                                                                        modifier = Modifier.size(24.dp)
-                                                                    )
+                                                                    Box(
+                                                                        modifier = Modifier
+                                                                            .size(32.dp)
+                                                                            .clip(CircleShape)
+                                                                            .background(
+                                                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                                                            ),
+                                                                        contentAlignment = Alignment.Center,
+                                                                    ) {
+                                                                        Icon(
+                                                                            painter = painterResource(R.drawable.account),
+                                                                            contentDescription = stringResource(R.string.account),
+                                                                            tint = MaterialTheme.colorScheme.primary,
+                                                                            modifier = Modifier.size(20.dp),
+                                                                        )
+                                                                    }
                                                                 }
                                                             }
                                                         }
