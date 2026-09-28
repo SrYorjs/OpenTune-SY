@@ -59,6 +59,7 @@ internal class CrossfadeAudio(
     private var crossfadeTargetMediaId: String? = null
     private var crossfadeStartElapsedMs: Long = 0L
     private var crossfadeActiveDurationMs: Int = 0
+    private var crossfadeActiveCurve: MixTransitionCurve = MixTransitionCurve.BLEND
     private var overlapNormalizeFactor: Float = 1f
 
     // ── Estado del handoff ────────────────────────────────────────────────────
@@ -119,7 +120,11 @@ internal class CrossfadeAudio(
 
     private suspend fun runLoop() {
         while (kotlin.coroutines.coroutineContext.isActive) {
-            val fadeMs = crossfadeDurationMs.value
+            val configuredFadeMs = crossfadeDurationMs.value
+            val fadeMs =
+                player.currentMediaItem
+                    ?.mixDurationMs(configuredFadeMs)
+                    ?: configuredFadeMs
 
             if (fadeMs <= 0) {
                 stopOverlapCrossfade(resetMainFade = true)
@@ -309,6 +314,9 @@ internal class CrossfadeAudio(
         crossfadeActive = true
         crossfadeStartElapsedMs = android.os.SystemClock.elapsedRealtime()
         crossfadeActiveDurationMs = min(fadeMs.toLong(), remainingMs).toInt().coerceAtLeast(1)
+        crossfadeActiveCurve =
+            player.currentMediaItem?.mixCurve(MixTransitionCurve.BLEND)
+                ?: MixTransitionCurve.BLEND
         crossfadeTargetIndex = overlapPrimedIndex
         crossfadeTargetMediaId = overlapPrimedMediaId
     }
@@ -424,20 +432,49 @@ internal class CrossfadeAudio(
         val elapsed = (android.os.SystemClock.elapsedRealtime() - crossfadeStartElapsedMs).coerceAtLeast(0L)
         val t = (elapsed.toFloat() / denom.toFloat()).coerceIn(0f, 1f)
 
-        // Calculamos el factor del player principal a través del flujo playbackFadeFactor
-        // para que el volumen final del player principal sea:
-        //   player.volume = playerVolume * normalizeFactor * audioFocusFactor * playbackFadeFactor
-        //                 = baseMainVolume * cos(t * π/2)
-        //
-        // Necesitamos que playbackFadeFactor = cos(t * π/2), ya que los demás factores
-        // se combinan en el collect de MusicService.
-        val radians = t.toDouble() * (PI / 2.0)
-        playbackFadeFactor.value = cos(radians).toFloat().coerceIn(0f, 1f)
+        val (outgoingGain, incomingGain) =
+            transitionGains(
+                progress = t,
+                curve = crossfadeActiveCurve,
+            )
 
-        // El overlap no pasa por playbackFadeFactor, así que aplicamos el volumen completo
-        // directamente con la curva seno.
+        playbackFadeFactor.value = outgoingGain
         overlap.volume =
-            (baseOverlapVolume * sin(radians).toFloat()).coerceIn(0f, maxSafeGainFactor)
+            (baseOverlapVolume * incomingGain).coerceIn(0f, maxSafeGainFactor)
+    }
+
+    /**
+     * DJ-style transition curves. BLEND preserves the previous equal-power
+     * behavior; the others change the hand-off envelope without changing pitch.
+     */
+    private fun transitionGains(
+        progress: Float,
+        curve: MixTransitionCurve,
+    ): Pair<Float, Float> {
+        val t = progress.coerceIn(0f, 1f)
+
+        return when (curve) {
+            MixTransitionCurve.FADE ->
+                (1f - t) to t
+
+            MixTransitionCurve.BLEND -> {
+                val radians = t.toDouble() * (PI / 2.0)
+                cos(radians).toFloat().coerceIn(0f, 1f) to
+                    sin(radians).toFloat().coerceIn(0f, 1f)
+            }
+
+            MixTransitionCurve.RISE -> {
+                val outgoing = (1f - t).pow(1.30f).coerceIn(0f, 1f)
+                val incoming = t.pow(0.62f).coerceIn(0f, 1f)
+                outgoing to incoming
+            }
+
+            MixTransitionCurve.MELT -> {
+                val outgoing = (1f - t).pow(0.72f).coerceIn(0f, 1f)
+                val incoming = t.pow(1.18f).coerceIn(0f, 1f)
+                outgoing to incoming
+            }
+        }
     }
 
     // ── Transición de MediaItem ───────────────────────────────────────────────
@@ -502,6 +539,7 @@ internal class CrossfadeAudio(
         crossfadeTargetIndex = C.INDEX_UNSET
         crossfadeTargetMediaId = null
         crossfadeActiveDurationMs = 0
+        crossfadeActiveCurve = MixTransitionCurve.BLEND
         overlapNormalizeFactor = 1f
         overlapPrimedIndex = C.INDEX_UNSET
         overlapPrimedMediaId = null
@@ -516,6 +554,7 @@ internal class CrossfadeAudio(
         crossfadeTargetIndex = C.INDEX_UNSET
         crossfadeTargetMediaId = null
         crossfadeActiveDurationMs = 0
+        crossfadeActiveCurve = MixTransitionCurve.BLEND
         overlapNormalizeFactor = 1f
         overlapPrimedIndex = C.INDEX_UNSET
         overlapPrimedMediaId = null
