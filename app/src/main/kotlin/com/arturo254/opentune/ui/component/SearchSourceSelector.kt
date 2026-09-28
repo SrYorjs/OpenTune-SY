@@ -82,14 +82,14 @@ fun SearchSourceSelector(
                 when (source) {
                     SearchSource.LOCAL -> R.drawable.library_music
                     SearchSource.ONLINE -> R.drawable.language
-                    SearchSource.AUDIUS -> R.drawable.graphic_eq
+                    SearchSource.DEEZER -> R.drawable.graphic_eq
                 }
             val label =
                 stringResource(
                     when (source) {
                         SearchSource.LOCAL -> R.string.provider_local
                         SearchSource.ONLINE -> R.string.provider_youtube
-                        SearchSource.AUDIUS -> R.string.provider_audius
+                        SearchSource.DEEZER -> R.string.provider_deezer
                     }
                 )
 
