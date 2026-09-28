@@ -1,6 +1,7 @@
 package com.arturo254.opentune.playback
 
 import android.content.Context
+import com.arturo254.opentune.db.entities.LyricsEntity.Companion.LYRICS_NOT_FOUND
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -71,7 +72,7 @@ constructor(
         mediaId: String,
         lyrics: String,
     ) = withContext(Dispatchers.IO) {
-        if (lyrics.isBlank() || lyrics == "Lyrics not found") return@withContext
+        if (lyrics.isBlank() || lyrics == LYRICS_NOT_FOUND) return@withContext
         val target = getLyricsFile(mediaId)
         atomicWrite(target, lyrics.toByteArray(Charsets.UTF_8))
     }
