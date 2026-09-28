@@ -58,9 +58,9 @@ fun Modifier.liquidGlassSurface(
         pureBlack || MaterialTheme.colorScheme.background.luminance() < 0.45f
     val fallbackSurface =
         if (darkSurface) {
-            Color.White.copy(alpha = 0.055f)
+            Color.White.copy(alpha = 0.070f)
         } else {
-            Color.White.copy(alpha = 0.30f)
+            Color.White.copy(alpha = 0.24f)
         }
     val borderColor =
         if (darkSurface) {
@@ -95,13 +95,13 @@ fun Modifier.liquidGlassSurface(
                         lensCenter = center,
                         lensSize = surfaceSize,
                         cornerRadius = 30f,
-                        refraction = refraction.coerceIn(0.025f, 0.085f),
-                        curve = curve.coerceIn(0.06f, 0.18f),
-                        dispersion = dispersion.coerceIn(0f, 0.004f),
-                        saturation = 1.015f,
-                        contrast = 1.008f,
+                        refraction = refraction.coerceIn(0.035f, 0.10f),
+                        curve = curve.coerceIn(0.075f, 0.22f),
+                        dispersion = dispersion.coerceIn(0f, 0.006f),
+                        saturation = 1.032f,
+                        contrast = 1.014f,
                         tint = Color.Transparent,
-                        edge = edge.coerceIn(0f, 0.012f),
+                        edge = edge.coerceIn(0f, 0.009f),
                         glow = LiquidGlassDefaults.NoGlow,
                     )
                 } else {
