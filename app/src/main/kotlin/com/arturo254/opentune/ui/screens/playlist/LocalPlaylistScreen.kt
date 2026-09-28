@@ -136,7 +136,6 @@ import com.arturo254.opentune.innertube.utils.completed
 import com.arturo254.opentune.models.toMediaMetadata
 import com.arturo254.opentune.playback.ExoDownloadService
 import com.arturo254.opentune.playback.queues.ListQueue
-import com.arturo254.opentune.playback.queues.LocalMixQueue
 import com.arturo254.opentune.ui.component.DefaultDialog
 import com.arturo254.opentune.ui.component.EditPlaylistDialog
 import com.arturo254.opentune.ui.component.DraggableScrollbar
@@ -144,6 +143,8 @@ import com.arturo254.opentune.ui.component.EmptyPlaceholder
 import com.arturo254.opentune.ui.component.AssignTagsDialog
 import com.arturo254.opentune.ui.component.IconButton
 import com.arturo254.opentune.ui.component.LocalMenuState
+import com.arturo254.opentune.ui.component.LiquidGlassPillButton
+import com.arturo254.opentune.ui.component.PlaylistMixSheet
 import com.arturo254.opentune.ui.component.SongListItem
 import com.arturo254.opentune.ui.component.SortHeader
 import com.arturo254.opentune.ui.menu.SelectionSongMenu
@@ -196,6 +197,16 @@ fun LocalPlaylistScreen(
     val swipeToSongEnabled by rememberPreference(SwipeToSongKey, defaultValue = false)
     val (disableBlur) = rememberPreference(DisableBlurKey, false)
     var showAssignTagsDialog by remember { mutableStateOf(false) }
+    var showMixSheet by remember { mutableStateOf(false) }
+
+    if (showMixSheet && playlist != null) {
+        PlaylistMixSheet(
+            playlistName = playlist!!.playlist.name,
+            songs = songs,
+            playerConnection = playerConnection,
+            onDismiss = { showMixSheet = false },
+        )
+    }
 
     if (showAssignTagsDialog && playlist != null) {
         AssignTagsDialog(
@@ -1005,30 +1016,27 @@ fun LocalPlaylistScreen(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                                        .padding(horizontal = 20.dp, vertical = 18.dp),
                                     horizontalArrangement = Arrangement.Center,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // Start Mix Button
-                                    Button(
-                                        onClick = {
-                                            playerConnection.playQueue(
-                                                LocalMixQueue(
-                                                    database = database,
-                                                    playlistId = playlist.id,
-                                                    maxMixSize = 50,
-                                                ),
-                                            )
-                                        },
-                                        shape = RoundedCornerShape(24.dp),
+                                    LiquidGlassPillButton(
+                                        onClick = { showMixSheet = true },
+                                        enabled = songs.size > 1,
+                                        selected = true,
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(48.dp)
+                                            .height(52.dp),
                                     ) {
                                         Icon(
                                             painter = painterResource(R.drawable.mix),
-                                            contentDescription = "Start Mix",
-                                            modifier = Modifier.size(24.dp)
+                                            contentDescription = null,
+                                            modifier = Modifier.size(21.dp),
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.playlist_mix_title),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
                                         )
                                     }
                                 }
