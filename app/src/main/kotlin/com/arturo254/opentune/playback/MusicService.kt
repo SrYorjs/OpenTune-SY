@@ -3035,7 +3035,6 @@ class MusicService :
                 com.arturo254.opentune.together.ControlAction.SkipNext -> {
                     if (player.hasNextMediaItem()) {
                         player.seekToNext()
-                        player.prepare()
                         player.playWhenReady = true
                     }
                 }
@@ -3043,7 +3042,6 @@ class MusicService :
                 com.arturo254.opentune.together.ControlAction.SkipPrevious -> {
                     if (player.hasPreviousMediaItem()) {
                         player.seekToPrevious()
-                        player.prepare()
                         player.playWhenReady = true
                     }
                 }
@@ -5205,7 +5203,6 @@ class MusicService :
                     promoteToStartedService()
                     ensureStartedAsForeground()
                     player.seekToNext()
-                    player.prepare()
                     player.playWhenReady = true
                 }
                 updatePlayerWidgets()
@@ -5217,7 +5214,6 @@ class MusicService :
                     promoteToStartedService()
                     ensureStartedAsForeground()
                     player.seekToPrevious()
-                    player.prepare()
                     player.playWhenReady = true
                 }
                 updatePlayerWidgets()
