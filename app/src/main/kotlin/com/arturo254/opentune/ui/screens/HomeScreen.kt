@@ -180,8 +180,8 @@ fun HomeScreen(
                 }
 
                 if (selectedChip == null) {
-                    item(key = "audius_discovery") {
-                        AudiusTrendingHomeSection(
+                    item(key = "global_catalog_discovery") {
+                        DeezerTrendingHomeSection(
                             playerConnection = playerConnection,
                             modifier = Modifier.animateItem(),
                         )
