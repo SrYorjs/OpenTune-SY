@@ -61,10 +61,13 @@ fun LiquidGlassIconButton(
     val shape = RoundedCornerShape(50)
     val baseColor =
         if (glass) {
-            if (selected) Color.White.copy(alpha = 0.13f)
-            else Color.Black.copy(alpha = if (pureBlack) 0.08f else 0.025f)
+            if (selected) {
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+            } else {
+                Color.Transparent
+            }
         } else {
-            if (selected) MaterialTheme.colorScheme.secondaryContainer
+            if (selected) MaterialTheme.colorScheme.primaryContainer
             else MaterialTheme.colorScheme.surfaceContainerHigh
         }
 
@@ -81,11 +84,11 @@ fun LiquidGlassIconButton(
                     Modifier.liquidGlassSurface(
                         shape = shape,
                         pureBlack = pureBlack,
-                        blurRadius = 3,
-                        refraction = 0.038f,
-                        curve = 0.08f,
-                        dispersion = 0.001f,
-                        edge = 0f,
+                        blurRadius = 6,
+                        refraction = 0.078f,
+                        curve = 0.17f,
+                        dispersion = 0.004f,
+                        edge = 0.48f,
                     )
                 } else {
                     Modifier
@@ -120,7 +123,7 @@ fun LiquidGlassControlCluster(
             .clip(shape)
             .background(
                 if (glass) {
-                    Color.Black.copy(alpha = if (pureBlack) 0.075f else 0.025f)
+                    Color.Transparent
                 } else {
                     MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.92f)
                 }
@@ -130,11 +133,11 @@ fun LiquidGlassControlCluster(
                     Modifier.liquidGlassSurface(
                         shape = shape,
                         pureBlack = pureBlack,
-                        blurRadius = 4,
-                        refraction = 0.045f,
-                        curve = 0.10f,
-                        dispersion = 0.0015f,
-                        edge = 0f,
+                        blurRadius = 7,
+                        refraction = 0.072f,
+                        curve = 0.16f,
+                        dispersion = 0.0035f,
+                        edge = 0.36f,
                     )
                 } else {
                     Modifier
