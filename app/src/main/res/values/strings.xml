@@ -32,6 +32,8 @@
     <string name="provider_local">Library</string>
     <string name="provider_youtube">YouTube Music</string>
     <string name="provider_audius">Audius</string>
+    <string name="audius_trending">Trending on Audius</string>
+    <string name="open_audio">Open audio</string>
     <!-- History -->
     <string name="today">Today</string>
     <string name="yesterday">Yesterday</string>
