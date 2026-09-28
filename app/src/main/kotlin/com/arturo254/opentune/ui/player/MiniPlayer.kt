@@ -76,7 +76,7 @@ private fun NewMiniPlayer(
         coroutineScope = coroutineScope,
         pureBlack = pureBlack,
         useLegacyBackground = false
-    ) { offsetX ->
+    ) { offsetX, transitionDirection ->
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -114,7 +114,8 @@ private fun NewMiniPlayer(
                 duration = duration,
                 playerConnection = playerConnection,
                 navController = navController,
-                    state = state
+                    state = state,
+                    transitionDirection = transitionDirection,
                 )
             }
         }
