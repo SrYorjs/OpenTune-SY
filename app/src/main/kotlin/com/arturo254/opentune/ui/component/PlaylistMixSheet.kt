@@ -56,6 +56,7 @@ import com.arturo254.opentune.playback.MixTrackAnalysis
 import com.arturo254.opentune.playback.MixTransition
 import com.arturo254.opentune.playback.MixTransitionCurve
 import com.arturo254.opentune.playback.PlaylistMixEngine
+import com.arturo254.opentune.playback.PlaylistMixPlan
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.playback.queues.ListQueue
 import kotlinx.coroutines.Dispatchers
@@ -81,6 +82,7 @@ fun PlaylistMixSheet(
 
     var mode by remember { mutableStateOf(PlaylistMixMode.SMART) }
     var analysisResults by remember { mutableStateOf<List<MixTrackAnalysis>>(emptyList()) }
+    var smartPlan by remember { mutableStateOf<PlaylistMixPlan?>(null) }
     var manualTransitions by remember(songs) {
         mutableStateOf(
             songs.zipWithNext { current, next ->
@@ -100,10 +102,11 @@ fun PlaylistMixSheet(
 
     LaunchedEffect(songs) {
         analyzing = true
-        analysisResults =
+        smartPlan =
             withContext(Dispatchers.IO) {
-                PlaylistMixEngine.analyze(songs)
+                PlaylistMixEngine.buildSmartPlan(songs)
             }
+        analysisResults = smartPlan?.orderedTracks.orEmpty()
         analyzing = false
     }
 
@@ -203,7 +206,7 @@ fun PlaylistMixSheet(
                             withContext(Dispatchers.Default) {
                                 when (mode) {
                                     PlaylistMixMode.SMART ->
-                                        PlaylistMixEngine.buildSmartPlan(songs)
+                                        smartPlan ?: PlaylistMixEngine.buildSmartPlan(songs)
 
                                     PlaylistMixMode.MANUAL -> {
                                         val analyzed =
