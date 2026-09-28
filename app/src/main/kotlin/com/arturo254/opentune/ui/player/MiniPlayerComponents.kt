@@ -20,6 +20,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.LocalIndication
@@ -60,6 +62,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -108,9 +111,10 @@ fun SwipeableMiniPlayerBox(
     coroutineScope: CoroutineScope,
     pureBlack: Boolean = false,
     useLegacyBackground: Boolean = false,
-    content: @Composable (Float) -> Unit
+    content: @Composable (Float, Int) -> Unit
 ) {
     var offsetX by remember { mutableFloatStateOf(0f) }
+    var transitionDirection by remember { mutableIntStateOf(1) }
     var dragStartTime by remember { mutableStateOf(0L) }
     var totalDragDistance by remember { mutableFloatStateOf(0f) }
     var settleJob by remember { mutableStateOf<Job?>(null) }
@@ -199,6 +203,7 @@ fun SwipeableMiniPlayerBox(
 
                                 if (shouldChangeSong) {
                                     val isRightSwipe = currentOffset > 0
+                                    transitionDirection = if (isRightSwipe) -1 else 1
                                     val canSkipPrevious = playerConnection.player.previousMediaItemIndex != -1
                                     val canSkipNext = playerConnection.player.nextMediaItemIndex != -1
 
@@ -224,7 +229,7 @@ fun SwipeableMiniPlayerBox(
                 }
             }
     ) {
-        content(offsetX)
+        content(offsetX, transitionDirection)
 
         // Visual indicator
         if (offsetX.absoluteValue > 50f) {
@@ -250,41 +255,51 @@ fun SwipeableMiniPlayerBox(
 
 @Composable
 fun RowScope.MiniPlayerInfo(
-    mediaMetadata: MediaMetadata
+    mediaMetadata: MediaMetadata,
+    transitionDirection: Int,
 ) {
-    Column(
+    AnimatedContent(
+        targetState = mediaMetadata,
+        contentKey = { it.id },
+        transitionSpec = {
+            (
+                slideInHorizontally(
+                    animationSpec = spring(
+                        dampingRatio = 0.86f,
+                        stiffness = 520f,
+                    ),
+                    initialOffsetX = { width -> transitionDirection * width / 3 },
+                ) + fadeIn(tween(110))
+            ) togetherWith (
+                slideOutHorizontally(
+                    animationSpec = tween(140),
+                    targetOffsetX = { width -> -transitionDirection * width / 4 },
+                ) + fadeOut(tween(100))
+            )
+        },
+        label = "miniInfoSlide",
         modifier = Modifier
             .weight(1f)
             .padding(horizontal = 12.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        AnimatedContent(
-            targetState = mediaMetadata.title,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "title"
-        ) { title ->
+    ) { metadata ->
+        Column(
+            verticalArrangement = Arrangement.Center,
+        ) {
             Text(
-                text = title,
+                text = metadata.title,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.basicMarquee()
+                modifier = Modifier.basicMarquee(),
             )
-        }
-
-        AnimatedContent(
-            targetState = mediaMetadata.artists,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "artist"
-        ) { artists ->
             Text(
-                text = artists.joinToString { it.name },
+                text = metadata.artists.joinToString { it.name },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.basicMarquee()
+                modifier = Modifier.basicMarquee(),
             )
         }
     }
@@ -296,6 +311,7 @@ private fun MiniPlayerArtwork(
     position: Long,
     duration: Long,
     isLoading: Boolean,
+    transitionDirection: Int,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -317,32 +333,54 @@ private fun MiniPlayerArtwork(
             )
         }
 
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                    shape = CircleShape
+        AnimatedContent(
+            targetState = mediaMetadata,
+            contentKey = { it?.id },
+            transitionSpec = {
+                (
+                    slideInHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = 0.86f,
+                            stiffness = 560f,
+                        ),
+                        initialOffsetX = { width -> transitionDirection * width / 2 },
+                    ) + fadeIn(tween(90))
+                ) togetherWith (
+                    slideOutHorizontally(
+                        animationSpec = tween(120),
+                        targetOffsetX = { width -> -transitionDirection * width / 2 },
+                    ) + fadeOut(tween(90))
                 )
-        ) {
-            val thumbnailUrl = mediaMetadata?.thumbnailUrl
-            if (thumbnailUrl != null) {
-                AsyncImage(
-                    model = thumbnailUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Image(
-                    painter = painterResource(R.drawable.opentune),
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp)
-                )
+            },
+            label = "miniArtworkSlide",
+        ) { metadata ->
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                        shape = CircleShape
+                    )
+            ) {
+                val thumbnailUrl = metadata?.thumbnailUrl
+                if (thumbnailUrl != null) {
+                    AsyncImage(
+                        model = thumbnailUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(R.drawable.opentune),
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
             }
         }
     }
@@ -458,7 +496,8 @@ fun NewMiniPlayerContent(
     duration: Long,
     playerConnection: PlayerConnection,
     navController: NavController,
-    state: BottomSheetState
+    state: BottomSheetState,
+    transitionDirection: Int,
 ) {
     val isPlaying by playerConnection.isPlaying.collectAsState()
     val playbackState by playerConnection.playbackState.collectAsState()
@@ -481,13 +520,17 @@ fun NewMiniPlayerContent(
             mediaMetadata = mediaMetadata,
             position = position,
             duration = duration,
-            isLoading = isLoading
+            isLoading = isLoading,
+            transitionDirection = transitionDirection,
         )
 
         Spacer(modifier = Modifier.width(12.dp))
 
         mediaMetadata?.let {
-            MiniPlayerInfo(mediaMetadata = it)
+            MiniPlayerInfo(
+                mediaMetadata = it,
+                transitionDirection = transitionDirection,
+            )
         } ?: Spacer(Modifier.weight(1f))
 
         if (togetherSessionState !is TogetherSessionState.Idle) {
