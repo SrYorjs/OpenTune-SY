@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.preferredFrameRate
 import androidx.compose.ui.semantics.Role
@@ -179,5 +180,31 @@ fun LiquidGlassCard(
                 }
             ),
         content = content,
+    )
+}
+
+
+/**
+ * Lightweight shared background for the redesigned top-level screens.
+ * A single gradient replaces several stacked radial draw passes, keeping the
+ * interface visually rich without adding continuous blur work while scrolling.
+ */
+@Composable
+fun Modifier.liquidGlassScreenBackground(
+    pureBlack: Boolean = false,
+): Modifier {
+    val primary = MaterialTheme.colorScheme.primary
+    val tertiary = MaterialTheme.colorScheme.tertiary
+    val surface = if (pureBlack) Color.Black else MaterialTheme.colorScheme.background
+
+    return this.background(
+        Brush.verticalGradient(
+            colors = listOf(
+                primary.copy(alpha = if (pureBlack) 0.07f else 0.11f),
+                surface.copy(alpha = 0.98f),
+                tertiary.copy(alpha = if (pureBlack) 0.035f else 0.055f),
+                surface,
+            )
+        )
     )
 }
