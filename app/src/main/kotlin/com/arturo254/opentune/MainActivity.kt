@@ -173,7 +173,6 @@ import com.arturo254.opentune.constants.HasPressedStarKey
 import com.arturo254.opentune.constants.LaunchCountKey
 import com.arturo254.opentune.constants.LiquidGlassNavBarKey
 import com.skydoves.cloudy.rememberSky
-import com.skydoves.cloudy.sky
 import com.arturo254.opentune.constants.LyricsSyncOffsetKey
 import com.arturo254.opentune.constants.MiniPlayerBottomSpacing
 import com.arturo254.opentune.constants.MiniPlayerHeight
@@ -680,13 +679,18 @@ class MainActivity : ComponentActivity() {
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val (previousTab) = rememberSaveable { mutableStateOf("home") }
                     val currentRoute = navBackStackEntry?.destination?.route
-                    val selectedNavigationRoute = when {
+                    val normalizedNavigationRoute = when {
                         currentRoute?.startsWith("search/") == true -> Screens.Search.route
                         else -> currentRoute
                     }
+                    var pendingNavigationRoute by rememberSaveable {
+                        mutableStateOf<String?>(null)
+                    }
 
-                    LaunchedEffect(currentRoute) {
-                        liquidGlassSky.invalidate(durationMillis = 180)
+                    LaunchedEffect(normalizedNavigationRoute) {
+                        if (pendingNavigationRoute == normalizedNavigationRoute) {
+                            pendingNavigationRoute = null
+                        }
                     }
                     val isYearInMusicScreen = currentRoute == "year_in_music"
                     val isAlwaysOnDisplayScreen = currentRoute == "always_on_display"
@@ -737,6 +741,12 @@ class MainActivity : ComponentActivity() {
 
                     var active by rememberSaveable {
                         mutableStateOf(false)
+                    }
+
+                    val selectedNavigationRoute = when {
+                        active -> Screens.Search.route
+                        pendingNavigationRoute != null -> pendingNavigationRoute
+                        else -> normalizedNavigationRoute
                     }
 
                     val onActiveChange: (Boolean) -> Unit = { newActive ->
@@ -1588,13 +1598,6 @@ class MainActivity : ComponentActivity() {
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .nestedScroll(searchBarScrollBehavior.nestedScrollConnection)
-                                        .then(
-                                            if (liquidGlassNavBar) {
-                                                Modifier.sky(liquidGlassSky)
-                                            } else {
-                                                Modifier
-                                            }
-                                        )
                                 ) {
                                     var transitionDirection =
                                         AnimatedContentTransitionScope.SlideDirection.Left
@@ -1847,6 +1850,7 @@ class MainActivity : ComponentActivity() {
                                                         searchBarScrollBehavior.state.resetHeightOffset()
                                                     }
                                                 } else {
+                                                    pendingNavigationRoute = screen.route
                                                     navController.navigate(screen.route) {
                                                         popUpTo(navController.graph.startDestinationId) {
                                                             saveState = true
