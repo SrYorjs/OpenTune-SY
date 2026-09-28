@@ -179,6 +179,15 @@ fun HomeScreen(
                     }
                 }
 
+                if (selectedChip == null) {
+                    item(key = "audius_discovery") {
+                        AudiusTrendingHomeSection(
+                            playerConnection = playerConnection,
+                            modifier = Modifier.animateItem(),
+                        )
+                    }
+                }
+
                 quickPicks?.takeIf { it.isNotEmpty() }?.let { picks ->
             /*
                 item {
