@@ -71,7 +71,7 @@ object CatalogPlaybackResolver {
                 SpotifyMapper.precompute(
                     title = track.title,
                     artist = track.artists.joinToString(" "),
-                    durationMs = track.durationMs,
+                    durationMs = track.durationMs.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt(),
                 )
 
             val (best, score) =
