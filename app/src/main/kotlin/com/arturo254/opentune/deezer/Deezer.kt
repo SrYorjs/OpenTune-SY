@@ -46,6 +46,77 @@ object Deezer {
             }
         }
 
+    suspend fun trackDetails(trackId: String): Result<DeezerTrack> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val request =
+                    Request.Builder()
+                        .url(BASE_URL + "/track/" + trackId)
+                        .header("Accept", "application/json")
+                        .header("User-Agent", "OpenTune-SY/3")
+                        .get()
+                        .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        error("Deezer track HTTP " + response.code)
+                    }
+                    val json = JSONObject(response.body.string())
+                    json.optJSONObject("error")?.let { apiError ->
+                        error(apiError.optString("message", "Deezer track error"))
+                    }
+                    DeezerTrack.fromJson(json) ?: error("Invalid Deezer track")
+                }
+            }
+        }
+
+    suspend fun findAudioFeatures(
+        title: String,
+        artist: String,
+        durationSeconds: Int,
+    ): Result<DeezerTrack> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val candidates =
+                    searchTracks(
+                        query = listOf(title, artist).filter(String::isNotBlank).joinToString(" "),
+                        limit = 8,
+                    ).getOrThrow()
+
+                val best =
+                    candidates.maxByOrNull { candidate ->
+                        val titleScore =
+                            when {
+                                candidate.title.equals(title, ignoreCase = true) -> 0.62
+                                candidate.title.contains(title, ignoreCase = true) ||
+                                    title.contains(candidate.title, ignoreCase = true) -> 0.46
+                                else -> tokenOverlap(candidate.title, title) * 0.40
+                            }
+                        val artistScore =
+                            when {
+                                candidate.artistName.equals(artist, ignoreCase = true) -> 0.25
+                                candidate.artistName.contains(artist, ignoreCase = true) ||
+                                    artist.contains(candidate.artistName, ignoreCase = true) -> 0.19
+                                else -> tokenOverlap(candidate.artistName, artist) * 0.15
+                            }
+                        val durationScore =
+                            if (durationSeconds > 0 && candidate.durationSeconds > 0) {
+                                when (kotlin.math.abs(durationSeconds - candidate.durationSeconds)) {
+                                    in 0..2 -> 0.13
+                                    in 3..5 -> 0.10
+                                    in 6..10 -> 0.05
+                                    else -> 0.0
+                                }
+                            } else {
+                                0.0
+                            }
+                        titleScore + artistScore + durationScore
+                    } ?: error("No Deezer candidate")
+
+                trackDetails(best.id).getOrThrow()
+            }
+        }
+
     suspend fun trendingTracks(limit: Int = 24): Result<List<DeezerTrack>> =
         withContext(Dispatchers.IO) {
             runCatching {
@@ -83,6 +154,25 @@ object Deezer {
         }
     }
 
+    private fun tokenOverlap(
+        leftRaw: String,
+        rightRaw: String,
+    ): Double {
+        fun normalize(value: String): Set<String> =
+            value
+                .lowercase()
+                .replace(Regex("""[^\p{L}\p{N}]+"""), " ")
+                .trim()
+                .split(Regex("""\s+"""))
+                .filter(String::isNotBlank)
+                .toSet()
+
+        val left = normalize(leftRaw)
+        val right = normalize(rightRaw)
+        if (left.isEmpty() || right.isEmpty()) return 0.0
+        return left.intersect(right).size.toDouble() / left.union(right).size.toDouble()
+    }
+
     private fun parseTracks(data: JSONArray): List<DeezerTrack> =
         buildList {
             for (index in 0 until data.length()) {
@@ -103,6 +193,9 @@ data class DeezerTrack(
     val explicit: Boolean,
     val artworkUrl: String?,
     val link: String?,
+    val bpm: Float? = null,
+    val gainDb: Float? = null,
+    val isrc: String? = null,
 ) {
     fun toCatalogReference(): CatalogTrackReference =
         CatalogTrackReference(
@@ -152,6 +245,15 @@ data class DeezerTrack(
                 explicit = json.optBoolean("explicit_lyrics", false),
                 artworkUrl = artwork,
                 link = json.optString("link").takeIf { it.isNotBlank() },
+                bpm =
+                    json.optDouble("bpm", Double.NaN)
+                        .takeIf { !it.isNaN() && it > 0.0 }
+                        ?.toFloat(),
+                gainDb =
+                    json.optDouble("gain", Double.NaN)
+                        .takeIf { !it.isNaN() }
+                        ?.toFloat(),
+                isrc = json.optString("isrc").takeIf { it.isNotBlank() },
             )
         }
     }
