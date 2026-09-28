@@ -26,6 +26,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -2935,7 +2937,22 @@ fun V8PlayerControlsContent(
                 // Título
                 AnimatedContent(
                     targetState = mediaMetadata.title,
-                    transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
+                    transitionSpec = {
+                        (
+                            slideInVertically(
+                                animationSpec = spring(
+                                    dampingRatio = 0.88f,
+                                    stiffness = 520f,
+                                ),
+                                initialOffsetY = { it / 3 },
+                            ) + fadeIn(tween(120))
+                        ) togetherWith (
+                            slideOutVertically(
+                                animationSpec = tween(140),
+                                targetOffsetY = { -it / 4 },
+                            ) + fadeOut(tween(100))
+                        )
+                    },
                     label = "v8_title"
                 ) { title ->
                     Text(
@@ -2957,7 +2974,22 @@ fun V8PlayerControlsContent(
                 }
                 AnimatedContent(
                     targetState = artistsText,
-                    transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
+                    transitionSpec = {
+                        (
+                            slideInVertically(
+                                animationSpec = spring(
+                                    dampingRatio = 0.90f,
+                                    stiffness = 560f,
+                                ),
+                                initialOffsetY = { it / 3 },
+                            ) + fadeIn(tween(130))
+                        ) togetherWith (
+                            slideOutVertically(
+                                animationSpec = tween(140),
+                                targetOffsetY = { -it / 4 },
+                            ) + fadeOut(tween(100))
+                        )
+                    },
                     label = "v8_artist"
                 ) { artists ->
                     Text(
@@ -3399,17 +3431,17 @@ fun GlassTrack(
             .height(trackHeight)
             .clip(shape)
     ) {
-        // Capa base "glass": translúcida + blur + borde tenue
+        // Lightweight optical track. Avoid a live blur here because this layer
+        // redraws continuously while playback/dragging updates the fraction.
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .blur(radius = 6.dp)
-                .background(tint.copy(alpha = 0.16f))
-        )
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .border(width = 0.75.dp, color = tint.copy(alpha = 0.3f), shape = shape)
+                .background(tint.copy(alpha = 0.14f))
+                .border(
+                    width = 0.75.dp,
+                    color = tint.copy(alpha = 0.24f),
+                    shape = shape,
+                )
         )
 
         // Relleno de progreso (vidrio más opaco + highlight superior), sin blur
