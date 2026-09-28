@@ -291,6 +291,7 @@ class MusicService :
         PlayerStreamClient.ANDROID_VR
     )
     private val playbackUrlCache = ConcurrentHashMap<String, Pair<String, Long>>()
+    private val playbackWarmupInFlight = ConcurrentHashMap.newKeySet<String>()
     private val streamRecoveryState = ConcurrentHashMap<String, Pair<Int, Long>>()
     @Volatile
     private var pendingStreamRefreshValidationMediaId: String? = null
@@ -3598,6 +3599,8 @@ class MusicService :
             lyricsPreloadManager?.onSongChanged(currentIndex, queue)
         }
 
+        scheduleNextStreamWarmup()
+
         val joined = togetherSessionState.value as? com.arturo254.opentune.together.TogetherSessionState.Joined
         if (joined?.role is com.arturo254.opentune.together.TogetherRole.Guest &&
             reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK
@@ -4310,6 +4313,56 @@ class MusicService :
                     .setFlags(FLAG_IGNORE_CACHE_ON_ERROR)
             ).setCacheWriteDataSinkFactory(null)
             .setFlags(FLAG_IGNORE_CACHE_ON_ERROR)
+
+    /**
+     * Resolve the next track's stream URL after the current track has settled.
+     * This is limited to unmetered networks so faster skips do not silently
+     * increase cellular data usage.
+     */
+    private fun scheduleNextStreamWarmup() {
+        if (connectivityManager.isActiveNetworkMetered) return
+
+        scope.launch(Dispatchers.IO + SilentHandler) {
+            delay(1_200L)
+
+            if (connectivityManager.isActiveNetworkMetered) return@launch
+
+            val nextIndex = player.currentMediaItemIndex + 1
+            if (nextIndex !in 0 until player.mediaItemCount) return@launch
+
+            val mediaId =
+                player.getMediaItemAt(nextIndex).mediaId
+                    .trim()
+                    .takeIf { it.isNotBlank() }
+                    ?: return@launch
+
+            val now = System.currentTimeMillis()
+            if (playbackUrlCache[mediaId]?.second?.let { it > now } == true) return@launch
+            if (!playbackWarmupInFlight.add(mediaId)) return@launch
+
+            try {
+                val playbackData =
+                    withTimeout(8_000L) {
+                        YTPlayerUtils.playerResponseForPlayback(
+                            mediaId,
+                            audioQuality = audioQuality,
+                            connectivityManager = connectivityManager,
+                            preferredStreamClient = preferredStreamClient,
+                            avoidCodecs = avoidStreamCodecs,
+                        )
+                    }.getOrNull() ?: return@launch
+
+                playbackUrlCache[mediaId] =
+                    playbackData.streamUrl to
+                        (System.currentTimeMillis() + playbackData.streamExpiresInSeconds * 1000L)
+            } catch (_: Exception) {
+                // Warmup is opportunistic; normal playback resolution remains
+                // the source of truth and will report any real error.
+            } finally {
+                playbackWarmupInFlight.remove(mediaId)
+            }
+        }
+    }
 
     private fun createDataSourceFactory(): DataSource.Factory {
         return ResolvingDataSource.Factory(createCacheDataSource()) { dataSpec ->
