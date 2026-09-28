@@ -2791,19 +2791,21 @@ fun V8PlayerBackdrop(
             }
         }
 
-        // One inexpensive cinematic treatment replaces the previous duplicated
-        // artwork + Cloudy 100px blur pipeline.
+        // Apple Music-like lower fade: the artwork stays visible up top while
+        // controls sit on a deep, slightly tinted cinematic floor.
+        val accent = MaterialTheme.colorScheme.primary
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colorStops = arrayOf(
-                            0f to Color.Black.copy(alpha = 0.10f),
-                            0.28f to Color.Transparent,
-                            0.58f to Color.Black.copy(alpha = 0.18f),
-                            0.76f to Color.Black.copy(alpha = 0.50f),
-                            1f to Color.Black.copy(alpha = 0.88f),
+                            0f to Color.Black.copy(alpha = 0.08f),
+                            0.30f to Color.Transparent,
+                            0.52f to Color.Black.copy(alpha = 0.12f),
+                            0.70f to accent.copy(alpha = 0.055f),
+                            0.82f to Color.Black.copy(alpha = 0.62f),
+                            1f to Color.Black.copy(alpha = 0.94f),
                         )
                     )
                 ),
