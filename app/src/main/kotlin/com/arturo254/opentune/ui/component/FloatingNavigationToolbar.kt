@@ -424,6 +424,10 @@ private fun FloatingNavigationToolbarItem(
                 )
             )
             .scale(pressScale)
+            .elasticLiquidPress(
+                interactionSource = interactionSource,
+                enabled = true,
+            )
             .clip(shape)
             .background(selectedContainer)
             .clickable(
