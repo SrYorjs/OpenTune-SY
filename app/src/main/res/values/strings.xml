@@ -32,6 +32,10 @@
     <string name="provider_local">Library</string>
     <string name="provider_youtube">YouTube Music</string>
     <string name="provider_audius">Audius</string>
+    <string name="search_deezer">Search Deezer catalog</string>
+    <string name="provider_deezer">Deezer</string>
+    <string name="deezer_trending">Trending worldwide</string>
+    <string name="global_catalog">Global catalog</string>
     <string name="audius_trending">Trending on Audius</string>
     <string name="open_audio">Open audio</string>
     <!-- History -->
