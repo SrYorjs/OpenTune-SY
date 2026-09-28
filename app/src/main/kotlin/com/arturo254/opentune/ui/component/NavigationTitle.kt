@@ -10,32 +10,26 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -53,41 +47,27 @@ fun NavigationTitle(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
         modifier = modifier
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
             .clickable(enabled = onClick != null) {
                 onClick?.invoke()
             }
-            .padding(horizontal = 16.dp, vertical = 14.dp)
+            .padding(horizontal = 20.dp, vertical = 18.dp),
     ) {
         thumbnail?.invoke()
 
-        Box(
-            modifier = Modifier
-                .width(4.dp)
-                .height(30.dp)
-                .background(
-                    brush = Brush.verticalGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.tertiary,
-                        )
-                    ),
-                    shape = RoundedCornerShape(50),
-                )
-        )
-
         Column(
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.weight(1f)
+            verticalArrangement = Arrangement.spacedBy(3.dp),
+            modifier = Modifier.weight(1f),
         ) {
             label?.let { labelText ->
                 Text(
                     text = labelText,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                 )
@@ -97,22 +77,24 @@ fun NavigationTitle(
                 targetState = title,
                 transitionSpec = {
                     (
-                        slideInHorizontally(
+                        slideInVertically(
                             animationSpec = spring(
                                 dampingRatio = 0.90f,
-                                stiffness = 600f,
+                                stiffness = 620f,
                             ),
-                            initialOffsetX = { it / 8 },
+                            initialOffsetY = { it / 4 },
                         ) + fadeIn()
                     ) togetherWith (
-                        slideOutHorizontally(targetOffsetX = { -it / 10 }) + fadeOut()
+                        slideOutVertically(
+                            targetOffsetY = { -it / 5 },
+                        ) + fadeOut()
                     )
                 },
                 label = "navigationTitle",
             ) { animatedTitle ->
                 Text(
                     text = animatedTitle,
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     overflow = TextOverflow.Ellipsis,
@@ -134,7 +116,7 @@ fun NavigationTitle(
         if (onClick != null) {
             LiquidGlassIconButton(
                 onClick = onClick,
-                size = 40.dp,
+                size = 42.dp,
             ) {
                 Icon(
                     painter = painterResource(R.drawable.arrow_forward),
