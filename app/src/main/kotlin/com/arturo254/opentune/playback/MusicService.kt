@@ -81,6 +81,7 @@ import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionToken
 import com.google.common.util.concurrent.MoreExecutors
+import com.arturo254.opentune.audius.Audius
 import com.arturo254.opentune.innertube.YouTube
 import com.arturo254.opentune.innertube.models.SongItem
 import com.arturo254.opentune.lyrics.LyricsPreloadManager
@@ -4334,6 +4335,8 @@ class MusicService :
                     .takeIf { it.isNotBlank() }
                     ?: return@launch
 
+            if (Audius.isMediaId(mediaId)) return@launch
+
             val now = System.currentTimeMillis()
             if (playbackUrlCache[mediaId]?.second?.let { it > now } == true) return@launch
             if (!playbackWarmupInFlight.add(mediaId)) return@launch
@@ -4365,6 +4368,12 @@ class MusicService :
     private fun createDataSourceFactory(): DataSource.Factory {
         return ResolvingDataSource.Factory(createCacheDataSource()) { dataSpec ->
             val mediaId = dataSpec.key ?: error("No media id")
+
+            // Audius tracks have a deterministic direct stream endpoint and do
+            // not need YouTube player-response resolution at all.
+            if (Audius.isMediaId(mediaId)) {
+                return@Factory dataSpec.withUri(Audius.streamUrl(mediaId).toUri())
+            }
 
             // Hot path for tracks whose stream URL was already resolved. Keep the
             // mediaId key unchanged so CacheDataSource can still serve local bytes
