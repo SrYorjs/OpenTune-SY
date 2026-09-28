@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -159,21 +160,20 @@ fun LiquidGlassCard(
             .clip(shape)
             .background(
                 if (glass) {
-                    Color.Black.copy(alpha = if (pureBlack) 0.07f else 0.02f)
+                    Color.Black.copy(alpha = if (pureBlack) 0.085f else 0.045f)
                 } else {
                     MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.90f)
                 }
             )
             .then(
                 if (glass) {
-                    Modifier.liquidGlassSurface(
+                    // Cards can appear many times in a scrolling grid/list. Keep
+                    // them translucent and outlined instead of launching a
+                    // backdrop shader for every visible cell.
+                    Modifier.border(
+                        width = 1.dp,
+                        color = Color.White.copy(alpha = 0.11f),
                         shape = shape,
-                        pureBlack = pureBlack,
-                        blurRadius = 4,
-                        refraction = 0.04f,
-                        curve = 0.09f,
-                        dispersion = 0.0012f,
-                        edge = 0f,
                     )
                 } else {
                     Modifier
