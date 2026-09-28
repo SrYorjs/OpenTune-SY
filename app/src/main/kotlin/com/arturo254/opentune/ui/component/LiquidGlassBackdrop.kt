@@ -1,15 +1,23 @@
 package com.arturo254.opentune.ui.component
 
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
@@ -19,7 +27,9 @@ import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
+import com.skydoves.cloudy.LiquidGlassDefaults
 import com.skydoves.cloudy.Sky
+import com.skydoves.cloudy.liquidGlass
 
 /**
  * The app now uses Kyant0/AndroidLiquidGlass' Backdrop engine for interactive
@@ -60,9 +70,44 @@ fun Modifier.liquidGlassSurface(
         }
 
     if (backdrop == null) {
+        var surfaceSize by remember { mutableStateOf(Size.Zero) }
+        val center =
+            remember(surfaceSize) {
+                Offset(
+                    x = surfaceSize.width * 0.5f,
+                    y = surfaceSize.height * 0.5f,
+                )
+            }
+        val useSafeShader =
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                surfaceSize != Size.Zero
+
         return this
+            .onSizeChanged { size ->
+                val next = Size(size.width.toFloat(), size.height.toFloat())
+                if (next != surfaceSize) surfaceSize = next
+            }
             .clip(shape)
             .background(fallbackSurface)
+            .then(
+                if (useSafeShader) {
+                    Modifier.liquidGlass(
+                        lensCenter = center,
+                        lensSize = surfaceSize,
+                        cornerRadius = 30f,
+                        refraction = refraction.coerceIn(0.025f, 0.085f),
+                        curve = curve.coerceIn(0.06f, 0.18f),
+                        dispersion = dispersion.coerceIn(0f, 0.004f),
+                        saturation = 1.015f,
+                        contrast = 1.008f,
+                        tint = Color.Transparent,
+                        edge = edge.coerceIn(0f, 0.012f),
+                        glow = LiquidGlassDefaults.NoGlow,
+                    )
+                } else {
+                    Modifier
+                }
+            )
             .border(0.8.dp, borderColor, shape)
     }
 
