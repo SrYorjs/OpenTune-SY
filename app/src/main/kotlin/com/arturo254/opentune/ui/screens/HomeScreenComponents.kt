@@ -89,6 +89,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import kotlinx.coroutines.CoroutineScope
 import com.arturo254.opentune.R
+import com.arturo254.opentune.audius.AudiusTrack
 import com.arturo254.opentune.constants.GridThumbnailHeight
 import com.arturo254.opentune.constants.ListItemHeight
 import com.arturo254.opentune.constants.ListThumbnailSize
@@ -142,7 +143,145 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.arturo254.opentune.viewmodels.AudiusSearchViewModel
 import com.arturo254.opentune.viewmodels.HomeViewModel
+
+@Composable
+fun AudiusTrendingHomeSection(
+    playerConnection: PlayerConnection,
+    modifier: Modifier = Modifier,
+    viewModel: AudiusSearchViewModel = hiltViewModel(),
+) {
+    val state by viewModel.state.collectAsState()
+    val mediaMetadata by playerConnection.mediaMetadata.collectAsState()
+    val isPlaying by playerConnection.isPlaying.collectAsState()
+    val tracks = state.tracks.take(12)
+
+    if (tracks.isEmpty()) return
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        NavigationTitle(
+            label = stringResource(R.string.open_audio),
+            title = stringResource(R.string.audius_trending),
+        )
+
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 18.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            items(
+                items = tracks,
+                key = { "audius_home_" + it.id },
+            ) { track ->
+                val metadata = track.toMediaMetadata()
+                val active = mediaMetadata?.id == metadata.id
+                val interaction = remember { MutableInteractionSource() }
+                val pressed by interaction.collectIsPressedAsState()
+                val scale by animateFloatAsState(
+                    targetValue = if (pressed) 0.96f else 1f,
+                    animationSpec = spring(
+                        dampingRatio = 0.84f,
+                        stiffness = 620f,
+                    ),
+                    label = "audiusHomeCard",
+                )
+                val shape = RoundedCornerShape(24.dp)
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .width(154.dp)
+                        .graphicsLayer {
+                            scaleX = scale
+                            scaleY = scale
+                        }
+                        .clip(shape)
+                        .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.56f))
+                        .border(
+                            0.75.dp,
+                            if (active) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
+                            } else {
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f)
+                            },
+                            shape,
+                        )
+                        .combinedClickable(
+                            interactionSource = interaction,
+                            onClick = {
+                                if (active) {
+                                    playerConnection.player.togglePlayPause()
+                                } else {
+                                    val items = tracks.map { item ->
+                                        item.toMediaMetadata().toMediaItem()
+                                    }
+                                    playerConnection.playQueue(
+                                        ListQueue(
+                                            title = "Audius",
+                                            items = items,
+                                            startIndex = tracks.indexOfFirst { it.id == track.id },
+                                        )
+                                    )
+                                }
+                            },
+                            onLongClick = {},
+                        )
+                        .padding(10.dp),
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(134.dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    ) {
+                        AsyncImage(
+                            model = track.artworkUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+
+                        if (active) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color.Black.copy(alpha = 0.26f))
+                            )
+                            Icon(
+                                painter = painterResource(
+                                    if (isPlaying) R.drawable.pause else R.drawable.play
+                                ),
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(32.dp),
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = track.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        color =
+                            if (active) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = track.artistName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
