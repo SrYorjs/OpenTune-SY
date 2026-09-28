@@ -72,21 +72,18 @@ fun V8DeviceSelector(
             activeDevice?.type == AudioDeviceInfo.TYPE_BLUETOOTH_SCO ||
             activeDevice?.type == AudioDeviceInfo.TYPE_BLE_HEADSET
 
-    // Botón AirPlay
-    Surface(
+    LiquidGlassIconButton(
         onClick = { showDeviceSheet = true },
-        shape = CircleShape,
-        color = if (isBluetooth) textBackgroundColor.copy(alpha = 0.15f) else Color.Transparent,
-        modifier = modifier.size(36.dp)
+        modifier = modifier,
+        size = 44.dp,
+        selected = isBluetooth,
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-            Icon(
-                painter = painterResource(deviceIcon),
-                contentDescription = "AirPlay",
-                tint = textBackgroundColor.copy(alpha = if (isBluetooth) 1f else 0.7f),
-                modifier = Modifier.size(22.dp)
-            )
-        }
+        Icon(
+            painter = painterResource(deviceIcon),
+            contentDescription = "Audio output",
+            tint = textBackgroundColor.copy(alpha = if (isBluetooth) 1f else 0.90f),
+            modifier = Modifier.size(21.dp),
+        )
     }
 
     // BottomSheet con dispositivos disponibles
