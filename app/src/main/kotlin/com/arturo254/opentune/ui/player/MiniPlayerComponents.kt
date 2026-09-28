@@ -642,7 +642,7 @@ private fun MiniPlayerPlayPauseButton(
 
     val liquidGlass = LocalEnableLiquidGlass.current
     val containerColor = if (liquidGlass) {
-        Color.White.copy(alpha = 0.11f)
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
     } else {
         MaterialTheme.colorScheme.primary
     }
@@ -661,7 +661,11 @@ private fun MiniPlayerPlayPauseButton(
             .background(containerColor)
             .border(
                 width = 1.dp,
-                color = Color.White.copy(alpha = if (liquidGlass) 0.12f else 0.0f),
+                color = if (liquidGlass) {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+    } else {
+        Color.Transparent
+    },
                 shape = CircleShape,
             )
             .clickable(
