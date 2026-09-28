@@ -211,7 +211,7 @@ fun BottomSheetPlayer(
 
     val playerDesignStyle by rememberEnumPreference(
         key = PlayerDesignStyleKey,
-        defaultValue = PlayerDesignStyle.V8
+        defaultValue = PlayerDesignStyle.V4
     )
 
     val playerBackground by rememberEnumPreference(
