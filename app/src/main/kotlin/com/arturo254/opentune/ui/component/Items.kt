@@ -25,6 +25,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -149,30 +150,69 @@ inline fun ListItem(
     trailingContent: @Composable RowScope.() -> Unit = {},
     isActive: Boolean = false
 ) {
+    val shape = RoundedCornerShape(20.dp)
+    val containerColor =
+        if (isActive) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.56f)
+        }
+    val borderColor =
+        if (isActive) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.24f)
+        } else {
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f)
+        }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
-            .height(ListItemHeight)
-            .padding(horizontal = 8.dp)
-            .then(
-                if (isActive) Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer) else Modifier
+            .padding(horizontal = 10.dp, vertical = 3.dp)
+            .height(ListItemHeight - 6.dp)
+            .clip(shape)
+            .background(containerColor)
+            .border(
+                width = 0.75.dp,
+                color = borderColor,
+                shape = shape,
             )
+            .padding(horizontal = 8.dp),
     ) {
-        Box(Modifier.padding(6.dp), contentAlignment = Alignment.Center) { thumbnailContent() }
-        Column(Modifier
-            .weight(1f)
-            .padding(horizontal = 6.dp)) {
+        Box(
+            modifier = Modifier.padding(end = 10.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            thumbnailContent()
+        }
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier.weight(1f),
+        ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1, overflow = TextOverflow.Ellipsis
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color =
+                    if (isActive) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-            if (subtitle != null) Row(verticalAlignment = Alignment.CenterVertically) { subtitle() }
+
+            if (subtitle != null) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    subtitle()
+                }
+            }
         }
-        trailingContent()
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            content = trailingContent,
+        )
     }
 }
 
@@ -209,36 +249,60 @@ fun GridItem(
     thumbnailRatio: Float = 1f,
     fillMaxWidth: Boolean = false,
 ) {
+    val shape = RoundedCornerShape(24.dp)
+
     Column(
-        modifier = if (fillMaxWidth) {
-            modifier
-                .padding(12.dp)
-                .fillMaxWidth()
-        } else {
-            modifier
-                .padding(12.dp)
-                .width(GridThumbnailHeight * thumbnailRatio)
-        }
+        modifier =
+            if (fillMaxWidth) {
+                modifier
+                    .padding(horizontal = 8.dp, vertical = 8.dp)
+                    .fillMaxWidth()
+                    .clip(shape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.44f))
+                    .border(
+                        0.75.dp,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f),
+                        shape,
+                    )
+                    .padding(10.dp)
+            } else {
+                modifier
+                    .padding(horizontal = 8.dp, vertical = 8.dp)
+                    .width(GridThumbnailHeight * thumbnailRatio + 20.dp)
+                    .clip(shape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.44f))
+                    .border(
+                        0.75.dp,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f),
+                        shape,
+                    )
+                    .padding(10.dp)
+            },
+        verticalArrangement = Arrangement.spacedBy(7.dp),
     ) {
         BoxWithConstraints(
             contentAlignment = Alignment.Center,
-            modifier = if (fillMaxWidth) {
-                Modifier.fillMaxWidth()
-            } else {
-                Modifier.height(GridThumbnailHeight)
-            }
-                .aspectRatio(thumbnailRatio)
+            modifier =
+                if (fillMaxWidth) {
+                    Modifier.fillMaxWidth()
+                } else {
+                    Modifier.height(GridThumbnailHeight)
+                }
+                    .aspectRatio(thumbnailRatio)
+                    .clip(
+                        if (thumbnailRatio == 1f) RoundedCornerShape(18.dp)
+                        else RoundedCornerShape(16.dp)
+                    ),
         ) {
             thumbnailContent()
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
-
         title()
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             badges()
-
             subtitle()
         }
     }
@@ -1234,9 +1298,7 @@ fun OverlayPlaylistListItem(
                     model = backgroundUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().let {
-                        if (disableBlur) it else it.blur(8.dp)
-                    }
+                    modifier = Modifier.fillMaxSize()
                 )
                 Box(modifier = Modifier
                     .fillMaxSize()
