@@ -5,36 +5,30 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
-import com.kyant.backdrop.Backdrop
-import com.kyant.backdrop.drawBackdrop
-import com.kyant.backdrop.effects.blur
-import com.kyant.backdrop.effects.lens
-import com.kyant.backdrop.effects.vibrancy
+import com.skydoves.cloudy.LiquidGlassDefaults
 import com.skydoves.cloudy.Sky
+import com.skydoves.cloudy.liquidGlass
 
 val LocalSky = androidx.compose.runtime.staticCompositionLocalOf<Sky?> { null }
-
 val LocalEnableLiquidGlass = androidx.compose.runtime.staticCompositionLocalOf { false }
 
 /**
- * Kyant Backdrop source shared by the floating navigation bar and mini-player.
+ * Stable transparent glass surface used by the app-wide redesign.
  *
- * It is intentionally separated from Cloudy's Sky: the navigation/player layer
- * uses a single low-cost backdrop pass, while other existing glass surfaces can
- * keep using Cloudy without nesting two blur pipelines on top of each other.
- */
-val LocalLiquidBackdrop = androidx.compose.runtime.staticCompositionLocalOf<Backdrop?> { null }
-
-/**
- * Shared transparent glass material for the two floating bars.
- *
- * Android 12+ uses Kyant Backdrop's real backdrop sampling with a very small
- * blur and lens. Older devices keep the same capsule/border with a cheap
- * translucent fallback so Liquid Glass does not become a performance penalty.
+ * This intentionally uses one lightweight shader pass only on Android 13+.
+ * Older devices receive the same transparent capsule/border without a runtime
+ * shader, avoiding launch/runtime failures on unsupported graphics stacks.
  */
 @Composable
 fun Modifier.liquidGlassSurface(
@@ -47,61 +41,60 @@ fun Modifier.liquidGlassSurface(
     edge: Float = 0f,
 ): Modifier {
     val enabled = LocalEnableLiquidGlass.current
-    val backdrop = LocalLiquidBackdrop.current
+    var surfaceSize by remember { mutableStateOf(Size.Zero) }
 
     if (!enabled) return this
 
-    val fallbackTint = Color.Black.copy(
-        alpha = if (pureBlack) 0.075f else 0.025f
+    val center = remember(surfaceSize) {
+        Offset(
+            x = surfaceSize.width * 0.5f,
+            y = surfaceSize.height * 0.5f,
+        )
+    }
+
+    val tintStrength = blurRadius.coerceIn(0, 12) / 12f
+    val baseTint = Color.Black.copy(
+        alpha = if (pureBlack) {
+            0.075f + (0.02f * tintStrength)
+        } else {
+            0.025f + (0.015f * tintStrength)
+        }
     )
-
-    // Keep the effect intentionally lighter than the catalog sample. The user
-    // asked for a transparent material, and a 1–2dp blur avoids the frosted
-    // white look while preserving the refraction/lens response.
-    val blurDp = (blurRadius / 2f).coerceIn(1f, 2f).dp
-    val lensRadius = (8f + curve.coerceIn(0f, 0.30f) * 20f).dp
-    val lensDepth = (12f + refraction.coerceIn(0f, 0.15f) * 80f).dp
-    val borderAlpha =
-        (if (pureBlack) 0.08f else 0.10f) +
-            dispersion.coerceIn(0f, 0.01f) * 2f +
-            edge.coerceIn(0f, 0.02f)
-
-    val useBackdrop =
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            backdrop != null
+    val useShader = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 
     return this
+        .onSizeChanged { size ->
+            val nextSize = Size(size.width.toFloat(), size.height.toFloat())
+            if (nextSize != surfaceSize) {
+                surfaceSize = nextSize
+            }
+        }
         .clip(shape)
+        .background(baseTint)
         .then(
-            if (useBackdrop) {
-                Modifier.drawBackdrop(
-                    backdrop = backdrop!!,
-                    shape = { shape },
-                    effects = {
-                        vibrancy()
-                        blur(blurDp.toPx())
-                        lens(
-                            lensRadius.toPx(),
-                            lensDepth.toPx(),
-                        )
-                    },
-                    // The default highlight/shadow is beautiful in the catalog,
-                    // but on these moving bars it can create a persistent bright
-                    // point. We keep only the optical material itself.
-                    highlight = null,
-                    shadow = null,
-                    innerShadow = null,
-                    onDrawSurface = {
-                        drawRect(fallbackTint)
-                    },
+            if (useShader && surfaceSize != Size.Zero) {
+                Modifier.liquidGlass(
+                    lensCenter = center,
+                    lensSize = surfaceSize,
+                    cornerRadius = 30f,
+                    refraction = refraction,
+                    curve = curve,
+                    dispersion = dispersion,
+                    saturation = 1.012f,
+                    contrast = 1.006f,
+                    tint = Color.Transparent,
+                    edge = edge.coerceIn(0f, 0.012f),
+                    glow = LiquidGlassDefaults.NoGlow,
                 )
             } else {
-                Modifier.background(fallbackTint)
+                Modifier
             }
         )
         .border(
             width = 1.dp,
-            color = Color.White.copy(alpha = borderAlpha.coerceAtMost(0.13f)),
+            color = Color.White.copy(
+                alpha = if (pureBlack) 0.08f else 0.10f
+            ),
             shape = shape,
         )
 }
