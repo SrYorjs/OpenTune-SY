@@ -681,7 +681,6 @@ class MainActivity : ComponentActivity() {
                     val allLocalItems by homeViewModel.allLocalItems.collectAsState()
                     val allYtItems by homeViewModel.allYtItems.collectAsState()
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
-                    val (previousTab) = rememberSaveable { mutableStateOf("home") }
                     val currentRoute = navBackStackEntry?.destination?.route
                     val normalizedNavigationRoute = when {
                         currentRoute?.startsWith("search/") == true -> Screens.Search.route
@@ -1604,30 +1603,6 @@ class MainActivity : ComponentActivity() {
                                         .fillMaxSize()
                                         .nestedScroll(searchBarScrollBehavior.nestedScrollConnection)
                                 ) {
-                                    var transitionDirection =
-                                        AnimatedContentTransitionScope.SlideDirection.Left
-
-                                    if (navigationItems.fastAny { it.route == navBackStackEntry?.destination?.route }) {
-                                        if (navigationItems.fastAny { it.route == previousTab }) {
-                                            val curIndex = navigationItems.indexOf(
-                                                navigationItems.fastFirstOrNull {
-                                                    it.route == navBackStackEntry?.destination?.route
-                                                }
-                                            )
-
-                                            val prevIndex = navigationItems.indexOf(
-                                                navigationItems.fastFirstOrNull {
-                                                    it.route == previousTab
-                                                }
-                                            )
-
-                                            if (prevIndex > curIndex)
-                                                AnimatedContentTransitionScope.SlideDirection.Right.also {
-                                                    transitionDirection = it
-                                                }
-                                        }
-                                    }
-
                                     NavHost(
                                         navController = navController,
                                         startDestination = when (tabOpenedFromShortcut ?: defaultOpenTab) {
@@ -1640,8 +1615,21 @@ class MainActivity : ComponentActivity() {
                                                 initialState.destination.route in topLevelScreens &&
                                                 targetState.destination.route in topLevelScreens
                                             ) {
-                                                fadeIn(
-                                                    animationSpec = tween(250)
+                                                val initialIndex = navigationItems.indexOfFirst {
+                                                    it.route == initialState.destination.route
+                                                }
+                                                val targetIndex = navigationItems.indexOfFirst {
+                                                    it.route == targetState.destination.route
+                                                }
+                                                val direction = if (targetIndex >= initialIndex) 1 else -1
+                                                slideInHorizontally(
+                                                    animationSpec = spring(
+                                                        dampingRatio = 0.90f,
+                                                        stiffness = 560f,
+                                                    ),
+                                                    initialOffsetX = { width -> direction * width / 7 },
+                                                ) + fadeIn(
+                                                    animationSpec = tween(140)
                                                 )
                                             } else {
                                                 fadeIn(
@@ -1660,8 +1648,18 @@ class MainActivity : ComponentActivity() {
                                                 initialState.destination.route in topLevelScreens &&
                                                 targetState.destination.route in topLevelScreens
                                             ) {
-                                                fadeOut(
-                                                    animationSpec = tween(200)
+                                                val initialIndex = navigationItems.indexOfFirst {
+                                                    it.route == initialState.destination.route
+                                                }
+                                                val targetIndex = navigationItems.indexOfFirst {
+                                                    it.route == targetState.destination.route
+                                                }
+                                                val direction = if (targetIndex >= initialIndex) 1 else -1
+                                                slideOutHorizontally(
+                                                    animationSpec = tween(150),
+                                                    targetOffsetX = { width -> -direction * width / 9 },
+                                                ) + fadeOut(
+                                                    animationSpec = tween(120)
                                                 )
                                             } else {
                                                 fadeOut(
@@ -1678,8 +1676,21 @@ class MainActivity : ComponentActivity() {
                                                         initialState.destination.route?.startsWith("search/") == true) &&
                                                 targetState.destination.route in topLevelScreens
                                             ) {
-                                                fadeIn(
-                                                    animationSpec = tween(250)
+                                                val initialIndex = navigationItems.indexOfFirst {
+                                                    it.route == initialState.destination.route
+                                                }
+                                                val targetIndex = navigationItems.indexOfFirst {
+                                                    it.route == targetState.destination.route
+                                                }
+                                                val direction = if (targetIndex >= initialIndex) 1 else -1
+                                                slideInHorizontally(
+                                                    animationSpec = spring(
+                                                        dampingRatio = 0.90f,
+                                                        stiffness = 560f,
+                                                    ),
+                                                    initialOffsetX = { width -> direction * width / 7 },
+                                                ) + fadeIn(
+                                                    animationSpec = tween(140)
                                                 )
                                             } else {
                                                 fadeIn(
@@ -1699,8 +1710,18 @@ class MainActivity : ComponentActivity() {
                                                         initialState.destination.route?.startsWith("search/") == true) &&
                                                 targetState.destination.route in topLevelScreens
                                             ) {
-                                                fadeOut(
-                                                    animationSpec = tween(200)
+                                                val initialIndex = navigationItems.indexOfFirst {
+                                                    it.route == initialState.destination.route
+                                                }
+                                                val targetIndex = navigationItems.indexOfFirst {
+                                                    it.route == targetState.destination.route
+                                                }
+                                                val direction = if (targetIndex >= initialIndex) 1 else -1
+                                                slideOutHorizontally(
+                                                    animationSpec = tween(150),
+                                                    targetOffsetX = { width -> -direction * width / 9 },
+                                                ) + fadeOut(
+                                                    animationSpec = tween(120)
                                                 )
                                             } else {
                                                 fadeOut(
