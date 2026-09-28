@@ -1841,7 +1841,7 @@ class MainActivity : ComponentActivity() {
                                             onItemClick = { screen, isSelected ->
                                                 if (screen.route == Screens.Search.route) {
                                                     onActiveChange(true)
-                                                } else if (isSelected) {
+                                                } else if (isSelected && !active) {
                                                     navController.currentBackStackEntry?.savedStateHandle?.set(
                                                         "scrollToTop",
                                                         true
@@ -1850,6 +1850,9 @@ class MainActivity : ComponentActivity() {
                                                         searchBarScrollBehavior.state.resetHeightOffset()
                                                     }
                                                 } else {
+                                                    if (active) {
+                                                        onActiveChange(false)
+                                                    }
                                                     pendingNavigationRoute = screen.route
                                                     navController.navigate(screen.route) {
                                                         popUpTo(navController.graph.startDestinationId) {
