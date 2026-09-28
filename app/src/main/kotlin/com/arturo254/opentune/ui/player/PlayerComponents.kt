@@ -3193,103 +3193,79 @@ fun V8PlaybackControls(
     canSkipNext: Boolean,
     textBackgroundColor: Color,
     playerConnection: PlayerConnection,
-    shuffleModeEnabled: Boolean
+    shuffleModeEnabled: Boolean,
 ) {
-    LiquidGlassControlCluster(
-        horizontalSpacing = 14.dp,
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(18.dp),
+        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(52.dp)
-                .clip(CircleShape)
-                .clickable(enabled = canSkipPrevious) {
-                    playerConnection.seekToPrevious()
-                }
+        LiquidGlassIconButton(
+            onClick = playerConnection::seekToPrevious,
+            enabled = canSkipPrevious,
+            size = 58.dp,
         ) {
             Icon(
                 painter = painterResource(R.drawable.skip_previous),
                 contentDescription = null,
-                tint = textBackgroundColor.copy(alpha = if (canSkipPrevious) 0.92f else 0.34f),
-                modifier = Modifier.size(32.dp)
+                tint = textBackgroundColor.copy(alpha = if (canSkipPrevious) 0.96f else 0.34f),
+                modifier = Modifier.size(30.dp),
             )
         }
 
-        val playInteraction = remember { MutableInteractionSource() }
-        val playPressed by playInteraction.collectIsPressedAsState()
-        val playScale by animateFloatAsState(
-            targetValue = if (playPressed) 0.90f else 1f,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMedium,
-            ),
-            label = "v8PlayPress",
-        )
-
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(64.dp)
-                .graphicsLayer {
-                    scaleX = playScale
-                    scaleY = playScale
+        LiquidGlassIconButton(
+            onClick = {
+                if (playbackState == Player.STATE_ENDED) {
+                    playerConnection.player.seekTo(0, 0)
+                    playerConnection.player.playWhenReady = true
+                } else {
+                    playerConnection.player.togglePlayPause()
                 }
-                .clip(CircleShape)
-                .background(textBackgroundColor.copy(alpha = 0.13f))
-                .clickable(
-                    interactionSource = playInteraction,
-                    indication = null,
-                ) {
-                    if (playbackState == Player.STATE_ENDED) {
-                        playerConnection.player.seekTo(0, 0)
-                        playerConnection.player.playWhenReady = true
-                    } else {
-                        playerConnection.player.togglePlayPause()
-                    }
-                }
+            },
+            enabled = !isLoading,
+            selected = isPlaying,
+            size = 72.dp,
         ) {
             if (isLoading) {
                 CircularWavyProgressIndicator(
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(31.dp),
                     color = textBackgroundColor,
                 )
             } else {
                 AnimatedContent(
                     targetState = isPlaying,
-                    transitionSpec = { fadeIn(tween(90)) togetherWith fadeOut(tween(70)) },
+                    transitionSpec = {
+                        fadeIn(tween(110)) togetherWith fadeOut(tween(80))
+                    },
                     label = "v8PlayPause",
                 ) { playing ->
                     Icon(
-                        painter = painterResource(
-                            when {
-                                playbackState == Player.STATE_ENDED -> R.drawable.replay
-                                playing -> R.drawable.pause
-                                else -> R.drawable.play
-                            }
-                        ),
+                        painter =
+                            painterResource(
+                                when {
+                                    playbackState == Player.STATE_ENDED -> R.drawable.replay
+                                    playing -> R.drawable.pause
+                                    else -> R.drawable.play
+                                }
+                            ),
                         contentDescription = null,
                         tint = textBackgroundColor,
-                        modifier = Modifier.size(42.dp)
+                        modifier = Modifier.size(38.dp),
                     )
                 }
             }
         }
 
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(52.dp)
-                .clip(CircleShape)
-                .clickable(enabled = canSkipNext) {
-                    playerConnection.seekToNext()
-                }
+        LiquidGlassIconButton(
+            onClick = playerConnection::seekToNext,
+            enabled = canSkipNext,
+            size = 58.dp,
         ) {
             Icon(
                 painter = painterResource(R.drawable.skip_next),
                 contentDescription = null,
-                tint = textBackgroundColor.copy(alpha = if (canSkipNext) 0.92f else 0.34f),
-                modifier = Modifier.size(32.dp)
+                tint = textBackgroundColor.copy(alpha = if (canSkipNext) 0.96f else 0.34f),
+                modifier = Modifier.size(30.dp),
             )
         }
     }
@@ -3306,52 +3282,38 @@ fun QueueCollapsedContentV8(
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = PlayerHorizontalPadding)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = PlayerHorizontalPadding),
     ) {
-        // Lyrics (izquierda)
-        Surface(
+        LiquidGlassIconButton(
             onClick = onShowLyrics,
-            shape = CircleShape,
-            color = Color.Transparent,
-            modifier = Modifier.size(36.dp)
+            size = 44.dp,
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Icon(
-                    painter = painterResource(R.drawable.lyrics_apple),
-                    contentDescription = "Lyrics",
-                    tint = textBackgroundColor.copy(alpha = 0.7f),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            V8DeviceSelector(
-                textBackgroundColor = textBackgroundColor,
-                modifier = Modifier.size(36.dp)
+            Icon(
+                painter = painterResource(R.drawable.lyrics_apple),
+                contentDescription = "Lyrics",
+                tint = textBackgroundColor.copy(alpha = 0.90f),
+                modifier = Modifier.size(20.dp),
             )
         }
 
-        // Queue (derecha)
-        Surface(
+        V8DeviceSelector(
+            textBackgroundColor = textBackgroundColor,
+            modifier = Modifier.size(44.dp),
+        )
+
+        LiquidGlassIconButton(
             onClick = onExpandQueue,
-            shape = CircleShape,
-            color = Color.Transparent,
-            modifier = Modifier.size(36.dp)
+            size = 44.dp,
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Icon(
-                    painter = painterResource(R.drawable.queue_music),
-                    contentDescription = "Queue",
-                    tint = textBackgroundColor.copy(alpha = 0.7f),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            Icon(
+                painter = painterResource(R.drawable.queue_music),
+                contentDescription = "Queue",
+                tint = textBackgroundColor.copy(alpha = 0.90f),
+                modifier = Modifier.size(20.dp),
+            )
         }
     }
 }
