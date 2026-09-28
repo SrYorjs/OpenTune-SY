@@ -8,6 +8,13 @@
 
 package com.arturo254.opentune.ui.screens.library
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -220,31 +227,51 @@ fun LibraryScreen(navController: NavController) {
         ) {}
         }
 
-        when (filterType) {
-            LibraryFilter.LIBRARY -> LibraryMixScreen(
-                navController,
-                filterContent,
-                onTabSelected = { filterType = it }
-            )
-            LibraryFilter.PLAYLISTS -> LibraryPlaylistsScreen(navController, filterContent)
-            LibraryFilter.SONGS -> LibrarySongsScreen(
-                navController,
-                { filterType = LibraryFilter.LIBRARY }
-            )
-            LibraryFilter.ALBUMS -> LibraryAlbumsScreen(
-                navController,
-                { filterType = LibraryFilter.LIBRARY }
-            )
-            LibraryFilter.ARTISTS -> LibraryArtistsScreen(
-                navController,
-                { filterType = LibraryFilter.LIBRARY }
-            )
-
-            LibraryFilter.SPOTIFY -> {
-                LibrarySpotifyPlaylistsScreen(
-                    navController = navController,
-                    filterContent = filterContent
+        AnimatedContent(
+            targetState = filterType,
+            transitionSpec = {
+                (
+                    slideInHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = 0.88f,
+                            stiffness = 520f,
+                        ),
+                        initialOffsetX = { width -> width / 7 },
+                    ) + fadeIn()
+                ) togetherWith (
+                    slideOutHorizontally(
+                        targetOffsetX = { width -> -width / 9 },
+                    ) + fadeOut()
                 )
+            },
+            label = "libraryLiquidTransition",
+        ) { activeFilter ->
+            when (activeFilter) {
+                LibraryFilter.LIBRARY -> LibraryMixScreen(
+                    navController,
+                    filterContent,
+                    onTabSelected = { filterType = it }
+                )
+                LibraryFilter.PLAYLISTS -> LibraryPlaylistsScreen(navController, filterContent)
+                LibraryFilter.SONGS -> LibrarySongsScreen(
+                    navController,
+                    { filterType = LibraryFilter.LIBRARY }
+                )
+                LibraryFilter.ALBUMS -> LibraryAlbumsScreen(
+                    navController,
+                    { filterType = LibraryFilter.LIBRARY }
+                )
+                LibraryFilter.ARTISTS -> LibraryArtistsScreen(
+                    navController,
+                    { filterType = LibraryFilter.LIBRARY }
+                )
+
+                LibraryFilter.SPOTIFY -> {
+                    LibrarySpotifyPlaylistsScreen(
+                        navController = navController,
+                        filterContent = filterContent
+                    )
+                }
             }
         }
     }
