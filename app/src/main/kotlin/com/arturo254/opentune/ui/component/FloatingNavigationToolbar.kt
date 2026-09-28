@@ -36,7 +36,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
@@ -89,18 +89,19 @@ fun FloatingNavigationToolbar(
     // the hide/show animation. The custom bar itself is intentionally static:
     // fewer animated layout passes means smoother scrolling.
     val liquidGlass = LocalEnableLiquidGlass.current
-    val barShape = RoundedCornerShape(32.dp)
+    val barShape = RoundedCornerShape(30.dp)
 
     BoxWithConstraints(
         modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
-        val showSelectedLabels = maxWidth >= 360.dp
+        val showSelectedLabels = maxWidth >= 320.dp
 
         Row(
             modifier = Modifier
-                .widthIn(max = 440.dp)
-                .height(60.dp)
+                .wrapContentWidth()
+                .height(58.dp)
+                .preferredFrameRate(120f)
                 .clip(barShape)
                 .background(
                     if (liquidGlass) {
@@ -113,13 +114,13 @@ fun FloatingNavigationToolbar(
                 .liquidGlassSurface(
                     shape = barShape,
                     pureBlack = pureBlack,
-                    blurRadius = 8,
-                    refraction = 0.075f,
-                    curve = 0.16f,
-                    dispersion = 0.004f,
-                    edge = 0.06f,
+                    blurRadius = 4,
+                    refraction = 0.045f,
+                    curve = 0.10f,
+                    dispersion = 0.0015f,
+                    edge = 0f,
                 )
-                .padding(horizontal = 5.dp, vertical = 5.dp),
+                .padding(horizontal = 5.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
@@ -129,7 +130,7 @@ fun FloatingNavigationToolbar(
                 showSelectedLabels = showSelectedLabels,
                 selectedRoute = selectedRoute,
                 onItemClick = onItemClick,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier,
             )
 
             if ((onShuffleClick != null && shuffleIconRes != null) ||
@@ -137,10 +138,10 @@ fun FloatingNavigationToolbar(
             ) {
                 Spacer(
                     modifier = Modifier
-                        .padding(horizontal = 4.dp)
+                        .padding(horizontal = 3.dp)
                         .width(1.dp)
-                        .height(28.dp)
-                        .background(Color.White.copy(alpha = if (pureBlack) 0.10f else 0.14f))
+                        .height(24.dp)
+                        .background(Color.White.copy(alpha = if (pureBlack) 0.07f else 0.09f))
                 )
 
                 FloatingToolbarAction(
@@ -169,8 +170,8 @@ private fun ToolbarItemsContainer(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.Center,
+        modifier = modifier.wrapContentWidth(),
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         items.forEach { screen ->
@@ -181,7 +182,7 @@ private fun ToolbarItemsContainer(
                 showSelectedLabel = showSelectedLabels,
                 pureBlack = pureBlack,
                 onClick = { onItemClick(screen, selected) },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier,
             )
         }
     }
@@ -217,15 +218,19 @@ private fun FloatingToolbarAction(
                 label = "toolbarActionScale",
             )
 
+            val liquidGlass = LocalEnableLiquidGlass.current
+
             Box(
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(42.dp)
                     .scale(scale)
                     .clip(CircleShape)
                     .background(
-                        Color.White.copy(
-                            alpha = if (pureBlack) 0.13f else 0.18f
-                        )
+                        if (liquidGlass) {
+                            Color.Black.copy(alpha = if (pureBlack) 0.10f else 0.055f)
+                        } else {
+                            Color.White.copy(alpha = if (pureBlack) 0.11f else 0.14f)
+                        }
                     )
                     .clickable(
                         interactionSource = interactionSource,
@@ -338,27 +343,27 @@ private fun FloatingNavigationToolbarItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val shape = RoundedCornerShape(25.dp)
-    val showLabel = selected && showSelectedLabel && screen.route != Screens.Search.route
+    val shape = RoundedCornerShape(24.dp)
+    val showLabel = selected && showSelectedLabel
 
     val selectedContainer by animateColorAsState(
         targetValue = if (selected) {
-            Color.White.copy(alpha = if (pureBlack) 0.15f else 0.20f)
+            Color.White.copy(alpha = if (pureBlack) 0.11f else 0.14f)
         } else {
             Color.Transparent
         },
-        animationSpec = tween(durationMillis = 110),
+        animationSpec = tween(durationMillis = 90),
         label = "selectedContainer",
     )
 
     val horizontalPadding by animateDpAsState(
-        targetValue = if (selected && showLabel) 13.dp else 10.dp,
-        animationSpec = tween(durationMillis = 110),
+        targetValue = if (showLabel) 12.dp else 10.dp,
+        animationSpec = tween(durationMillis = 100),
         label = "itemPadding",
     )
 
     val iconScale by animateFloatAsState(
-        targetValue = if (selected) 1.08f else 1f,
+        targetValue = if (selected) 1.07f else 1f,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioMediumBouncy,
             stiffness = Spring.StiffnessMedium,
@@ -381,13 +386,13 @@ private fun FloatingNavigationToolbarItem(
         if (selected) {
             if (pureBlack) Color.White else MaterialTheme.colorScheme.onSurface
         } else {
-            if (pureBlack) Color.White.copy(alpha = 0.74f)
+            if (pureBlack) Color.White.copy(alpha = 0.72f)
             else MaterialTheme.colorScheme.onSurfaceVariant
         }
 
     Row(
         modifier = modifier
-            .height(50.dp)
+            .height(48.dp)
             .scale(pressScale)
             .clip(shape)
             .background(selectedContainer)
@@ -403,7 +408,7 @@ private fun FloatingNavigationToolbarItem(
     ) {
         Crossfade(
             targetState = selected,
-            animationSpec = tween(durationMillis = 90),
+            animationSpec = tween(durationMillis = 75),
             label = "iconCrossfade",
             modifier = Modifier.scale(iconScale),
         ) { isSelected ->
@@ -419,21 +424,21 @@ private fun FloatingNavigationToolbarItem(
 
         AnimatedVisibility(
             visible = showLabel,
-            enter = fadeIn(tween(80)) + expandHorizontally(
-                animationSpec = tween(110),
+            enter = fadeIn(tween(70)) + expandHorizontally(
+                animationSpec = tween(105),
                 expandFrom = Alignment.Start,
             ),
-            exit = fadeOut(tween(70)) + shrinkHorizontally(
+            exit = fadeOut(tween(60)) + shrinkHorizontally(
                 animationSpec = tween(90),
                 shrinkTowards = Alignment.Start,
             ),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Spacer(modifier = Modifier.width(7.dp))
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = stringResource(screen.titleId),
                     color = contentColor,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
