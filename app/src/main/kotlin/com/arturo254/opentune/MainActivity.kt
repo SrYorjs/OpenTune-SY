@@ -238,6 +238,7 @@ import com.arturo254.opentune.ui.screens.Screens
 import com.arturo254.opentune.ui.screens.buildLoginRoute
 import com.arturo254.opentune.ui.screens.musicrecognition.MusicRecognitionRoute
 import com.arturo254.opentune.ui.screens.navigationBuilder
+import com.arturo254.opentune.ui.screens.search.AudiusSearchScreen
 import com.arturo254.opentune.ui.screens.search.LocalSearchScreen
 import com.arturo254.opentune.ui.screens.search.OnlineSearchScreen
 import com.arturo254.opentune.ui.screens.settings.DarkMode
@@ -763,13 +764,25 @@ class MainActivity : ComponentActivity() {
 
                     val searchBarFocusRequester = remember { FocusRequester() }
 
-                    val onSearch: (String) -> Unit = {
-                        if (it.isNotEmpty()) {
-                            onActiveChange(false)
-                            navController.navigate("search/${URLEncoder.encode(it, "UTF-8")}")
+                    val onSearch: (String) -> Unit = { searchText ->
+                        if (searchText.isNotEmpty()) {
                             if (!pauseSearchHistory) {
                                 database.query {
-                                    insert(SearchHistory(query = it))
+                                    insert(SearchHistory(query = searchText))
+                                }
+                            }
+
+                            when (searchSource) {
+                                SearchSource.ONLINE -> {
+                                    onActiveChange(false)
+                                    navController.navigate(
+                                        "search/" + URLEncoder.encode(searchText, "UTF-8")
+                                    )
+                                }
+
+                                SearchSource.LOCAL,
+                                SearchSource.AUDIUS -> {
+                                    focusManager.clearFocus()
                                 }
                             }
                         }
@@ -1438,6 +1451,7 @@ class MainActivity : ComponentActivity() {
                                                             when (searchSource) {
                                                                 SearchSource.LOCAL -> R.string.search_library
                                                                 SearchSource.ONLINE -> R.string.search_yt_music
+                                                                SearchSource.AUDIUS -> R.string.search_audius
                                                             }
                                                         ),
                                                     )
@@ -1499,8 +1513,7 @@ class MainActivity : ComponentActivity() {
                                                             }
                                                             IconButton(
                                                                 onClick = {
-                                                                    searchSource =
-                                                                        if (searchSource == SearchSource.ONLINE) SearchSource.LOCAL else SearchSource.ONLINE
+                                                                    searchSource = searchSource.toggle()
                                                                 },
                                                             ) {
                                                                 Icon(
@@ -1508,6 +1521,7 @@ class MainActivity : ComponentActivity() {
                                                                         when (searchSource) {
                                                                             SearchSource.LOCAL -> R.drawable.library_music
                                                                             SearchSource.ONLINE -> R.drawable.language
+                                                                            SearchSource.AUDIUS -> R.drawable.graphic_eq
                                                                         },
                                                                     ),
                                                                     contentDescription = null,
@@ -1545,7 +1559,7 @@ class MainActivity : ComponentActivity() {
                                                     targetState = searchSource,
                                                     transitionSpec = {
                                                         val direction =
-                                                            if (targetState == SearchSource.ONLINE) 1 else -1
+                                                            if (targetState.ordinal >= initialState.ordinal) 1 else -1
                                                         (
                                                             slideInHorizontally(
                                                                 animationSpec = spring(
@@ -1582,23 +1596,24 @@ class MainActivity : ComponentActivity() {
                                                                 query = query.text,
                                                                 onQueryChange = onQueryChange,
                                                                 navController = navController,
-                                                                onSearch = {
+                                                                onSearch = { searchedQuery ->
                                                                     navController.navigate(
-                                                                        "search/${
-                                                                            URLEncoder.encode(
-                                                                                it,
-                                                                                "UTF-8"
-                                                                            )
-                                                                        }"
+                                                                        "search/" + URLEncoder.encode(searchedQuery, "UTF-8")
                                                                     )
                                                                     if (!pauseSearchHistory) {
                                                                         database.query {
-                                                                            insert(SearchHistory(query = it))
+                                                                            insert(SearchHistory(query = searchedQuery))
                                                                         }
                                                                     }
                                                                 },
                                                                 onDismiss = { onActiveChange(false) },
                                                                 pureBlack = pureBlack
+                                                            )
+
+                                                        SearchSource.AUDIUS ->
+                                                            AudiusSearchScreen(
+                                                                query = query.text,
+                                                                pureBlack = pureBlack,
                                                             )
                                                     }
                                                 }
