@@ -48,7 +48,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.math.abs
 import kotlin.math.min
 
-val DefaultThemeColor = Color(0xFFED5564)
+val DefaultThemeColor = Color(0xFFFF3B69)
 
 data class ThemeSeedPalette(
     val primary: Color,
@@ -104,7 +104,8 @@ fun OpenTuneTheme(
         }
 
     val colorScheme = remember(baseColorScheme, pureBlack, darkTheme) {
-        if (darkTheme && pureBlack) baseColorScheme.pureBlack(true) else baseColorScheme
+        val premiumScheme = baseColorScheme.premiumMusicSurfaces(darkTheme)
+        if (darkTheme && pureBlack) premiumScheme.pureBlack(true) else premiumScheme
     }
 
     val animatedColorScheme = updateTransition(colorScheme)
@@ -469,6 +470,49 @@ fun Bitmap.extractGradientColors(): List<Color> {
     return listOf(first.rgb.toComposeColor(), second.rgb.toComposeColor())
         .sortedByDescending { it.luminance() }
 }
+
+private fun ColorScheme.premiumMusicSurfaces(isDark: Boolean): ColorScheme =
+    if (isDark) {
+        copy(
+            background = Color(0xFF08090B),
+            onBackground = Color(0xFFF7F7F8),
+            surface = Color(0xFF0C0D10),
+            onSurface = Color(0xFFF7F7F8),
+            surfaceVariant = Color(0xFF17181D),
+            onSurfaceVariant = Color(0xFFB5B6BE),
+            surfaceContainerLowest = Color(0xFF07080A),
+            surfaceContainerLow = Color(0xFF101115),
+            surfaceContainer = Color(0xFF14151A),
+            surfaceContainerHigh = Color(0xFF1A1B21),
+            surfaceContainerHighest = Color(0xFF22232A),
+            surfaceBright = Color(0xFF2B2C34),
+            surfaceDim = Color(0xFF08090B),
+            outline = Color(0xFF737680),
+            outlineVariant = Color(0xFF30323A),
+            inverseSurface = Color(0xFFF1F1F3),
+            inverseOnSurface = Color(0xFF17181B),
+        )
+    } else {
+        copy(
+            background = Color(0xFFF7F7F9),
+            onBackground = Color(0xFF111114),
+            surface = Color(0xFFFCFCFD),
+            onSurface = Color(0xFF111114),
+            surfaceVariant = Color(0xFFE9E9ED),
+            onSurfaceVariant = Color(0xFF5E6068),
+            surfaceContainerLowest = Color(0xFFFFFFFF),
+            surfaceContainerLow = Color(0xFFF3F3F6),
+            surfaceContainer = Color(0xFFEFEFF3),
+            surfaceContainerHigh = Color(0xFFE8E8ED),
+            surfaceContainerHighest = Color(0xFFE0E0E6),
+            surfaceBright = Color(0xFFFFFFFF),
+            surfaceDim = Color(0xFFDADAE0),
+            outline = Color(0xFF777982),
+            outlineVariant = Color(0xFFD2D3D9),
+            inverseSurface = Color(0xFF1B1C20),
+            inverseOnSurface = Color(0xFFF4F4F6),
+        )
+    }
 
 fun ColorScheme.pureBlack(apply: Boolean) =
     if (apply) copy(
