@@ -81,6 +81,7 @@ import androidx.media3.common.Player
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.EnableHapticFeedbackKey
@@ -109,14 +110,32 @@ fun SwipeableMiniPlayerBox(
     useLegacyBackground: Boolean = false,
     content: @Composable (Float) -> Unit
 ) {
-    val offsetXAnimatable = remember { Animatable(0f) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
     var dragStartTime by remember { mutableStateOf(0L) }
     var totalDragDistance by remember { mutableFloatStateOf(0f) }
+    var settleJob by remember { mutableStateOf<Job?>(null) }
 
     val animationSpec = spring<Float>(
         dampingRatio = Spring.DampingRatioNoBouncy,
-        stiffness = Spring.StiffnessLow
+        stiffness = Spring.StiffnessMedium
     )
+
+    fun settleOffset() {
+        settleJob?.cancel()
+        val startOffset = offsetX
+        if (startOffset == 0f) return
+
+        settleJob = coroutineScope.launch {
+            val settleAnimation = Animatable(startOffset)
+            settleAnimation.animateTo(
+                targetValue = 0f,
+                animationSpec = animationSpec
+            ) {
+                offsetX = value
+            }
+            offsetX = 0f
+        }
+    }
 
     fun calculateAutoSwipeThreshold(swipeSensitivity: Float): Int {
         return (600 / (1f + kotlin.math.exp(-(-11.44748 * swipeSensitivity + 9.04945)))).roundToInt()
@@ -140,19 +159,15 @@ fun SwipeableMiniPlayerBox(
             }
             .let { baseModifier ->
                 if (swipeThumbnail) {
-                    baseModifier.pointerInput(Unit) {
+                    baseModifier.pointerInput(swipeSensitivity, layoutDirection, playerConnection) {
                         detectHorizontalDragGestures(
                             onDragStart = {
+                                settleJob?.cancel()
                                 dragStartTime = System.currentTimeMillis()
                                 totalDragDistance = 0f
                             },
                             onDragCancel = {
-                                coroutineScope.launch {
-                                    offsetXAnimatable.animateTo(
-                                        targetValue = 0f,
-                                        animationSpec = animationSpec
-                                    )
-                                }
+                                settleOffset()
                             },
                             onHorizontalDrag = { _, dragAmount ->
                                 val adjustedDragAmount =
@@ -161,25 +176,26 @@ fun SwipeableMiniPlayerBox(
                                 val canSkipNext = playerConnection.player.nextMediaItemIndex != -1
                                 val allowLeft = adjustedDragAmount < 0 && canSkipNext
                                 val allowRight = adjustedDragAmount > 0 && canSkipPrevious
+
                                 if (allowLeft || allowRight) {
                                     totalDragDistance += kotlin.math.abs(adjustedDragAmount)
-                                    coroutineScope.launch {
-                                        offsetXAnimatable.snapTo(offsetXAnimatable.value + adjustedDragAmount)
-                                    }
+                                    // Update synchronously with the pointer event. The previous
+                                    // implementation launched a coroutine for every drag frame.
+                                    offsetX += adjustedDragAmount
                                 }
                             },
                             onDragEnd = {
                                 val dragDuration = System.currentTimeMillis() - dragStartTime
                                 val velocity = if (dragDuration > 0) totalDragDistance / dragDuration else 0f
-                                val currentOffset = offsetXAnimatable.value
+                                val currentOffset = offsetX
 
                                 val minDistanceThreshold = 50f
                                 val velocityThreshold = (swipeSensitivity * -8.25f) + 8.5f
 
                                 val shouldChangeSong = (
-                                        kotlin.math.abs(currentOffset) > minDistanceThreshold &&
-                                                velocity > velocityThreshold
-                                        ) || (kotlin.math.abs(currentOffset) > autoSwipeThreshold)
+                                    kotlin.math.abs(currentOffset) > minDistanceThreshold &&
+                                        velocity > velocityThreshold
+                                    ) || (kotlin.math.abs(currentOffset) > autoSwipeThreshold)
 
                                 if (shouldChangeSong) {
                                     val isRightSwipe = currentOffset > 0
@@ -199,12 +215,7 @@ fun SwipeableMiniPlayerBox(
                                     }
                                 }
 
-                                coroutineScope.launch {
-                                    offsetXAnimatable.animateTo(
-                                        targetValue = 0f,
-                                        animationSpec = animationSpec
-                                    )
-                                }
+                                settleOffset()
                             }
                         )
                     }
@@ -213,22 +224,22 @@ fun SwipeableMiniPlayerBox(
                 }
             }
     ) {
-        content(offsetXAnimatable.value)
+        content(offsetX)
 
         // Visual indicator
-        if (offsetXAnimatable.value.absoluteValue > 50f) {
+        if (offsetX.absoluteValue > 50f) {
             Box(
                 modifier = Modifier
-                    .align(if (offsetXAnimatable.value > 0) Alignment.CenterStart else Alignment.CenterEnd)
+                    .align(if (offsetX > 0) Alignment.CenterStart else Alignment.CenterEnd)
                     .padding(horizontal = 16.dp)
             ) {
                 Icon(
                     painter = painterResource(
-                        if (offsetXAnimatable.value > 0) R.drawable.skip_previous else R.drawable.skip_next
+                        if (offsetX > 0) R.drawable.skip_previous else R.drawable.skip_next
                     ),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary.copy(
-                        alpha = (offsetXAnimatable.value.absoluteValue / autoSwipeThreshold).coerceIn(0f, 1f)
+                        alpha = (offsetX.absoluteValue / autoSwipeThreshold).coerceIn(0f, 1f)
                     ),
                     modifier = Modifier.size(24.dp)
                 )
