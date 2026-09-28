@@ -48,6 +48,7 @@ import com.arturo254.opentune.LocalPlayerAwareWindowInsets
 import com.arturo254.opentune.R
 import com.arturo254.opentune.ui.component.LiquidGlassCard
 import com.arturo254.opentune.ui.component.NavigationTitle
+import com.arturo254.opentune.ui.component.liquidGlassScreenBackground
 import com.arturo254.opentune.ui.component.shimmer.ShimmerHost
 import com.arturo254.opentune.ui.component.shimmer.TextPlaceholder
 import com.arturo254.opentune.viewmodels.MoodAndGenresViewModel
@@ -78,6 +79,9 @@ fun MoodAndGenresScreen(
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 180.dp),
         state = gridState,
+        modifier = Modifier
+            .fillMaxSize()
+            .liquidGlassScreenBackground(),
         contentPadding = PaddingValues(
             start = 6.dp,
             top = topPadding,
