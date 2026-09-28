@@ -13,6 +13,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.Indication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.animation.core.Spring
@@ -102,19 +103,15 @@ fun IconButton(
             .scale(pressScale)
             .clip(glassShape)
             .background(
-                if (glass) Color.Black.copy(alpha = 0.025f)
+                if (glass) Color.Black.copy(alpha = 0.035f)
                 else colors.containerColor
             )
             .then(
                 if (glass) {
-                    Modifier.liquidGlassSurface(
+                    Modifier.border(
+                        width = 1.dp,
+                        color = Color.White.copy(alpha = 0.10f),
                         shape = glassShape,
-                        pureBlack = false,
-                        blurRadius = 3,
-                        refraction = 0.038f,
-                        curve = 0.08f,
-                        dispersion = 0.001f,
-                        edge = 0f,
                     )
                 } else {
                     Modifier
