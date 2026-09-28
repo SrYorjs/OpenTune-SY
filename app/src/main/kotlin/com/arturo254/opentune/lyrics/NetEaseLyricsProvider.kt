@@ -156,12 +156,80 @@ object NetEaseLyricsProvider : LyricsProvider {
             if (root.optBoolean("nolyric", false) || root.optBoolean("uncollected", false)) {
                 error("Lyrics unavailable")
             }
+            val wordSynced =
+                root
+                    .optJSONObject("yrc")
+                    ?.optString("lyric")
+                    ?.takeIf(String::isNotBlank)
+                    ?.let(::convertYrcToEnhancedLrc)
+                    ?.takeIf(String::isNotBlank)
+
+            if (wordSynced != null) return wordSynced
+
             return root
                 .optJSONObject("lrc")
                 ?.optString("lyric")
                 ?.takeIf(String::isNotBlank)
                 ?: error("Empty NetEase lyrics")
         }
+    }
+
+    /**
+     * NetEase YRC uses millisecond line/word ranges:
+     * [lineStart,lineDuration](wordStart,wordDuration,0)word...
+     *
+     * OpenTune already understands enhanced LRC with <mm:ss.xxx> word markers,
+     * so convert instead of throwing away the most accurate timing data.
+     */
+    private fun convertYrcToEnhancedLrc(yrc: String): String {
+        val lineRegex = Regex("""^\[(\d+),(\d+)](.*)$""")
+        val wordRegex = Regex("""\((\d+),(\d+),\d+\)([^()]*)""")
+
+        return yrc
+            .lineSequence()
+            .mapNotNull { rawLine ->
+                val line = rawLine.trim()
+                if (line.isBlank() || line.startsWith("{")) return@mapNotNull null
+
+                val lineMatch = lineRegex.matchEntire(line) ?: return@mapNotNull null
+                val lineStart = lineMatch.groupValues[1].toLongOrNull() ?: return@mapNotNull null
+                val body = lineMatch.groupValues[3]
+                val words = wordRegex.findAll(body).toList()
+                if (words.isEmpty()) return@mapNotNull null
+
+                buildString {
+                    append(formatLineTime(lineStart))
+                    words.forEach { match ->
+                        val rawWordStart = match.groupValues[1].toLongOrNull() ?: lineStart
+                        val wordStart =
+                            if (rawWordStart + 1_000L < lineStart) {
+                                lineStart + rawWordStart
+                            } else {
+                                rawWordStart
+                            }
+                        val text = match.groupValues[3]
+                        if (text.isNotEmpty()) {
+                            append(formatWordTime(wordStart))
+                            append(text)
+                        }
+                    }
+                }.takeIf { it.length > 12 }
+            }
+            .joinToString("\n")
+    }
+
+    private fun formatLineTime(ms: Long): String =
+        "[" + formatTimestamp(ms) + "]"
+
+    private fun formatWordTime(ms: Long): String =
+        "<" + formatTimestamp(ms) + ">"
+
+    private fun formatTimestamp(ms: Long): String {
+        val safe = ms.coerceAtLeast(0L)
+        val minutes = safe / 60_000L
+        val seconds = (safe % 60_000L) / 1_000L
+        val millis = safe % 1_000L
+        return String.format(Locale.ROOT, "%02d:%02d.%03d", minutes, seconds, millis)
     }
 
     private fun artistNames(array: JSONArray): List<String> =
