@@ -174,8 +174,6 @@ import com.arturo254.opentune.constants.HasPressedStarKey
 import com.arturo254.opentune.constants.LaunchCountKey
 import com.arturo254.opentune.constants.LiquidGlassNavBarKey
 import com.skydoves.cloudy.rememberSky
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.arturo254.opentune.constants.LyricsSyncOffsetKey
 import com.arturo254.opentune.constants.MiniPlayerBottomSpacing
 import com.arturo254.opentune.constants.MiniPlayerHeight
@@ -226,7 +224,6 @@ import com.arturo254.opentune.ui.component.LocalBottomSheetPageState
 import com.arturo254.opentune.ui.component.LocalMenuState
 import com.arturo254.opentune.ui.component.LocalSky
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
-import com.arturo254.opentune.ui.component.LocalLiquidBackdrop
 import com.arturo254.opentune.ui.component.LiquidGlassControlCluster
 import com.mikepenz.markdown.m3.Markdown
 import com.arturo254.opentune.constants.TogetherDisplayNameKey
@@ -661,13 +658,10 @@ class MainActivity : ComponentActivity() {
                 seedPalette = if (!enableDynamicTheme) customThemeSeedPalette else null,
                 appFontStyle = appFontStyle,
             ) {
-                val appLiquidBackdrop = rememberLayerBackdrop()
-
                 BoxWithConstraints(
                     modifier =
                         Modifier
                             .fillMaxSize()
-                            .layerBackdrop(appLiquidBackdrop)
                             .background(
                                 if (pureBlack) Color.Black else MaterialTheme.colorScheme.surface
                             )
@@ -1173,7 +1167,6 @@ class MainActivity : ComponentActivity() {
                         LocalSyncUtils provides syncUtils,
                         LocalSky provides liquidGlassSky,
                         LocalEnableLiquidGlass provides liquidGlassNavBar,
-                        LocalLiquidBackdrop provides appLiquidBackdrop,
                         LocalBottomSheetPageState provides bottomSheetPageState,
                         LocalMenuState provides menuState,
                     ) {
