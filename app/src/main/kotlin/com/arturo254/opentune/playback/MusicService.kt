@@ -60,6 +60,7 @@ import androidx.media3.datasource.cache.CacheDataSource.FLAG_IGNORE_CACHE_ON_ERR
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.ContentMetadata
 import androidx.media3.datasource.okhttp.OkHttpDataSource
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
@@ -650,6 +651,7 @@ class MusicService :
             ExoPlayer
                 .Builder(this)
                 .setMediaSourceFactory(createMediaSourceFactory())
+                .setLoadControl(createFastStartLoadControl())
                 .setRenderersFactory(createRenderersFactory())
                 .setHandleAudioBecomingNoisy(true)
                 .setWakeMode(C.WAKE_MODE_NETWORK)
@@ -862,6 +864,7 @@ class MusicService :
                     ExoPlayer
                         .Builder(this)
                         .setMediaSourceFactory(createMediaSourceFactory())
+                        .setLoadControl(createFastStartLoadControl())
                         .setRenderersFactory(createRenderersFactory())
                         .setHandleAudioBecomingNoisy(false)
                         .setWakeMode(C.WAKE_MODE_NETWORK)
@@ -4312,6 +4315,21 @@ class MusicService :
         return ResolvingDataSource.Factory(createCacheDataSource()) { dataSpec ->
             val mediaId = dataSpec.key ?: error("No media id")
 
+            // Hot path for tracks whose stream URL was already resolved. Keep the
+            // mediaId key unchanged so CacheDataSource can still serve local bytes
+            // before it ever touches the network.
+            playbackUrlCache[mediaId]
+                ?.takeIf { it.second > System.currentTimeMillis() }
+                ?.let {
+                    scope.launch(Dispatchers.IO) { recoverSong(mediaId) }
+                    val length =
+                        if (dataSpec.length >= 0) minOf(dataSpec.length, CHUNK_LENGTH)
+                        else CHUNK_LENGTH
+                    return@Factory dataSpec
+                        .withUri(it.first.toUri())
+                        .subrange(dataSpec.uriPositionOffset, length)
+                }
+
             val requiredCachedLength =
                 if (dataSpec.length >= 0) {
                     dataSpec.length
@@ -4342,12 +4360,6 @@ class MusicService :
                     scope.launch(Dispatchers.IO) { recoverSong(mediaId) }
                     return@Factory dataSpec
                 }
-            }
-
-            playbackUrlCache[mediaId]?.takeIf { it.second > System.currentTimeMillis() }?.let {
-                scope.launch(Dispatchers.IO) { recoverSong(mediaId) }
-                val length = if (dataSpec.length >= 0) minOf(dataSpec.length, CHUNK_LENGTH) else CHUNK_LENGTH
-                return@Factory dataSpec.withUri(it.first.toUri()).subrange(dataSpec.uriPositionOffset, length)
             }
 
             // Intentar obtener playback data de YouTube (fuente primaria)
@@ -4600,6 +4612,24 @@ class MusicService :
             }
         }.getOrDefault(false)
     }
+
+    /**
+     * Start playback earlier than ExoPlayer's conservative defaults while keeping
+     * a healthy forward buffer for unstable mobile networks.
+     *
+     * The important values here are bufferForPlaybackMs / afterRebuffer: lowering
+     * those removes a noticeable wait after the stream URL has already resolved.
+     */
+    private fun createFastStartLoadControl(): DefaultLoadControl =
+        DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                8_000,
+                45_000,
+                750,
+                1_500,
+            )
+            .setPrioritizeTimeOverSizeThresholds(true)
+            .build()
 
     private fun createMediaSourceFactory() =
         DefaultMediaSourceFactory(
