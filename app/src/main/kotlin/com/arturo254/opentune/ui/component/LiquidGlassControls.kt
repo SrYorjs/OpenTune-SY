@@ -300,23 +300,44 @@ fun LiquidGlassCard(
     val glass = LocalEnableLiquidGlass.current
     val shape = RoundedCornerShape(cornerRadius)
 
+    val primary = MaterialTheme.colorScheme.primary
+    val glassBrush =
+        Brush.linearGradient(
+            colors =
+                if (pureBlack) {
+                    listOf(
+                        Color.White.copy(alpha = 0.075f),
+                        primary.copy(alpha = 0.045f),
+                        Color.Black.copy(alpha = 0.045f),
+                    )
+                } else {
+                    listOf(
+                        Color.White.copy(alpha = 0.16f),
+                        primary.copy(alpha = 0.055f),
+                        MaterialTheme.colorScheme.surface.copy(alpha = 0.08f),
+                    )
+                }
+        )
+
     Box(
         modifier = modifier
             .clip(shape)
             .background(
-                if (glass) {
-                    Color.Black.copy(alpha = if (pureBlack) 0.07f else 0.032f)
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.90f)
-                }
+                if (glass) glassBrush
+                else Brush.linearGradient(
+                    listOf(
+                        MaterialTheme.colorScheme.surfaceContainer,
+                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.82f),
+                    )
+                )
             )
             .border(
-                width = 0.75.dp,
+                width = 0.8.dp,
                 color =
                     if (glass) {
-                        Color.White.copy(alpha = if (pureBlack) 0.15f else 0.12f)
+                        Color.White.copy(alpha = if (pureBlack) 0.18f else 0.22f)
                     } else {
-                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f)
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f)
                     },
                 shape = shape,
             ),
@@ -337,11 +358,12 @@ fun Modifier.liquidGlassScreenBackground(
 
     return this.background(
         Brush.verticalGradient(
-            colors = listOf(
-                primary.copy(alpha = if (pureBlack) 0.075f else 0.115f),
-                surface.copy(alpha = 0.985f),
-                tertiary.copy(alpha = if (pureBlack) 0.04f else 0.06f),
-                surface,
+            colorStops = arrayOf(
+                0f to primary.copy(alpha = if (pureBlack) 0.10f else 0.14f),
+                0.20f to surface.copy(alpha = 0.965f),
+                0.56f to surface,
+                0.78f to tertiary.copy(alpha = if (pureBlack) 0.045f else 0.07f),
+                1f to surface,
             )
         )
     )
