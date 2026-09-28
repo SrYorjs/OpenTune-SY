@@ -116,18 +116,28 @@ object PlaylistMixEngine {
         curve: MixTransitionCurve,
     ): PlaylistMixPlan =
         withContext(Dispatchers.Default) {
-            val analyzed = analyze(songs)
+            val ordered =
+                songs.map { playlistSong ->
+                    MixTrackAnalysis(
+                        playlistSong = playlistSong,
+                        bpm = null,
+                        gainDb = null,
+                        sourceTrackId = null,
+                        confidence = 0f,
+                    )
+                }
+
             PlaylistMixPlan(
-                orderedTracks = analyzed,
+                orderedTracks = ordered,
                 transitions =
-                    analyzed.zipWithNext { current, next ->
+                    ordered.zipWithNext { current, next ->
                         MixTransition(
                             outgoingSongId = current.playlistSong.song.id,
                             incomingSongId = next.playlistSong.song.id,
                             durationMs = durationMs.coerceIn(1_500, 20_000),
                             curve = curve,
-                            bpmDelta = bpmDelta(current, next),
-                            gainDelta = gainDelta(current, next),
+                            bpmDelta = null,
+                            gainDelta = null,
                         )
                     },
             )
