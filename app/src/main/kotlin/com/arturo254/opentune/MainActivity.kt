@@ -173,6 +173,8 @@ import com.arturo254.opentune.constants.HasPressedStarKey
 import com.arturo254.opentune.constants.LaunchCountKey
 import com.arturo254.opentune.constants.LiquidGlassNavBarKey
 import com.skydoves.cloudy.rememberSky
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.arturo254.opentune.constants.LyricsSyncOffsetKey
 import com.arturo254.opentune.constants.MiniPlayerBottomSpacing
 import com.arturo254.opentune.constants.MiniPlayerHeight
@@ -223,6 +225,7 @@ import com.arturo254.opentune.ui.component.LocalBottomSheetPageState
 import com.arturo254.opentune.ui.component.LocalMenuState
 import com.arturo254.opentune.ui.component.LocalSky
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
+import com.arturo254.opentune.ui.component.LocalLiquidBackdrop
 import com.mikepenz.markdown.m3.Markdown
 import com.arturo254.opentune.constants.TogetherDisplayNameKey
 import com.arturo254.opentune.ui.component.BottomSheetPageState
@@ -485,6 +488,7 @@ class MainActivity : ComponentActivity() {
             val bottomSheetPageState = remember { BottomSheetPageState() }
             val (liquidGlassNavBar) = rememberPreference(LiquidGlassNavBarKey, defaultValue = false)
             val liquidGlassSky = rememberSky()
+            val liquidGlassBackdrop = rememberLayerBackdrop()
             val menuState = remember { MenuState() }
             val uriHandler = LocalUriHandler.current
             val releaseNotesState = remember { mutableStateOf<String?>(null) }
@@ -1152,6 +1156,7 @@ class MainActivity : ComponentActivity() {
                         LocalSyncUtils provides syncUtils,
                         LocalSky provides liquidGlassSky,
                         LocalEnableLiquidGlass provides liquidGlassNavBar,
+                        LocalLiquidBackdrop provides liquidGlassBackdrop,
                         LocalBottomSheetPageState provides bottomSheetPageState,
                         LocalMenuState provides menuState,
                     ) {
@@ -1706,18 +1711,26 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             }
                                         },
-                                        modifier = Modifier.nestedScroll(
-                                            if (
-                                                navigationItems.fastAny {
-                                                    it.route == navBackStackEntry?.destination?.route
-                                                } ||
-                                                navBackStackEntry?.destination?.route?.startsWith("search/") == true
-                                            ) {
-                                                searchBarScrollBehavior.nestedScrollConnection
-                                            } else {
-                                                topAppBarScrollBehavior.nestedScrollConnection
-                                            }
-                                        )
+                                        modifier = Modifier
+                                            .nestedScroll(
+                                                if (
+                                                    navigationItems.fastAny {
+                                                        it.route == navBackStackEntry?.destination?.route
+                                                    } ||
+                                                    navBackStackEntry?.destination?.route?.startsWith("search/") == true
+                                                ) {
+                                                    searchBarScrollBehavior.nestedScrollConnection
+                                                } else {
+                                                    topAppBarScrollBehavior.nestedScrollConnection
+                                                }
+                                            )
+                                            .then(
+                                                if (liquidGlassNavBar) {
+                                                    Modifier.layerBackdrop(liquidGlassBackdrop)
+                                                } else {
+                                                    Modifier
+                                                }
+                                            )
                                     ) {
                                         navigationBuilder(
                                             navController,
