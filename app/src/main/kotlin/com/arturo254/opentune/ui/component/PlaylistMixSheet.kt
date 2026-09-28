@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.R
 import com.arturo254.opentune.db.entities.PlaylistSong
 import com.arturo254.opentune.playback.MixTrackAnalysis
+import com.arturo254.opentune.playback.MixTransition
 import com.arturo254.opentune.playback.MixTransitionCurve
 import com.arturo254.opentune.playback.PlaylistMixEngine
 import com.arturo254.opentune.playback.PlayerConnection
@@ -79,9 +80,21 @@ fun PlaylistMixSheet(
     val scope = rememberCoroutineScope()
 
     var mode by remember { mutableStateOf(PlaylistMixMode.SMART) }
-    var manualDurationSec by remember { mutableFloatStateOf(7f) }
-    var manualCurve by remember { mutableStateOf(MixTransitionCurve.BLEND) }
     var analysisResults by remember { mutableStateOf<List<MixTrackAnalysis>>(emptyList()) }
+    var manualTransitions by remember(songs) {
+        mutableStateOf(
+            songs.zipWithNext { current, next ->
+                MixTransition(
+                    outgoingSongId = current.song.id,
+                    incomingSongId = next.song.id,
+                    durationMs = 7_000,
+                    curve = MixTransitionCurve.BLEND,
+                    bpmDelta = null,
+                    gainDelta = null,
+                )
+            }
+        )
+    }
     var analyzing by remember { mutableStateOf(true) }
     var starting by remember { mutableStateOf(false) }
 
@@ -168,10 +181,14 @@ fun PlaylistMixSheet(
 
                     PlaylistMixMode.MANUAL ->
                         ManualMixPanel(
-                            durationSec = manualDurationSec,
-                            onDurationChange = { manualDurationSec = it },
-                            curve = manualCurve,
-                            onCurveChange = { manualCurve = it },
+                            songs = songs,
+                            transitions = manualTransitions,
+                            onTransitionChange = { index, transition ->
+                                manualTransitions =
+                                    manualTransitions.toMutableList().apply {
+                                        if (index in indices) this[index] = transition
+                                    }
+                            },
                         )
                 }
             }
@@ -188,12 +205,18 @@ fun PlaylistMixSheet(
                                     PlaylistMixMode.SMART ->
                                         PlaylistMixEngine.buildSmartPlan(songs)
 
-                                    PlaylistMixMode.MANUAL ->
-                                        PlaylistMixEngine.buildManualPlan(
-                                            songs = songs,
-                                            durationMs = (manualDurationSec * 1000f).roundToInt(),
-                                            curve = manualCurve,
+                                    PlaylistMixMode.MANUAL -> {
+                                        val analyzed =
+                                            if (analysisResults.size == songs.size) {
+                                                analysisResults
+                                            } else {
+                                                PlaylistMixEngine.analyze(songs)
+                                            }
+                                        PlaylistMixEngine.rebuildWithManualTransitions(
+                                            analyzed = analyzed,
+                                            transitions = manualTransitions,
                                         )
+                                    }
                                 }
                             }
 
@@ -428,100 +451,151 @@ private fun SmartMixPanel(
 
 @Composable
 private fun ManualMixPanel(
-    durationSec: Float,
-    onDurationChange: (Float) -> Unit,
-    curve: MixTransitionCurve,
-    onCurveChange: (MixTransitionCurve) -> Unit,
+    songs: List<PlaylistSong>,
+    transitions: List<MixTransition>,
+    onTransitionChange: (Int, MixTransition) -> Unit,
 ) {
     LiquidGlassCard(
         cornerRadius = 26.dp,
         modifier = Modifier.fillMaxWidth(),
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.padding(14.dp),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 Text(
-                    text = stringResource(R.string.playlist_mix_transition_time),
+                    text = stringResource(R.string.playlist_mix_manual_console),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = durationSec.roundToInt().toString() + " s",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
+                    text = stringResource(R.string.playlist_mix_manual_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            Slider(
-                value = durationSec,
-                onValueChange = onDurationChange,
-                valueRange = 2f..14f,
-                steps = 11,
-                colors = SliderDefaults.colors(
-                    activeTrackColor = MaterialTheme.colorScheme.primary,
-                    thumbColor = MaterialTheme.colorScheme.primary,
-                ),
-            )
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(9.dp),
+                modifier = Modifier.height(310.dp),
+            ) {
+                itemsIndexed(
+                    items = transitions,
+                    key = { index, item ->
+                        item.outgoingSongId + ">" + item.incomingSongId + ":" + index
+                    },
+                ) { index, transition ->
+                    val outgoing = songs.getOrNull(index)
+                    val incoming = songs.getOrNull(index + 1)
 
-            Text(
-                text = stringResource(R.string.playlist_mix_curve),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                MixTransitionCurve.entries.forEach { option ->
-                    val selected = curve == option
-                    Box(
-                        contentAlignment = Alignment.Center,
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(9.dp),
                         modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(16.dp))
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(20.dp))
                             .background(
-                                if (selected) {
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.5f)
-                                }
+                                MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.48f)
                             )
                             .border(
                                 0.75.dp,
-                                if (selected) {
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
-                                } else {
-                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f)
-                                },
-                                RoundedCornerShape(16.dp),
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
+                                RoundedCornerShape(20.dp),
                             )
-                            .clickable { onCurveChange(option) }
-                            .padding(vertical = 10.dp),
+                            .padding(12.dp),
                     ) {
-                        Text(
-                            text =
-                                when (option) {
-                                    MixTransitionCurve.FADE -> "Fade"
-                                    MixTransitionCurve.BLEND -> "Blend"
-                                    MixTransitionCurve.RISE -> "Rise"
-                                    MixTransitionCurve.MELT -> "Melt"
-                                },
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                            color =
-                                if (selected) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = outgoing?.song?.title.orEmpty(),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    text = "→ " + incoming?.song?.title.orEmpty(),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+
+                            Text(
+                                text = (transition.durationMs / 1000f)
+                                    .let { String.format("%.1fs", it) },
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+
+                        Slider(
+                            value = transition.durationMs / 1000f,
+                            onValueChange = { seconds ->
+                                onTransitionChange(
+                                    index,
+                                    transition.copy(
+                                        durationMs =
+                                            (seconds * 1000f)
+                                                .roundToInt()
+                                                .coerceIn(1_500, 20_000)
+                                    ),
+                                )
+                            },
+                            valueRange = 2f..14f,
+                            steps = 11,
+                            colors = SliderDefaults.colors(
+                                activeTrackColor = MaterialTheme.colorScheme.primary,
+                                thumbColor = MaterialTheme.colorScheme.primary,
+                            ),
                         )
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            MixTransitionCurve.entries.forEach { option ->
+                                val selected = transition.curve == option
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(
+                                            if (selected) {
+                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                                            } else {
+                                                Color.Transparent
+                                            }
+                                        )
+                                        .clickable {
+                                            onTransitionChange(
+                                                index,
+                                                transition.copy(curve = option),
+                                            )
+                                        }
+                                        .padding(vertical = 8.dp),
+                                ) {
+                                    Text(
+                                        text =
+                                            when (option) {
+                                                MixTransitionCurve.FADE -> "Fade"
+                                                MixTransitionCurve.BLEND -> "Blend"
+                                                MixTransitionCurve.RISE -> "Rise"
+                                                MixTransitionCurve.MELT -> "Melt"
+                                            },
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight =
+                                            if (selected) FontWeight.Bold else FontWeight.Medium,
+                                        color =
+                                            if (selected) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
-
-            Text(
-                text = stringResource(R.string.playlist_mix_manual_desc),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }
