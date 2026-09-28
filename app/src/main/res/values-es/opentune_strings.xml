@@ -480,6 +480,7 @@
     <string name="playlist_mix_transition_time">Duración de transición</string>
     <string name="playlist_mix_curve">Curva de transición</string>
     <string name="playlist_mix_manual_desc">Mantiene el orden actual y aplica la misma curva y duración entre canciones.</string>
+    <string name="playlist_mix_manual_console">Consola de transiciones</string>
     <string name="playlist_mix_start_smart">Reproducir Smart Mix</string>
     <string name="playlist_mix_start_manual">Reproducir Mix manual</string>
 
