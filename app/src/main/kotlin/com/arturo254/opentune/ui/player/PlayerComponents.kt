@@ -2742,52 +2742,38 @@ fun V8PlayerBackdrop(
     label: String,
     modifier: Modifier = Modifier,
 ) {
-    val cloudyRadius = 100
-    val blurMaskStart = 0.42f
-    val blurMaskMid = 0.55f
-    val blurMaskSolid = 0.72f
-    val baseArtworkScale = if (disableBlur) 1.02f else 1.05f
-    val baseArtworkAlpha = if (disableBlur) 0.65f else 0.75f
+    val artworkScale by animateFloatAsState(
+        targetValue = if (isPlaying) 1.055f else 1.025f,
+        animationSpec = spring(
+            dampingRatio = 0.92f,
+            stiffness = 120f,
+        ),
+        label = "premiumArtworkBreathing",
+    )
 
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.Black),
     ) {
         AnimatedContent(
             targetState = thumbnailUrl,
             transitionSpec = {
-                fadeIn(tween(800)) togetherWith fadeOut(tween(800))
+                fadeIn(tween(220)) togetherWith fadeOut(tween(180))
             },
             label = label,
         ) { artworkUrl ->
             if (artworkUrl != null) {
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(Modifier.fillMaxSize()) {
                     if (canvasArtwork != null && !canvasArtwork.preferredAnimationUrl.isNullOrBlank()) {
-                        // ✅ Canvas con RESIZE_MODE_ZOOM para mantener aspecto sin estiramiento
                         CanvasArtworkPlayer(
                             primaryUrl = canvasArtwork.animated,
                             fallbackUrl = canvasArtwork.videoUrl,
                             isPlaying = isPlaying,
                             modifier = Modifier.fillMaxSize(),
-                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM  // ← ZOOM mantiene aspecto
-                        )
-                        // Overlay con gradiente
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.verticalGradient(
-                                        colorStops = arrayOf(
-                                            0f to Color.Transparent,
-                                            0.15f to Color.Black.copy(alpha = 0.05f),
-                                            0.45f to Color.Black.copy(alpha = 0.25f),
-                                            0.70f to Color.Black.copy(alpha = 0.50f),
-                                            1f to Color.Black.copy(alpha = 0.85f),
-                                        )
-                                    )
-                                )
+                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM,
                         )
                     } else {
-                        // Imagen estática (fallback)
                         AsyncImage(
                             model = artworkUrl.highRes(),
                             contentDescription = null,
@@ -2795,89 +2781,46 @@ fun V8PlayerBackdrop(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .graphicsLayer {
-                                    scaleX = baseArtworkScale
-                                    scaleY = baseArtworkScale
-                                    alpha = baseArtworkAlpha
-                                }
+                                    scaleX = artworkScale
+                                    scaleY = artworkScale
+                                    alpha = 0.90f
+                                },
                         )
-
-                        val painter = rememberAsyncImagePainter(
-                            model = artworkUrl.highRes()
-                        )
-
-                        val imageSize = painter.intrinsicSize
-
-                        val contentScale = remember(imageSize) {
-                            if (imageSize.width <= 0 || imageSize.height <= 0) {
-                                ContentScale.Crop
-                            } else {
-                                val aspectRatio = imageSize.width / imageSize.height
-
-                                when {
-                                    aspectRatio > 1.35f -> ContentScale.FillHeight
-                                    aspectRatio < 0.75f -> ContentScale.FillWidth
-                                    else -> ContentScale.Crop
-                                }
-                            }
-                        }
-
-                        if (!disableBlur) {
-                            Image(
-                                painter = painter,
-                                contentDescription = null,
-                                contentScale = contentScale,
-                                alignment = Alignment.Center,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .cloudy(radius = cloudyRadius)
-                                    .drawWithCache {
-                                        val blurMask = Brush.verticalGradient(
-                                            colorStops = arrayOf(
-                                                0f to Color.Transparent,
-                                                blurMaskStart to Color.Transparent,
-                                                blurMaskMid to Color.Black.copy(alpha = 0.5f),
-                                                blurMaskSolid to Color.Black,
-                                                1f to Color.Black
-                                            )
-                                        )
-
-                                        onDrawWithContent {
-                                            drawContent()
-
-                                            drawRect(
-                                                brush = blurMask,
-                                                blendMode = BlendMode.DstIn
-                                            )
-                                        }
-                                    }
-                            )
-                        }
                     }
                 }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black)
-                )
             }
         }
 
-        // Gradiente siempre presente
+        // One inexpensive cinematic treatment replaces the previous duplicated
+        // artwork + Cloudy 100px blur pipeline.
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colorStops = arrayOf(
-                            0f to Color.Transparent,
-                            0.20f to Color.Transparent,
-                            0.50f to Color.Black.copy(alpha = 0.15f),
-                            0.75f to Color.Black.copy(alpha = 0.35f),
-                            1f to Color.Black.copy(alpha = 0.70f),
+                            0f to Color.Black.copy(alpha = 0.10f),
+                            0.28f to Color.Transparent,
+                            0.58f to Color.Black.copy(alpha = 0.18f),
+                            0.76f to Color.Black.copy(alpha = 0.50f),
+                            1f to Color.Black.copy(alpha = 0.88f),
                         )
                     )
-                )
+                ),
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.10f),
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.08f),
+                        )
+                    )
+                ),
         )
     }
 }
