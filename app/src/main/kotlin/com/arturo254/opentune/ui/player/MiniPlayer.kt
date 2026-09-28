@@ -24,16 +24,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.preferredFrameRate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.constants.SwipeSensitivityKey
 import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.utils.rememberPreference
-import kotlin.math.roundToInt
-
 
 @Composable
 fun MiniPlayer(
@@ -95,18 +93,20 @@ private fun NewMiniPlayer(
                 .liquidGlassSurface(
                     shape = RoundedCornerShape(32.dp),
                     pureBlack = pureBlack,
-                    blurRadius = 8,
-                    refraction = 0.07f,
-                    curve = 0.15f,
-                    dispersion = 0.004f,
-                    edge = 0.05f,
+                    blurRadius = 4,
+                    refraction = 0.045f,
+                    curve = 0.10f,
+                    dispersion = 0.0015f,
+                    edge = 0f,
                 )
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(64.dp)
-                    .offset { IntOffset(offsetX.roundToInt(), 0) }
+                    .graphicsLayer {
+                        translationX = offsetX
+                    }
             ) {
                 NewMiniPlayerContent(
                     pureBlack = pureBlack,
