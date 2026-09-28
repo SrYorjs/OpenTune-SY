@@ -55,7 +55,7 @@ import kotlin.math.tanh
  * devices where a live Backdrop is not available.
  */
 @Composable
-private fun Modifier.elasticLiquidPress(
+internal fun Modifier.elasticLiquidPress(
     interactionSource: MutableInteractionSource,
     enabled: Boolean,
 ): Modifier {
