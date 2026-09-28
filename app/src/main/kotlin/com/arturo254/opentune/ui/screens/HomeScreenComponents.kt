@@ -22,6 +22,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -160,12 +161,12 @@ fun QuickPicksSection(
 
     HorizontalCenteredHeroCarousel(
         state = rememberCarouselState { distinctQuickPicks.size },
-        maxItemWidth = 250.dp,
-        itemSpacing = 8.dp,
-        contentPadding = PaddingValues(horizontal = 16.dp),
+        maxItemWidth = 238.dp,
+        itemSpacing = 12.dp,
+        contentPadding = PaddingValues(horizontal = 18.dp),
         modifier = modifier
             .fillMaxWidth()
-            .height(290.dp)
+            .height(274.dp)
     ) { index ->
         val song = distinctQuickPicks[index]
         val isActive = song.id == mediaMetadata?.id
@@ -193,10 +194,11 @@ fun QuickPicksSection(
                     scaleY = cardScale
                     transformOrigin = TransformOrigin.Center
                 }
-                .maskClip(MaterialTheme.shapes.extraLarge)
-                .maskBorder(
-                    BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    MaterialTheme.shapes.extraLarge
+                .clip(RoundedCornerShape(28.dp))
+                .border(
+                    width = 0.8.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f),
+                    shape = RoundedCornerShape(28.dp),
                 )
                 .combinedClickable(
                     interactionSource = interactionSource,
@@ -325,10 +327,10 @@ fun SpeedDialSection(
     val context = LocalContext.current
     val distinctSpeedDial = remember(speedDialSongs) { speedDialSongs.distinctBy { it.id }.take(24) }
     val speedDialIndexById = remember(distinctSpeedDial) { distinctSpeedDial.mapIndexed { index, song -> song.id to index }.toMap() }
-    val tileSize = 130.dp
-    val spacing = 10.dp
+    val tileSize = 148.dp
+    val spacing = 12.dp
     val state = rememberLazyGridState()
-    val rowCount = min(3, distinctSpeedDial.size + 1)
+    val rowCount = min(2, distinctSpeedDial.size + 1)
     val gridHeight = (tileSize * rowCount) + (spacing * (rowCount - 1))
 
     fun playSpeedDialQueue(startIndex: Int) {
@@ -411,7 +413,12 @@ fun SpeedDialSection(
                             scaleY = cardScale
                             transformOrigin = TransformOrigin.Center
                         }
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(22.dp))
+                        .border(
+                            width = 0.75.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f),
+                            shape = RoundedCornerShape(22.dp),
+                        )
                         .combinedClickable(
                             interactionSource = interactionSource,
                             onClick = {
