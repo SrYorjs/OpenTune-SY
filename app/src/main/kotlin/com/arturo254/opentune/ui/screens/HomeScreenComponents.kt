@@ -65,6 +65,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -88,7 +89,9 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import com.arturo254.opentune.R
+import com.arturo254.opentune.catalog.CatalogPlaybackResolver
 import com.arturo254.opentune.constants.GridThumbnailHeight
 import com.arturo254.opentune.constants.ListItemHeight
 import com.arturo254.opentune.constants.ListThumbnailSize
@@ -142,27 +145,28 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.arturo254.opentune.viewmodels.AudiusSearchViewModel
+import com.arturo254.opentune.viewmodels.DeezerSearchViewModel
 import com.arturo254.opentune.viewmodels.HomeViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AudiusTrendingHomeSection(
+fun DeezerTrendingHomeSection(
     playerConnection: PlayerConnection,
     modifier: Modifier = Modifier,
-    viewModel: AudiusSearchViewModel = hiltViewModel(),
+    viewModel: DeezerSearchViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsState()
     val mediaMetadata by playerConnection.mediaMetadata.collectAsState()
     val isPlaying by playerConnection.isPlaying.collectAsState()
+    val scope = rememberCoroutineScope()
     val tracks = state.tracks.take(12)
 
     if (tracks.isEmpty()) return
 
     Column(modifier = modifier.fillMaxWidth()) {
         NavigationTitle(
-            label = stringResource(R.string.open_audio),
-            title = stringResource(R.string.audius_trending),
+            label = stringResource(R.string.global_catalog),
+            title = stringResource(R.string.deezer_trending),
         )
 
         LazyRow(
@@ -172,69 +176,74 @@ fun AudiusTrendingHomeSection(
         ) {
             items(
                 items = tracks,
-                key = { "audius_home_" + it.id },
+                key = { "deezer_home_" + it.id },
             ) { track ->
-                val metadata = track.toMediaMetadata()
-                val active = mediaMetadata?.id == metadata.id
+                val active =
+                    mediaMetadata?.title.equals(track.title, ignoreCase = true) &&
+                        mediaMetadata?.artists
+                            ?.any { it.name.equals(track.artistName, ignoreCase = true) } == true
                 val interaction = remember { MutableInteractionSource() }
                 val pressed by interaction.collectIsPressedAsState()
                 val scale by animateFloatAsState(
-                    targetValue = if (pressed) 0.96f else 1f,
+                    targetValue = if (pressed) 0.955f else 1f,
                     animationSpec = spring(
-                        dampingRatio = 0.84f,
-                        stiffness = 620f,
+                        dampingRatio = 0.86f,
+                        stiffness = 640f,
                     ),
-                    label = "audiusHomeCard",
+                    label = "deezerHomeCard",
                 )
-                val shape = RoundedCornerShape(24.dp)
+                val shape = RoundedCornerShape(26.dp)
 
                 Column(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .width(154.dp)
-                        .graphicsLayer {
-                            scaleX = scale
-                            scaleY = scale
-                        }
-                        .clip(shape)
-                        .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.56f))
-                        .border(
-                            0.75.dp,
-                            if (active) {
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)
-                            } else {
-                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f)
-                            },
-                            shape,
-                        )
-                        .combinedClickable(
-                            interactionSource = interaction,
-                            onClick = {
+                    modifier =
+                        Modifier
+                            .width(160.dp)
+                            .graphicsLayer {
+                                scaleX = scale
+                                scaleY = scale
+                            }
+                            .clip(shape)
+                            .background(
+                                MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.50f)
+                            )
+                            .border(
+                                0.75.dp,
                                 if (active) {
-                                    playerConnection.player.togglePlayPause()
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.34f)
                                 } else {
-                                    val items = tracks.map { item ->
-                                        item.toMediaMetadata().toMediaItem()
+                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.17f)
+                                },
+                                shape,
+                            )
+                            .combinedClickable(
+                                interactionSource = interaction,
+                                onClick = {
+                                    if (active) {
+                                        playerConnection.player.togglePlayPause()
+                                    } else {
+                                        scope.launch {
+                                            CatalogPlaybackResolver
+                                                .resolveToMediaItem(track.toCatalogReference())
+                                                ?.let { mediaItem ->
+                                                    playerConnection.player.setMediaItem(mediaItem)
+                                                    playerConnection.player.prepare()
+                                                    playerConnection.player.playWhenReady = true
+                                                }
+                                        }
                                     }
-                                    playerConnection.playQueue(
-                                        ListQueue(
-                                            title = "Audius",
-                                            items = items,
-                                            startIndex = tracks.indexOfFirst { it.id == track.id },
-                                        )
-                                    )
-                                }
-                            },
-                            onLongClick = {},
-                        )
-                        .padding(10.dp),
+                                },
+                                onLongClick = {},
+                            )
+                            .padding(10.dp),
                 ) {
                     Box(
                         contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(134.dp)
-                            .clip(RoundedCornerShape(18.dp))
-                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                        modifier =
+                            Modifier
+                                .size(140.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                     ) {
                         AsyncImage(
                             model = track.artworkUrl,
@@ -245,14 +254,16 @@ fun AudiusTrendingHomeSection(
 
                         if (active) {
                             Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(Color.Black.copy(alpha = 0.26f))
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .background(Color.Black.copy(alpha = 0.24f))
                             )
                             Icon(
-                                painter = painterResource(
-                                    if (isPlaying) R.drawable.pause else R.drawable.play
-                                ),
+                                painter =
+                                    painterResource(
+                                        if (isPlaying) R.drawable.pause else R.drawable.play
+                                    ),
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(32.dp),
