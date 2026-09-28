@@ -470,4 +470,17 @@
     <string name="your_artists">tus artistas</string>
     <string name="more_label">más</string>
     <string name="player_fullscreen">Reproductor en pantalla completa</string>
+
+    <string name="playlist_mix_title">Mix de playlist</string>
+    <string name="playlist_mix_smart">Automático</string>
+    <string name="playlist_mix_manual">Manual</string>
+    <string name="playlist_mix_smart_title">Automix inteligente</string>
+    <string name="playlist_mix_smart_desc">Analiza BPM y nivel de ganancia para reordenar la playlist y suavizar los cambios bruscos.</string>
+    <string name="playlist_mix_analyzed">Analizadas</string>
+    <string name="playlist_mix_transition_time">Duración de transición</string>
+    <string name="playlist_mix_curve">Curva de transición</string>
+    <string name="playlist_mix_manual_desc">Mantiene el orden actual y aplica la misma curva y duración entre canciones.</string>
+    <string name="playlist_mix_start_smart">Reproducir Smart Mix</string>
+    <string name="playlist_mix_start_manual">Reproducir Mix manual</string>
+
 </resources>
