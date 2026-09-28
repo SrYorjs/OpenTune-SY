@@ -127,8 +127,9 @@ class PlayerConnection(
             service.requestTogetherControl(com.arturo254.opentune.together.ControlAction.SkipNext)
             return
         }
+        // Media3 transitions to the already prepared next item itself.
+        // Calling prepare() again here forces avoidable re-preparation/buffering.
         player.seekToNext()
-        player.prepare()
         player.playWhenReady = true
         // Immediately restart the Discord presence updater so it picks up the new track without waiting
         if (com.arturo254.opentune.ui.screens.settings.DiscordPresenceManager.isRunning()) {
@@ -145,7 +146,6 @@ class PlayerConnection(
             return
         }
         player.seekToPrevious()
-        player.prepare()
         player.playWhenReady = true
         // Immediately restart the Discord presence updater so it picks up the new track without waiting
         if (com.arturo254.opentune.ui.screens.settings.DiscordPresenceManager.isRunning()) {
