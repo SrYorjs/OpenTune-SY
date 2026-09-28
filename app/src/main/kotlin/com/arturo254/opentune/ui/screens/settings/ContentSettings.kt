@@ -101,6 +101,10 @@ fun ContentSettings(
         key = EnableLrcLibKey,
         defaultValue = true
     )
+    val (enableNetEaseLyrics, onEnableNetEaseLyricsChange) = rememberPreference(
+        key = EnableNetEaseLyricsKey,
+        defaultValue = true
+    )
     val (enableBetterLyrics, onEnableBetterLyricsChange) = rememberPreference(
         key = EnableBetterLyricsKey,
         defaultValue = true
@@ -300,6 +304,12 @@ fun ContentSettings(
             icon = { Icon(painterResource(R.drawable.lyrics), null) },
             checked = enableLrclib,
             onCheckedChange = onEnableLrclibChange,
+        )
+        SwitchPreference(
+            title = { Text(stringResource(R.string.enable_netease_lyrics)) },
+            icon = { Icon(painterResource(R.drawable.lyrics), null) },
+            checked = enableNetEaseLyrics,
+            onCheckedChange = onEnableNetEaseLyricsChange,
         )
         SwitchPreference(
             title = { Text(stringResource(R.string.enable_kugou)) },

@@ -42,6 +42,7 @@ import com.arturo254.opentune.extensions.togglePlayPause
 import com.arturo254.opentune.models.toMediaMetadata
 import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.ui.component.LocalMenuState
+import com.arturo254.opentune.ui.component.liquidGlassScreenBackground
 import com.arturo254.opentune.ui.component.YouTubeListItem
 import com.arturo254.opentune.ui.menu.*
 import com.arturo254.opentune.R
@@ -96,7 +97,7 @@ fun OnlineSearchScreen(
         ),
         modifier = Modifier
             .fillMaxSize()
-            .background(if (pureBlack) Color.Black else MaterialTheme.colorScheme.background)
+            .liquidGlassScreenBackground(pureBlack = pureBlack)
     ) {
         items(viewState.history, key = { "history_${it.query}" }) { history ->
             SuggestionItem(

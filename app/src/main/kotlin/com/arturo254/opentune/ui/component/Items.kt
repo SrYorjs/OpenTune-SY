@@ -25,6 +25,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -149,30 +150,69 @@ inline fun ListItem(
     trailingContent: @Composable RowScope.() -> Unit = {},
     isActive: Boolean = false
 ) {
+    val shape = RoundedCornerShape(20.dp)
+    val containerColor =
+        if (isActive) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.56f)
+        }
+    val borderColor =
+        if (isActive) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.24f)
+        } else {
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f)
+        }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
-            .height(ListItemHeight)
-            .padding(horizontal = 8.dp)
-            .then(
-                if (isActive) Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer) else Modifier
+            .padding(horizontal = 10.dp, vertical = 3.dp)
+            .height(ListItemHeight - 6.dp)
+            .clip(shape)
+            .background(containerColor)
+            .border(
+                width = 0.75.dp,
+                color = borderColor,
+                shape = shape,
             )
+            .padding(horizontal = 8.dp),
     ) {
-        Box(Modifier.padding(6.dp), contentAlignment = Alignment.Center) { thumbnailContent() }
-        Column(Modifier
-            .weight(1f)
-            .padding(horizontal = 6.dp)) {
+        Box(
+            modifier = Modifier.padding(end = 10.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            thumbnailContent()
+        }
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier.weight(1f),
+        ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1, overflow = TextOverflow.Ellipsis
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color =
+                    if (isActive) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-            if (subtitle != null) Row(verticalAlignment = Alignment.CenterVertically) { subtitle() }
+
+            if (subtitle != null) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    subtitle()
+                }
+            }
         }
-        trailingContent()
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            content = trailingContent,
+        )
     }
 }
 
@@ -209,36 +249,60 @@ fun GridItem(
     thumbnailRatio: Float = 1f,
     fillMaxWidth: Boolean = false,
 ) {
+    val shape = RoundedCornerShape(24.dp)
+
     Column(
-        modifier = if (fillMaxWidth) {
-            modifier
-                .padding(12.dp)
-                .fillMaxWidth()
-        } else {
-            modifier
-                .padding(12.dp)
-                .width(GridThumbnailHeight * thumbnailRatio)
-        }
+        modifier =
+            if (fillMaxWidth) {
+                modifier
+                    .padding(horizontal = 8.dp, vertical = 8.dp)
+                    .fillMaxWidth()
+                    .clip(shape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.44f))
+                    .border(
+                        0.75.dp,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f),
+                        shape,
+                    )
+                    .padding(10.dp)
+            } else {
+                modifier
+                    .padding(horizontal = 8.dp, vertical = 8.dp)
+                    .width(GridThumbnailHeight * thumbnailRatio + 20.dp)
+                    .clip(shape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.44f))
+                    .border(
+                        0.75.dp,
+                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f),
+                        shape,
+                    )
+                    .padding(10.dp)
+            },
+        verticalArrangement = Arrangement.spacedBy(7.dp),
     ) {
         BoxWithConstraints(
             contentAlignment = Alignment.Center,
-            modifier = if (fillMaxWidth) {
-                Modifier.fillMaxWidth()
-            } else {
-                Modifier.height(GridThumbnailHeight)
-            }
-                .aspectRatio(thumbnailRatio)
+            modifier =
+                if (fillMaxWidth) {
+                    Modifier.fillMaxWidth()
+                } else {
+                    Modifier.height(GridThumbnailHeight)
+                }
+                    .aspectRatio(thumbnailRatio)
+                    .clip(
+                        if (thumbnailRatio == 1f) RoundedCornerShape(18.dp)
+                        else RoundedCornerShape(16.dp)
+                    ),
         ) {
             thumbnailContent()
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
-
         title()
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             badges()
-
             subtitle()
         }
     }
@@ -535,102 +599,83 @@ fun LibraryHeroFavoriteTile(
     accentColor: Color = MaterialTheme.colorScheme.primary,
 ) {
     val animatedColor by animateColorAsState(accentColor, spring())
+    val shape = RoundedCornerShape(26.dp)
 
-    val expressiveHeroShape = RoundedCornerShape(
-        topStart = 38.dp,
-        topEnd = 12.dp,
-        bottomEnd = 38.dp,
-        bottomStart = 38.dp
-    )
-
-    val expressiveIconShape = RoundedCornerShape(
-        topStart = 24.dp,
-        topEnd = 12.dp,
-        bottomEnd = 24.dp,
-        bottomStart = 12.dp
-    )
-
-
-    Card(
-        shape = expressiveHeroShape,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+    Box(
         modifier = modifier
+            .clip(shape)
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        animatedColor.copy(alpha = 0.18f),
+                        MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.88f),
+                    )
+                )
+            )
+            .border(
+                0.8.dp,
+                animatedColor.copy(alpha = 0.20f),
+                shape,
+            ),
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(20.dp)
+                .padding(18.dp),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth()
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(58.dp)
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(animatedColor.copy(alpha = 0.16f)),
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(72.dp)
-                        .clip(expressiveIconShape)
-                        .background(animatedColor.copy(alpha = 0.16f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(iconRes),
-                        contentDescription = null,
-                        tint = animatedColor,
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
+                Icon(
+                    painter = painterResource(iconRes),
+                    contentDescription = null,
+                    tint = animatedColor,
+                    modifier = Modifier.size(28.dp),
+                )
+            }
 
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.weight(1f)
-                ) {
-                    SuggestionChip(
-                        onClick = {},
-                        label = {
-                            Text(
-                                text = badgeText.uppercase(),
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    letterSpacing = MaterialTheme.typography.labelSmall.letterSpacing * 1.5
-                                )
-                            )
-                        },
-                        shape = CircleShape,
-                        colors = SuggestionChipDefaults.suggestionChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
-                        ),
-                        border = null,
-                        modifier = Modifier.height(24.dp)
-                    )
-
+            Column(
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+                modifier = Modifier.weight(1f),
+            ) {
+                Text(
+                    text = badgeText.uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = animatedColor,
+                    maxLines = 1,
+                )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                subtitle?.takeIf { it.isNotBlank() }?.let {
                     Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Black
-                        ),
+                        text = it,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSurface
                     )
-
-                    subtitle?.takeIf { it.isNotBlank() }?.let {
-                        Text(
-                            text = it,
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                fontWeight = FontWeight.Medium
-                            ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
                 }
             }
+
+            Icon(
+                painter = painterResource(R.drawable.chevron_right),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(22.dp),
+            )
         }
     }
 }
@@ -645,83 +690,52 @@ fun LibraryPinnedCollectionTile(
     accentColor: Color = MaterialTheme.colorScheme.primary,
 ) {
     val animatedColor by animateColorAsState(accentColor, spring())
+    val shape = RoundedCornerShape(22.dp)
 
-    val expressiveCardShape = when (gridPosition) {
-        GridPosition.LEFT -> RoundedCornerShape(
-            topStart = 28.dp,
-            bottomStart = 28.dp,
-            topEnd = 6.dp,
-            bottomEnd = 6.dp
-        )
-
-        GridPosition.RIGHT -> RoundedCornerShape(
-            topStart = 6.dp,
-            bottomStart = 6.dp,
-            topEnd = 28.dp,
-            bottomEnd = 28.dp
-        )
-
-        GridPosition.SINGLE -> RoundedCornerShape(28.dp)
-    }
-
-    val expressiveIconShape = RoundedCornerShape(
-        topStart = 16.dp,
-        topEnd = 8.dp,
-        bottomEnd = 16.dp,
-        bottomStart = 8.dp
-    )
-
-    Card(
-        shape = expressiveCardShape,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.72f))
+            .border(
+                0.75.dp,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.22f),
+                shape,
+            )
+            .padding(16.dp),
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+        Box(
+            contentAlignment = Alignment.Center,
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp)
+                .size(42.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(animatedColor.copy(alpha = 0.13f)),
         ) {
-            Box(
-                modifier = Modifier
-                    .clip(expressiveIconShape)
-                    .background(animatedColor.copy(alpha = 0.10f))
-                    .padding(10.dp)
-            ) {
-                Icon(
-                    painter = painterResource(iconRes),
-                    contentDescription = null,
-                    tint = animatedColor,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            Icon(
+                painter = painterResource(iconRes),
+                contentDescription = null,
+                tint = animatedColor,
+                modifier = Modifier.size(22.dp),
+            )
+        }
 
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            subtitle?.takeIf { it.isNotBlank() }?.let {
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = MaterialTheme.typography.titleMedium.letterSpacing
-                    ),
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurface
                 )
-
-                subtitle?.takeIf { it.isNotBlank() }?.let {
-                    Text(
-                        text = it,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Medium
-                        ),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
         }
     }
@@ -1234,9 +1248,7 @@ fun OverlayPlaylistListItem(
                     model = backgroundUrl,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize().let {
-                        if (disableBlur) it else it.blur(8.dp)
-                    }
+                    modifier = Modifier.fillMaxSize()
                 )
                 Box(modifier = Modifier
                     .fillMaxSize()

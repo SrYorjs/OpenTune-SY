@@ -117,11 +117,9 @@ fun DefaultDialog(
                 .navigationBarsPadding(),
             contentAlignment = Alignment.Center,
         ) {
-            Surface(
+            LiquidGlassCard(
+                cornerRadius = 30.dp,
                 modifier = Modifier.heightIn(max = maxHeight),
-                shape = AlertDialogDefaults.shape,
-                color = AlertDialogDefaults.containerColor,
-                tonalElevation = AlertDialogDefaults.TonalElevation,
             ) {
                 Column(
                     modifier = modifier.padding(24.dp),
@@ -212,14 +210,11 @@ fun AccountSettingsDialog(
                 },
             contentAlignment = Alignment.TopCenter
         ) {
-            Surface(
+            LiquidGlassCard(
+                cornerRadius = 30.dp,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 72.dp, start = 16.dp, end = 16.dp)
-                    .clip(RoundedCornerShape(28.dp)),
-                shape = MaterialTheme.shapes.large,
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 8.dp
+                    .padding(top = 72.dp, start = 16.dp, end = 16.dp),
             ) {
                 AccountSettings(
                     navController = navController,
@@ -247,11 +242,9 @@ fun ActionPromptDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        Surface(
+        LiquidGlassCard(
+            cornerRadius = 30.dp,
             modifier = Modifier.padding(24.dp),
-            shape = AlertDialogDefaults.shape,
-            color = AlertDialogDefaults.containerColor,
-            tonalElevation = AlertDialogDefaults.TonalElevation,
         ) {
             Column(
                 modifier = Modifier.padding(24.dp)
@@ -326,11 +319,9 @@ fun ListDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-        Surface(
+        LiquidGlassCard(
+            cornerRadius = 30.dp,
             modifier = Modifier.padding(24.dp),
-            shape = AlertDialogDefaults.shape,
-            color = AlertDialogDefaults.containerColor,
-            tonalElevation = AlertDialogDefaults.TonalElevation,
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,

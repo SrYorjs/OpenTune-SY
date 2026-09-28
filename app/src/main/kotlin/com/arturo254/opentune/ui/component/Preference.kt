@@ -111,8 +111,8 @@ private val expressiveBadgeShape: Shape = RoundedCornerShape(
 )
 
 private val expressiveBottomSheetShape: Shape = RoundedCornerShape(
-    topStart = 32.dp,
-    topEnd = 32.dp,
+    topStart = 34.dp,
+    topEnd = 34.dp,
     bottomStart = 0.dp,
     bottomEnd = 0.dp
 )
@@ -225,23 +225,15 @@ fun PreferenceEntry(
     if (inGroup) {
         rowContent()
     } else {
-        Surface(
-            shape = expressiveCardShape,
-            color = containerColor,
-            tonalElevation = elevation.dp,
-            shadowElevation = if (isPressed) 4.dp else 2.dp,
+        LiquidGlassCard(
+            cornerRadius = 24.dp,
             modifier = modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 3.dp)
+                .padding(horizontal = 16.dp, vertical = 4.dp)
                 .graphicsLayer {
                     scaleX = scale
                     scaleY = scale
-                }
-                .shadow(
-                    elevation = if (isPressed) 8.dp else 4.dp,
-                    shape = expressiveCardShape,
-                    clip = false
-                ),
+                },
         ) {
             rowContent()
         }
@@ -253,26 +245,24 @@ fun IconContainer(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val ghostishShape = MaterialShapes.Ghostish.toShape()
+    val shape = RoundedCornerShape(16.dp)
 
     Box(
         modifier = modifier
-            .size(48.dp)
-            .clip(ghostishShape)
+            .size(44.dp)
+            .clip(shape)
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.06f)
-                    ),
-                    start = Offset(0f, 0f),
-                    end = Offset(100f, 100f)
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                        MaterialTheme.colorScheme.tertiary.copy(alpha = 0.07f),
+                    )
                 )
             )
             .border(
-                width = 1.dp,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                shape = ghostishShape
+                width = 0.75.dp,
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
+                shape = shape,
             ),
         contentAlignment = Alignment.Center,
     ) {
@@ -822,23 +812,14 @@ fun PreferenceGroup(
             )
         }
 
-        Surface(
-            shape = expressiveCardShape,
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            tonalElevation = 2.dp,
-            shadowElevation = 4.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(
-                    elevation = 4.dp,
-                    shape = expressiveCardShape,
-                    clip = false
-                ),
+        LiquidGlassCard(
+            cornerRadius = 26.dp,
+            modifier = Modifier.fillMaxWidth(),
         ) {
             CompositionLocalProvider(LocalPreferenceInGroup provides true) {
                 Column(
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    content = content
+                    modifier = Modifier.padding(vertical = 5.dp),
+                    content = content,
                 )
             }
         }
@@ -906,8 +887,8 @@ fun ExpressiveActionBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         shape = expressiveBottomSheetShape,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 6.dp,
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+        tonalElevation = 0.dp,
         dragHandle = {
             Box(
                 modifier = Modifier
@@ -1000,8 +981,8 @@ fun <T> ExpressiveListBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         shape = expressiveBottomSheetShape,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 6.dp,
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+        tonalElevation = 0.dp,
         dragHandle = {
             Box(
                 modifier = Modifier
@@ -1077,8 +1058,8 @@ fun ExpressiveTextFieldBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         shape = expressiveBottomSheetShape,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        tonalElevation = 6.dp,
+        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+        tonalElevation = 0.dp,
         dragHandle = {
             Box(
                 modifier = Modifier

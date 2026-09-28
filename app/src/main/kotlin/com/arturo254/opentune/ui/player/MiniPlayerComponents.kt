@@ -20,12 +20,16 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,19 +53,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.toShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -69,6 +70,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -82,6 +84,7 @@ import androidx.media3.common.Player
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.EnableHapticFeedbackKey
@@ -91,6 +94,7 @@ import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.together.TogetherSessionState
 import com.arturo254.opentune.ui.component.BottomSheetState
+import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
 import com.arturo254.opentune.utils.rememberHaptic
 import com.arturo254.opentune.utils.rememberPreference
 import kotlin.math.absoluteValue
@@ -107,16 +111,35 @@ fun SwipeableMiniPlayerBox(
     coroutineScope: CoroutineScope,
     pureBlack: Boolean = false,
     useLegacyBackground: Boolean = false,
-    content: @Composable (Float) -> Unit
+    content: @Composable (Float, Int) -> Unit
 ) {
-    val offsetXAnimatable = remember { Animatable(0f) }
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var transitionDirection by remember { mutableIntStateOf(1) }
     var dragStartTime by remember { mutableStateOf(0L) }
     var totalDragDistance by remember { mutableFloatStateOf(0f) }
+    var settleJob by remember { mutableStateOf<Job?>(null) }
 
     val animationSpec = spring<Float>(
         dampingRatio = Spring.DampingRatioNoBouncy,
-        stiffness = Spring.StiffnessLow
+        stiffness = Spring.StiffnessMedium
     )
+
+    fun settleOffset() {
+        settleJob?.cancel()
+        val startOffset = offsetX
+        if (startOffset == 0f) return
+
+        settleJob = coroutineScope.launch {
+            val settleAnimation = Animatable(startOffset)
+            settleAnimation.animateTo(
+                targetValue = 0f,
+                animationSpec = animationSpec
+            ) {
+                offsetX = value
+            }
+            offsetX = 0f
+        }
+    }
 
     fun calculateAutoSwipeThreshold(swipeSensitivity: Float): Int {
         return (600 / (1f + kotlin.math.exp(-(-11.44748 * swipeSensitivity + 9.04945)))).roundToInt()
@@ -140,19 +163,15 @@ fun SwipeableMiniPlayerBox(
             }
             .let { baseModifier ->
                 if (swipeThumbnail) {
-                    baseModifier.pointerInput(Unit) {
+                    baseModifier.pointerInput(swipeSensitivity, layoutDirection, playerConnection) {
                         detectHorizontalDragGestures(
                             onDragStart = {
+                                settleJob?.cancel()
                                 dragStartTime = System.currentTimeMillis()
                                 totalDragDistance = 0f
                             },
                             onDragCancel = {
-                                coroutineScope.launch {
-                                    offsetXAnimatable.animateTo(
-                                        targetValue = 0f,
-                                        animationSpec = animationSpec
-                                    )
-                                }
+                                settleOffset()
                             },
                             onHorizontalDrag = { _, dragAmount ->
                                 val adjustedDragAmount =
@@ -161,28 +180,30 @@ fun SwipeableMiniPlayerBox(
                                 val canSkipNext = playerConnection.player.nextMediaItemIndex != -1
                                 val allowLeft = adjustedDragAmount < 0 && canSkipNext
                                 val allowRight = adjustedDragAmount > 0 && canSkipPrevious
+
                                 if (allowLeft || allowRight) {
                                     totalDragDistance += kotlin.math.abs(adjustedDragAmount)
-                                    coroutineScope.launch {
-                                        offsetXAnimatable.snapTo(offsetXAnimatable.value + adjustedDragAmount)
-                                    }
+                                    // Update synchronously with the pointer event. The previous
+                                    // implementation launched a coroutine for every drag frame.
+                                    offsetX += adjustedDragAmount
                                 }
                             },
                             onDragEnd = {
                                 val dragDuration = System.currentTimeMillis() - dragStartTime
                                 val velocity = if (dragDuration > 0) totalDragDistance / dragDuration else 0f
-                                val currentOffset = offsetXAnimatable.value
+                                val currentOffset = offsetX
 
                                 val minDistanceThreshold = 50f
                                 val velocityThreshold = (swipeSensitivity * -8.25f) + 8.5f
 
                                 val shouldChangeSong = (
-                                        kotlin.math.abs(currentOffset) > minDistanceThreshold &&
-                                                velocity > velocityThreshold
-                                        ) || (kotlin.math.abs(currentOffset) > autoSwipeThreshold)
+                                    kotlin.math.abs(currentOffset) > minDistanceThreshold &&
+                                        velocity > velocityThreshold
+                                    ) || (kotlin.math.abs(currentOffset) > autoSwipeThreshold)
 
                                 if (shouldChangeSong) {
                                     val isRightSwipe = currentOffset > 0
+                                    transitionDirection = if (isRightSwipe) -1 else 1
                                     val canSkipPrevious = playerConnection.player.previousMediaItemIndex != -1
                                     val canSkipNext = playerConnection.player.nextMediaItemIndex != -1
 
@@ -199,12 +220,7 @@ fun SwipeableMiniPlayerBox(
                                     }
                                 }
 
-                                coroutineScope.launch {
-                                    offsetXAnimatable.animateTo(
-                                        targetValue = 0f,
-                                        animationSpec = animationSpec
-                                    )
-                                }
+                                settleOffset()
                             }
                         )
                     }
@@ -213,22 +229,22 @@ fun SwipeableMiniPlayerBox(
                 }
             }
     ) {
-        content(offsetXAnimatable.value)
+        content(offsetX, transitionDirection)
 
         // Visual indicator
-        if (offsetXAnimatable.value.absoluteValue > 50f) {
+        if (offsetX.absoluteValue > 50f) {
             Box(
                 modifier = Modifier
-                    .align(if (offsetXAnimatable.value > 0) Alignment.CenterStart else Alignment.CenterEnd)
+                    .align(if (offsetX > 0) Alignment.CenterStart else Alignment.CenterEnd)
                     .padding(horizontal = 16.dp)
             ) {
                 Icon(
                     painter = painterResource(
-                        if (offsetXAnimatable.value > 0) R.drawable.skip_previous else R.drawable.skip_next
+                        if (offsetX > 0) R.drawable.skip_previous else R.drawable.skip_next
                     ),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary.copy(
-                        alpha = (offsetXAnimatable.value.absoluteValue / autoSwipeThreshold).coerceIn(0f, 1f)
+                        alpha = (offsetX.absoluteValue / autoSwipeThreshold).coerceIn(0f, 1f)
                     ),
                     modifier = Modifier.size(24.dp)
                 )
@@ -239,41 +255,51 @@ fun SwipeableMiniPlayerBox(
 
 @Composable
 fun RowScope.MiniPlayerInfo(
-    mediaMetadata: MediaMetadata
+    mediaMetadata: MediaMetadata,
+    transitionDirection: Int,
 ) {
-    Column(
+    AnimatedContent(
+        targetState = mediaMetadata,
+        contentKey = { it.id },
+        transitionSpec = {
+            (
+                slideInHorizontally(
+                    animationSpec = spring(
+                        dampingRatio = 0.86f,
+                        stiffness = 520f,
+                    ),
+                    initialOffsetX = { width -> transitionDirection * width / 3 },
+                ) + fadeIn(tween(110))
+            ) togetherWith (
+                slideOutHorizontally(
+                    animationSpec = tween(140),
+                    targetOffsetX = { width -> -transitionDirection * width / 4 },
+                ) + fadeOut(tween(100))
+            )
+        },
+        label = "miniInfoSlide",
         modifier = Modifier
             .weight(1f)
             .padding(horizontal = 12.dp),
-        verticalArrangement = Arrangement.Center
-    ) {
-        AnimatedContent(
-            targetState = mediaMetadata.title,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "title"
-        ) { title ->
+    ) { metadata ->
+        Column(
+            verticalArrangement = Arrangement.Center,
+        ) {
             Text(
-                text = title,
+                text = metadata.title,
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.basicMarquee()
+                modifier = Modifier.basicMarquee(),
             )
-        }
-
-        AnimatedContent(
-            targetState = mediaMetadata.artists,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "artist"
-        ) { artists ->
             Text(
-                text = artists.joinToString { it.name },
+                text = metadata.artists.joinToString { it.name },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.basicMarquee()
+                modifier = Modifier.basicMarquee(),
             )
         }
     }
@@ -285,6 +311,7 @@ private fun MiniPlayerArtwork(
     position: Long,
     duration: Long,
     isLoading: Boolean,
+    transitionDirection: Int,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -306,32 +333,54 @@ private fun MiniPlayerArtwork(
             )
         }
 
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                    shape = CircleShape
+        AnimatedContent(
+            targetState = mediaMetadata,
+            contentKey = { it?.id },
+            transitionSpec = {
+                (
+                    slideInHorizontally(
+                        animationSpec = spring(
+                            dampingRatio = 0.86f,
+                            stiffness = 560f,
+                        ),
+                        initialOffsetX = { width -> transitionDirection * width / 2 },
+                    ) + fadeIn(tween(90))
+                ) togetherWith (
+                    slideOutHorizontally(
+                        animationSpec = tween(120),
+                        targetOffsetX = { width -> -transitionDirection * width / 2 },
+                    ) + fadeOut(tween(90))
                 )
-        ) {
-            val thumbnailUrl = mediaMetadata?.thumbnailUrl
-            if (thumbnailUrl != null) {
-                AsyncImage(
-                    model = thumbnailUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Image(
-                    painter = painterResource(R.drawable.opentune),
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp)
-                )
+            },
+            label = "miniArtworkSlide",
+        ) { metadata ->
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                        shape = CircleShape
+                    )
+            ) {
+                val thumbnailUrl = metadata?.thumbnailUrl
+                if (thumbnailUrl != null) {
+                    AsyncImage(
+                        model = thumbnailUrl,
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(R.drawable.opentune),
+                        contentDescription = null,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
             }
         }
     }
@@ -346,11 +395,17 @@ private fun MiniPlayerTransportButton(
     enabled: Boolean = true,
     isPrimary: Boolean = false
 ) {
-    val containerColor =
-        if (isPrimary) MaterialTheme.colorScheme.surface else Color.Transparent
-    val borderColor =
-        if (enabled) MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-        else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+    val liquidGlass = LocalEnableLiquidGlass.current
+    val containerColor = when {
+        liquidGlass && isPrimary -> Color.White.copy(alpha = 0.18f)
+        isPrimary -> MaterialTheme.colorScheme.surface
+        else -> Color.Transparent
+    }
+    val borderColor = when {
+        liquidGlass && enabled -> Color.White.copy(alpha = 0.22f)
+        enabled -> MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+        else -> MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+    }
     val iconTint =
         if (enabled) MaterialTheme.colorScheme.onSurface
         else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
@@ -441,7 +496,8 @@ fun NewMiniPlayerContent(
     duration: Long,
     playerConnection: PlayerConnection,
     navController: NavController,
-    state: BottomSheetState
+    state: BottomSheetState,
+    transitionDirection: Int,
 ) {
     val isPlaying by playerConnection.isPlaying.collectAsState()
     val playbackState by playerConnection.playbackState.collectAsState()
@@ -464,13 +520,17 @@ fun NewMiniPlayerContent(
             mediaMetadata = mediaMetadata,
             position = position,
             duration = duration,
-            isLoading = isLoading
+            isLoading = isLoading,
+            transitionDirection = transitionDirection,
         )
 
         Spacer(modifier = Modifier.width(12.dp))
 
         mediaMetadata?.let {
-            MiniPlayerInfo(mediaMetadata = it)
+            MiniPlayerInfo(
+                mediaMetadata = it,
+                transitionDirection = transitionDirection,
+            )
         } ?: Spacer(Modifier.weight(1f))
 
         if (togetherSessionState !is TogetherSessionState.Idle) {
@@ -566,63 +626,84 @@ private fun MiniPlayerPlayPauseButton(
     isLoading: Boolean,
     playerConnection: PlayerConnection,
 ) {
-    // Animación de escala del botón
-    val buttonScale by animateFloatAsState(
-        targetValue = 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium,
-            visibilityThreshold = 0.01f
-        ),
-        label = "buttonScale"
-    )
-
-    val animationKey by rememberUpdatedState(isPlaying)
     val (enableHaptic) = rememberPreference(EnableHapticFeedbackKey, true)
     val haptic = rememberHaptic(enabled = enableHaptic)
 
-    FilledIconButton(
-        onClick = {
-            haptic.click()
-            if (!isLoading) playerConnection.player.togglePlayPause()
-        },
-        modifier = Modifier
-            .size(48.dp)
-            .graphicsLayer {
-                scaleX = buttonScale
-                scaleY = buttonScale
-            },
-        shape = MaterialShapes.Cookie9Sided.toShape(),
-        colors = IconButtonDefaults.filledIconButtonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val buttonScale by animateFloatAsState(
+        targetValue = if (pressed) 0.91f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium,
         ),
-        enabled = !isLoading,
+        label = "miniPlayPressScale",
+    )
+
+    val liquidGlass = LocalEnableLiquidGlass.current
+    val containerColor = if (liquidGlass) {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+    val iconColor = if (liquidGlass) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        MaterialTheme.colorScheme.onPrimary
+    }
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(46.dp)
+            .scale(buttonScale)
+            .clip(CircleShape)
+            .background(containerColor)
+            .border(
+                width = 1.dp,
+                color = if (liquidGlass) {
+        MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
+    } else {
+        Color.Transparent
+    },
+                shape = CircleShape,
+            )
+            .clickable(
+                enabled = !isLoading,
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+            ) {
+                haptic.click()
+                playerConnection.player.togglePlayPause()
+            },
     ) {
         if (isLoading) {
             CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                color = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(19.dp),
+                color = if (liquidGlass) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onPrimary
+                },
                 strokeWidth = 2.dp,
             )
         } else {
             AnimatedContent(
                 targetState = isPlaying,
                 transitionSpec = {
-                    // Efecto Expressive: el icono entrante escala desde el centro
-                    // mientras el saliente escala hacia afuera
-                    (fadeIn(animationSpec = tween(150)) +
+                    (fadeIn(animationSpec = tween(130)) +
                             scaleIn(
-                                initialScale = 0.4f, animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioLowBouncy,
-                                    stiffness = Spring.StiffnessLow
+                                initialScale = 0.65f,
+                                animationSpec = spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessMedium,
                                 )
-                            )
-                            ).togetherWith(
-                            fadeOut(animationSpec = tween(100)) +
-                                    scaleOut(targetScale = 1.6f, animationSpec = tween(100))
+                            )).togetherWith(
+                            fadeOut(animationSpec = tween(90)) +
+                                    scaleOut(
+                                        targetScale = 0.75f,
+                                        animationSpec = tween(90),
+                                    )
                         )
                 },
                 label = "playPauseIcon",
@@ -632,7 +713,8 @@ private fun MiniPlayerPlayPauseButton(
                         if (playing) R.drawable.pause else R.drawable.play
                     ),
                     contentDescription = null,
-                    modifier = Modifier.size(22.dp),
+                    tint = iconColor,
+                    modifier = Modifier.size(21.dp),
                 )
             }
         }

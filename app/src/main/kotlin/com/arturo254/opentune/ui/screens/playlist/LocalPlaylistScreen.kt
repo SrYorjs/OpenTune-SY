@@ -136,7 +136,6 @@ import com.arturo254.opentune.innertube.utils.completed
 import com.arturo254.opentune.models.toMediaMetadata
 import com.arturo254.opentune.playback.ExoDownloadService
 import com.arturo254.opentune.playback.queues.ListQueue
-import com.arturo254.opentune.playback.queues.LocalMixQueue
 import com.arturo254.opentune.ui.component.DefaultDialog
 import com.arturo254.opentune.ui.component.EditPlaylistDialog
 import com.arturo254.opentune.ui.component.DraggableScrollbar
@@ -144,6 +143,9 @@ import com.arturo254.opentune.ui.component.EmptyPlaceholder
 import com.arturo254.opentune.ui.component.AssignTagsDialog
 import com.arturo254.opentune.ui.component.IconButton
 import com.arturo254.opentune.ui.component.LocalMenuState
+import com.arturo254.opentune.ui.component.LiquidGlassIconButton
+import com.arturo254.opentune.ui.component.LiquidGlassPillButton
+import com.arturo254.opentune.ui.component.PlaylistMixSheet
 import com.arturo254.opentune.ui.component.SongListItem
 import com.arturo254.opentune.ui.component.SortHeader
 import com.arturo254.opentune.ui.menu.SelectionSongMenu
@@ -196,6 +198,16 @@ fun LocalPlaylistScreen(
     val swipeToSongEnabled by rememberPreference(SwipeToSongKey, defaultValue = false)
     val (disableBlur) = rememberPreference(DisableBlurKey, false)
     var showAssignTagsDialog by remember { mutableStateOf(false) }
+    var showMixSheet by remember { mutableStateOf(false) }
+
+    if (showMixSheet && playlist != null) {
+        PlaylistMixSheet(
+            playlistName = playlist!!.playlist.name,
+            songs = songs,
+            playerConnection = playerConnection,
+            onDismiss = { showMixSheet = false },
+        )
+    }
 
     if (showAssignTagsDialog && playlist != null) {
         AssignTagsDialog(
@@ -777,67 +789,55 @@ fun LocalPlaylistScreen(
 
                                 Spacer(modifier = Modifier.height(24.dp))
 
-                                // Action Buttons Row
+                                // Premium floating transport/actions
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 24.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-                                    verticalAlignment = Alignment.CenterVertically
+                                        .padding(horizontal = 18.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(
+                                        12.dp,
+                                        Alignment.CenterHorizontally,
+                                    ),
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    // Like/Delete Button (depending on editable)
                                     if (editable) {
-                                        Surface(
+                                        LiquidGlassIconButton(
                                             onClick = { showDeletePlaylistDialog = true },
-                                            shape = CircleShape,
-                                            color = MaterialTheme.colorScheme.surfaceVariant,
-                                            modifier = Modifier.size(48.dp)
+                                            size = 46.dp,
                                         ) {
-                                            Box(
-                                                modifier = Modifier.fillMaxSize(),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.delete),
-                                                    contentDescription = null,
-                                                    tint = MaterialTheme.colorScheme.error,
-                                                    modifier = Modifier.size(24.dp)
-                                                )
-                                            }
+                                            Icon(
+                                                painter = painterResource(R.drawable.delete),
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.error,
+                                                modifier = Modifier.size(21.dp),
+                                            )
                                         }
                                     } else {
                                         val liked = playlist.playlist.bookmarkedAt != null
-                                        Surface(
+                                        LiquidGlassIconButton(
                                             onClick = {
                                                 database.transaction {
                                                     update(playlist.playlist.toggleLike())
                                                 }
                                             },
-                                            shape = CircleShape,
-                                            color = MaterialTheme.colorScheme.surfaceVariant,
-                                            modifier = Modifier.size(48.dp)
+                                            selected = liked,
+                                            size = 46.dp,
                                         ) {
-                                            Box(
-                                                modifier = Modifier.fillMaxSize(),
-                                                contentAlignment = Alignment.Center
-                                            ) {
-                                                Icon(
-                                                    painter = painterResource(
-                                                        if (liked) R.drawable.favorite else R.drawable.favorite_border
-                                                    ),
-                                                    contentDescription = null,
-                                                    tint = if (liked)
-                                                        MaterialTheme.colorScheme.error
-                                                    else
-                                                        MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    modifier = Modifier.size(24.dp)
-                                                )
-                                            }
+                                            Icon(
+                                                painter = painterResource(
+                                                    if (liked) R.drawable.favorite
+                                                    else R.drawable.favorite_border
+                                                ),
+                                                contentDescription = null,
+                                                tint =
+                                                    if (liked) MaterialTheme.colorScheme.error
+                                                    else MaterialTheme.colorScheme.onSurface,
+                                                modifier = Modifier.size(21.dp),
+                                            )
                                         }
                                     }
 
-                                    // Play Button
-                                    Button(
+                                    LiquidGlassIconButton(
                                         onClick = {
                                             playerConnection.playQueue(
                                                 ListQueue(
@@ -846,20 +846,18 @@ fun LocalPlaylistScreen(
                                                 ),
                                             )
                                         },
-                                        shape = RoundedCornerShape(24.dp),
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(48.dp)
+                                        selected = true,
+                                        size = 62.dp,
                                     ) {
                                         Icon(
                                             painter = painterResource(R.drawable.play),
                                             contentDescription = stringResource(R.string.play),
-                                            modifier = Modifier.size(24.dp)
+                                            tint = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.size(29.dp),
                                         )
                                     }
 
-                                    // Shuffle Button
-                                    Button(
+                                    LiquidGlassIconButton(
                                         onClick = {
                                             playerConnection.playQueue(
                                                 ListQueue(
@@ -868,20 +866,16 @@ fun LocalPlaylistScreen(
                                                 ),
                                             )
                                         },
-                                        shape = RoundedCornerShape(24.dp),
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(48.dp)
+                                        size = 50.dp,
                                     ) {
                                         Icon(
                                             painter = painterResource(R.drawable.shuffle),
                                             contentDescription = stringResource(R.string.shuffle),
-                                            modifier = Modifier.size(24.dp)
+                                            modifier = Modifier.size(22.dp),
                                         )
                                     }
 
-                                    // Download Button
-                                    Surface(
+                                    LiquidGlassIconButton(
                                         onClick = {
                                             when (downloadState) {
                                                 Download.STATE_COMPLETED -> {
@@ -914,53 +908,46 @@ fun LocalPlaylistScreen(
                                                 }
                                             }
                                         },
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.surfaceVariant,
-                                        modifier = Modifier.size(48.dp)
+                                        selected = downloadState == Download.STATE_COMPLETED,
+                                        size = 46.dp,
                                     ) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            when (downloadState) {
-                                                Download.STATE_COMPLETED -> {
-                                                    Icon(
-                                                        painter = painterResource(R.drawable.offline),
-                                                        contentDescription = null,
-                                                        tint = MaterialTheme.colorScheme.primary,
-                                                        modifier = Modifier.size(24.dp)
-                                                    )
-                                                }
-                                                Download.STATE_DOWNLOADING -> {
-                                                    CircularProgressIndicator(
-                                                        strokeWidth = 2.dp,
-                                                        modifier = Modifier.size(24.dp),
-                                                        color = MaterialTheme.colorScheme.primary
-                                                    )
-                                                }
-                                                else -> {
-                                                    Icon(
-                                                        painter = painterResource(R.drawable.download),
-                                                        contentDescription = null,
-                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        modifier = Modifier.size(24.dp)
-                                                    )
-                                                }
+                                        when (downloadState) {
+                                            Download.STATE_COMPLETED -> {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.offline),
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(21.dp),
+                                                )
+                                            }
+                                            Download.STATE_DOWNLOADING -> {
+                                                CircularProgressIndicator(
+                                                    strokeWidth = 2.dp,
+                                                    modifier = Modifier.size(21.dp),
+                                                    color = MaterialTheme.colorScheme.primary,
+                                                )
+                                            }
+                                            else -> {
+                                                Icon(
+                                                    painter = painterResource(R.drawable.download),
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(21.dp),
+                                                )
                                             }
                                         }
                                     }
 
-                                    // More Options Button
-                                    Surface(
+                                    LiquidGlassIconButton(
                                         onClick = {
-                                            // Show more options (edit, sync, queue)
                                             if (editable) {
                                                 showEditDialog = true
                                             } else if (playlist.playlist.browseId != null) {
                                                 coroutineScope.launch(Dispatchers.IO) {
-                                                    val playlistPage = YouTube.playlist(playlist.playlist.browseId)
-                                                        .completed()
-                                                        .getOrNull() ?: return@launch
+                                                    val playlistPage =
+                                                        YouTube.playlist(playlist.playlist.browseId)
+                                                            .completed()
+                                                            .getOrNull()
+                                                            ?: return@launch
                                                     database.transaction {
                                                         clearPlaylist(playlist.id)
                                                         playlistPage.songs
@@ -971,64 +958,57 @@ fun LocalPlaylistScreen(
                                                                     songId = song.id,
                                                                     playlistId = playlist.id,
                                                                     position = position,
-                                                                    setVideoId = song.setVideoId
+                                                                    setVideoId = song.setVideoId,
                                                                 )
                                                             }
                                                             .forEach(::insert)
                                                     }
                                                 }
                                                 coroutineScope.launch(Dispatchers.Main) {
-                                                    snackbarHostState.showSnackbar(context.getString(R.string.playlist_synced))
+                                                    snackbarHostState.showSnackbar(
+                                                        context.getString(R.string.playlist_synced)
+                                                    )
                                                 }
                                             }
                                         },
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.surfaceVariant,
-                                        modifier = Modifier.size(48.dp)
+                                        size = 46.dp,
                                     ) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                painter = painterResource(
-                                                    if (editable) R.drawable.edit else R.drawable.sync
-                                                ),
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier = Modifier.size(24.dp)
-                                            )
-                                        }
+                                        Icon(
+                                            painter = painterResource(
+                                                if (editable) R.drawable.edit else R.drawable.sync
+                                            ),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(21.dp),
+                                        )
                                     }
                                 }
+
+                                Spacer(modifier = Modifier.height(4.dp))
 
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 20.dp, vertical = 20.dp),
+                                        .padding(horizontal = 20.dp, vertical = 18.dp),
                                     horizontalArrangement = Arrangement.Center,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // Start Mix Button
-                                    Button(
-                                        onClick = {
-                                            playerConnection.playQueue(
-                                                LocalMixQueue(
-                                                    database = database,
-                                                    playlistId = playlist.id,
-                                                    maxMixSize = 50,
-                                                ),
-                                            )
-                                        },
-                                        shape = RoundedCornerShape(24.dp),
+                                    LiquidGlassPillButton(
+                                        onClick = { showMixSheet = true },
+                                        enabled = songs.size > 1,
+                                        selected = true,
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(48.dp)
+                                            .height(52.dp),
                                     ) {
                                         Icon(
                                             painter = painterResource(R.drawable.mix),
-                                            contentDescription = "Start Mix",
-                                            modifier = Modifier.size(24.dp)
+                                            contentDescription = null,
+                                            modifier = Modifier.size(21.dp),
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.playlist_mix_title),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
                                         )
                                     }
                                 }

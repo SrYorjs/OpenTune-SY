@@ -43,12 +43,16 @@ import com.arturo254.opentune.utils.enumPreference
 import com.arturo254.opentune.constants.NetworkMeteredKey
 import com.arturo254.opentune.utils.dataStore
 import com.arturo254.opentune.utils.get
+import com.arturo254.opentune.ui.player.fetchCanvasArtworkForPlayback
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import okhttp3.ConnectionPool
+import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import java.time.LocalDateTime
-import java.util.concurrent.Executor
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -56,12 +60,13 @@ import javax.inject.Singleton
 class DownloadUtil
 @Inject
 constructor(
-    @ApplicationContext context: Context,
+    @ApplicationContext private val context: Context,
     val database: MusicDatabase,
     val databaseProvider: DatabaseProvider,
     @DownloadCache val downloadCache: Cache,
     @PlayerCache val playerCache: Cache,
     private val lyricsHelper: LyricsHelper,
+    private val offlineAssets: OfflineMediaAssetStore,
 ) {
     private val connectivityManager = context.getSystemService<ConnectivityManager>()!!
     private val audioQuality by enumPreference(context, AudioQualityKey, AudioQuality.AUTO)
@@ -70,9 +75,22 @@ constructor(
     private val avoidStreamCodecs: Set<String> by lazy {
         if (deviceSupportsMimeType("audio/opus")) emptySet() else setOf("opus")
     }
+    private val mediaDispatcher =
+        Dispatcher().apply {
+            maxRequests = 32
+            maxRequestsPerHost = 12
+        }
+
+    private val downloadExecutor = Executors.newFixedThreadPool(4)
+
     private val mediaOkHttpClient: OkHttpClient by lazy {
         OkHttpClient
             .Builder()
+            .dispatcher(mediaDispatcher)
+            .connectionPool(ConnectionPool(8, 5, TimeUnit.MINUTES))
+            .connectTimeout(8, TimeUnit.SECONDS)
+            .readTimeout(0, TimeUnit.MILLISECONDS)
+            .retryOnConnectionFailure(true)
             .proxy(YouTube.streamProxy)
             .followRedirects(true)
             .followSslRedirects(true)
@@ -205,9 +223,9 @@ constructor(
             databaseProvider,
             downloadCache,
             dataSourceFactory,
-            Executor(Runnable::run)
+            downloadExecutor
         ).apply {
-            maxParallelDownloads = 3
+            maxParallelDownloads = 4
             addListener(
                 object : DownloadManager.Listener {
                     override fun onDownloadChanged(
@@ -218,6 +236,12 @@ constructor(
                         downloads.update { map ->
                             map.toMutableMap().apply {
                                 set(download.request.id, download)
+                            }
+                        }
+
+                        if (download.state == Download.STATE_COMPLETED) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                ensureOfflineBundleByLookup(download.request.id)
                             }
                         }
                     }
@@ -246,7 +270,12 @@ constructor(
      */
     private suspend fun ensureLyricsSavedByLookup(mediaId: String) {
         val existing = database.getLyricsById(mediaId)
-        if (existing != null) return
+        if (existing != null) {
+            if (existing.lyrics != LYRICS_NOT_FOUND) {
+                offlineAssets.saveLyrics(mediaId, existing.lyrics)
+            }
+            return
+        }
 
         val song = database.getSongByIdBlocking(mediaId) ?: run {
             Timber.tag("DownloadUtil").w("No se encontró la canción $mediaId en la BD, no se puede buscar letra todavía")
@@ -276,7 +305,12 @@ constructor(
         duration: Int,
     ) {
         val existing = database.getLyricsById(mediaId)
-        if (existing != null) return
+        if (existing != null) {
+            if (existing.lyrics != LYRICS_NOT_FOUND) {
+                offlineAssets.saveLyrics(mediaId, existing.lyrics)
+            }
+            return
+        }
 
         val mediaMetadata = MediaMetadata(
             id = mediaId,
@@ -296,7 +330,64 @@ constructor(
         database.query {
             upsert(LyricsEntity(id = mediaId, lyrics = lyrics))
         }
+
+        if (lyrics != LYRICS_NOT_FOUND) {
+            offlineAssets.saveLyrics(mediaId, lyrics)
+        }
     }
+
+    private suspend fun ensureOfflineBundleByLookup(mediaId: String) {
+        val song = database.getSongByIdBlocking(mediaId) ?: return
+        val title = song.song.title
+        val artists = song.artists.joinToString { it.name }
+        val album = song.album?.title ?: song.song.albumName
+
+        coroutineScope {
+            val lyricsJob =
+                async(Dispatchers.IO) {
+                    ensureLyricsSaved(
+                        mediaId = mediaId,
+                        title = title,
+                        artist = artists,
+                        album = album,
+                        duration = song.song.duration,
+                    )
+                }
+
+            val coverJob =
+                async(Dispatchers.IO) {
+                    offlineAssets.cacheCover(
+                        mediaId = mediaId,
+                        url = song.song.thumbnailUrl,
+                    )
+                }
+
+            val canvasJob =
+                async(Dispatchers.IO) {
+                    val canvas =
+                        runCatching {
+                            fetchCanvasArtworkForPlayback(
+                                songTitleRaw = title,
+                                artistNameRaw = artists,
+                                albumName = album,
+                            )
+                        }.getOrNull()
+
+                    offlineAssets.cacheAnimatedArtwork(
+                        mediaId = mediaId,
+                        url = canvas?.preferredAnimationUrl,
+                    )
+                }
+
+            awaitAll(lyricsJob, coverJob, canvasJob)
+        }
+    }
+
+    fun getOfflineCoverUri(mediaId: String): String? =
+        offlineAssets.getCoverUri(mediaId)
+
+    fun getOfflineAnimationUri(mediaId: String): String? =
+        offlineAssets.getAnimationUri(mediaId)
 
     private fun deviceSupportsMimeType(mimeType: String): Boolean {
         return runCatching {

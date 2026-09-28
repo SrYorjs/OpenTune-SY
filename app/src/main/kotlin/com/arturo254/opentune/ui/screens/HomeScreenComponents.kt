@@ -22,6 +22,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -64,6 +65,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -87,7 +89,9 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import com.arturo254.opentune.R
+import com.arturo254.opentune.catalog.CatalogPlaybackResolver
 import com.arturo254.opentune.constants.GridThumbnailHeight
 import com.arturo254.opentune.constants.ListItemHeight
 import com.arturo254.opentune.constants.ListThumbnailSize
@@ -141,7 +145,154 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.arturo254.opentune.viewmodels.DeezerSearchViewModel
 import com.arturo254.opentune.viewmodels.HomeViewModel
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun DeezerTrendingHomeSection(
+    playerConnection: PlayerConnection,
+    modifier: Modifier = Modifier,
+    viewModel: DeezerSearchViewModel = hiltViewModel(),
+) {
+    val state by viewModel.state.collectAsState()
+    val mediaMetadata by playerConnection.mediaMetadata.collectAsState()
+    val isPlaying by playerConnection.isPlaying.collectAsState()
+    val scope = rememberCoroutineScope()
+    val tracks = state.tracks.take(12)
+
+    if (tracks.isEmpty()) return
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        NavigationTitle(
+            label = stringResource(R.string.global_catalog),
+            title = stringResource(R.string.deezer_trending),
+        )
+
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 18.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            items(
+                items = tracks,
+                key = { "deezer_home_" + it.id },
+            ) { track ->
+                val active =
+                    mediaMetadata?.title.equals(track.title, ignoreCase = true) &&
+                        mediaMetadata?.artists
+                            ?.any { it.name.equals(track.artistName, ignoreCase = true) } == true
+                val interaction = remember { MutableInteractionSource() }
+                val pressed by interaction.collectIsPressedAsState()
+                val scale by animateFloatAsState(
+                    targetValue = if (pressed) 0.955f else 1f,
+                    animationSpec = spring(
+                        dampingRatio = 0.86f,
+                        stiffness = 640f,
+                    ),
+                    label = "deezerHomeCard",
+                )
+                val shape = RoundedCornerShape(26.dp)
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier =
+                        Modifier
+                            .width(160.dp)
+                            .graphicsLayer {
+                                scaleX = scale
+                                scaleY = scale
+                            }
+                            .clip(shape)
+                            .background(
+                                MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.50f)
+                            )
+                            .border(
+                                0.75.dp,
+                                if (active) {
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.34f)
+                                } else {
+                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.17f)
+                                },
+                                shape,
+                            )
+                            .combinedClickable(
+                                interactionSource = interaction,
+                                onClick = {
+                                    if (active) {
+                                        playerConnection.player.togglePlayPause()
+                                    } else {
+                                        scope.launch {
+                                            CatalogPlaybackResolver
+                                                .resolveToMediaItem(track.toCatalogReference())
+                                                ?.let { mediaItem ->
+                                                    playerConnection.player.setMediaItem(mediaItem)
+                                                    playerConnection.player.prepare()
+                                                    playerConnection.player.playWhenReady = true
+                                                }
+                                        }
+                                    }
+                                },
+                                onLongClick = {},
+                            )
+                            .padding(10.dp),
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier =
+                            Modifier
+                                .size(140.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    ) {
+                        AsyncImage(
+                            model = track.artworkUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+
+                        if (active) {
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .background(Color.Black.copy(alpha = 0.24f))
+                            )
+                            Icon(
+                                painter =
+                                    painterResource(
+                                        if (isPlaying) R.drawable.pause else R.drawable.play
+                                    ),
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(32.dp),
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = track.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        color =
+                            if (active) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = track.artistName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -160,12 +311,12 @@ fun QuickPicksSection(
 
     HorizontalCenteredHeroCarousel(
         state = rememberCarouselState { distinctQuickPicks.size },
-        maxItemWidth = 250.dp,
-        itemSpacing = 8.dp,
-        contentPadding = PaddingValues(horizontal = 16.dp),
+        maxItemWidth = 238.dp,
+        itemSpacing = 12.dp,
+        contentPadding = PaddingValues(horizontal = 18.dp),
         modifier = modifier
             .fillMaxWidth()
-            .height(290.dp)
+            .height(274.dp)
     ) { index ->
         val song = distinctQuickPicks[index]
         val isActive = song.id == mediaMetadata?.id
@@ -193,10 +344,11 @@ fun QuickPicksSection(
                     scaleY = cardScale
                     transformOrigin = TransformOrigin.Center
                 }
-                .maskClip(MaterialTheme.shapes.extraLarge)
-                .maskBorder(
-                    BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                    MaterialTheme.shapes.extraLarge
+                .clip(RoundedCornerShape(28.dp))
+                .border(
+                    width = 0.8.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.28f),
+                    shape = RoundedCornerShape(28.dp),
                 )
                 .combinedClickable(
                     interactionSource = interactionSource,
@@ -325,10 +477,10 @@ fun SpeedDialSection(
     val context = LocalContext.current
     val distinctSpeedDial = remember(speedDialSongs) { speedDialSongs.distinctBy { it.id }.take(24) }
     val speedDialIndexById = remember(distinctSpeedDial) { distinctSpeedDial.mapIndexed { index, song -> song.id to index }.toMap() }
-    val tileSize = 130.dp
-    val spacing = 10.dp
+    val tileSize = 148.dp
+    val spacing = 12.dp
     val state = rememberLazyGridState()
-    val rowCount = min(3, distinctSpeedDial.size + 1)
+    val rowCount = min(2, distinctSpeedDial.size + 1)
     val gridHeight = (tileSize * rowCount) + (spacing * (rowCount - 1))
 
     fun playSpeedDialQueue(startIndex: Int) {
@@ -411,7 +563,12 @@ fun SpeedDialSection(
                             scaleY = cardScale
                             transformOrigin = TransformOrigin.Center
                         }
-                        .clip(RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(22.dp))
+                        .border(
+                            width = 0.75.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f),
+                            shape = RoundedCornerShape(22.dp),
+                        )
                         .combinedClickable(
                             interactionSource = interactionSource,
                             onClick = {

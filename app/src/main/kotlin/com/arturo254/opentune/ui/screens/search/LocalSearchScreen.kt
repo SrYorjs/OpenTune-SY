@@ -84,12 +84,12 @@ fun LocalSearchScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(if (pureBlack) Color.Black else MaterialTheme.colorScheme.background)
+            .liquidGlassScreenBackground(pureBlack = pureBlack)
     ) {
         Surface(
-            color = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surface,
-            tonalElevation = if (pureBlack) 0.dp else 0.dp,
-            shadowElevation = if (pureBlack) 0.dp else 1.dp,
+            color = Color.Transparent,
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
         ) {
             ChipsRow(
                 chips = listOf(

@@ -480,4 +480,13 @@
     <string name="playback">Playback</string>
     <string name="jossred_fallback_label">Use alternative source</string>
     <string name="jossred_fallback_description">Attempt to play from JossRed if YouTube fails</string>
+    <string name="playlist_mix_smart_title">Smart Automix</string>
+    <string name="playlist_mix_smart_desc">Analyzes BPM and gain level to reorder the playlist and soften abrupt transitions.</string>
+    <string name="playlist_mix_analyzed">Analyzed</string>
+    <string name="playlist_mix_transition_time">Transition duration</string>
+    <string name="playlist_mix_manual_desc">Keeps the current order and applies the same curve and duration between tracks.</string>
+    <string name="playlist_mix_manual_console">Transition console</string>
+    <string name="playlist_mix_start_smart">Play Smart Mix</string>
+    <string name="playlist_mix_start_manual">Play Manual Mix</string>
+
 </resources>

@@ -10,8 +10,7 @@ package com.arturo254.opentune.ui.player
 
 import androidx.compose.foundation.background
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
-import com.arturo254.opentune.ui.component.LocalSky
-import com.skydoves.cloudy.cloudy
+import com.arturo254.opentune.ui.component.liquidGlassSurface
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,18 +22,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.preferredFrameRate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.constants.SwipeSensitivityKey
 import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.utils.rememberPreference
-import kotlin.math.roundToInt
-
 
 @Composable
 fun MiniPlayer(
@@ -79,34 +76,48 @@ private fun NewMiniPlayer(
         coroutineScope = coroutineScope,
         pureBlack = pureBlack,
         useLegacyBackground = false
-    ) { offsetX ->
+    ) { offsetX, transitionDirection ->
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp)
-                .offset { IntOffset(offsetX.roundToInt(), 0) }
-                .clip(RoundedCornerShape(32.dp))
-                .then(
-                    if (LocalEnableLiquidGlass.current && LocalSky.current != null) {
-                        Modifier.cloudy(
-                            sky = LocalSky.current!!,
-                            radius = 24,
-                            shape = RoundedCornerShape(32.dp),
-                            tint = Color.White.copy(alpha = 0.08f),
-                        )
+                .preferredFrameRate(120f)
+                .background(
+                    color = if (LocalEnableLiquidGlass.current) {
+                        Color.Transparent
                     } else {
-                        Modifier.background(color = MaterialTheme.colorScheme.surfaceContainer)
+                        if (pureBlack) Color.Black.copy(alpha = 0.82f)
+                        else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.88f)
                     }
                 )
+                .liquidGlassSurface(
+                    shape = RoundedCornerShape(32.dp),
+                    pureBlack = pureBlack,
+                    blurRadius = 4,
+                    refraction = 0.045f,
+                    curve = 0.10f,
+                    dispersion = 0.0015f,
+                    edge = 0f,
+                )
         ) {
-            NewMiniPlayerContent(
-                pureBlack = pureBlack,
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .graphicsLayer {
+                        translationX = offsetX
+                    }
+            ) {
+                NewMiniPlayerContent(
+                    pureBlack = pureBlack,
                 position = position,
                 duration = duration,
                 playerConnection = playerConnection,
                 navController = navController,
-                state = state
-            )
+                    state = state,
+                    transitionDirection = transitionDirection,
+                )
+            }
         }
     }
 }

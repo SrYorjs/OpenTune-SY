@@ -60,6 +60,7 @@ import androidx.media3.datasource.cache.CacheDataSource.FLAG_IGNORE_CACHE_ON_ERR
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.ContentMetadata
 import androidx.media3.datasource.okhttp.OkHttpDataSource
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
@@ -290,6 +291,7 @@ class MusicService :
         PlayerStreamClient.ANDROID_VR
     )
     private val playbackUrlCache = ConcurrentHashMap<String, Pair<String, Long>>()
+    private val playbackWarmupInFlight = ConcurrentHashMap.newKeySet<String>()
     private val streamRecoveryState = ConcurrentHashMap<String, Pair<Int, Long>>()
     @Volatile
     private var pendingStreamRefreshValidationMediaId: String? = null
@@ -650,6 +652,7 @@ class MusicService :
             ExoPlayer
                 .Builder(this)
                 .setMediaSourceFactory(createMediaSourceFactory())
+                .setLoadControl(createFastStartLoadControl())
                 .setRenderersFactory(createRenderersFactory())
                 .setHandleAudioBecomingNoisy(true)
                 .setWakeMode(C.WAKE_MODE_NETWORK)
@@ -862,6 +865,7 @@ class MusicService :
                     ExoPlayer
                         .Builder(this)
                         .setMediaSourceFactory(createMediaSourceFactory())
+                        .setLoadControl(createFastStartLoadControl())
                         .setRenderersFactory(createRenderersFactory())
                         .setHandleAudioBecomingNoisy(false)
                         .setWakeMode(C.WAKE_MODE_NETWORK)
@@ -3031,7 +3035,6 @@ class MusicService :
                 com.arturo254.opentune.together.ControlAction.SkipNext -> {
                     if (player.hasNextMediaItem()) {
                         player.seekToNext()
-                        player.prepare()
                         player.playWhenReady = true
                     }
                 }
@@ -3039,7 +3042,6 @@ class MusicService :
                 com.arturo254.opentune.together.ControlAction.SkipPrevious -> {
                     if (player.hasPreviousMediaItem()) {
                         player.seekToPrevious()
-                        player.prepare()
                         player.playWhenReady = true
                     }
                 }
@@ -3594,6 +3596,8 @@ class MusicService :
         if (queue.isNotEmpty()) {
             lyricsPreloadManager?.onSongChanged(currentIndex, queue)
         }
+
+        scheduleNextStreamWarmup()
 
         val joined = togetherSessionState.value as? com.arturo254.opentune.together.TogetherSessionState.Joined
         if (joined?.role is com.arturo254.opentune.together.TogetherRole.Guest &&
@@ -4308,9 +4312,74 @@ class MusicService :
             ).setCacheWriteDataSinkFactory(null)
             .setFlags(FLAG_IGNORE_CACHE_ON_ERROR)
 
+    /**
+     * Resolve the next track's stream URL after the current track has settled.
+     * This is limited to unmetered networks so faster skips do not silently
+     * increase cellular data usage.
+     */
+    private fun scheduleNextStreamWarmup() {
+        if (connectivityManager.isActiveNetworkMetered) return
+
+        scope.launch(Dispatchers.IO + SilentHandler) {
+            delay(1_200L)
+
+            if (connectivityManager.isActiveNetworkMetered) return@launch
+
+            val nextIndex = player.currentMediaItemIndex + 1
+            if (nextIndex !in 0 until player.mediaItemCount) return@launch
+
+            val mediaId =
+                player.getMediaItemAt(nextIndex).mediaId
+                    .trim()
+                    .takeIf { it.isNotBlank() }
+                    ?: return@launch
+
+            val now = System.currentTimeMillis()
+            if (playbackUrlCache[mediaId]?.second?.let { it > now } == true) return@launch
+            if (!playbackWarmupInFlight.add(mediaId)) return@launch
+
+            try {
+                val playbackData =
+                    withTimeout(8_000L) {
+                        YTPlayerUtils.playerResponseForPlayback(
+                            mediaId,
+                            audioQuality = audioQuality,
+                            connectivityManager = connectivityManager,
+                            preferredStreamClient = preferredStreamClient,
+                            avoidCodecs = avoidStreamCodecs,
+                        )
+                    }.getOrNull() ?: return@launch
+
+                playbackUrlCache[mediaId] =
+                    playbackData.streamUrl to
+                        (System.currentTimeMillis() + playbackData.streamExpiresInSeconds * 1000L)
+            } catch (_: Exception) {
+                // Warmup is opportunistic; normal playback resolution remains
+                // the source of truth and will report any real error.
+            } finally {
+                playbackWarmupInFlight.remove(mediaId)
+            }
+        }
+    }
+
     private fun createDataSourceFactory(): DataSource.Factory {
         return ResolvingDataSource.Factory(createCacheDataSource()) { dataSpec ->
             val mediaId = dataSpec.key ?: error("No media id")
+
+            // Hot path for tracks whose stream URL was already resolved. Keep the
+            // mediaId key unchanged so CacheDataSource can still serve local bytes
+            // before it ever touches the network.
+            playbackUrlCache[mediaId]
+                ?.takeIf { it.second > System.currentTimeMillis() }
+                ?.let {
+                    scope.launch(Dispatchers.IO) { recoverSong(mediaId) }
+                    val length =
+                        if (dataSpec.length >= 0) minOf(dataSpec.length, CHUNK_LENGTH)
+                        else CHUNK_LENGTH
+                    return@Factory dataSpec
+                        .withUri(it.first.toUri())
+                        .subrange(dataSpec.uriPositionOffset, length)
+                }
 
             val requiredCachedLength =
                 if (dataSpec.length >= 0) {
@@ -4342,12 +4411,6 @@ class MusicService :
                     scope.launch(Dispatchers.IO) { recoverSong(mediaId) }
                     return@Factory dataSpec
                 }
-            }
-
-            playbackUrlCache[mediaId]?.takeIf { it.second > System.currentTimeMillis() }?.let {
-                scope.launch(Dispatchers.IO) { recoverSong(mediaId) }
-                val length = if (dataSpec.length >= 0) minOf(dataSpec.length, CHUNK_LENGTH) else CHUNK_LENGTH
-                return@Factory dataSpec.withUri(it.first.toUri()).subrange(dataSpec.uriPositionOffset, length)
             }
 
             // Intentar obtener playback data de YouTube (fuente primaria)
@@ -4600,6 +4663,24 @@ class MusicService :
             }
         }.getOrDefault(false)
     }
+
+    /**
+     * Start playback earlier than ExoPlayer's conservative defaults while keeping
+     * a healthy forward buffer for unstable mobile networks.
+     *
+     * The important values here are bufferForPlaybackMs / afterRebuffer: lowering
+     * those removes a noticeable wait after the stream URL has already resolved.
+     */
+    private fun createFastStartLoadControl(): DefaultLoadControl =
+        DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                8_000,
+                45_000,
+                750,
+                1_500,
+            )
+            .setPrioritizeTimeOverSizeThresholds(true)
+            .build()
 
     private fun createMediaSourceFactory() =
         DefaultMediaSourceFactory(
@@ -5122,7 +5203,6 @@ class MusicService :
                     promoteToStartedService()
                     ensureStartedAsForeground()
                     player.seekToNext()
-                    player.prepare()
                     player.playWhenReady = true
                 }
                 updatePlayerWidgets()
@@ -5134,7 +5214,6 @@ class MusicService :
                     promoteToStartedService()
                     ensureStartedAsForeground()
                     player.seekToPrevious()
-                    player.prepare()
                     player.playWhenReady = true
                 }
                 updatePlayerWidgets()

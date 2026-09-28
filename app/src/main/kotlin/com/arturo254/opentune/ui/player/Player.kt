@@ -211,7 +211,7 @@ fun BottomSheetPlayer(
 
     val playerDesignStyle by rememberEnumPreference(
         key = PlayerDesignStyleKey,
-        defaultValue = PlayerDesignStyle.V4
+        defaultValue = PlayerDesignStyle.V8
     )
 
     val playerBackground by rememberEnumPreference(
@@ -232,6 +232,14 @@ fun BottomSheetPlayer(
     var keyboardSkipMultiplier by remember { mutableStateOf(1) }
     var lastKeyboardTapTime by remember { mutableLongStateOf(0L) }
     val mediaMetadata by playerConnection.mediaMetadata.collectAsState()
+    val downloadUtil = LocalDownloadUtil.current
+    val download by downloadUtil
+        .getDownload(mediaMetadata?.id ?: "")
+        .collectAsState(initial = null)
+    val offlineCoverUri =
+        remember(mediaMetadata?.id, download?.state) {
+            mediaMetadata?.id?.let(downloadUtil::getOfflineCoverUri)
+        }
 
     // ============================================================
 // 🎯 CANVAS ARTWORK - Colocar DESPUÉS de mediaMetadata
@@ -239,8 +247,20 @@ fun BottomSheetPlayer(
     var canvasArtwork by remember { mutableStateOf<CanvasArtwork?>(null) }
     var canvasFetchInFlight by remember { mutableStateOf(false) }
 
-    LaunchedEffect(mediaMetadata?.id) {
+    LaunchedEffect(mediaMetadata?.id, download?.state) {
         val metadata = mediaMetadata ?: return@LaunchedEffect
+
+        downloadUtil.getOfflineAnimationUri(metadata.id)?.let { localAnimation ->
+            canvasArtwork =
+                CanvasArtwork(
+                    name = metadata.title,
+                    artist = metadata.artists.joinToString { it.name },
+                    albumName = metadata.album?.title,
+                    animated = localAnimation,
+                    videoUrl = localAnimation,
+                )
+            return@LaunchedEffect
+        }
 
         val songTitle = metadata.title.takeIf { it.isNotBlank() } ?: return@LaunchedEffect
         val artistName = metadata.artists.joinToString { it.name }.takeIf { it.isNotBlank() }
@@ -499,9 +519,6 @@ fun BottomSheetPlayer(
     }.let { (tb, ib) ->
         if (playerDesignStyle == PlayerDesignStyle.V7) Pair(Color.White, Color.Black) else Pair(tb, ib)
     }
-
-    val download by LocalDownloadUtil.current.getDownload(mediaMetadata?.id ?: "")
-        .collectAsState(initial = null)
 
     val sleepTimerEnabled =
         remember(
@@ -1096,7 +1113,7 @@ fun BottomSheetPlayer(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         V8PlayerBackdrop(
-                            thumbnailUrl = mediaMetadata?.thumbnailUrl,
+                            thumbnailUrl = offlineCoverUri ?: mediaMetadata?.thumbnailUrl,
                             canvasArtwork = canvasArtwork,
                             isPlaying = isPlaying,
                             disableBlur = disableBlur,
@@ -1306,7 +1323,7 @@ fun BottomSheetPlayer(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         V8PlayerBackdrop(
-                            thumbnailUrl = mediaMetadata?.thumbnailUrl,
+                            thumbnailUrl = offlineCoverUri ?: mediaMetadata?.thumbnailUrl,
                             canvasArtwork = canvasArtwork,
                             isPlaying = isPlaying,
                             disableBlur = disableBlur,

@@ -698,4 +698,24 @@
     <string name="together_welcome_host_body">Pulsa \"comenzar sesión\", después comparte el enlace de sesión. Mantén OpenTune abierto en segundo plano mientras alojas.</string>
     <string name="stream_bypass_proxy">Proxy de derivación para transmisiones</string>
     <string name="stream_bypass_proxy_desc">Utiliza tu dirección IP directa para la reproducción de transmisiones y evita las incompatibilidades de IP</string>
+
+    <string name="playlist_mix_title">Mixear playlist</string>
+    <string name="playlist_mix_smart">Mix inteligente</string>
+    <string name="playlist_mix_manual">Manual</string>
+    <string name="playlist_mix_smart_description">Analiza tempo y energía para reducir cambios bruscos entre canciones.</string>
+    <string name="playlist_mix_manual_description">Conserva el orden de tu playlist y elige la curva y el tiempo de transición.</string>
+    <string name="playlist_mix_analyze">Analizar mezcla</string>
+    <string name="playlist_mix_analyzing">Analizando tempo y energía…</string>
+    <string name="playlist_mix_ready">Mezcla lista</string>
+    <string name="playlist_mix_start">Iniciar Mix</string>
+    <string name="playlist_mix_duration">Transición</string>
+    <string name="playlist_mix_curve">Curva</string>
+    <string name="playlist_mix_bpm_unknown">BPM —</string>
+    <string name="playlist_mix_no_key">El catálogo actual no expone tonalidad armónica, así que OpenTune no inventa una.</string>
+    <string name="playlist_mix_fade">Fade</string>
+    <string name="playlist_mix_blend">Blend</string>
+    <string name="playlist_mix_rise">Rise</string>
+    <string name="playlist_mix_melt">Melt</string>
+    <string name="playlist_mix_seconds">%1$d s</string>
+
 </resources>

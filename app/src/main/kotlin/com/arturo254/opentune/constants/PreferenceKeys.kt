@@ -39,6 +39,7 @@ val ProviderOrderKey = stringPreferencesKey("lyrics_provider_order")
 
 val DefaultProviderOrder = listOf(
     PreferredLyricsProvider.LRCLIB,
+    PreferredLyricsProvider.NETEASE,
     PreferredLyricsProvider.KUGOU,
     PreferredLyricsProvider.BETTER_LYRICS,
     PreferredLyricsProvider.SIMPMUSIC,
@@ -46,6 +47,7 @@ val DefaultProviderOrder = listOf(
 
 fun PreferredLyricsProvider.displayName(): String = when (this) {
     PreferredLyricsProvider.LRCLIB -> "LrcLib"
+    PreferredLyricsProvider.NETEASE -> "NetEase LRC"
     PreferredLyricsProvider.KUGOU -> "KuGou"
     PreferredLyricsProvider.BETTER_LYRICS -> "BetterLyrics"
     PreferredLyricsProvider.SIMPMUSIC -> "SimpMusic"
@@ -65,6 +67,7 @@ val ContentLanguageKey = stringPreferencesKey("contentLanguage")
 val ContentCountryKey = stringPreferencesKey("contentCountry")
 val EnableKugouKey = booleanPreferencesKey("enableKugou")
 val EnableLrcLibKey = booleanPreferencesKey("enableLrclib")
+val EnableNetEaseLyricsKey = booleanPreferencesKey("enableNetEaseLyrics")
 val EnableBetterLyricsKey = booleanPreferencesKey("enableBetterLyrics")
 val EnableSimpMusicLyricsKey = booleanPreferencesKey("enableSimpMusicLyrics")
 val HideExplicitKey = booleanPreferencesKey("hideExplicit")
@@ -373,6 +376,7 @@ enum class QuickPicks {
 
 enum class PreferredLyricsProvider {
     LRCLIB,
+    NETEASE,
     KUGOU,
     BETTER_LYRICS,
     SIMPMUSIC,
@@ -451,12 +455,14 @@ val SwipeSensitivityKey = floatPreferencesKey("swipeSensitivity")
 enum class SearchSource {
     LOCAL,
     ONLINE,
+    DEEZER,
     ;
 
     fun toggle() =
         when (this) {
             LOCAL -> ONLINE
-            ONLINE -> LOCAL
+            ONLINE -> DEEZER
+            DEEZER -> LOCAL
         }
 }
 

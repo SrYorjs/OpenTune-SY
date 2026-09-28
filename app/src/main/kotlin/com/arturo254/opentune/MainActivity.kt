@@ -16,7 +16,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateDpAsState
@@ -28,6 +28,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -173,7 +174,6 @@ import com.arturo254.opentune.constants.HasPressedStarKey
 import com.arturo254.opentune.constants.LaunchCountKey
 import com.arturo254.opentune.constants.LiquidGlassNavBarKey
 import com.skydoves.cloudy.rememberSky
-import com.skydoves.cloudy.sky
 import com.arturo254.opentune.constants.LyricsSyncOffsetKey
 import com.arturo254.opentune.constants.MiniPlayerBottomSpacing
 import com.arturo254.opentune.constants.MiniPlayerHeight
@@ -224,11 +224,13 @@ import com.arturo254.opentune.ui.component.LocalBottomSheetPageState
 import com.arturo254.opentune.ui.component.LocalMenuState
 import com.arturo254.opentune.ui.component.LocalSky
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
+import com.arturo254.opentune.ui.component.LiquidGlassControlCluster
 import com.mikepenz.markdown.m3.Markdown
 import com.arturo254.opentune.constants.TogetherDisplayNameKey
 import com.arturo254.opentune.ui.component.BottomSheetPageState
 import com.arturo254.opentune.ui.component.MenuState
 import com.arturo254.opentune.ui.component.TopSearch
+import com.arturo254.opentune.ui.component.SearchSourceSelector
 import com.arturo254.opentune.ui.component.rememberBottomSheetState
 import com.arturo254.opentune.ui.component.shimmer.ShimmerTheme
 import com.arturo254.opentune.ui.menu.YouTubeSongMenu
@@ -238,6 +240,7 @@ import com.arturo254.opentune.ui.screens.Screens
 import com.arturo254.opentune.ui.screens.buildLoginRoute
 import com.arturo254.opentune.ui.screens.musicrecognition.MusicRecognitionRoute
 import com.arturo254.opentune.ui.screens.navigationBuilder
+import com.arturo254.opentune.ui.screens.search.DeezerSearchScreen
 import com.arturo254.opentune.ui.screens.search.LocalSearchScreen
 import com.arturo254.opentune.ui.screens.search.OnlineSearchScreen
 import com.arturo254.opentune.ui.screens.settings.DarkMode
@@ -678,8 +681,20 @@ class MainActivity : ComponentActivity() {
                     val allLocalItems by homeViewModel.allLocalItems.collectAsState()
                     val allYtItems by homeViewModel.allYtItems.collectAsState()
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
-                    val (previousTab) = rememberSaveable { mutableStateOf("home") }
                     val currentRoute = navBackStackEntry?.destination?.route
+                    val normalizedNavigationRoute = when {
+                        currentRoute?.startsWith("search/") == true -> Screens.Search.route
+                        else -> currentRoute
+                    }
+                    var pendingNavigationRoute by rememberSaveable {
+                        mutableStateOf<String?>(null)
+                    }
+
+                    LaunchedEffect(normalizedNavigationRoute) {
+                        if (pendingNavigationRoute == normalizedNavigationRoute) {
+                            pendingNavigationRoute = null
+                        }
+                    }
                     val isYearInMusicScreen = currentRoute == "year_in_music"
                     val isAlwaysOnDisplayScreen = currentRoute == "always_on_display"
 
@@ -731,6 +746,12 @@ class MainActivity : ComponentActivity() {
                         mutableStateOf(false)
                     }
 
+                    val selectedNavigationRoute = when {
+                        active -> Screens.Search.route
+                        pendingNavigationRoute != null -> pendingNavigationRoute
+                        else -> normalizedNavigationRoute
+                    }
+
                     val onActiveChange: (Boolean) -> Unit = { newActive ->
                         active = newActive
                         if (!newActive) {
@@ -745,13 +766,25 @@ class MainActivity : ComponentActivity() {
 
                     val searchBarFocusRequester = remember { FocusRequester() }
 
-                    val onSearch: (String) -> Unit = {
-                        if (it.isNotEmpty()) {
-                            onActiveChange(false)
-                            navController.navigate("search/${URLEncoder.encode(it, "UTF-8")}")
+                    val onSearch: (String) -> Unit = { searchText ->
+                        if (searchText.isNotEmpty()) {
                             if (!pauseSearchHistory) {
                                 database.query {
-                                    insert(SearchHistory(query = it))
+                                    insert(SearchHistory(query = searchText))
+                                }
+                            }
+
+                            when (searchSource) {
+                                SearchSource.ONLINE -> {
+                                    onActiveChange(false)
+                                    navController.navigate(
+                                        "search/" + URLEncoder.encode(searchText, "UTF-8")
+                                    )
+                                }
+
+                                SearchSource.LOCAL,
+                                SearchSource.DEEZER -> {
+                                    focusManager.clearFocus()
                                 }
                             }
                         }
@@ -1260,92 +1293,69 @@ class MainActivity : ComponentActivity() {
                                                         }) + WindowInsetsSides.Top
                                                     ),
                                                     title = {
-                                                        val googleSans = FontFamily(
-                                                            Font(
-                                                                R.font.anybody,
-                                                                variationSettings = FontVariation.Settings(
-                                                                    FontVariation.weight(650),
-                                                                    FontVariation.width(110f),
-                                                                    FontVariation.slant(-4f)
-                                                                )
-                                                            )
-                                                        )
-
-                                                        Row(
-                                                            verticalAlignment = Alignment.CenterVertically,
-                                                            horizontalArrangement = Arrangement.spacedBy(
-                                                                6.dp
-                                                            )
+                                                        Column(
+                                                            verticalArrangement = Arrangement.spacedBy(1.dp),
                                                         ) {
-
-                                                            Box(
-                                                                modifier = Modifier
-                                                                    .size(40.dp)
-                                                                    .clip(RoundedCornerShape(14.dp))
-                                                                    .background(
-                                                                        MaterialTheme.colorScheme.secondaryContainer.copy(
-                                                                            alpha = 0.5f
-                                                                        )
-                                                                    ),
-                                                                contentAlignment = Alignment.Center
-                                                            ) {
-                                                                Icon(
-                                                                    painter = painterResource(R.drawable.opentune),
-                                                                    contentDescription = null,
-                                                                    tint = Color.Unspecified,
-                                                                    modifier = Modifier.size(28.dp)
-                                                                )
-                                                            }
-
                                                             Text(
                                                                 text = stringResource(R.string.app_name),
-                                                                style = MaterialTheme.typography.headlineSmallEmphasized.copy(
-                                                                    fontFamily = googleSans,
-                                                                    fontWeight = FontWeight.ExtraBold
-                                                                ),
+                                                                style = MaterialTheme.typography.headlineMedium,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = MaterialTheme.colorScheme.onSurface,
                                                                 maxLines = 1,
-                                                                overflow = TextOverflow.Ellipsis
+                                                                overflow = TextOverflow.Ellipsis,
+                                                            )
+                                                            Text(
+                                                                text = "MUSIC",
+                                                                style = MaterialTheme.typography.labelSmall,
+                                                                fontWeight = FontWeight.Bold,
+                                                                color = MaterialTheme.colorScheme.primary,
+                                                                maxLines = 1,
                                                             )
                                                         }
                                                     },
                                                     actions = {
-
-                                                        IconButton(
-                                                            modifier = Modifier.size(40.dp),
-                                                            onClick = { navController.navigate("history") }
+                                                        LiquidGlassControlCluster(
+                                                            pureBlack = pureBlack,
+                                                            horizontalSpacing = 0.dp,
+                                                            modifier = Modifier.padding(end = 6.dp),
                                                         ) {
-                                                            Icon(
-                                                                painter = painterResource(R.drawable.history),
-                                                                contentDescription = stringResource(R.string.history),
-                                                                modifier = Modifier.size(22.dp)
-                                                            )
+                                                            androidx.compose.material3.IconButton(
+                                                                modifier = Modifier.size(34.dp),
+                                                                onClick = { navController.navigate("history") },
+                                                            ) {
+                                                                Icon(
+                                                                    painter = painterResource(R.drawable.history),
+                                                                    contentDescription = stringResource(R.string.history),
+                                                                    modifier = Modifier.size(19.dp),
+                                                                )
+                                                            }
+
+                                                            androidx.compose.material3.IconButton(
+                                                                modifier = Modifier.size(34.dp),
+                                                                onClick = { navController.navigate("stats") },
+                                                            ) {
+                                                                Icon(
+                                                                    painter = painterResource(R.drawable.stats),
+                                                                    contentDescription = stringResource(R.string.stats),
+                                                                    modifier = Modifier.size(19.dp),
+                                                                )
+                                                            }
+
+                                                            androidx.compose.material3.IconButton(
+                                                                modifier = Modifier.size(34.dp),
+                                                                onClick = { navController.navigate("new_release") },
+                                                            ) {
+                                                                Icon(
+                                                                    painter = painterResource(R.drawable.notifications),
+                                                                    contentDescription = stringResource(R.string.new_release_albums),
+                                                                    modifier = Modifier.size(19.dp),
+                                                                )
+                                                            }
                                                         }
 
-                                                        IconButton(
-                                                            modifier = Modifier.size(40.dp),
-                                                            onClick = { navController.navigate("stats") }
-                                                        ) {
-                                                            Icon(
-                                                                painter = painterResource(R.drawable.stats),
-                                                                contentDescription = stringResource(R.string.stats),
-                                                                modifier = Modifier.size(22.dp)
-                                                            )
-                                                        }
-
-                                                        IconButton(
-                                                            modifier = Modifier.size(40.dp),
-                                                            onClick = { navController.navigate("new_release") }
-                                                        ) {
-                                                            Icon(
-                                                                painter = painterResource(R.drawable.notifications),
-                                                                contentDescription = stringResource(R.string.new_release_albums),
-                                                                modifier = Modifier.size(22.dp)
-                                                            )
-                                                        }
-
-                                                        IconButton(
-                                                            modifier = Modifier.size(40.dp),
-                                                            onClick = { showAccountDialog = true }
+                                                        androidx.compose.material3.IconButton(
+                                                            modifier = Modifier.size(42.dp),
+                                                            onClick = { showAccountDialog = true },
                                                         ) {
                                                             BadgedBox(
                                                                 badge = {
@@ -1363,15 +1373,26 @@ class MainActivity : ComponentActivity() {
                                                                         model = accountImageUrl,
                                                                         contentDescription = stringResource(R.string.account),
                                                                         modifier = Modifier
-                                                                            .size(30.dp)
-                                                                            .clip(CircleShape)
+                                                                            .size(32.dp)
+                                                                            .clip(CircleShape),
                                                                     )
                                                                 } else {
-                                                                    Icon(
-                                                                        painter = painterResource(R.drawable.account),
-                                                                        contentDescription = stringResource(R.string.account),
-                                                                        modifier = Modifier.size(24.dp)
-                                                                    )
+                                                                    Box(
+                                                                        modifier = Modifier
+                                                                            .size(32.dp)
+                                                                            .clip(CircleShape)
+                                                                            .background(
+                                                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                                                            ),
+                                                                        contentAlignment = Alignment.Center,
+                                                                    ) {
+                                                                        Icon(
+                                                                            painter = painterResource(R.drawable.account),
+                                                                            contentDescription = stringResource(R.string.account),
+                                                                            tint = MaterialTheme.colorScheme.primary,
+                                                                            modifier = Modifier.size(20.dp),
+                                                                        )
+                                                                    }
                                                                 }
                                                             }
                                                         }
@@ -1420,6 +1441,7 @@ class MainActivity : ComponentActivity() {
                                                             when (searchSource) {
                                                                 SearchSource.LOCAL -> R.string.search_library
                                                                 SearchSource.ONLINE -> R.string.search_yt_music
+                                                                SearchSource.DEEZER -> R.string.search_deezer
                                                             }
                                                         ),
                                                     )
@@ -1479,22 +1501,6 @@ class MainActivity : ComponentActivity() {
                                                                     )
                                                                 }
                                                             }
-                                                            IconButton(
-                                                                onClick = {
-                                                                    searchSource =
-                                                                        if (searchSource == SearchSource.ONLINE) SearchSource.LOCAL else SearchSource.ONLINE
-                                                                },
-                                                            ) {
-                                                                Icon(
-                                                                    painter = painterResource(
-                                                                        when (searchSource) {
-                                                                            SearchSource.LOCAL -> R.drawable.library_music
-                                                                            SearchSource.ONLINE -> R.drawable.language
-                                                                        },
-                                                                    ),
-                                                                    contentDescription = null,
-                                                                )
-                                                            }
                                                         }
                                                     }
                                                 },
@@ -1523,9 +1529,37 @@ class MainActivity : ComponentActivity() {
                                                     )
                                                 }
                                             ) {
-                                                Crossfade(
+                                                SearchSourceSelector(
+                                                    selected = searchSource,
+                                                    onSelected = { source ->
+                                                        searchSource = source
+                                                    },
+                                                    modifier = Modifier
+                                                        .align(Alignment.CenterHorizontally)
+                                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                                )
+
+                                                AnimatedContent(
                                                     targetState = searchSource,
-                                                    label = "",
+                                                    transitionSpec = {
+                                                        val direction =
+                                                            if (targetState.ordinal >= initialState.ordinal) 1 else -1
+                                                        (
+                                                            slideInHorizontally(
+                                                                animationSpec = spring(
+                                                                    dampingRatio = 0.90f,
+                                                                    stiffness = 560f,
+                                                                ),
+                                                                initialOffsetX = { width -> direction * width / 6 },
+                                                            ) + fadeIn(tween(120))
+                                                        ) togetherWith (
+                                                            slideOutHorizontally(
+                                                                animationSpec = tween(140),
+                                                                targetOffsetX = { width -> -direction * width / 8 },
+                                                            ) + fadeOut(tween(100))
+                                                        )
+                                                    },
+                                                    label = "searchSourceSlide",
                                                     modifier =
                                                         Modifier
                                                             .fillMaxSize()
@@ -1546,23 +1580,24 @@ class MainActivity : ComponentActivity() {
                                                                 query = query.text,
                                                                 onQueryChange = onQueryChange,
                                                                 navController = navController,
-                                                                onSearch = {
+                                                                onSearch = { searchedQuery ->
                                                                     navController.navigate(
-                                                                        "search/${
-                                                                            URLEncoder.encode(
-                                                                                it,
-                                                                                "UTF-8"
-                                                                            )
-                                                                        }"
+                                                                        "search/" + URLEncoder.encode(searchedQuery, "UTF-8")
                                                                     )
                                                                     if (!pauseSearchHistory) {
                                                                         database.query {
-                                                                            insert(SearchHistory(query = it))
+                                                                            insert(SearchHistory(query = searchedQuery))
                                                                         }
                                                                     }
                                                                 },
                                                                 onDismiss = { onActiveChange(false) },
                                                                 pureBlack = pureBlack
+                                                            )
+
+                                                        SearchSource.DEEZER ->
+                                                            DeezerSearchScreen(
+                                                                query = query.text,
+                                                                pureBlack = pureBlack,
                                                             )
                                                     }
                                                 }
@@ -1580,38 +1615,7 @@ class MainActivity : ComponentActivity() {
                                     modifier = Modifier
                                         .fillMaxSize()
                                         .nestedScroll(searchBarScrollBehavior.nestedScrollConnection)
-                                        .then(
-                                            if (liquidGlassNavBar) {
-                                                Modifier.sky(liquidGlassSky)
-                                            } else {
-                                                Modifier
-                                            }
-                                        )
                                 ) {
-                                    var transitionDirection =
-                                        AnimatedContentTransitionScope.SlideDirection.Left
-
-                                    if (navigationItems.fastAny { it.route == navBackStackEntry?.destination?.route }) {
-                                        if (navigationItems.fastAny { it.route == previousTab }) {
-                                            val curIndex = navigationItems.indexOf(
-                                                navigationItems.fastFirstOrNull {
-                                                    it.route == navBackStackEntry?.destination?.route
-                                                }
-                                            )
-
-                                            val prevIndex = navigationItems.indexOf(
-                                                navigationItems.fastFirstOrNull {
-                                                    it.route == previousTab
-                                                }
-                                            )
-
-                                            if (prevIndex > curIndex)
-                                                AnimatedContentTransitionScope.SlideDirection.Right.also {
-                                                    transitionDirection = it
-                                                }
-                                        }
-                                    }
-
                                     NavHost(
                                         navController = navController,
                                         startDestination = when (tabOpenedFromShortcut ?: defaultOpenTab) {
@@ -1624,8 +1628,21 @@ class MainActivity : ComponentActivity() {
                                                 initialState.destination.route in topLevelScreens &&
                                                 targetState.destination.route in topLevelScreens
                                             ) {
-                                                fadeIn(
-                                                    animationSpec = tween(250)
+                                                val initialIndex = navigationItems.indexOfFirst {
+                                                    it.route == initialState.destination.route
+                                                }
+                                                val targetIndex = navigationItems.indexOfFirst {
+                                                    it.route == targetState.destination.route
+                                                }
+                                                val direction = if (targetIndex >= initialIndex) 1 else -1
+                                                slideInHorizontally(
+                                                    animationSpec = spring(
+                                                        dampingRatio = 0.90f,
+                                                        stiffness = 560f,
+                                                    ),
+                                                    initialOffsetX = { width -> direction * width / 7 },
+                                                ) + fadeIn(
+                                                    animationSpec = tween(140)
                                                 )
                                             } else {
                                                 fadeIn(
@@ -1644,8 +1661,18 @@ class MainActivity : ComponentActivity() {
                                                 initialState.destination.route in topLevelScreens &&
                                                 targetState.destination.route in topLevelScreens
                                             ) {
-                                                fadeOut(
-                                                    animationSpec = tween(200)
+                                                val initialIndex = navigationItems.indexOfFirst {
+                                                    it.route == initialState.destination.route
+                                                }
+                                                val targetIndex = navigationItems.indexOfFirst {
+                                                    it.route == targetState.destination.route
+                                                }
+                                                val direction = if (targetIndex >= initialIndex) 1 else -1
+                                                slideOutHorizontally(
+                                                    animationSpec = tween(150),
+                                                    targetOffsetX = { width -> -direction * width / 9 },
+                                                ) + fadeOut(
+                                                    animationSpec = tween(120)
                                                 )
                                             } else {
                                                 fadeOut(
@@ -1662,8 +1689,21 @@ class MainActivity : ComponentActivity() {
                                                         initialState.destination.route?.startsWith("search/") == true) &&
                                                 targetState.destination.route in topLevelScreens
                                             ) {
-                                                fadeIn(
-                                                    animationSpec = tween(250)
+                                                val initialIndex = navigationItems.indexOfFirst {
+                                                    it.route == initialState.destination.route
+                                                }
+                                                val targetIndex = navigationItems.indexOfFirst {
+                                                    it.route == targetState.destination.route
+                                                }
+                                                val direction = if (targetIndex >= initialIndex) 1 else -1
+                                                slideInHorizontally(
+                                                    animationSpec = spring(
+                                                        dampingRatio = 0.90f,
+                                                        stiffness = 560f,
+                                                    ),
+                                                    initialOffsetX = { width -> direction * width / 7 },
+                                                ) + fadeIn(
+                                                    animationSpec = tween(140)
                                                 )
                                             } else {
                                                 fadeIn(
@@ -1683,8 +1723,18 @@ class MainActivity : ComponentActivity() {
                                                         initialState.destination.route?.startsWith("search/") == true) &&
                                                 targetState.destination.route in topLevelScreens
                                             ) {
-                                                fadeOut(
-                                                    animationSpec = tween(200)
+                                                val initialIndex = navigationItems.indexOfFirst {
+                                                    it.route == initialState.destination.route
+                                                }
+                                                val targetIndex = navigationItems.indexOfFirst {
+                                                    it.route == targetState.destination.route
+                                                }
+                                                val direction = if (targetIndex >= initialIndex) 1 else -1
+                                                slideOutHorizontally(
+                                                    animationSpec = tween(150),
+                                                    targetOffsetX = { width -> -direction * width / 9 },
+                                                ) + fadeOut(
+                                                    animationSpec = tween(120)
                                                 )
                                             } else {
                                                 fadeOut(
@@ -1695,18 +1745,20 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             }
                                         },
-                                        modifier = Modifier.nestedScroll(
-                                            if (
-                                                navigationItems.fastAny {
-                                                    it.route == navBackStackEntry?.destination?.route
-                                                } ||
-                                                navBackStackEntry?.destination?.route?.startsWith("search/") == true
-                                            ) {
-                                                searchBarScrollBehavior.nestedScrollConnection
-                                            } else {
-                                                topAppBarScrollBehavior.nestedScrollConnection
-                                            }
-                                        )
+                                        modifier = Modifier
+                                            .nestedScroll(
+                                                if (
+                                                    navigationItems.fastAny {
+                                                        it.route == navBackStackEntry?.destination?.route
+                                                    } ||
+                                                    navBackStackEntry?.destination?.route?.startsWith("search/") == true
+                                                ) {
+                                                    searchBarScrollBehavior.nestedScrollConnection
+                                                } else {
+                                                    topAppBarScrollBehavior.nestedScrollConnection
+                                                }
+                                            )
+
                                     ) {
                                         navigationBuilder(
                                             navController,
@@ -1826,14 +1878,11 @@ class MainActivity : ComponentActivity() {
                                                 { navController.navigate(MusicRecognitionRoute) }
                                             } else null,
                                             musicRecognitionContentDescription = if (shouldShowHomeShuffleButton) stringResource(R.string.music_recognition) else "",
-                                            isSelected = { screen ->
-                                                navBackStackEntry?.destination?.hierarchy?.any { it.route == screen.route } ==
-                                                        true
-                                            },
+                                            selectedRoute = selectedNavigationRoute,
                                             onItemClick = { screen, isSelected ->
                                                 if (screen.route == Screens.Search.route) {
                                                     onActiveChange(true)
-                                                } else if (isSelected) {
+                                                } else if (isSelected && !active) {
                                                     navController.currentBackStackEntry?.savedStateHandle?.set(
                                                         "scrollToTop",
                                                         true
@@ -1842,6 +1891,10 @@ class MainActivity : ComponentActivity() {
                                                         searchBarScrollBehavior.state.resetHeightOffset()
                                                     }
                                                 } else {
+                                                    if (active) {
+                                                        onActiveChange(false)
+                                                    }
+                                                    pendingNavigationRoute = screen.route
                                                     navController.navigate(screen.route) {
                                                         popUpTo(navController.graph.startDestinationId) {
                                                             saveState = true

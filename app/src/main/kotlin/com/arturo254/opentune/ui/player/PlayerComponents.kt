@@ -26,6 +26,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -114,6 +116,8 @@ import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.ui.component.BottomSheetPageState
 import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.ui.component.MenuState
+import com.arturo254.opentune.ui.component.LiquidGlassControlCluster
+import com.arturo254.opentune.ui.component.LiquidGlassIconButton
 import com.arturo254.opentune.ui.component.PlayerSliderTrack
 import com.arturo254.opentune.ui.component.ResizableIconButton
 import com.arturo254.opentune.ui.menu.PlayerMenu
@@ -2738,52 +2742,38 @@ fun V8PlayerBackdrop(
     label: String,
     modifier: Modifier = Modifier,
 ) {
-    val cloudyRadius = 100
-    val blurMaskStart = 0.42f
-    val blurMaskMid = 0.55f
-    val blurMaskSolid = 0.72f
-    val baseArtworkScale = if (disableBlur) 1.02f else 1.05f
-    val baseArtworkAlpha = if (disableBlur) 0.65f else 0.75f
+    val artworkScale by animateFloatAsState(
+        targetValue = if (isPlaying) 1.055f else 1.025f,
+        animationSpec = spring(
+            dampingRatio = 0.92f,
+            stiffness = 120f,
+        ),
+        label = "premiumArtworkBreathing",
+    )
 
     Box(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.Black),
     ) {
         AnimatedContent(
             targetState = thumbnailUrl,
             transitionSpec = {
-                fadeIn(tween(800)) togetherWith fadeOut(tween(800))
+                fadeIn(tween(220)) togetherWith fadeOut(tween(180))
             },
             label = label,
         ) { artworkUrl ->
             if (artworkUrl != null) {
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(Modifier.fillMaxSize()) {
                     if (canvasArtwork != null && !canvasArtwork.preferredAnimationUrl.isNullOrBlank()) {
-                        // ✅ Canvas con RESIZE_MODE_ZOOM para mantener aspecto sin estiramiento
                         CanvasArtworkPlayer(
                             primaryUrl = canvasArtwork.animated,
                             fallbackUrl = canvasArtwork.videoUrl,
                             isPlaying = isPlaying,
                             modifier = Modifier.fillMaxSize(),
-                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM  // ← ZOOM mantiene aspecto
-                        )
-                        // Overlay con gradiente
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(
-                                    Brush.verticalGradient(
-                                        colorStops = arrayOf(
-                                            0f to Color.Transparent,
-                                            0.15f to Color.Black.copy(alpha = 0.05f),
-                                            0.45f to Color.Black.copy(alpha = 0.25f),
-                                            0.70f to Color.Black.copy(alpha = 0.50f),
-                                            1f to Color.Black.copy(alpha = 0.85f),
-                                        )
-                                    )
-                                )
+                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM,
                         )
                     } else {
-                        // Imagen estática (fallback)
                         AsyncImage(
                             model = artworkUrl.highRes(),
                             contentDescription = null,
@@ -2791,89 +2781,48 @@ fun V8PlayerBackdrop(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .graphicsLayer {
-                                    scaleX = baseArtworkScale
-                                    scaleY = baseArtworkScale
-                                    alpha = baseArtworkAlpha
-                                }
+                                    scaleX = artworkScale
+                                    scaleY = artworkScale
+                                    alpha = 0.90f
+                                },
                         )
-
-                        val painter = rememberAsyncImagePainter(
-                            model = artworkUrl.highRes()
-                        )
-
-                        val imageSize = painter.intrinsicSize
-
-                        val contentScale = remember(imageSize) {
-                            if (imageSize.width <= 0 || imageSize.height <= 0) {
-                                ContentScale.Crop
-                            } else {
-                                val aspectRatio = imageSize.width / imageSize.height
-
-                                when {
-                                    aspectRatio > 1.35f -> ContentScale.FillHeight
-                                    aspectRatio < 0.75f -> ContentScale.FillWidth
-                                    else -> ContentScale.Crop
-                                }
-                            }
-                        }
-
-                        if (!disableBlur) {
-                            Image(
-                                painter = painter,
-                                contentDescription = null,
-                                contentScale = contentScale,
-                                alignment = Alignment.Center,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .cloudy(radius = cloudyRadius)
-                                    .drawWithCache {
-                                        val blurMask = Brush.verticalGradient(
-                                            colorStops = arrayOf(
-                                                0f to Color.Transparent,
-                                                blurMaskStart to Color.Transparent,
-                                                blurMaskMid to Color.Black.copy(alpha = 0.5f),
-                                                blurMaskSolid to Color.Black,
-                                                1f to Color.Black
-                                            )
-                                        )
-
-                                        onDrawWithContent {
-                                            drawContent()
-
-                                            drawRect(
-                                                brush = blurMask,
-                                                blendMode = BlendMode.DstIn
-                                            )
-                                        }
-                                    }
-                            )
-                        }
                     }
                 }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black)
-                )
             }
         }
 
-        // Gradiente siempre presente
+        // Apple Music-like lower fade: the artwork stays visible up top while
+        // controls sit on a deep, slightly tinted cinematic floor.
+        val accent = MaterialTheme.colorScheme.primary
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colorStops = arrayOf(
-                            0f to Color.Transparent,
-                            0.20f to Color.Transparent,
-                            0.50f to Color.Black.copy(alpha = 0.15f),
-                            0.75f to Color.Black.copy(alpha = 0.35f),
-                            1f to Color.Black.copy(alpha = 0.70f),
+                            0f to Color.Black.copy(alpha = 0.08f),
+                            0.30f to Color.Transparent,
+                            0.52f to Color.Black.copy(alpha = 0.12f),
+                            0.70f to accent.copy(alpha = 0.055f),
+                            0.82f to Color.Black.copy(alpha = 0.62f),
+                            1f to Color.Black.copy(alpha = 0.94f),
                         )
                     )
-                )
+                ),
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.Black.copy(alpha = 0.10f),
+                            Color.Transparent,
+                            Color.Black.copy(alpha = 0.08f),
+                        )
+                    )
+                ),
         )
     }
 }
@@ -2933,7 +2882,22 @@ fun V8PlayerControlsContent(
                 // Título
                 AnimatedContent(
                     targetState = mediaMetadata.title,
-                    transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
+                    transitionSpec = {
+                        (
+                            slideInVertically(
+                                animationSpec = spring(
+                                    dampingRatio = 0.88f,
+                                    stiffness = 520f,
+                                ),
+                                initialOffsetY = { it / 3 },
+                            ) + fadeIn(tween(120))
+                        ) togetherWith (
+                            slideOutVertically(
+                                animationSpec = tween(140),
+                                targetOffsetY = { -it / 4 },
+                            ) + fadeOut(tween(100))
+                        )
+                    },
                     label = "v8_title"
                 ) { title ->
                     Text(
@@ -2955,7 +2919,22 @@ fun V8PlayerControlsContent(
                 }
                 AnimatedContent(
                     targetState = artistsText,
-                    transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
+                    transitionSpec = {
+                        (
+                            slideInVertically(
+                                animationSpec = spring(
+                                    dampingRatio = 0.90f,
+                                    stiffness = 560f,
+                                ),
+                                initialOffsetY = { it / 3 },
+                            ) + fadeIn(tween(130))
+                        ) togetherWith (
+                            slideOutVertically(
+                                animationSpec = tween(140),
+                                targetOffsetY = { -it / 4 },
+                            ) + fadeOut(tween(100))
+                        )
+                    },
                     label = "v8_artist"
                 ) { artists ->
                     Text(
@@ -2971,22 +2950,15 @@ fun V8PlayerControlsContent(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Botones superiores: Like + Menú (38dp, ~10% menos que V7)
+            // Top actions share the same transparent Liquid Glass language as the bars.
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Like
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (currentSongLiked) textBackgroundColor.copy(alpha = 0.2f)
-                            else Color.Transparent
-                        )
-                        .clickable { playerConnection.toggleLike() },
-                    contentAlignment = Alignment.Center
+                LiquidGlassIconButton(
+                    onClick = { playerConnection.toggleLike() },
+                    size = 44.dp,
+                    selected = currentSongLiked,
                 ) {
                     Icon(
                         painter = painterResource(
@@ -2994,37 +2966,33 @@ fun V8PlayerControlsContent(
                             else R.drawable.favorite_outline
                         ),
                         contentDescription = null,
-                        tint = textBackgroundColor.copy(alpha = if (currentSongLiked) 1f else 0.7f),
-                        modifier = Modifier.size(30.dp)
+                        tint = textBackgroundColor.copy(alpha = if (currentSongLiked) 1f else 0.78f),
+                        modifier = Modifier.size(24.dp)
                     )
                 }
 
-                // Menú
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .clickable {
-                            menuState.show {
-                                PlayerMenu(
-                                    mediaMetadata = mediaMetadata,
-                                    navController = navController,
-                                    playerBottomSheetState = state,
-                                    onShowDetailsDialog = {
-                                        bottomSheetPageState.show {
-                                            ShowMediaInfo(mediaMetadata.id)
-                                        }
-                                    },
-                                    onDismiss = menuState::dismiss
-                                )
-                            }
-                        },
-                    contentAlignment = Alignment.Center
+                LiquidGlassIconButton(
+                    onClick = {
+                        menuState.show {
+                            PlayerMenu(
+                                mediaMetadata = mediaMetadata,
+                                navController = navController,
+                                playerBottomSheetState = state,
+                                onShowDetailsDialog = {
+                                    bottomSheetPageState.show {
+                                        ShowMediaInfo(mediaMetadata.id)
+                                    }
+                                },
+                                onDismiss = menuState::dismiss
+                            )
+                        }
+                    },
+                    size = 44.dp,
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.more_horiz),
                         contentDescription = null,
-                        tint = textBackgroundColor.copy(alpha = 0.7f),
+                        tint = textBackgroundColor.copy(alpha = 0.78f),
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -3177,15 +3145,14 @@ fun V8VolumeSlider(
     activeColor: Color,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        modifier = modifier
+    LiquidGlassControlCluster(
+        modifier = modifier,
+        horizontalSpacing = 10.dp,
     ) {
         Icon(
             painter = painterResource(R.drawable.volume_off),
             contentDescription = null,
-            tint = activeColor.copy(alpha = 0.6f),
+            tint = activeColor.copy(alpha = 0.66f),
             modifier = Modifier.size(16.dp)
         )
 
@@ -3201,7 +3168,7 @@ fun V8VolumeSlider(
                     .coerceIn(0f, 1f)
                 GlassTrack(
                     fraction = fraction,
-                    trackHeight = 10.dp,
+                    trackHeight = 8.dp,
                     tint = activeColor,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -3209,12 +3176,11 @@ fun V8VolumeSlider(
             modifier = Modifier.weight(1f)
         )
 
-        // Icono grande (volumen alto) a la derecha
         Icon(
             painter = painterResource(R.drawable.volume_up),
             contentDescription = null,
-            tint = activeColor.copy(alpha = 0.6f),
-            modifier = Modifier.size(22.dp)
+            tint = activeColor.copy(alpha = 0.72f),
+            modifier = Modifier.size(20.dp)
         )
     }
 }
@@ -3229,84 +3195,126 @@ fun V8PlaybackControls(
     canSkipNext: Boolean,
     textBackgroundColor: Color,
     playerConnection: PlayerConnection,
-    shuffleModeEnabled: Boolean
+    shuffleModeEnabled: Boolean,
 ) {
-    Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = PlayerHorizontalPadding)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
     ) {
-        // Skip Previous
-        Surface(
-            onClick = { playerConnection.seekToPrevious() },
-            enabled = canSkipPrevious,
-            shape = CircleShape,
-            color = Color.Transparent,
-            modifier = Modifier.size(56.dp)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(18.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            LiquidGlassIconButton(
+                onClick = playerConnection::seekToPrevious,
+                enabled = canSkipPrevious,
+                size = 58.dp,
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.skip_previous),
                     contentDescription = null,
-                    tint = textBackgroundColor.copy(alpha = if (canSkipPrevious) 1f else 0.4f),
-                    modifier = Modifier.size(38.dp)
+                    tint = textBackgroundColor.copy(alpha = if (canSkipPrevious) 0.96f else 0.34f),
+                    modifier = Modifier.size(30.dp),
+                )
+            }
+
+            LiquidGlassIconButton(
+                onClick = {
+                    if (playbackState == Player.STATE_ENDED) {
+                        playerConnection.player.seekTo(0, 0)
+                        playerConnection.player.playWhenReady = true
+                    } else {
+                        playerConnection.player.togglePlayPause()
+                    }
+                },
+                enabled = !isLoading,
+                selected = isPlaying,
+                size = 72.dp,
+            ) {
+                if (isLoading) {
+                    CircularWavyProgressIndicator(
+                        modifier = Modifier.size(31.dp),
+                        color = textBackgroundColor,
+                    )
+                } else {
+                    AnimatedContent(
+                        targetState = isPlaying,
+                        transitionSpec = {
+                            fadeIn(tween(110)) togetherWith fadeOut(tween(80))
+                        },
+                        label = "v8PlayPause",
+                    ) { playing ->
+                        Icon(
+                            painter =
+                                painterResource(
+                                    when {
+                                        playbackState == Player.STATE_ENDED -> R.drawable.replay
+                                        playing -> R.drawable.pause
+                                        else -> R.drawable.play
+                                    }
+                                ),
+                            contentDescription = null,
+                            tint = textBackgroundColor,
+                            modifier = Modifier.size(38.dp),
+                        )
+                    }
+                }
+            }
+
+            LiquidGlassIconButton(
+                onClick = playerConnection::seekToNext,
+                enabled = canSkipNext,
+                size = 58.dp,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.skip_next),
+                    contentDescription = null,
+                    tint = textBackgroundColor.copy(alpha = if (canSkipNext) 0.96f else 0.34f),
+                    modifier = Modifier.size(30.dp),
                 )
             }
         }
 
-        // Play/Pause - SIN FONDO (como Apple Music)
-        Surface(
-            onClick = {
-                if (playbackState == Player.STATE_ENDED) {
-                    playerConnection.player.seekTo(0, 0)
-                    playerConnection.player.playWhenReady = true
-                } else {
-                    playerConnection.player.togglePlayPause()
-                }
-            },
-            shape = CircleShape,
-            color = Color.Transparent,
-            modifier = Modifier.size(72.dp)
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(18.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                if (isLoading) {
-                    CircularWavyProgressIndicator(
-                        modifier = Modifier.size(36.dp),
-                        color = textBackgroundColor,
-                    )
-                } else {
-                    Icon(
-                        painter = painterResource(
-                            when {
-                                playbackState == Player.STATE_ENDED -> R.drawable.replay
-                                isPlaying -> R.drawable.pause
-                                else -> R.drawable.play
+            LiquidGlassIconButton(
+                onClick = {
+                    playerConnection.player.shuffleModeEnabled = !shuffleModeEnabled
+                },
+                selected = shuffleModeEnabled,
+                size = 42.dp,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.shuffle),
+                    contentDescription = null,
+                    tint = textBackgroundColor.copy(alpha = if (shuffleModeEnabled) 1f else 0.72f),
+                    modifier = Modifier.size(19.dp),
+                )
+            }
+
+            LiquidGlassIconButton(
+                onClick = { playerConnection.player.toggleRepeatMode() },
+                selected = repeatMode != Player.REPEAT_MODE_OFF,
+                size = 42.dp,
+            ) {
+                Icon(
+                    painter =
+                        painterResource(
+                            if (repeatMode == Player.REPEAT_MODE_ONE) {
+                                R.drawable.repeat_one
+                            } else {
+                                R.drawable.repeat
                             }
                         ),
-                        contentDescription = null,
-                        tint = textBackgroundColor,
-                        modifier = Modifier.size(48.dp)
-                    )
-                }
-            }
-        }
-
-        // Skip Next
-        Surface(
-            onClick = { playerConnection.seekToNext() },
-            enabled = canSkipNext,
-            shape = CircleShape,
-            color = Color.Transparent,
-            modifier = Modifier.size(56.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Icon(
-                    painter = painterResource(R.drawable.skip_next),
                     contentDescription = null,
-                    tint = textBackgroundColor.copy(alpha = if (canSkipNext) 1f else 0.4f),
-                    modifier = Modifier.size(38.dp)
+                    tint =
+                        textBackgroundColor.copy(
+                            alpha = if (repeatMode == Player.REPEAT_MODE_OFF) 0.72f else 1f
+                        ),
+                    modifier = Modifier.size(19.dp),
                 )
             }
         }
@@ -3324,52 +3332,38 @@ fun QueueCollapsedContentV8(
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = PlayerHorizontalPadding)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = PlayerHorizontalPadding),
     ) {
-        // Lyrics (izquierda)
-        Surface(
+        LiquidGlassIconButton(
             onClick = onShowLyrics,
-            shape = CircleShape,
-            color = Color.Transparent,
-            modifier = Modifier.size(36.dp)
+            size = 44.dp,
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Icon(
-                    painter = painterResource(R.drawable.lyrics_apple),
-                    contentDescription = "Lyrics",
-                    tint = textBackgroundColor.copy(alpha = 0.7f),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            V8DeviceSelector(
-                textBackgroundColor = textBackgroundColor,
-                modifier = Modifier.size(36.dp)
+            Icon(
+                painter = painterResource(R.drawable.lyrics_apple),
+                contentDescription = "Lyrics",
+                tint = textBackgroundColor.copy(alpha = 0.90f),
+                modifier = Modifier.size(20.dp),
             )
         }
 
-        // Queue (derecha)
-        Surface(
+        V8DeviceSelector(
+            textBackgroundColor = textBackgroundColor,
+            modifier = Modifier.size(44.dp),
+        )
+
+        LiquidGlassIconButton(
             onClick = onExpandQueue,
-            shape = CircleShape,
-            color = Color.Transparent,
-            modifier = Modifier.size(36.dp)
+            size = 44.dp,
         ) {
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                Icon(
-                    painter = painterResource(R.drawable.queue_music),
-                    contentDescription = "Queue",
-                    tint = textBackgroundColor.copy(alpha = 0.7f),
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            Icon(
+                painter = painterResource(R.drawable.queue_music),
+                contentDescription = "Queue",
+                tint = textBackgroundColor.copy(alpha = 0.90f),
+                modifier = Modifier.size(20.dp),
+            )
         }
     }
 }
@@ -3392,17 +3386,17 @@ fun GlassTrack(
             .height(trackHeight)
             .clip(shape)
     ) {
-        // Capa base "glass": translúcida + blur + borde tenue
+        // Lightweight optical track. Avoid a live blur here because this layer
+        // redraws continuously while playback/dragging updates the fraction.
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .blur(radius = 6.dp)
-                .background(tint.copy(alpha = 0.16f))
-        )
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .border(width = 0.75.dp, color = tint.copy(alpha = 0.3f), shape = shape)
+                .background(tint.copy(alpha = 0.14f))
+                .border(
+                    width = 0.75.dp,
+                    color = tint.copy(alpha = 0.24f),
+                    shape = shape,
+                )
         )
 
         // Relleno de progreso (vidrio más opaco + highlight superior), sin blur
