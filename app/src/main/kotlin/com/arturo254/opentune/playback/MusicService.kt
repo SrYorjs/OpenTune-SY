@@ -67,7 +67,6 @@ import androidx.media3.exoplayer.analytics.PlaybackStatsListener
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.SilenceSkippingAudioProcessor
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
-import androidx.media3.exoplayer.source.ShuffleOrder.DefaultShuffleOrder
 import androidx.media3.extractor.ExtractorsFactory
 import androidx.media3.extractor.mkv.MatroskaExtractor
 import androidx.media3.extractor.mp4.FragmentedMp4Extractor
@@ -149,13 +148,10 @@ import com.arturo254.opentune.extensions.metadata
 import com.arturo254.opentune.extensions.setOffloadEnabled
 import com.arturo254.opentune.extensions.togglePlayPause
 import com.arturo254.opentune.extensions.toMediaItem
-import com.arturo254.opentune.extensions.toPersistQueue
-import com.arturo254.opentune.extensions.toQueue
 import com.arturo254.opentune.lyrics.LyricsHelper
 import com.arturo254.opentune.models.PersistQueue
 import com.arturo254.opentune.models.PersistPlayerState
 import com.arturo254.opentune.models.toMediaMetadata
-import com.arturo254.opentune.playback.queues.EmptyQueue
 import com.arturo254.opentune.playback.queues.Queue
 import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.playback.queues.filterExplicit
@@ -335,11 +331,27 @@ class MusicService :
             }.build()
     }
 
-    private var currentQueue: Queue = EmptyQueue
-    var queueTitle: String? = null
+    private lateinit var queueController: QueueController
+
+    private var currentQueue: Queue
+        get() = queueController.currentQueue
+        set(value) {
+            queueController.currentQueue = value
+        }
+
+    var queueTitle: String?
+        get() = queueController.queueTitle
+        set(value) {
+            queueController.queueTitle = value
+        }
+
+    private var suppressAutoPlayback: Boolean
+        get() = queueController.suppressAutoPlayback
+        set(value) {
+            queueController.suppressAutoPlayback = value
+        }
+
     private val persistentStateLock = Any()
-    @Volatile
-    private var suppressAutoPlayback = false
     private var lastPresenceToken: String? = null
     @Volatile
     private var lastPresenceUpdateTime = 0L
@@ -668,6 +680,22 @@ class MusicService :
                     addAnalyticsListener(PlaybackStatsListener(false, this@MusicService))
                     setOffloadEnabled(false)
                 }
+
+        queueController =
+            QueueController(
+                player = player,
+                scopeProvider = { scope },
+                hideExplicitProvider = { dataStore.get(HideExplicitKey, false) },
+                hideVideoProvider = { dataStore.get(HideVideoKey, false) },
+                permanentShuffleProvider = { dataStore.get(PermanentShuffleKey, false) },
+                onCurrentMetadataChanged = {
+                    currentMediaMetadata.value = player.currentMetadata
+                },
+                onQueueRestored = ::updateNotification,
+                onDeferredLoadError = { error ->
+                    Timber.e(error, "Failed to load deferred queue items")
+                },
+            )
 
         audioFocusController =
             AudioFocusController(
@@ -1129,54 +1157,7 @@ class MusicService :
     }
 
     private suspend fun restorePersistentQueue(persistedQueue: PersistQueue) {
-        val restoredQueue = persistedQueue.toQueue()
-        val hideExplicit = dataStore.get(HideExplicitKey, false)
-        val hideVideo = dataStore.get(HideVideoKey, false)
-        val initialStatus =
-            restoredQueue
-                .getInitialStatus()
-                .filterExplicit(hideExplicit)
-                .filterVideo(hideVideo)
-
-        withContext(Dispatchers.Main) {
-            currentQueue = restoredQueue
-            queueTitle = initialStatus.title
-
-            val items = initialStatus.items
-            if (items.isEmpty()) {
-                return@withContext
-            }
-
-            val fullIndex = initialStatus.mediaItemIndex.coerceIn(0, items.lastIndex)
-            val windowStart = (fullIndex - 20).coerceAtLeast(0)
-            val windowEnd = (fullIndex + 50).coerceAtMost(items.size)
-
-            val initialChunk = items.subList(windowStart, windowEnd)
-            val relativeIndex = (fullIndex - windowStart).coerceIn(0, initialChunk.lastIndex)
-
-            player.setMediaItems(
-                initialChunk,
-                relativeIndex,
-                initialStatus.position,
-            )
-            player.prepare()
-            player.playWhenReady = false
-            currentMediaMetadata.value = player.currentMetadata
-            updateNotification()
-
-            if (items.size > initialChunk.size) {
-                scope.launch(SilentHandler) {
-                    delay(2000)
-                    if (!isActive || player.mediaItemCount == 0) return@launch
-                    if (windowStart > 0) {
-                        player.addMediaItems(0, items.subList(0, windowStart))
-                    }
-                    if (windowEnd < items.size) {
-                        player.addMediaItems(items.subList(windowEnd, items.size))
-                    }
-                }
-            }
-        }
+        queueController.restorePersistentQueue(persistedQueue)
     }
 
     private fun ensurePresenceManager() {
@@ -1561,111 +1542,20 @@ class MusicService :
             ensureStartedAsForeground()
         }
         ensureScopesActive()
-        suppressAutoPlayback = false
-        currentQueue = queue
-        queueTitle = null
-        val permanentShuffle = dataStore.get(PermanentShuffleKey, false)
-        if (!permanentShuffle) {
-            player.shuffleModeEnabled = false
-        }
 
-        clearAutomix()
-        automixSeedMediaId = null
-        autoAddedMediaIds.clear()
-        if (queue.preloadItem != null) {
-            player.setMediaItem(queue.preloadItem!!.toMediaItem())
-            player.prepare()
-            player.playWhenReady = playWhenReady
-        }
-        scope.launch(SilentHandler) {
-            val initialStatus =
-                withContext(Dispatchers.IO) {
-                    queue.getInitialStatus().filterExplicit(dataStore.get(HideExplicitKey, false)).filterVideo(dataStore.get(HideVideoKey, false))
-                }
-            if (initialStatus.title != null) {
-                queueTitle = initialStatus.title
-            }
-            if (initialStatus.items.isEmpty()) return@launch
-            if (queue.preloadItem != null) {
-                player.addMediaItems(
-                    0,
-                    initialStatus.items.subList(0, initialStatus.mediaItemIndex)
-                )
-                player.addMediaItems(
-                    initialStatus.items.subList(
-                        initialStatus.mediaItemIndex + 1,
-                        initialStatus.items.size
-                    )
-                )
-                if (player.shuffleModeEnabled) {
-                    applyCurrentFirstShuffleOrder()
-                }
-            } else {
-                val items = initialStatus.items
-                val index = initialStatus.mediaItemIndex
-
-                // Chunk Loading: Only load a window around the current item initially
-                // to prevent blocking the Main Thread for seconds with large queues.
-                val windowStart = (index - 20).coerceAtLeast(0)
-                val windowEnd = (index + 50).coerceAtMost(items.size)
-
-                val initialChunk = items.subList(windowStart, windowEnd)
-                val relativeIndex = index - windowStart
-
-                player.setMediaItems(
-                    initialChunk,
-                    if (relativeIndex > 0) relativeIndex else 0,
-                    initialStatus.position,
-                )
-                player.prepare()
-                player.playWhenReady = playWhenReady
-                if (player.shuffleModeEnabled) {
-                    applyCurrentFirstShuffleOrder()
-                }
-
-                // Defer loading the rest of the queue
-                if (items.size > initialChunk.size) {
-                    scope.launch(SilentHandler) {
-                        try {
-                            delay(2000) // Allow UI to settle
-                            if (!isActive) return@launch
-
-                            // Add preceding items
-                            if (windowStart > 0) {
-                                val startChunk = items.subList(0, windowStart)
-                                player.addMediaItems(0, startChunk)
-                            }
-
-                            // Add succeeding items
-                            if (windowEnd < items.size) {
-                                val endChunk = items.subList(windowEnd, items.size)
-                                player.addMediaItems(endChunk)
-                            }
-
-                            if (player.shuffleModeEnabled) {
-                                applyCurrentFirstShuffleOrder()
-                            }
-                        } catch (e: Exception) {
-                            Timber.e(e, "Failed to load deferred queue items")
-                        }
-                    }
-                }
-            }
-        }
+        queueController.playQueue(
+            queue = queue,
+            playWhenReady = playWhenReady,
+            clearAuxiliaryQueueState = {
+                clearAutomix()
+                automixSeedMediaId = null
+                autoAddedMediaIds.clear()
+            },
+        )
     }
 
     private fun applyCurrentFirstShuffleOrder() {
-        val count = player.mediaItemCount
-        if (count <= 1) return
-        val currentIndex = player.currentMediaItemIndex.coerceIn(0, count - 1)
-        val shuffledIndices = IntArray(count) { it }
-        shuffledIndices.shuffle()
-        val currentPos = shuffledIndices.indexOf(currentIndex)
-        if (currentPos >= 0) {
-            shuffledIndices[currentPos] = shuffledIndices[0]
-        }
-        shuffledIndices[0] = currentIndex
-        player.setShuffleOrder(DefaultShuffleOrder(shuffledIndices, System.currentTimeMillis()))
+        queueController.applyCurrentFirstShuffleOrder()
     }
 
     fun startRadioSeamlessly() {
@@ -2042,10 +1932,8 @@ class MusicService :
     }
 
     fun stopAndClearPlayback() {
-        suppressAutoPlayback = true
+        queueController.clearState(suppressAutoPlayback = true)
         clearAutomix()
-        currentQueue = EmptyQueue
-        queueTitle = null
         clearStreamRefreshGuards()
         waitingForNetworkConnection.value = false
         currentMediaMetadata.value = null
@@ -2078,12 +1966,7 @@ class MusicService :
             }
             return
         }
-        suppressAutoPlayback = false
-        player.addMediaItems(
-            if (player.mediaItemCount == 0) 0 else player.currentMediaItemIndex + 1,
-            items
-        )
-        player.prepare()
+        queueController.playNext(items)
     }
 
     fun addToQueue(items: List<MediaItem>) {
@@ -2107,9 +1990,7 @@ class MusicService :
             }
             return
         }
-        suppressAutoPlayback = false
-        player.addMediaItems(items)
-        player.prepare()
+        queueController.addToQueue(items)
     }
 
     fun startTogetherHost(
@@ -3562,7 +3443,7 @@ class MusicService :
         ) {
             scope.launch(SilentHandler) {
                 val mediaItems =
-                    currentQueue.nextPage().filterExplicit(dataStore.get(HideExplicitKey, false)).filterVideo(dataStore.get(HideVideoKey, false))
+                    queueController.nextPage()
                 if (player.playbackState != STATE_IDLE) {
                     player.addMediaItems(mediaItems.drop(1))
                 } else {
@@ -4879,12 +4760,12 @@ class MusicService :
 
         withContext(Dispatchers.IO) {
             // Save current queue with proper type information
-            val persistQueue = currentQueue.toPersistQueue(
-                title = queueTitle,
-                items = mediaItemsSnapshot,
-                mediaItemIndex = currentMediaItemIndex,
-                position = currentPosition
-            )
+            val persistQueue =
+                queueController.toPersistQueue(
+                    items = mediaItemsSnapshot,
+                    mediaItemIndex = currentMediaItemIndex,
+                    position = currentPosition,
+                )
 
             val persistAutomix =
                 PersistQueue(
@@ -4944,12 +4825,12 @@ class MusicService :
                 val playbackState = player.playbackState
                 val playWhenReady = player.playWhenReady
                 runBlocking(Dispatchers.IO) {
-                    val persistQueue = currentQueue.toPersistQueue(
-                        title = queueTitle,
-                        items = mediaItemsSnapshot,
-                        mediaItemIndex = currentMediaItemIndex,
-                        position = currentPosition
-                    )
+                    val persistQueue =
+                        queueController.toPersistQueue(
+                            items = mediaItemsSnapshot,
+                            mediaItemIndex = currentMediaItemIndex,
+                            position = currentPosition,
+                        )
                     val persistAutomix = PersistQueue(
                         title = "automix",
                         items = automixSnapshot,
