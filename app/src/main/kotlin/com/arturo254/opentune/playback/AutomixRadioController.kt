@@ -773,7 +773,7 @@ internal class AutomixRadioController(
 
                 val currentId =
                     (
-                        mediaItem?.currentMetadataOrNull()
+                        mediaItem?.metadata
                             ?: player.currentMetadata
                     )
                         ?.id
@@ -1036,6 +1036,4 @@ internal class AutomixRadioController(
                     .mediaId
             }.toSet()
 
-    private fun MediaItem.currentMetadataOrNull() =
-        metadata
 }
