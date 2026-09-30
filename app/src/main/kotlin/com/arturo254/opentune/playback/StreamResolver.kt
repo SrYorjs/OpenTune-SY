@@ -205,8 +205,7 @@ internal class StreamResolver(
                             is PlaybackException -> throw throwable
 
                             is java.net.ConnectException,
-                            is java.net.UnknownHostException,
-                            -> throw PlaybackException(
+                            is java.net.UnknownHostException -> throw PlaybackException(
                                 context.getString(R.string.error_no_internet),
                                 throwable,
                                 PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
