@@ -51,7 +51,6 @@ import androidx.media3.common.Timeline
 import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
-import androidx.media3.datasource.HttpDataSource
 import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR
@@ -209,7 +208,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import java.io.FileOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
@@ -218,7 +216,6 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.time.LocalDateTime
-import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import kotlin.math.min
 import kotlin.math.pow
@@ -267,8 +264,10 @@ class MusicService :
 
     private lateinit var connectivityManager: ConnectivityManager
     lateinit var connectivityObserver: NetworkConnectivityObserver
-    val waitingForNetworkConnection = MutableStateFlow(false)
-    private val isNetworkConnected = MutableStateFlow(false)
+    private lateinit var errorRecoveryController: ErrorRecoveryController
+
+    val waitingForNetworkConnection
+        get() = errorRecoveryController.waitingForNetworkConnection
 
     private val audioQuality by enumPreference(
         this,
@@ -280,13 +279,6 @@ class MusicService :
         PlayerStreamClientKey,
         PlayerStreamClient.ANDROID_VR
     )
-    private val playbackUrlCache = ConcurrentHashMap<String, Pair<String, Long>>()
-    private val playbackWarmupInFlight = ConcurrentHashMap.newKeySet<String>()
-    private val streamRecoveryState = ConcurrentHashMap<String, Pair<Int, Long>>()
-    @Volatile
-    private var pendingStreamRefreshValidationMediaId: String? = null
-    @Volatile
-    private var refreshValidatedPlayingMediaId: String? = null
     private val avoidStreamCodecs: Set<String> by lazy {
         if (deviceSupportsMimeType("audio/opus")) emptySet() else setOf("opus")
     }
@@ -459,8 +451,6 @@ class MusicService :
     private var automixSeedMediaId: String? = null
 
     val autoAddedMediaIds: MutableSet<String> = java.util.Collections.synchronizedSet(mutableSetOf())
-
-    private var consecutivePlaybackErr = 0
 
     val maxSafeGainFactor = 1.414f // +3 dB
     @Volatile
@@ -697,6 +687,26 @@ class MusicService :
                 },
             )
 
+        errorRecoveryController =
+            ErrorRecoveryController(
+                player = player,
+                scopeProvider = { scope },
+                downloadCache = downloadCache,
+                playerCache = playerCache,
+                preferredStreamClientProvider = { preferredStreamClient },
+                autoSkipNextOnErrorProvider = {
+                    dataStore.get(AutoSkipNextOnErrorKey, false)
+                },
+                skipSilenceEnabledProvider = {
+                    dataStore.get(SkipSilenceKey, false)
+                },
+                disableSkipSilence = {
+                    dataStore.edit { settings ->
+                        settings[SkipSilenceKey] = false
+                    }
+                },
+            )
+
         audioFocusController =
             AudioFocusController(
                 context = this,
@@ -758,16 +768,7 @@ class MusicService :
 
         scope.launch {
             connectivityObserver.networkStatus.collect { isConnected ->
-                isNetworkConnected.value = isConnected
-                if (isConnected && waitingForNetworkConnection.value) {
-                    waitingForNetworkConnection.value = false
-                    if (player.currentMediaItem != null && player.playWhenReady &&
-                        player.playbackState == Player.STATE_IDLE
-                    ) {
-                        player.prepare()
-                        player.play()
-                    }
-                }
+                errorRecoveryController.onNetworkConnectivityChanged(isConnected)
             }
         }
 
@@ -1342,35 +1343,6 @@ class MusicService :
         bluetoothReceiverRegistered = false
     }
 
-    private fun waitOnNetworkError() {
-        waitingForNetworkConnection.value = true
-    }
-
-    private fun skipOnError() {
-        /**
-         * Auto skip to the next media item on error.
-         *
-         * To prevent a "runaway diesel engine" scenario, force the user to take action after
-         * too many errors come up too quickly. Pause to show player "stopped" state
-         */
-        consecutivePlaybackErr += 2
-        val nextWindowIndex = player.nextMediaItemIndex
-
-        if (consecutivePlaybackErr <= MAX_CONSECUTIVE_ERR && nextWindowIndex != C.INDEX_UNSET) {
-            player.seekTo(nextWindowIndex, C.TIME_UNSET)
-            player.prepare()
-            player.play()
-            return
-        }
-
-        player.pause()
-        consecutivePlaybackErr = 0
-    }
-
-    private fun stopOnError() {
-        player.pause()
-    }
-
     private fun updateNotification() {
         try {
             val customLayout = listOf(
@@ -1934,15 +1906,13 @@ class MusicService :
     fun stopAndClearPlayback() {
         queueController.clearState(suppressAutoPlayback = true)
         clearAutomix()
-        clearStreamRefreshGuards()
-        waitingForNetworkConnection.value = false
+        errorRecoveryController.resetForPlaybackStop()
         currentMediaMetadata.value = null
         player.playWhenReady = false
         player.stop()
         player.clearMediaItems()
         abandonAudioFocus()
         closeAudioEffectSession()
-        consecutivePlaybackErr = 0
     }
 
     fun playNext(items: List<MediaItem>) {
@@ -3357,11 +3327,11 @@ class MusicService :
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
         super.onMediaItemTransition(mediaItem, reason)
 
-        clearStreamRefreshGuards(
+        errorRecoveryController.onMediaItemTransition(
             mediaItem?.mediaId
                 ?.trim()
                 ?.takeIf { it.isNotBlank() }
-                ?: player.currentMediaItem?.mediaId
+                ?: player.currentMediaItem?.mediaId,
         )
 
         crossfadeAudio?.onMediaItemTransition(mediaItem, reason)
@@ -3509,20 +3479,7 @@ class MusicService :
         super.onPlaybackStateChanged(playbackState)
         updatePlayerWidgets()
 
-        val activeMediaId = player.currentMediaItem?.mediaId
-        clearStreamRefreshGuards(activeMediaId)
-        if (
-            playbackState == Player.STATE_READY &&
-            player.playWhenReady &&
-            player.isPlaying &&
-            activeMediaId != null &&
-            pendingStreamRefreshValidationMediaId == activeMediaId
-        ) {
-            refreshValidatedPlayingMediaId = activeMediaId
-            pendingStreamRefreshValidationMediaId = null
-            streamRecoveryState.remove(activeMediaId)
-            Timber.tag("MusicService").i("Stream refresh validated and playback resumed for $activeMediaId")
-        }
+        errorRecoveryController.onPlaybackStateChanged(playbackState)
 
         scope.launch {
             val shouldSave = withContext(Dispatchers.IO) { dataStore.get(PersistentQueueKey, true) }
@@ -3922,114 +3879,7 @@ class MusicService :
 
     override fun onPlayerError(error: PlaybackException) {
         super.onPlayerError(error)
-        val isConnectionError = (error.cause?.cause is PlaybackException) &&
-                (error.cause?.cause as PlaybackException).errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
-
-        if (!isNetworkConnected.value || isConnectionError) {
-            waitOnNetworkError()
-            return
-        }
-
-        val currentMediaId = player.currentMediaItem?.mediaId
-        val httpStatusCode = error.httpStatusCodeOrNull()
-
-        if (currentMediaId != null && YTPlayerUtils.isBotDetectionException(error)) {
-            if (markAndCheckRecoveryAllowance(currentMediaId)) {
-                Timber.tag("MusicService").w(
-                    "Bot detection error for $currentMediaId — clearing caches and retrying with fresh stream"
-                )
-                YTPlayerUtils.invalidateCachedStreamUrls(currentMediaId)
-                playbackUrlCache.remove(currentMediaId)
-                pendingStreamRefreshValidationMediaId = currentMediaId
-                player.prepare()
-                player.playWhenReady = true
-                return
-            }
-        }
-
-        val shouldAttemptStreamRefresh =
-            currentMediaId != null && (
-                    error.errorCode == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS ||
-                            error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND ||
-                            error.errorCode == PlaybackException.ERROR_CODE_IO_READ_POSITION_OUT_OF_RANGE ||
-                            httpStatusCode in setOf(403, 404, 410, 416, 429, 500, 502, 503)
-                    )
-
-        if (currentMediaId != null && error.errorCode == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND) {
-            scope.launch(Dispatchers.IO) {
-                runCatching { downloadCache.removeResource(currentMediaId) }
-                runCatching { playerCache.removeResource(currentMediaId) }
-            }
-        }
-
-        if (shouldAttemptStreamRefresh && currentMediaId != null && shouldSkipRedundantStreamRefresh(currentMediaId)) {
-            Timber.tag("MusicService").w(
-                "Skipping redundant stream refresh for $currentMediaId after validated recovery; resuming playback without URL refresh"
-            )
-            refreshValidatedPlayingMediaId = null
-            player.prepare()
-            player.playWhenReady = true
-            return
-        }
-
-        if (shouldAttemptStreamRefresh && currentMediaId != null && markAndCheckRecoveryAllowance(currentMediaId)) {
-            val failingStreamClientKey =
-                playbackUrlCache[currentMediaId]
-                    ?.first
-                    ?.toHttpUrlOrNull()
-                    ?.queryParameter("c")
-                    ?.trim()
-                    ?.takeIf { it.isNotBlank() }
-            Timber.tag("MusicService").w(
-                "Attempting stream refresh for $currentMediaId (http=$httpStatusCode, code=${error.errorCode}, client=${failingStreamClientKey ?: "unknown"})"
-            )
-            YTPlayerUtils.markStreamClientFailed(currentMediaId, failingStreamClientKey, httpStatusCode)
-            YTPlayerUtils.markPreferredClientFailed(currentMediaId, preferredStreamClient, httpStatusCode)
-            YTPlayerUtils.invalidateCachedStreamUrls(currentMediaId)
-            playbackUrlCache.remove(currentMediaId)
-            pendingStreamRefreshValidationMediaId = currentMediaId
-            player.prepare()
-            player.playWhenReady = true
-            return
-        }
-
-        val skipSilenceCurrentlyEnabled = dataStore.get(SkipSilenceKey, false)
-        val causeText = (error.cause?.stackTraceToString() ?: error.stackTraceToString()).lowercase()
-        val looksLikeSilenceProcessor = skipSilenceCurrentlyEnabled && (
-                "silenceskippingaudioprocessor" in causeText || "silence" in causeText
-                )
-
-        if (looksLikeSilenceProcessor) {
-            scope.launch {
-                try {
-                    dataStore.edit { settings ->
-                        settings[SkipSilenceKey] = false
-                    }
-                    player.skipSilenceEnabled = false
-                    val currentPos = player.currentPosition
-                    val targetPos = min(currentPos + 1500L, if (player.duration > 0) player.duration - 1000L else currentPos + 1500L)
-                    player.seekTo(targetPos)
-                    player.prepare()
-                    player.play()
-                    return@launch
-                } catch (t: Throwable) {
-                    Timber.tag("MusicService").e(t, "failed to recover from silence-skipper error")
-                }
-                if (dataStore.get(AutoSkipNextOnErrorKey, false)) {
-                    skipOnError()
-                } else {
-                    stopOnError()
-                }
-            }
-
-            return
-        }
-
-        if (dataStore.get(AutoSkipNextOnErrorKey, false)) {
-            skipOnError()
-        } else {
-            stopOnError()
-        }
+        errorRecoveryController.handlePlayerError(error)
     }
 
     private suspend fun trimPlayerCacheToBytes(limitBytes: Long) {
@@ -4112,8 +3962,8 @@ class MusicService :
                     ?: return@launch
 
             val now = System.currentTimeMillis()
-            if (playbackUrlCache[mediaId]?.second?.let { it > now } == true) return@launch
-            if (!playbackWarmupInFlight.add(mediaId)) return@launch
+            if (errorRecoveryController.hasValidCachedStream(mediaId, now)) return@launch
+            if (!errorRecoveryController.tryBeginWarmup(mediaId)) return@launch
 
             try {
                 val playbackData =
@@ -4127,14 +3977,18 @@ class MusicService :
                         )
                     }.getOrNull() ?: return@launch
 
-                playbackUrlCache[mediaId] =
-                    playbackData.streamUrl to
-                        (System.currentTimeMillis() + playbackData.streamExpiresInSeconds * 1000L)
+                errorRecoveryController.cacheStream(
+                    mediaId = mediaId,
+                    url = playbackData.streamUrl,
+                    expiresAtMs =
+                        System.currentTimeMillis() +
+                            playbackData.streamExpiresInSeconds * 1000L,
+                )
             } catch (_: Exception) {
                 // Warmup is opportunistic; normal playback resolution remains
                 // the source of truth and will report any real error.
             } finally {
-                playbackWarmupInFlight.remove(mediaId)
+                errorRecoveryController.finishWarmup(mediaId)
             }
         }
     }
@@ -4146,8 +4000,8 @@ class MusicService :
             // Hot path for tracks whose stream URL was already resolved. Keep the
             // mediaId key unchanged so CacheDataSource can still serve local bytes
             // before it ever touches the network.
-            playbackUrlCache[mediaId]
-                ?.takeIf { it.second > System.currentTimeMillis() }
+            errorRecoveryController
+                .validCachedStream(mediaId)
                 ?.let {
                     scope.launch(Dispatchers.IO) { recoverSong(mediaId) }
                     val length =
@@ -4271,8 +4125,13 @@ class MusicService :
                 scope.launch(Dispatchers.IO) { recoverSong(mediaId, nonNullPlayback) }
 
                 val streamUrl = nonNullPlayback.streamUrl
-                playbackUrlCache[mediaId] =
-                    streamUrl to System.currentTimeMillis() + (nonNullPlayback.streamExpiresInSeconds * 1000L)
+                errorRecoveryController.cacheStream(
+                    mediaId = mediaId,
+                    url = streamUrl,
+                    expiresAtMs =
+                        System.currentTimeMillis() +
+                            nonNullPlayback.streamExpiresInSeconds * 1000L,
+                )
                 val length = if (dataSpec.length >= 0) minOf(dataSpec.length, CHUNK_LENGTH) else CHUNK_LENGTH
                 return@Factory dataSpec.withUri(streamUrl.toUri()).subrange(dataSpec.uriPositionOffset, length)
 
@@ -4324,8 +4183,11 @@ class MusicService :
                                 Timber.i("Using JossRed URL as fallback for $mediaId: $alternativeUrl")
 
                                 // Guardar URL en caché con expiración de 5 minutos
-                                playbackUrlCache[mediaId] =
-                                    alternativeUrl to System.currentTimeMillis() + 300_000L
+                                errorRecoveryController.cacheStream(
+                                    mediaId = mediaId,
+                                    url = alternativeUrl,
+                                    expiresAtMs = System.currentTimeMillis() + 300_000L,
+                                )
 
                                 // Recuperar información de la canción en segundo plano
                                 scope.launch(Dispatchers.IO) {
@@ -4385,51 +4247,7 @@ class MusicService :
     }
 
     fun retryCurrentFromFreshStream() {
-        val mediaId = player.currentMediaItem?.mediaId ?: return
-        clearStreamRefreshGuards(mediaId)
-        YTPlayerUtils.invalidateCachedStreamUrls(mediaId)
-        playbackUrlCache.remove(mediaId)
-        pendingStreamRefreshValidationMediaId = mediaId
-        player.prepare()
-        player.playWhenReady = true
-    }
-
-    private fun PlaybackException.httpStatusCodeOrNull(): Int? {
-        var t: Throwable? = cause
-        while (t != null) {
-            if (t is HttpDataSource.InvalidResponseCodeException) return t.responseCode
-            t = t.cause
-        }
-        return null
-    }
-
-    private fun markAndCheckRecoveryAllowance(mediaId: String): Boolean {
-        val now = System.currentTimeMillis()
-        val (count, lastAt) = streamRecoveryState[mediaId] ?: (0 to 0L)
-        val nextCount = if (now - lastAt > 45_000L) 1 else count + 1
-        if (nextCount > 2) return false
-        streamRecoveryState[mediaId] = nextCount to now
-        return true
-    }
-
-    private fun shouldSkipRedundantStreamRefresh(mediaId: String): Boolean {
-        if (refreshValidatedPlayingMediaId != mediaId) return false
-        val expiresAt = playbackUrlCache[mediaId]?.second ?: return false
-        if (expiresAt <= System.currentTimeMillis()) {
-            refreshValidatedPlayingMediaId = null
-            return false
-        }
-        return true
-    }
-
-    private fun clearStreamRefreshGuards(activeMediaId: String? = null) {
-        val normalizedActiveMediaId = activeMediaId?.trim()?.takeIf { it.isNotBlank() }
-        if (normalizedActiveMediaId == null || refreshValidatedPlayingMediaId != normalizedActiveMediaId) {
-            refreshValidatedPlayingMediaId = null
-        }
-        if (normalizedActiveMediaId == null || pendingStreamRefreshValidationMediaId != normalizedActiveMediaId) {
-            pendingStreamRefreshValidationMediaId = null
-        }
+        errorRecoveryController.retryCurrentFromFreshStream()
     }
 
     private fun deviceSupportsMimeType(mimeType: String): Boolean {
@@ -5040,7 +4858,6 @@ class MusicService :
         const val PERSISTENT_QUEUE_FILE = "persistent_queue.data"
         const val PERSISTENT_AUTOMIX_FILE = "persistent_automix.data"
         const val PERSISTENT_PLAYER_STATE_FILE = "persistent_player_state.data"
-        const val MAX_CONSECUTIVE_ERR = 5
         const val MIN_PRESENCE_UPDATE_INTERVAL = 20_000L
         const val PLAYBACK_RESOLUTION_TIMEOUT_MS = 20_000L
     }
