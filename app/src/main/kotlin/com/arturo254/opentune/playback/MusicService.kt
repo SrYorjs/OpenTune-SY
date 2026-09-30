@@ -821,8 +821,7 @@ class MusicService :
             dataStore.data
                 .map { it[AudioOffload] ?: false }
                 .distinctUntilChanged(),
-            audioEffectsController.internalDspActive
-                .distinctUntilChanged(),
+            audioEffectsController.internalDspActive,
         ) { requestedOffload, dspActive ->
             requestedOffload to dspActive
         }.collectLatest(scope) { (requestedOffload, dspActive) ->
