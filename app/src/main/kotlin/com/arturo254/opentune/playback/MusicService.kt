@@ -3418,7 +3418,7 @@ class MusicService :
             player.repeatMode == REPEAT_MODE_OFF
         ) {
             val isNearEndWithoutPaging =
-                player.mediaItemCount - player.currentMediaItemIndex <= 3 && !currentQueue.hasNextPage()
+                player.mediaItemCount - player.currentMediaItemIndex <= 3 && !queueController.hasNextPage()
 
             if (!isNearEndWithoutPaging) {
                 val force =
@@ -3438,7 +3438,7 @@ class MusicService :
             dataStore.get(AutoLoadMoreKey, true) &&
             reason != Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT &&
             player.mediaItemCount - player.currentMediaItemIndex <= 5 &&
-            currentQueue.hasNextPage() &&
+            queueController.hasNextPage() &&
             player.repeatMode == REPEAT_MODE_OFF
         ) {
             scope.launch(SilentHandler) {
@@ -3458,7 +3458,7 @@ class MusicService :
             reason != Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT &&
             player.repeatMode == REPEAT_MODE_OFF &&
             player.mediaItemCount - player.currentMediaItemIndex <= 3 &&
-            !currentQueue.hasNextPage()
+            !queueController.hasNextPage()
         ) {
             scope.launch(SilentHandler) {
                 if (suppressAutoPlayback || player.mediaItemCount == 0) return@launch
