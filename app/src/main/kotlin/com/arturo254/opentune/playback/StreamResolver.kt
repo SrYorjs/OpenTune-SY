@@ -513,7 +513,7 @@ internal class StreamResolver(
             ).setCacheWriteDataSinkFactory(null)
             .setFlags(FLAG_IGNORE_CACHE_ON_ERROR)
 
-    private suspend fun persistResolvedFormat(
+    private fun persistResolvedFormat(
         mediaId: String,
         playback: YTPlayerUtils.PlaybackData,
     ) {
