@@ -526,7 +526,7 @@ internal class AutomixRadioController(
         automixSeedMediaId =
             currentMeta.id
                 .trim()
-                .ifBlank { null }
+                .takeIf { it.isNotBlank() }
 
         val hideExplicit =
             dataStore.get(HideExplicitKey, false)
