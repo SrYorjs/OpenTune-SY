@@ -544,7 +544,7 @@ internal class StreamResolver(
                     codecs =
                         format.mimeType
                             .split("codecs=")[1]
-                            .removeSurrounding("""),
+                            .removeSurrounding("\""),
                     bitrate = format.bitrate,
                     sampleRate = format.audioSampleRate,
                     contentLength = format.contentLength!!,
