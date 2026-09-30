@@ -54,7 +54,7 @@ internal class StreamResolver(
     private val promptLoginRecovery: (String, String) -> Unit,
 ) {
     private val connectivityManager: ConnectivityManager =
-        context.getSystemService()!!
+        context.getSystemService<ConnectivityManager>()!!
 
     private val avoidStreamCodecs: Set<String> by lazy {
         if (deviceSupportsMimeType("audio/opus")) emptySet() else setOf("opus")
