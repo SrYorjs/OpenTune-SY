@@ -21,8 +21,6 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothClass
 import android.content.pm.PackageManager
 import android.database.SQLException
-import android.media.AudioManager
-import android.media.AudioFocusRequest
 import android.media.audiofx.AudioEffect
 import android.media.audiofx.BassBoost
 import android.media.audiofx.Equalizer
@@ -256,13 +254,9 @@ class MusicService :
     @Inject
     lateinit var mediaLibrarySessionCallback: MediaLibrarySessionCallback
 
-    private lateinit var audioManager: AudioManager
-    private var audioFocusRequest: AudioFocusRequest? = null
-    private var lastAudioFocusState = AudioManager.AUDIOFOCUS_NONE
-    private var wasPlayingBeforeAudioFocusLoss = false
+    private lateinit var audioFocusController: AudioFocusController
     private var pauseOnDeviceMuteEnabled = false
     private var wasAutoPausedByDeviceMute = false
-    private var hasAudioFocus = false
     private var autoStartOnBluetoothEnabled = false
     private var bluetoothReceiverRegistered = false
     private var wakeLock: PowerManager.WakeLock? = null
@@ -675,11 +669,15 @@ class MusicService :
                     setOffloadEnabled(false)
                 }
 
-        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        audioFocusController =
+            AudioFocusController(
+                context = this,
+                player = player,
+                audioFocusVolumeFactor = audioFocusVolumeFactor,
+            )
         wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "OpenTune:Playback")
             .also { it.setReferenceCounted(false) }
-        setupAudioFocusRequest()
 
         mediaLibrarySessionCallback.apply {
             toggleLike = ::toggleLike
@@ -1245,117 +1243,15 @@ class MusicService :
         }
     }
 
-    private fun setupAudioFocusRequest() {
-        audioFocusRequest = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-            .setAudioAttributes(
-                android.media.AudioAttributes.Builder()
-                    .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
-                    .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
-                    .build()
-            )
-            .setOnAudioFocusChangeListener { focusChange ->
-                handleAudioFocusChange(focusChange)
-            }
-            .setAcceptsDelayedFocusGain(true)
-            .build()
-    }
-
-    private fun handleAudioFocusChange(focusChange: Int) {
-        when (focusChange) {
-            AudioManager.AUDIOFOCUS_GAIN -> {
-                hasAudioFocus = true
-                audioFocusVolumeFactor.value = 1f
-
-                if (wasPlayingBeforeAudioFocusLoss) {
-                    player.play()
-                    wasPlayingBeforeAudioFocusLoss = false
-                }
-
-                lastAudioFocusState = focusChange
-            }
-
-            AudioManager.AUDIOFOCUS_LOSS -> {
-                hasAudioFocus = false
-                audioFocusVolumeFactor.value = 1f
-                wasPlayingBeforeAudioFocusLoss = false
-
-                if (player.isPlaying) {
-                    player.pause()
-                }
-
-                abandonAudioFocus()
-
-                lastAudioFocusState = focusChange
-            }
-
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
-                hasAudioFocus = false
-                audioFocusVolumeFactor.value = 1f
-                wasPlayingBeforeAudioFocusLoss = player.isPlaying
-
-                if (player.isPlaying) {
-                    player.pause()
-                }
-
-                lastAudioFocusState = focusChange
-            }
-
-            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
-
-                hasAudioFocus = false
-
-                wasPlayingBeforeAudioFocusLoss = player.isPlaying
-
-                audioFocusVolumeFactor.value = 0.2f
-
-                lastAudioFocusState = focusChange
-            }
-
-            AudioManager.AUDIOFOCUS_GAIN_TRANSIENT -> {
-
-                hasAudioFocus = true
-                audioFocusVolumeFactor.value = 1f
-
-                if (wasPlayingBeforeAudioFocusLoss) {
-                    player.play()
-                    wasPlayingBeforeAudioFocusLoss = false
-                }
-
-                lastAudioFocusState = focusChange
-            }
-
-            AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK -> {
-                hasAudioFocus = true
-                audioFocusVolumeFactor.value = 1f
-
-                lastAudioFocusState = focusChange
-            }
-        }
-    }
-
-    private fun requestAudioFocus(): Boolean {
-        if (hasAudioFocus) return true
-
-        audioFocusRequest?.let { request ->
-            val result = audioManager.requestAudioFocus(request)
-            hasAudioFocus = result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED
-            return hasAudioFocus
-        }
-        return false
-    }
+    private fun requestAudioFocus(): Boolean =
+        audioFocusController.requestFocus()
 
     private fun abandonAudioFocus() {
-        if (hasAudioFocus) {
-            audioFocusRequest?.let { request ->
-                audioManager.abandonAudioFocusRequest(request)
-                hasAudioFocus = false
-            }
-        }
+        audioFocusController.abandonFocus()
     }
 
-    fun hasAudioFocusForPlayback(): Boolean {
-        return hasAudioFocus
-    }
+    fun hasAudioFocusForPlayback(): Boolean =
+        audioFocusController.hasFocus()
 
     private fun isDeviceMutedNow(): Boolean {
         return player.isDeviceMuted || player.deviceVolume <= 0
