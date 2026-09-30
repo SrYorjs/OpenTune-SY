@@ -83,7 +83,7 @@ internal class CrossfadeAudio(
     /** Cuánto buffer (ms) necesita el overlap player antes de permitir beginOverlapCrossfade.
      *  Se calcula como fadeMs + 2s, acotado entre 3s y 10s. */
     private fun requiredStartBufferMs(fadeMs: Int): Long =
-        (fadeMs.toLong() + 2_000L).coerceIn(3_000L, 10_000L)
+        MixTransitionMath.requiredStartBufferMs(fadeMs)
 
     // ── API pública ───────────────────────────────────────────────────────────
 
@@ -450,32 +450,8 @@ internal class CrossfadeAudio(
     private fun transitionGains(
         progress: Float,
         curve: MixTransitionCurve,
-    ): Pair<Float, Float> {
-        val t = progress.coerceIn(0f, 1f)
-
-        return when (curve) {
-            MixTransitionCurve.FADE ->
-                (1f - t) to t
-
-            MixTransitionCurve.BLEND -> {
-                val radians = t.toDouble() * (PI / 2.0)
-                cos(radians).toFloat().coerceIn(0f, 1f) to
-                    sin(radians).toFloat().coerceIn(0f, 1f)
-            }
-
-            MixTransitionCurve.RISE -> {
-                val outgoing = (1f - t).pow(1.30f).coerceIn(0f, 1f)
-                val incoming = t.pow(0.62f).coerceIn(0f, 1f)
-                outgoing to incoming
-            }
-
-            MixTransitionCurve.MELT -> {
-                val outgoing = (1f - t).pow(0.72f).coerceIn(0f, 1f)
-                val incoming = t.pow(1.18f).coerceIn(0f, 1f)
-                outgoing to incoming
-            }
-        }
-    }
+    ): Pair<Float, Float> =
+        MixTransitionMath.gains(progress, curve)
 
     // ── Transición de MediaItem ───────────────────────────────────────────────
 
