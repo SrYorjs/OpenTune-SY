@@ -281,6 +281,8 @@ class MusicService :
     )
     private lateinit var streamResolver: StreamResolver
     private lateinit var playbackEngine: PlaybackEngine
+    private lateinit var playbackPersistenceController:
+        PlaybackPersistenceController
 
     private lateinit var queueController: QueueController
 
@@ -302,15 +304,18 @@ class MusicService :
             queueController.suppressAutoPlayback = value
         }
 
-    private val persistentStateLock = Any()
     private var lastPresenceToken: String? = null
     @Volatile
     private var lastPresenceUpdateTime = 0L
     @Volatile
     private var lastLoginRecoveryPrompt: Pair<String, Long>? = null
 
-    val currentMediaMetadata = MutableStateFlow<com.arturo254.opentune.models.MediaMetadata?>(null)
-    val queueRestoreCompleted = MutableStateFlow(false)
+    val currentMediaMetadata =
+        MutableStateFlow<com.arturo254.opentune.models.MediaMetadata?>(null)
+
+    val queueRestoreCompleted
+        get() =
+            playbackPersistenceController.queueRestoreCompleted
     private val currentSong =
         currentMediaMetadata
             .flatMapLatest { mediaMetadata ->
@@ -690,6 +695,22 @@ class MusicService :
                 playNext = ::playNext,
             )
 
+        playbackPersistenceController =
+            PlaybackPersistenceController(
+                context = this,
+                player = player,
+                queueController = queueController,
+                automixRadioController =
+                    automixRadioController,
+                dataStore = dataStore,
+                scopeProvider = { scope },
+                playerVolume = playerVolume,
+                currentMediaMetadata =
+                    currentMediaMetadata,
+                onRestored = ::updateNotification,
+                onError = ::reportException,
+            )
+
         audioFocusController =
             AudioFocusController(
                 context = this,
@@ -1061,69 +1082,7 @@ class MusicService :
                 }
             }
 
-        scope.launch(Dispatchers.IO) {
-            if (dataStore.get(PersistentQueueKey, true)) {
-                readPersistentObject<PersistQueue>(PERSISTENT_QUEUE_FILE)
-                    ?.let { persistedQueue ->
-                        restorePersistentQueue(persistedQueue)
-                    }
-                readPersistentObject<PersistQueue>(PERSISTENT_AUTOMIX_FILE)
-                    ?.let { persistedAutomix ->
-                        val items = persistedAutomix.items.map { it.toMediaItem() }
-                        withContext(Dispatchers.Main) {
-                            automixRadioController.restoreAutomix(
-                                items = items,
-                                currentMediaId =
-                                    player.currentMetadata
-                                        ?.id
-                                        ?.trim()
-                                        ?.takeIf {
-                                            it.isNotBlank()
-                                        },
-                            )
-                        }
-                    }
-
-                readPersistentObject<PersistPlayerState>(PERSISTENT_PLAYER_STATE_FILE)
-                    ?.let { playerState ->
-                        delay(1000)
-                        withContext(Dispatchers.Main) {
-                            player.repeatMode = playerState.repeatMode
-                            player.shuffleModeEnabled = playerState.shuffleModeEnabled
-                            playerVolume.value = playerState.volume
-
-                            if (player.mediaItemCount > 0) {
-                                val index =
-                                    if (playerState.currentMediaItemIndex in 0 until player.mediaItemCount) {
-                                        playerState.currentMediaItemIndex
-                                    } else {
-                                        player.currentMediaItemIndex.coerceIn(0, player.mediaItemCount - 1)
-                                    }
-                                player.seekTo(index, playerState.currentPosition)
-                            }
-
-                            currentMediaMetadata.value = player.currentMetadata
-                            updateNotification()
-                        }
-                    }
-            }
-            withContext(Dispatchers.Main) {
-                queueRestoreCompleted.value = true
-            }
-        }
-
-        // Save queue periodically to prevent queue loss from crash or force kill
-        // Save queue periodically to prevent queue loss from crash or force kill
-        scope.launch {
-            while (isActive) {
-                val interval = if (player.isPlaying) 10.seconds else 30.seconds
-                delay(interval)
-                val shouldSave = withContext(Dispatchers.IO) { dataStore.get(PersistentQueueKey, true) }
-                if (shouldSave) {
-                    saveQueueToDisk()
-                }
-            }
-        }
+        playbackPersistenceController.start()
     }
 
     private fun ensureScopesActive() {
@@ -1136,10 +1095,6 @@ class MusicService :
         if (!ioScope.isActive) {
             ioScope = CoroutineScope(Dispatchers.IO + scopeJob)
         }
-    }
-
-    private suspend fun restorePersistentQueue(persistedQueue: PersistQueue) {
-        queueController.restorePersistentQueue(persistedQueue)
     }
 
     private fun ensurePresenceManager() {
@@ -2892,7 +2847,7 @@ class MusicService :
         scope.launch {
             val shouldSave = withContext(Dispatchers.IO) { dataStore.get(PersistentQueueKey, true) }
             if (shouldSave) {
-                saveQueueToDisk()
+                playbackPersistenceController.saveIfEnabled()
             }
         }
         ensurePresenceManager()
@@ -2908,7 +2863,7 @@ class MusicService :
         scope.launch {
             val shouldSave = withContext(Dispatchers.IO) { dataStore.get(PersistentQueueKey, true) }
             if (shouldSave) {
-                saveQueueToDisk()
+                playbackPersistenceController.saveIfEnabled()
             }
         }
 
@@ -3194,7 +3149,7 @@ class MusicService :
         // Save state when shuffle mode changes - must be on Main thread to access player
         scope.launch {
             if (dataStore.get(PersistentQueueKey, true)) {
-                saveQueueToDisk()
+                playbackPersistenceController.saveIfEnabled()
             }
         }
     }
@@ -3225,7 +3180,7 @@ class MusicService :
         // Save state when repeat mode changes - must be on Main thread to access player
         scope.launch {
             if (dataStore.get(PersistentQueueKey, true)) {
-                saveQueueToDisk()
+                playbackPersistenceController.saveIfEnabled()
             }
         }
     }
@@ -3382,140 +3337,6 @@ class MusicService :
         )
     }
 
-    private inline fun <reified T> readPersistentObject(fileName: String): T? {
-        val persistentFile = filesDir.resolve(fileName)
-        if (!persistentFile.exists() || !persistentFile.isFile) return null
-
-        return synchronized(persistentStateLock) {
-            runCatching {
-                persistentFile.inputStream().use { fis ->
-                    ObjectInputStream(fis).use { input ->
-                        input.readObject() as? T
-                    }
-                }
-            }.onFailure {
-                Timber.tag("MusicService").w(it, "Failed to read persistent file: $fileName")
-                runCatching { persistentFile.delete() }
-            }.getOrNull()
-        }
-    }
-
-    private fun writePersistentObject(fileName: String, payload: Serializable) {
-        val persistentFile = filesDir.resolve(fileName)
-        val tempFile = filesDir.resolve("$fileName.tmp")
-
-        synchronized(persistentStateLock) {
-            runCatching {
-                FileOutputStream(tempFile).use { fos ->
-                    ObjectOutputStream(fos).use { output ->
-                        output.writeObject(payload)
-                        output.flush()
-                    }
-                    fos.fd.sync()
-                }
-
-                if (persistentFile.exists() && !persistentFile.delete()) {
-                    error("Could not replace $fileName")
-                }
-                if (!tempFile.renameTo(persistentFile)) {
-                    error("Could not atomically move $fileName")
-                }
-            }.onFailure {
-                runCatching { tempFile.delete() }
-                reportException(it)
-            }
-        }
-    }
-
-    private fun MediaItem.toPersistableMetadata(): com.arturo254.opentune.models.MediaMetadata? {
-        val tagged = metadata
-        if (tagged != null) return tagged
-
-        val id =
-            mediaId.trim().ifBlank {
-                localConfiguration?.uri?.toString()?.trim().orEmpty()
-            }.takeIf { it.isNotBlank() } ?: return null
-
-        val title =
-            mediaMetadata.title?.toString()?.trim().takeIf { !it.isNullOrBlank() }
-                ?: id
-
-        val artistText =
-            mediaMetadata.artist?.toString()?.trim().takeIf { !it.isNullOrBlank() }
-                ?: mediaMetadata.subtitle?.toString()?.trim().takeIf { !it.isNullOrBlank() }
-
-        val artists =
-            artistText
-                ?.split(",")
-                ?.mapNotNull { it.trim().takeIf(String::isNotBlank) }
-                ?.map { name -> com.arturo254.opentune.models.MediaMetadata.Artist(id = null, name = name) }
-                .orEmpty()
-
-        val thumbnailUrl = mediaMetadata.artworkUri?.toString()
-        val albumTitle = mediaMetadata.albumTitle?.toString()?.trim().takeIf { !it.isNullOrBlank() }
-        val album =
-            albumTitle?.let { titleValue ->
-                com.arturo254.opentune.models.MediaMetadata.Album(id = titleValue, title = titleValue)
-            }
-
-        return com.arturo254.opentune.models.MediaMetadata(
-            id = id,
-            title = title,
-            artists = artists,
-            duration = -1,
-            thumbnailUrl = thumbnailUrl,
-            album = album,
-        )
-    }
-
-    private suspend fun saveQueueToDisk() {
-        val mediaItemsSnapshot = player.mediaItems.mapNotNull { it.toPersistableMetadata() }
-        if (mediaItemsSnapshot.isEmpty()) return
-
-        val currentMediaItemIndex = player.currentMediaItemIndex
-        val currentPosition = player.currentPosition
-        val automixSnapshot = automixItems.value.mapNotNull { it.metadata }
-        val playWhenReady = player.playWhenReady
-        val repeatMode = player.repeatMode
-        val shuffleModeEnabled = player.shuffleModeEnabled
-        val volume = playerVolume.value
-        val playbackState = player.playbackState
-
-        withContext(Dispatchers.IO) {
-            // Save current queue with proper type information
-            val persistQueue =
-                queueController.toPersistQueue(
-                    items = mediaItemsSnapshot,
-                    mediaItemIndex = currentMediaItemIndex,
-                    position = currentPosition,
-                )
-
-            val persistAutomix =
-                PersistQueue(
-                    title = "automix",
-                    items = automixSnapshot,
-                    mediaItemIndex = 0,
-                    position = 0,
-                )
-
-            // Save player state
-            val persistPlayerState = PersistPlayerState(
-                playWhenReady = playWhenReady,
-                repeatMode = repeatMode,
-                shuffleModeEnabled = shuffleModeEnabled,
-                volume = volume,
-                currentPosition = currentPosition,
-                currentMediaItemIndex = currentMediaItemIndex, // Redundant but part of data class
-                playbackState = playbackState
-            )
-
-            writePersistentObject(PERSISTENT_QUEUE_FILE, persistQueue)
-            writePersistentObject(PERSISTENT_AUTOMIX_FILE, persistAutomix)
-            writePersistentObject(PERSISTENT_PLAYER_STATE_FILE, persistPlayerState)
-        }
-    }
-
-
     override fun onDestroy() {
         super.onDestroy()
         unregisterBluetoothReceiver()
@@ -3537,48 +3358,10 @@ class MusicService :
             audioEffectsController.release()
         } catch (_: Exception) {}
         try {
-            if (dataStore.get(PersistentQueueKey, true) && player.mediaItemCount > 0) {
-                val mediaItemsSnapshot = player.mediaItems.mapNotNull { it.metadata }
-                val currentMediaItemIndex = player.currentMediaItemIndex
-                val currentPosition = player.currentPosition
-                val automixSnapshot = automixItems.value.mapNotNull { it.metadata }
-                val repeatMode = player.repeatMode
-                val shuffleModeEnabled = player.shuffleModeEnabled
-                val volume = playerVolume.value
-                val playbackState = player.playbackState
-                val playWhenReady = player.playWhenReady
-                runBlocking(Dispatchers.IO) {
-                    val persistQueue =
-                        queueController.toPersistQueue(
-                            items = mediaItemsSnapshot,
-                            mediaItemIndex = currentMediaItemIndex,
-                            position = currentPosition,
-                        )
-                    val persistAutomix = PersistQueue(
-                        title = "automix",
-                        items = automixSnapshot,
-                        mediaItemIndex = 0,
-                        position = 0,
-                    )
-                    val persistPlayerState = PersistPlayerState(
-                        playWhenReady = playWhenReady,
-                        repeatMode = repeatMode,
-                        shuffleModeEnabled = shuffleModeEnabled,
-                        volume = volume,
-                        currentPosition = currentPosition,
-                        currentMediaItemIndex = currentMediaItemIndex,
-                        playbackState = playbackState
-                    )
+            playbackPersistenceController
+                .saveBlockingIfEnabled()
+        } catch (_: Exception) {}
 
-                    writePersistentObject(PERSISTENT_QUEUE_FILE, persistQueue)
-                    writePersistentObject(PERSISTENT_AUTOMIX_FILE, persistAutomix)
-                    writePersistentObject(PERSISTENT_PLAYER_STATE_FILE, persistPlayerState)
-                }
-            }
-        } catch (_: Exception) {}
-        try {
-            mediaSession.release()
-        } catch (_: Exception) {}
         try {
             crossfadeAudio?.release()
             crossfadeAudio = null
@@ -3660,7 +3443,7 @@ class MusicService :
 
                 if (stopMusicOnTaskClearEnabled) {
                     if (dataStore.get(PersistentQueueKey, true) && player.mediaItemCount > 0) {
-                        runBlocking { saveQueueToDisk() }
+                        playbackPersistenceController.saveBlockingIfEnabled()
                     }
                     runCatching { stopAndClearPlayback() }
                     runCatching {
