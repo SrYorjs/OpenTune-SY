@@ -13,6 +13,7 @@ import com.arturo254.opentune.constants.HideExplicitKey
 import com.arturo254.opentune.constants.HideVideoKey
 import com.arturo254.opentune.extensions.SilentHandler
 import com.arturo254.opentune.extensions.currentMetadata
+import com.arturo254.opentune.extensions.metadata
 import com.arturo254.opentune.extensions.toMediaItem
 import com.arturo254.opentune.innertube.YouTube
 import com.arturo254.opentune.innertube.models.WatchEndpoint
