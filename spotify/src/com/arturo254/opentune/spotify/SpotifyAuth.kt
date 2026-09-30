@@ -13,6 +13,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import com.arturo254.opentune.spotify.models.SpotifyInternalToken
 import java.net.HttpURLConnection
+import java.net.URI
 import java.net.URL
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -217,7 +218,7 @@ object SpotifyAuth {
         urlString: String,
         extraHeaders: Map<String, String>,
     ): String {
-        val connection = URL(urlString).openConnection() as HttpURLConnection
+        val connection = URI(urlString).toURL().openConnection() as HttpURLConnection
         try {
             connection.requestMethod = "GET"
             connection.instanceFollowRedirects = true

@@ -35,6 +35,7 @@ internal class AudioEffectsController(
     private val ioScopeProvider: () -> CoroutineScope,
 ) {
     val eqCapabilities = MutableStateFlow<EqCapabilities?>(null)
+    val internalDspActive = MutableStateFlow(false)
 
     private val desiredEqSettings =
         MutableStateFlow(
@@ -65,6 +66,16 @@ internal class AudioEffectsController(
                 .distinctUntilChanged()
                 .collectLatest { settings ->
                     desiredEqSettings.value = settings
+                    internalDspActive.value =
+                        settings.enabled ||
+                            settings.outputGainEnabled ||
+                            settings.bassBoostEnabled ||
+                            settings.virtualizerEnabled
+
+                    val sessionId = playerProvider().audioSessionId
+                    if (sessionId > 0) {
+                        ensureEffects(sessionId)
+                    }
                     applySettingsToEffects(settings)
                 }
         }
@@ -179,9 +190,9 @@ internal class AudioEffectsController(
 
         release()
         effectsSessionId = sessionId
-        equalizer = runCatching { Equalizer(0, sessionId) }.getOrNull()
-        bassBoost = runCatching { BassBoost(0, sessionId) }.getOrNull()
-        virtualizer = runCatching { Virtualizer(0, sessionId) }.getOrNull()
+        equalizer = runCatching { Equalizer(1_000, sessionId) }.getOrNull()
+        bassBoost = runCatching { BassBoost(1_000, sessionId) }.getOrNull()
+        virtualizer = runCatching { Virtualizer(1_000, sessionId) }.getOrNull()
         loudnessEnhancer =
             runCatching { LoudnessEnhancer(sessionId) }.getOrNull()
 

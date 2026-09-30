@@ -828,23 +828,35 @@ class MusicService :
                 }
             }
 
-        dataStore.data
-            .map { it[AudioOffload] ?: false }
-            .distinctUntilChanged()
-            .collectLatest(scope) { enabled ->
-                playbackEngine.updateAudioOffload(player, enabled)
-                if (enabled) {
-                    val skipSilenceEnabled = dataStore.get(SkipSilenceKey, false)
-                    if (skipSilenceEnabled) {
-                        dataStore.edit { it[SkipSilenceKey] = false }
-                        player.skipSilenceEnabled = false
-                    }
-                    val crossfadeSeconds = dataStore.get(AudioCrossfadeDurationKey, 0)
-                    if (crossfadeSeconds != 0) {
-                        dataStore.edit { it[AudioCrossfadeDurationKey] = 0 }
+        combine(
+            dataStore.data
+                .map { it[AudioOffload] ?: false }
+                .distinctUntilChanged(),
+            audioEffectsController.internalDspActive
+                .distinctUntilChanged(),
+        ) { requestedOffload, dspActive ->
+            requestedOffload to dspActive
+        }.collectLatest(scope) { (requestedOffload, dspActive) ->
+            val effectiveOffload = requestedOffload && !dspActive
+            playbackEngine.updateAudioOffload(player, effectiveOffload)
+
+            if (effectiveOffload) {
+                val skipSilenceEnabled =
+                    dataStore.get(SkipSilenceKey, false)
+                if (skipSilenceEnabled) {
+                    dataStore.edit { it[SkipSilenceKey] = false }
+                    player.skipSilenceEnabled = false
+                }
+
+                val crossfadeSeconds =
+                    dataStore.get(AudioCrossfadeDurationKey, 0)
+                if (crossfadeSeconds != 0) {
+                    dataStore.edit {
+                        it[AudioCrossfadeDurationKey] = 0
                     }
                 }
             }
+        }
 
         dataStore.data
             .map { (it[AudioCrossfadeDurationKey] ?: 0) * 1000 }
