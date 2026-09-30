@@ -1190,7 +1190,13 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
                     actions = {
                         Switch(
                             checked = eqEnabled,
-                            onCheckedChange = { setEqEnabled(it); if (it && selectedProfileId.isBlank()) setSelectedProfileId("manual") },
+                            onCheckedChange = {
+                                playerConnection.service.previewEqEnabled(it)
+                                setEqEnabled(it)
+                                if (it && selectedProfileId.isBlank()) {
+                                    setSelectedProfileId("manual")
+                                }
+                            },
                             thumbContent = {
                                 Icon(painter = painterResource(id = if (eqEnabled) R.drawable.check else R.drawable.close), contentDescription = null, modifier = Modifier.size(SwitchDefaults.IconSize))
                             },
@@ -1262,7 +1268,13 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
                                     value = value.toFloat().coerceIn(minMb.toFloat(), maxMb.toFloat()),
                                     onValueChange = { newValue ->
                                         val coerced = newValue.toInt().coerceIn(minMb, maxMb)
-                                        bandLevelsMb = bandLevelsMb.toMutableList().apply { while (size < bandCount) add(0); set(band, coerced) }
+                                        bandLevelsMb = bandLevelsMb.toMutableList().apply {
+                                            while (size < bandCount) add(0)
+                                            set(band, coerced)
+                                        }
+                                        playerConnection.service.previewEqBandLevels(
+                                            bandLevelsMb,
+                                        )
                                     },
                                     onValueChangeFinished = { setSelectedProfileId("manual"); setBandLevelsRaw(encodeBandLevelsMb(bandLevelsMb)) },
                                     valueRange = minMb.toFloat()..maxMb.toFloat(),
@@ -1277,19 +1289,94 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
                     Spacer(Modifier.height(12.dp))
 
                     EqSection(title = stringResource(R.string.eq_output_gain)) {
-                        EqToggleSliderRow(enabled = outputGainEnabled, onEnabledChange = { setSelectedProfileId("manual"); setOutputGainEnabled(it) }, value = outputGainLocal, onValueChange = { outputGainLocal = it }, valueRange = -1500..1500, formatValue = { formatDb(it / 100f) }, modifier = Modifier.padding(horizontal = 8.dp), onValueChangeFinished = { setSelectedProfileId("manual"); setOutputGainMb(outputGainLocal) })
+                        EqToggleSliderRow(
+                            enabled = outputGainEnabled,
+                            onEnabledChange = {
+                                setSelectedProfileId("manual")
+                                playerConnection.service.previewEqOutputGain(
+                                    it,
+                                    outputGainLocal,
+                                )
+                                setOutputGainEnabled(it)
+                            },
+                            value = outputGainLocal,
+                            onValueChange = {
+                                outputGainLocal = it
+                                playerConnection.service.previewEqOutputGain(
+                                    outputGainEnabled,
+                                    it,
+                                )
+                            },
+                            valueRange = -1500..1500,
+                            formatValue = { formatDb(it / 100f) },
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            onValueChangeFinished = {
+                                setSelectedProfileId("manual")
+                                setOutputGainMb(outputGainLocal)
+                            },
+                        )
                     }
 
                     Spacer(Modifier.height(12.dp))
 
                     EqSection(title = stringResource(R.string.eq_bass_boost)) {
-                        EqToggleSliderRow(enabled = bassBoostEnabled, onEnabledChange = { setSelectedProfileId("manual"); setBassBoostEnabled(it) }, value = bassBoostStrengthLocal, onValueChange = { bassBoostStrengthLocal = it }, valueRange = 0..1000, formatValue = { "${it / 10}%" }, modifier = Modifier.padding(horizontal = 8.dp), onValueChangeFinished = { setSelectedProfileId("manual"); setBassBoostStrength(bassBoostStrengthLocal) })
+                        EqToggleSliderRow(
+                            enabled = bassBoostEnabled,
+                            onEnabledChange = {
+                                setSelectedProfileId("manual")
+                                playerConnection.service.previewEqBassBoost(
+                                    it,
+                                    bassBoostStrengthLocal,
+                                )
+                                setBassBoostEnabled(it)
+                            },
+                            value = bassBoostStrengthLocal,
+                            onValueChange = {
+                                bassBoostStrengthLocal = it
+                                playerConnection.service.previewEqBassBoost(
+                                    bassBoostEnabled,
+                                    it,
+                                )
+                            },
+                            valueRange = 0..1000,
+                            formatValue = { "${it / 10}%" },
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            onValueChangeFinished = {
+                                setSelectedProfileId("manual")
+                                setBassBoostStrength(bassBoostStrengthLocal)
+                            },
+                        )
                     }
 
                     Spacer(Modifier.height(12.dp))
 
                     EqSection(title = stringResource(R.string.eq_virtualizer)) {
-                        EqToggleSliderRow(enabled = virtualizerEnabled, onEnabledChange = { setSelectedProfileId("manual"); setVirtualizerEnabled(it) }, value = virtualizerStrengthLocal, onValueChange = { virtualizerStrengthLocal = it }, valueRange = 0..1000, formatValue = { "${it / 10}%" }, modifier = Modifier.padding(horizontal = 8.dp), onValueChangeFinished = { setSelectedProfileId("manual"); setVirtualizerStrength(virtualizerStrengthLocal) })
+                        EqToggleSliderRow(
+                            enabled = virtualizerEnabled,
+                            onEnabledChange = {
+                                setSelectedProfileId("manual")
+                                playerConnection.service.previewEqVirtualizer(
+                                    it,
+                                    virtualizerStrengthLocal,
+                                )
+                                setVirtualizerEnabled(it)
+                            },
+                            value = virtualizerStrengthLocal,
+                            onValueChange = {
+                                virtualizerStrengthLocal = it
+                                playerConnection.service.previewEqVirtualizer(
+                                    virtualizerEnabled,
+                                    it,
+                                )
+                            },
+                            valueRange = 0..1000,
+                            formatValue = { "${it / 10}%" },
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            onValueChangeFinished = {
+                                setSelectedProfileId("manual")
+                                setVirtualizerStrength(virtualizerStrengthLocal)
+                            },
+                        )
                     }
                 }
             }

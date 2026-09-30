@@ -81,6 +81,77 @@ internal class AudioEffectsController(
         }
     }
 
+    fun previewEnabled(enabled: Boolean) {
+        previewSettings(
+            desiredEqSettings.value.copy(
+                enabled = enabled,
+            ),
+        )
+    }
+
+    fun previewBandLevels(levelsMb: List<Int>) {
+        previewSettings(
+            desiredEqSettings.value.copy(
+                bandLevelsMb = levelsMb,
+            ),
+        )
+    }
+
+    fun previewOutputGain(
+        enabled: Boolean,
+        gainMb: Int,
+    ) {
+        previewSettings(
+            desiredEqSettings.value.copy(
+                outputGainEnabled = enabled,
+                outputGainMb =
+                    gainMb.coerceIn(-1500, 1500),
+            ),
+        )
+    }
+
+    fun previewBassBoost(
+        enabled: Boolean,
+        strength: Int,
+    ) {
+        previewSettings(
+            desiredEqSettings.value.copy(
+                bassBoostEnabled = enabled,
+                bassBoostStrength =
+                    strength.coerceIn(0, 1000),
+            ),
+        )
+    }
+
+    fun previewVirtualizer(
+        enabled: Boolean,
+        strength: Int,
+    ) {
+        previewSettings(
+            desiredEqSettings.value.copy(
+                virtualizerEnabled = enabled,
+                virtualizerStrength =
+                    strength.coerceIn(0, 1000),
+            ),
+        )
+    }
+
+    private fun previewSettings(settings: EqSettings) {
+        desiredEqSettings.value = settings
+        internalDspActive.value =
+            settings.enabled ||
+                settings.outputGainEnabled ||
+                settings.bassBoostEnabled ||
+                settings.virtualizerEnabled
+
+        val sessionId =
+            playerProvider().audioSessionId
+        if (sessionId > 0) {
+            ensureEffects(sessionId)
+        }
+        applySettingsToEffects(settings)
+    }
+
     fun applyFlatPreset() {
         ioScopeProvider().launch {
             val caps = eqCapabilities.value

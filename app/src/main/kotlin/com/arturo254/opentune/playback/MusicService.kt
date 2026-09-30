@@ -1707,6 +1707,44 @@ class MusicService :
         startRadioSeamlessly()
     }
 
+    fun previewEqEnabled(enabled: Boolean) {
+        audioEffectsController.previewEnabled(enabled)
+    }
+
+    fun previewEqBandLevels(levelsMb: List<Int>) {
+        audioEffectsController.previewBandLevels(levelsMb)
+    }
+
+    fun previewEqOutputGain(
+        enabled: Boolean,
+        gainMb: Int,
+    ) {
+        audioEffectsController.previewOutputGain(
+            enabled,
+            gainMb,
+        )
+    }
+
+    fun previewEqBassBoost(
+        enabled: Boolean,
+        strength: Int,
+    ) {
+        audioEffectsController.previewBassBoost(
+            enabled,
+            strength,
+        )
+    }
+
+    fun previewEqVirtualizer(
+        enabled: Boolean,
+        strength: Int,
+    ) {
+        audioEffectsController.previewVirtualizer(
+            enabled,
+            strength,
+        )
+    }
+
     fun applyEqFlatPreset() {
         audioEffectsController.applyFlatPreset()
     }
