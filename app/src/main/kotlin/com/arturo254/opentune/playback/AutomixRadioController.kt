@@ -200,9 +200,7 @@ internal class AutomixRadioController(
             automixItems.value
                 .toMutableList()
                 .apply {
-                    if (position in indices) {
-                        removeAt(position)
-                    }
+                    removeAt(position)
                 }
 
         addToQueue(listOf(item))
@@ -216,9 +214,7 @@ internal class AutomixRadioController(
             automixItems.value
                 .toMutableList()
                 .apply {
-                    if (position in indices) {
-                        removeAt(position)
-                    }
+                    removeAt(position)
                 }
 
         playNext(listOf(item))
