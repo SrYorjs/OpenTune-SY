@@ -385,13 +385,19 @@ class MusicService :
 
     private var scrobbleManager: com.arturo254.opentune.utils.ScrobbleManager? = null
 
-    val automixItems = MutableStateFlow<List<MediaItem>>(emptyList())
-    val automixLoading = MutableStateFlow(false)
-    val automixError = MutableStateFlow<String?>(null)
-    private var automixJob: Job? = null
-    private var automixSeedMediaId: String? = null
+    private lateinit var automixRadioController: AutomixRadioController
 
-    val autoAddedMediaIds: MutableSet<String> = java.util.Collections.synchronizedSet(mutableSetOf())
+    val automixItems
+        get() = automixRadioController.automixItems
+
+    val automixLoading
+        get() = automixRadioController.automixLoading
+
+    val automixError
+        get() = automixRadioController.automixError
+
+    val autoAddedMediaIds
+        get() = automixRadioController.autoAddedMediaIds
 
     val maxSafeGainFactor = 1.414f // +3 dB
     @Volatile
@@ -671,6 +677,17 @@ class MusicService :
                         settings[SkipSilenceKey] = false
                     }
                 },
+            )
+
+        automixRadioController =
+            AutomixRadioController(
+                context = this,
+                player = player,
+                queueController = queueController,
+                dataStore = dataStore,
+                scopeProvider = { scope },
+                addToQueue = ::addToQueue,
+                playNext = ::playNext,
             )
 
         audioFocusController =
@@ -1042,8 +1059,16 @@ class MusicService :
                     ?.let { persistedAutomix ->
                         val items = persistedAutomix.items.map { it.toMediaItem() }
                         withContext(Dispatchers.Main) {
-                            automixItems.value = items
-                            automixSeedMediaId = player.currentMetadata?.id?.trim()?.takeIf { it.isNotBlank() }
+                            automixRadioController.restoreAutomix(
+                                items = items,
+                                currentMediaId =
+                                    player.currentMetadata
+                                        ?.id
+                                        ?.trim()
+                                        ?.takeIf {
+                                            it.isNotBlank()
+                                        },
+                            )
                         }
                     }
 
@@ -1463,9 +1488,7 @@ class MusicService :
             queue = queue,
             playWhenReady = playWhenReady,
             clearAuxiliaryQueueState = {
-                clearAutomix()
-                automixSeedMediaId = null
-                autoAddedMediaIds.clear()
+                automixRadioController.resetForNewQueue()
             },
         )
     }
@@ -1475,376 +1498,74 @@ class MusicService :
     }
 
     fun startRadioSeamlessly() {
-        val joined = togetherSessionState.value as? com.arturo254.opentune.together.TogetherSessionState.Joined
-        if (!isTogetherApplyingRemote() && joined?.role is com.arturo254.opentune.together.TogetherRole.Guest) {
-            if (!joined.roomState.settings.allowGuestsToControlPlayback) {
-                showTogetherNotice(getString(R.string.not_allowed), key = "GUEST_RADIO_DISABLED")
+        val joined =
+            togetherSessionState.value as?
+                com.arturo254.opentune.together.TogetherSessionState.Joined
+
+        if (
+            !isTogetherApplyingRemote() &&
+            joined?.role is
+                com.arturo254.opentune.together.TogetherRole.Guest
+        ) {
+            if (
+                !joined.roomState.settings
+                    .allowGuestsToControlPlayback
+            ) {
+                showTogetherNotice(
+                    getString(R.string.not_allowed),
+                    key = "GUEST_RADIO_DISABLED",
+                )
                 return
             }
-            showTogetherNotice(getString(R.string.not_allowed), key = "GUEST_RADIO_UNSUPPORTED")
+
+            showTogetherNotice(
+                getString(R.string.not_allowed),
+                key = "GUEST_RADIO_UNSUPPORTED",
+            )
             return
         }
-        suppressAutoPlayback = false
-        val currentMediaMetadata = player.currentMetadata ?: return
 
-        val currentIndex = player.currentMediaItemIndex
-        val currentMediaId = currentMediaMetadata.id
-
-        scope.launch(SilentHandler) {
-            val radioQueue = YouTubeQueue(
-                endpoint = WatchEndpoint(videoId = currentMediaId)
-            )
-            val initialStatus = withContext(Dispatchers.IO) {
-                radioQueue.getInitialStatus().filterExplicit(dataStore.get(HideExplicitKey, false)).filterVideo(dataStore.get(HideVideoKey, false))
-            }
-
-            if (initialStatus.title != null) {
-                queueTitle = initialStatus.title
-            }
-
-            val radioItems = initialStatus.items.filter { item ->
-                item.mediaId != currentMediaId
-            }
-
-            if (radioItems.isNotEmpty()) {
-                val itemCount = player.mediaItemCount
-
-                if (itemCount > currentIndex + 1) {
-                    player.removeMediaItems(currentIndex + 1, itemCount)
-                }
-
-                player.addMediaItems(currentIndex + 1, radioItems)
-            }
-
-            currentQueue = radioQueue
-        }
+        automixRadioController.startRadioSeamlessly()
     }
 
     fun getAutomixAlbum(albumId: String) {
-        scope.launch(Dispatchers.IO + SilentHandler) {
-            YouTube
-                .album(albumId)
-                .onSuccess {
-                    getAutomix(it.album.playlistId)
-                }
-        }
+        automixRadioController.getAutomixAlbum(albumId)
     }
 
     fun getAutomix(playlistId: String) {
-        if (dataStore.get(AutoLoadMoreKey, true) &&
-            player.repeatMode == REPEAT_MODE_OFF) {
-            scope.launch(Dispatchers.IO + SilentHandler) {
-                val seedAtRequest =
-                    withContext(Dispatchers.Main) {
-                        player.currentMetadata?.id?.trim()?.takeIf { it.isNotBlank() }
-                    }
-                YouTube
-                    .next(WatchEndpoint(playlistId = playlistId))
-                    .onSuccess {
-                        YouTube
-                            .next(WatchEndpoint(playlistId = it.endpoint.playlistId))
-                            .onSuccess {
-                                val mediaItems = it.items.map { song -> song.toMediaItem() }
-                                withContext(Dispatchers.Main) {
-                                    val currentSeed =
-                                        player.currentMetadata?.id?.trim()?.takeIf { it.isNotBlank() }
-                                    if (seedAtRequest != null && currentSeed != seedAtRequest) return@withContext
-                                    automixItems.value = mediaItems
-                                    automixSeedMediaId = currentSeed
-                                }
-                            }
-                    }
-            }
-        }
+        automixRadioController.getAutomix(playlistId)
     }
 
     fun addToQueueAutomix(
         item: MediaItem,
         position: Int,
     ) {
-        automixItems.value =
-            automixItems.value.toMutableList().apply {
-                removeAt(position)
-            }
-        addToQueue(listOf(item))
+        automixRadioController.addToQueueAutomix(
+            item,
+            position,
+        )
     }
 
     fun playNextAutomix(
         item: MediaItem,
         position: Int,
     ) {
-        automixItems.value =
-            automixItems.value.toMutableList().apply {
-                removeAt(position)
-            }
-        playNext(listOf(item))
+        automixRadioController.playNextAutomix(
+            item,
+            position,
+        )
     }
 
     fun clearAutomix() {
-        automixJob?.cancel()
-        automixJob = null
-        automixItems.value = emptyList()
-        automixLoading.value = false
-        automixError.value = null
-        automixSeedMediaId = null
-    }
-
-    private fun refreshAutomixForCurrentMedia(force: Boolean) {
-        if (!dataStore.get(AutoLoadMoreKey, true)) return
-        if (player.repeatMode != REPEAT_MODE_OFF) return
-        if (suppressAutoPlayback) return
-        if (player.mediaItemCount == 0) return
-
-        val currentMeta = player.currentMetadata ?: return
-        val seedMediaId = currentMeta.id.trim().ifBlank { return }
-
-        if (!force && automixSeedMediaId == seedMediaId && automixItems.value.isNotEmpty() && automixJob?.isActive == true) return
-
-        automixJob?.cancel()
-        automixJob = null
-        automixItems.value = emptyList()
-        automixLoading.value = true
-        automixError.value = null
-        automixSeedMediaId = seedMediaId
-
-        val hideExplicit = dataStore.get(HideExplicitKey, false)
-        val hideVideo = dataStore.get(HideVideoKey, false)
-
-        automixJob = scope.launch {
-            try {
-                val nextResult = withContext(Dispatchers.IO) {
-                    YouTube.next(WatchEndpoint(videoId = seedMediaId))
-                }
-
-                nextResult
-                    .onSuccess { result ->
-                        if (automixSeedMediaId != seedMediaId) {
-                            automixLoading.value = false
-                            return@onSuccess
-                        }
-
-                        val queueIds =
-                            (0 until player.mediaItemCount)
-                                .map { player.getMediaItemAt(it).mediaId }
-                                .toSet()
-
-                        val fromNext =
-                            result.items
-                                .map { it.toMediaItem() }
-                                .filter { it.mediaId !in queueIds }
-                                .filterExplicit(hideExplicit)
-                                .filterVideo(hideVideo)
-
-                        val relatedCandidates =
-                            result.relatedEndpoint
-                                ?.let { endpoint ->
-                                    withContext(Dispatchers.IO) { YouTube.related(endpoint) }
-                                        .getOrNull()
-                                        ?.songs
-                                        .orEmpty()
-                                }
-                                .orEmpty()
-
-                        val related =
-                            relatedCandidates
-                                .map { it.toMediaItem() }
-                                .filter { it.mediaId !in queueIds }
-                                .filterExplicit(hideExplicit)
-                                .filterVideo(hideVideo)
-
-                        val poolBase =
-                            (fromNext + related)
-                                .asSequence()
-                                .distinctBy { it.mediaId }
-                                .take(50)
-                                .toList()
-
-                        val pool =
-                            if (poolBase.size >= 25 || result.endpoint.playlistId.isNullOrBlank()) {
-                                poolBase
-                            } else {
-                                val playlistId = result.endpoint.playlistId
-                                val extra =
-                                    withContext(Dispatchers.IO) {
-                                        YouTube.next(WatchEndpoint(playlistId = playlistId))
-                                    }.getOrNull()
-                                        ?.items
-                                        .orEmpty()
-                                        .map { it.toMediaItem() }
-                                        .filter { it.mediaId !in queueIds }
-                                        .filterExplicit(hideExplicit)
-                                        .filterVideo(hideVideo)
-
-                                (poolBase + extra)
-                                    .asSequence()
-                                    .distinctBy { it.mediaId }
-                                    .take(75)
-                                    .toList()
-                            }
-
-                        if (automixSeedMediaId != seedMediaId) {
-                            automixLoading.value = false
-                            return@onSuccess
-                        }
-
-                        automixItems.value = pool
-                        if (pool.isEmpty()) {
-                            automixError.value = getString(R.string.error_no_similar_songs)
-                        }
-                        automixLoading.value = false
-                    }
-                    .onFailure { throwable ->
-                        if (automixSeedMediaId == seedMediaId) {
-                            automixLoading.value = false
-                            automixError.value =
-                                throwable.localizedMessage ?: getString(R.string.error_automix_failed)
-                        }
-                    }
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                if (automixSeedMediaId == seedMediaId) {
-                    automixLoading.value = false
-                    automixError.value = e.localizedMessage ?: getString(R.string.error_automix_failed)
-                }
-            }
-        }
+        automixRadioController.clearAutomix()
     }
 
     fun onInfiniteQueueDisabled() {
-        automixJob?.cancel()
-        automixJob = null
-        automixLoading.value = false
-        automixError.value = null
-        val currentIndex = player.currentMediaItemIndex
-        val idsToRemove = synchronized(autoAddedMediaIds) { autoAddedMediaIds.toSet() }
-        if (idsToRemove.isEmpty()) {
-            clearAutomix()
-            return
-        }
-        for (i in player.mediaItemCount - 1 downTo 0) {
-            if (i == currentIndex) continue
-            val item = player.getMediaItemAt(i)
-            if (item.mediaId in idsToRemove) {
-                player.removeMediaItem(i)
-            }
-        }
-        autoAddedMediaIds.clear()
-        clearAutomix()
+        automixRadioController.onInfiniteQueueDisabled()
     }
 
     fun onInfiniteQueueEnabled() {
-        val currentMeta = player.currentMetadata
-        if (currentMeta == null) {
-            automixError.value = getString(R.string.error_no_song_playing)
-            return
-        }
-
-        automixJob?.cancel()
-        automixLoading.value = true
-        automixError.value = null
-        automixItems.value = emptyList()
-        automixSeedMediaId = currentMeta.id.trim().ifBlank { null }
-
-        val hideExplicit = dataStore.get(HideExplicitKey, false)
-        val hideVideo = dataStore.get(HideVideoKey, false)
-
-        automixJob = scope.launch {
-            try {
-                val nextResult = withContext(Dispatchers.IO) {
-                    YouTube.next(WatchEndpoint(videoId = currentMeta.id))
-                }
-
-                nextResult
-                    .onSuccess { result ->
-                        if (suppressAutoPlayback || player.playbackState == STATE_IDLE || player.mediaItemCount == 0) {
-                            automixLoading.value = false
-                            return@onSuccess
-                        }
-                        val initialQueueIds = (0 until player.mediaItemCount).map { player.getMediaItemAt(it).mediaId }.toSet()
-                        val filteredFromNext =
-                            result.items
-                                .map { it.toMediaItem() }
-                                .filter { it.mediaId !in initialQueueIds }
-                                .filterExplicit(hideExplicit)
-                                .filterVideo(hideVideo)
-
-                        val addedNow = ArrayList<MediaItem>(32)
-
-                        if (filteredFromNext.isNotEmpty()) {
-                            val toAdd = filteredFromNext.take(25)
-                            player.addMediaItems(toAdd)
-                            toAdd.forEach { autoAddedMediaIds.add(it.mediaId) }
-                            addedNow.addAll(toAdd)
-                        }
-
-                        val queueIdsAfterNext = (0 until player.mediaItemCount).map { player.getMediaItemAt(it).mediaId }.toSet()
-                        val relatedCandidates =
-                            result.relatedEndpoint?.let { relatedEndpoint ->
-                                withContext(Dispatchers.IO) {
-                                    YouTube.related(relatedEndpoint)
-                                }.getOrNull()?.songs.orEmpty()
-                            }.orEmpty()
-
-                        val filteredRelated =
-                            relatedCandidates
-                                .map { it.toMediaItem() }
-                                .filter { it.mediaId !in queueIdsAfterNext }
-                                .filterExplicit(hideExplicit)
-                                .filterVideo(hideVideo)
-
-                        if (addedNow.isEmpty() && filteredRelated.isNotEmpty()) {
-                            val toAdd = filteredRelated.take(25)
-                            player.addMediaItems(toAdd)
-                            toAdd.forEach { autoAddedMediaIds.add(it.mediaId) }
-                            addedNow.addAll(toAdd)
-                        }
-
-                        val queueIdsAfterAdds = (0 until player.mediaItemCount).map { player.getMediaItemAt(it).mediaId }.toSet()
-                        val playlistId = result.endpoint.playlistId
-                        val automixCandidates =
-                            if (playlistId.isNullOrBlank()) {
-                                emptyList()
-                            } else {
-                                withContext(Dispatchers.IO) {
-                                    YouTube.next(WatchEndpoint(playlistId = playlistId))
-                                }.getOrNull()?.items.orEmpty()
-                            }
-
-                        val filteredAutomix =
-                            automixCandidates
-                                .map { it.toMediaItem() }
-                                .filter { it.mediaId !in queueIdsAfterAdds }
-                                .filterExplicit(hideExplicit)
-                                .filterVideo(hideVideo)
-
-                        val addedIds = addedNow.map { it.mediaId }.toSet()
-                        val pool =
-                            (filteredFromNext + filteredRelated + filteredAutomix)
-                                .asSequence()
-                                .distinctBy { it.mediaId }
-                                .filter { it.mediaId !in addedIds }
-                                .take(75)
-                                .toList()
-
-                        automixItems.value = pool
-
-                        if (addedNow.isEmpty() && pool.isEmpty()) {
-                            automixError.value = getString(R.string.error_no_similar_songs)
-                        }
-                        automixLoading.value = false
-                    }
-                    .onFailure { throwable ->
-                        automixLoading.value = false
-                        automixError.value = throwable.localizedMessage ?: getString(R.string.error_automix_failed)
-                    }
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                automixLoading.value = false
-                automixError.value = e.localizedMessage ?: getString(R.string.error_automix_failed)
-            }
-        }
+        automixRadioController.onInfiniteQueueEnabled()
     }
 
     fun stopAndClearPlayback() {
@@ -3125,25 +2846,12 @@ class MusicService :
 
         scrobbleManager?.onSongStop()
 
-        if (!timelineEmpty &&
-            dataStore.get(AutoLoadMoreKey, true) &&
-            reason != Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT &&
-            player.repeatMode == REPEAT_MODE_OFF
-        ) {
-            val isNearEndWithoutPaging =
-                player.mediaItemCount - player.currentMediaItemIndex <= 3 && !queueController.hasNextPage()
-
-            if (!isNearEndWithoutPaging) {
-                val force =
-                    reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK ||
-                            reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED
-
-                val currentId = (mediaItem?.metadata ?: player.currentMetadata)?.id?.trim().orEmpty()
-                if (force || (currentId.isNotBlank() && automixSeedMediaId != currentId)) {
-                    refreshAutomixForCurrentMedia(force = force)
-                }
-            }
-        }
+        automixRadioController.onMediaItemTransition(
+            mediaItem = mediaItem,
+            reason = reason,
+            timelineEmpty = timelineEmpty,
+            queueHasNextPage = queueController.hasNextPage(),
+        )
 
         // Auto-load more from queue if available
         if (!suppressAutoPlayback &&
@@ -3161,45 +2869,6 @@ class MusicService :
                     player.addMediaItems(mediaItems.drop(1))
                 } else {
                     scope.launch { discordRpc?.stopActivity() }
-                }
-            }
-        }
-
-        if (!suppressAutoPlayback &&
-            !timelineEmpty &&
-            dataStore.get(AutoLoadMoreKey, true) &&
-            reason != Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT &&
-            player.repeatMode == REPEAT_MODE_OFF &&
-            player.mediaItemCount - player.currentMediaItemIndex <= 3 &&
-            !queueController.hasNextPage()
-        ) {
-            scope.launch(SilentHandler) {
-                if (suppressAutoPlayback || player.mediaItemCount == 0) return@launch
-                val queueIds = (0 until player.mediaItemCount).map { player.getMediaItemAt(it).mediaId }.toSet()
-                val currentMediaMetadata = player.currentMetadata
-                val currentMediaId = currentMediaMetadata?.id?.trim().orEmpty()
-                val existingSeed = automixSeedMediaId?.trim().orEmpty()
-                val existingAutomix =
-                    if (currentMediaId.isNotBlank() && existingSeed == currentMediaId) {
-                        automixItems.value
-                    } else {
-                        if (automixItems.value.isNotEmpty()) {
-                            clearAutomix()
-                        }
-                        emptyList()
-                    }
-                if (existingAutomix.isNotEmpty()) {
-                    if (player.playbackState == STATE_IDLE) return@launch
-                    val filteredAutomix = existingAutomix.filter { it.mediaId !in queueIds }
-                    if (filteredAutomix.isNotEmpty()) {
-                        player.addMediaItems(filteredAutomix)
-                        filteredAutomix.forEach { autoAddedMediaIds.add(it.mediaId) }
-                    }
-                    clearAutomix()
-                } else {
-                    if (currentMediaMetadata != null) {
-                        refreshAutomixForCurrentMedia(force = true)
-                    }
                 }
             }
         }
@@ -3236,64 +2905,9 @@ class MusicService :
             scrobbleManager?.onSongStop()
         }
 
-        // Auto-start recommendations when playback ends
-        if (!suppressAutoPlayback &&
-            playbackState == Player.STATE_ENDED &&
-            dataStore.get(AutoLoadMoreKey, true) &&
-            player.repeatMode == REPEAT_MODE_OFF &&
-            player.currentMediaItem != null
-        ) {
-            scope.launch(SilentHandler) {
-                if (suppressAutoPlayback || player.playbackState == STATE_IDLE || player.mediaItemCount == 0) return@launch
-                val lastMediaMetadata = player.currentMetadata
-                val existingAutomix = automixItems.value
-                if (existingAutomix.isNotEmpty()) {
-                    val filteredAutomix = existingAutomix.filter { it.mediaId != lastMediaMetadata?.id }
-                    if (filteredAutomix.isNotEmpty()) {
-                        autoAddedMediaIds.clear()
-                        player.setMediaItems(filteredAutomix, 0, 0)
-                        player.prepare()
-                        player.play()
-                        filteredAutomix.forEach { autoAddedMediaIds.add(it.mediaId) }
-                    }
-                    clearAutomix()
-                } else {
-                    if (lastMediaMetadata != null) {
-                        withContext(Dispatchers.IO) {
-                            YouTube.next(WatchEndpoint(videoId = lastMediaMetadata.id))
-                        }.onSuccess { nextResult ->
-                            if (suppressAutoPlayback || player.playbackState == STATE_IDLE || player.mediaItemCount == 0) return@onSuccess
-                            val hideExplicit = dataStore.get(HideExplicitKey, false)
-                            val hideVideo = dataStore.get(HideVideoKey, false)
-                            val radioItems = nextResult.items
-                                .map { it.toMediaItem() }
-                                .filter { it.mediaId != lastMediaMetadata.id }
-                                .filterExplicit(hideExplicit)
-                                .filterVideo(hideVideo)
-
-                            if (radioItems.isNotEmpty()) {
-                                autoAddedMediaIds.clear()
-                                player.setMediaItems(radioItems, 0, 0)
-                                player.prepare()
-                                player.play()
-                                radioItems.forEach { autoAddedMediaIds.add(it.mediaId) }
-
-                                withContext(Dispatchers.IO) {
-                                    YouTube.next(WatchEndpoint(playlistId = nextResult.endpoint.playlistId))
-                                }.onSuccess { automixResult ->
-                                    if (suppressAutoPlayback || player.playbackState == STATE_IDLE) return@onSuccess
-                                    automixItems.value = automixResult.items
-                                        .map { it.toMediaItem() }
-                                        .filter { it.mediaId != lastMediaMetadata.id }
-                                        .filterExplicit(hideExplicit)
-                                        .filterVideo(hideVideo)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        automixRadioController.onPlaybackStateChanged(
+            playbackState,
+        )
 
         ensurePresenceManager()
         scope.launch {
