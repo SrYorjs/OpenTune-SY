@@ -225,7 +225,13 @@ fun OnlineSearchScreen(
                                         playerConnection.player.togglePlayPause()
                                     } else {
                                         playerConnection.playQueue(
-                                            YouTubeQueue.radio(item.toMediaMetadata())
+                                            YouTubeQueue(
+                                                item.endpoint
+                                                    ?: WatchEndpoint(
+                                                        videoId = item.id,
+                                                    ),
+                                                item.toMediaMetadata(),
+                                            )
                                         )
                                         onDismiss()
                                     }

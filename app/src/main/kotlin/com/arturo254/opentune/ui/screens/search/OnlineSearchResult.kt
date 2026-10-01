@@ -219,8 +219,11 @@ fun OnlineSearchResult(
                                     } else {
                                         playerConnection.playQueue(
                                             YouTubeQueue(
-                                                WatchEndpoint(videoId = item.id),
-                                                item.toMediaMetadata()
+                                                item.endpoint
+                                                    ?: WatchEndpoint(
+                                                        videoId = item.id,
+                                                    ),
+                                                item.toMediaMetadata(),
                                             )
                                         )
                                     }

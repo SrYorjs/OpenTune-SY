@@ -560,7 +560,7 @@ class MusicService :
                     libraryActionsController
                         .currentSong,
                 onCurrentSongChanged = {
-                    updateNotification()
+                    refreshPlaybackNotification()
                 },
                 onError = ::reportException,
             )
@@ -601,6 +601,9 @@ class MusicService :
                 },
                 updateNotification = {
                     updateNotification()
+                },
+                refreshNotification = {
+                    refreshPlaybackNotification()
                 },
                 updateWidgets = {
                     updatePlayerWidgets()

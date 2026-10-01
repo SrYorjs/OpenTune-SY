@@ -50,6 +50,7 @@ internal class PlaybackEventCoordinator(
         AudioEffectsController,
     private val requestAudioFocus: () -> Boolean,
     private val updateNotification: () -> Unit,
+    private val refreshNotification: () -> Unit,
     private val updateWidgets: () -> Unit,
 ) {
     fun onMediaItemTransition(
@@ -155,9 +156,24 @@ internal class PlaybackEventCoordinator(
                     player.playbackState !=
                     Player.STATE_IDLE
                 ) {
-                    player.addMediaItems(
-                        mediaItems.drop(1),
-                    )
+                    val existingIds =
+                        (0 until player.mediaItemCount)
+                            .map {
+                                player
+                                    .getMediaItemAt(it)
+                                    .mediaId
+                            }.toSet()
+
+                    val newItems =
+                        mediaItems.filter {
+                            it.mediaId !in existingIds
+                        }
+
+                    if (newItems.isNotEmpty()) {
+                        player.addMediaItems(
+                            newItems,
+                        )
+                    }
                 } else {
                     presenceHistoryController
                         .stopActivity()
@@ -173,6 +189,7 @@ internal class PlaybackEventCoordinator(
                 .saveIfEnabled()
         }
 
+        refreshNotification()
         updateWidgets()
     }
 
@@ -306,6 +323,15 @@ internal class PlaybackEventCoordinator(
 
         presenceHistoryController
             .onEvents(events)
+
+        if (
+            events.containsAny(
+                Player.EVENT_MEDIA_METADATA_CHANGED,
+                Player.EVENT_MEDIA_ITEM_TRANSITION,
+            )
+        ) {
+            refreshNotification()
+        }
 
         if (
             events.containsAny(
