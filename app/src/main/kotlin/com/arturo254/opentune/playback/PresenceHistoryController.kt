@@ -45,6 +45,7 @@ import com.arturo254.opentune.utils.get
 import com.arturo254.opentune.utils.getAsync
 import com.arturo254.opentune.utils.getPresenceIntervalMillis
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.debounce
@@ -56,6 +57,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.time.LocalDateTime
 
+@OptIn(FlowPreview::class)
 internal class PresenceHistoryController(
     private val context: Context,
     private val player: ExoPlayer,
