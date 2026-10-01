@@ -303,9 +303,6 @@ interface DatabaseDao {
     fun likedSongsCount(): Flow<Int>
 
 
-    @Transaction
-    @Query("SELECT * FROM playlist_song_map WHERE playlistId = :playlistId ORDER BY position")
-    fun playlistSongs(playlistId: String): Flow<List<PlaylistSong>>
 
 
     @Transaction
@@ -409,105 +406,6 @@ interface DatabaseDao {
 
 
     @Transaction
-    @Query("SELECT *, (SELECT COUNT(*) FROM playlist_song_map WHERE playlistId = playlist.id) AS songCount FROM playlist WHERE bookmarkedAt IS NOT NULL ORDER BY rowId")
-    fun playlistsByCreateDateAsc(): Flow<List<Playlist>>
-
-    @Transaction
-    @Query(
-        "SELECT *, (SELECT COUNT(*) FROM playlist_song_map WHERE playlistId = playlist.id) AS songCount FROM playlist WHERE bookmarkedAt IS NOT NULL ORDER BY lastUpdateTime",
-    )
-    fun playlistsByUpdatedDateAsc(): Flow<List<Playlist>>
-
-    @Transaction
-    @Query("SELECT *, (SELECT COUNT(*) FROM playlist_song_map WHERE playlistId = playlist.id) AS songCount FROM playlist WHERE bookmarkedAt IS NOT NULL ORDER BY name")
-    fun playlistsByNameAsc(): Flow<List<Playlist>>
-
-    @Transaction
-    @Query("SELECT *, (SELECT COUNT(*) FROM playlist_song_map WHERE playlistId = playlist.id) AS songCount FROM playlist WHERE bookmarkedAt IS NOT NULL ORDER BY songCount")
-    fun playlistsBySongCountAsc(): Flow<List<Playlist>>
-
-    @Transaction
-    @Query(
-        "SELECT *, (SELECT COUNT(*) FROM playlist_song_map WHERE playlistId = playlist.id) AS songCount FROM playlist WHERE bookmarkedAt IS NOT NULL ORDER BY COALESCE(customOrder, rowId), rowId",
-    )
-    fun playlistsByCustomOrderAsc(): Flow<List<Playlist>>
-
-    fun playlists(
-        sortType: PlaylistSortType,
-        descending: Boolean,
-    ) = when (sortType) {
-        PlaylistSortType.CREATE_DATE -> playlistsByCreateDateAsc()
-        PlaylistSortType.NAME ->
-            playlistsByNameAsc().map { playlists ->
-                val collator = Collator.getInstance(Locale.getDefault())
-                collator.strength = Collator.PRIMARY
-                playlists.sortedWith(compareBy(collator) { it.playlist.name })
-            }
-
-        PlaylistSortType.SONG_COUNT -> playlistsBySongCountAsc()
-        PlaylistSortType.LAST_UPDATED -> playlistsByUpdatedDateAsc()
-        PlaylistSortType.CUSTOM -> playlistsByCustomOrderAsc()
-    }.map { list ->
-        if (descending && sortType != PlaylistSortType.CUSTOM) list.asReversed() else list
-    }
-
-    @Query("UPDATE playlist SET customOrder = :customOrder WHERE id = :playlistId")
-    fun setPlaylistCustomOrder(
-        playlistId: String,
-        customOrder: Int?,
-    )
-
-    @Query("SELECT MAX(customOrder) FROM playlist WHERE bookmarkedAt IS NOT NULL")
-    fun maxPlaylistCustomOrder(): Int?
-
-    @Transaction
-    @Query("SELECT *, (SELECT COUNT(*) FROM playlist_song_map WHERE playlistId = playlist.id) AS songCount FROM playlist WHERE id = :playlistId")
-    fun playlist(playlistId: String): Flow<Playlist?>
-
-    @Transaction
-    @Query("SELECT *, (SELECT COUNT(*) FROM playlist_song_map WHERE playlistId = playlist.id) AS songCount FROM playlist WHERE id = :playlistId LIMIT 1")
-    suspend fun getPlaylistById(playlistId: String): Playlist?
-
-    @Transaction
-    @Query("SELECT *, (SELECT COUNT(*) FROM playlist_song_map WHERE playlistId = playlist.id) AS songCount FROM playlist WHERE id = :playlistId LIMIT 1")
-    fun getPlaylistByIdBlocking(playlistId: String): Playlist?
-
-    @Transaction
-    @Query("SELECT *, (SELECT COUNT(*) FROM playlist_song_map WHERE playlistId = playlist.id) AS songCount FROM playlist WHERE isEditable AND bookmarkedAt IS NOT NULL ORDER BY rowId")
-    fun editablePlaylistsByCreateDateAsc(): Flow<List<Playlist>>
-
-    @Transaction
-    @Query("SELECT *, (SELECT COUNT(*) FROM playlist_song_map WHERE playlistId = playlist.id) AS songCount FROM playlist WHERE browseId = :browseId")
-    fun playlistByBrowseId(browseId: String): Flow<Playlist?>
-
-    @Transaction
-    @Query("SELECT COUNT(*) from playlist_song_map WHERE playlistId = :playlistId AND songId = :songId LIMIT 1")
-    fun checkInPlaylist(
-        playlistId: String,
-        songId: String,
-    ): Int
-
-    @Query("SELECT songId from playlist_song_map WHERE playlistId = :playlistId AND songId IN (:songIds)")
-    fun playlistDuplicates(
-        playlistId: String,
-        songIds: List<String>,
-    ): List<String>
-
-    @Transaction
-    fun addSongToPlaylist(playlist: Playlist, songIds: List<String>) {
-        var position = playlist.songCount
-        songIds.forEach { id ->
-            insert(
-                PlaylistSongMap(
-                    songId = id,
-                    playlistId = playlist.id,
-                    position = position++
-                )
-            )
-        }
-    }
-
-    @Transaction
     @Query("SELECT * FROM song WHERE title LIKE '%' || :query || '%' AND inLibrary IS NOT NULL LIMIT :previewSize")
     fun searchSongs(
         query: String,
@@ -516,14 +414,6 @@ interface DatabaseDao {
 
 
 
-    @Transaction
-    @Query(
-        "SELECT *, (SELECT COUNT(*) FROM playlist_song_map WHERE playlistId = playlist.id) AS songCount FROM playlist WHERE name LIKE '%' || :query || '%' LIMIT :previewSize",
-    )
-    fun searchPlaylists(
-        query: String,
-        previewSize: Int = Int.MAX_VALUE,
-    ): Flow<List<Playlist>>
 
     @Transaction
     @Query("UPDATE song SET inLibrary = :inLibrary WHERE id = :songId")
@@ -557,27 +447,6 @@ interface DatabaseDao {
     )
     fun relatedSongs(songId: String): List<Song>
 
-    @Transaction
-    @Query(
-        """
-        UPDATE playlist_song_map SET position = 
-            CASE 
-                WHEN position < :fromPosition THEN position + 1
-                WHEN position > :fromPosition THEN position - 1
-                ELSE :toPosition
-            END 
-        WHERE playlistId = :playlistId AND position BETWEEN MIN(:fromPosition, :toPosition) AND MAX(:fromPosition, :toPosition)
-    """,
-    )
-    fun move(
-        playlistId: String,
-        fromPosition: Int,
-        toPosition: Int,
-    )
-
-    @Transaction
-    @Query("DELETE FROM playlist_song_map WHERE playlistId = :playlistId")
-    fun clearPlaylist(playlistId: String)
 
     @Transaction
     @Query("SELECT * FROM artist WHERE name = :name")
@@ -595,8 +464,6 @@ interface DatabaseDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insert(album: AlbumEntity): Long
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insert(playlist: PlaylistEntity)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insert(map: SongArtistMap)
@@ -607,8 +474,6 @@ interface DatabaseDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insert(map: AlbumArtistMap)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insert(map: PlaylistSongMap)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(setVideoIdEntity: SetVideoIdEntity)
@@ -749,11 +614,7 @@ interface DatabaseDao {
     @Update
     fun update(album: AlbumEntity)
 
-    @Update
-    fun update(playlist: PlaylistEntity)
 
-    @Update
-    fun update(map: PlaylistSongMap)
 
     @Transaction
     fun update(
@@ -827,21 +688,6 @@ interface DatabaseDao {
         }
     }
 
-    @Update
-    fun update(playlistEntity: PlaylistEntity, playlistItem: PlaylistItem) {
-        update(
-            playlistEntity.copy(
-                name = playlistItem.title,
-                browseId = playlistItem.id,
-                thumbnailUrl = playlistItem.thumbnail,
-                isEditable = playlistItem.isEditable,
-                remoteSongCount = playlistItem.songCountText?.let { Regex("""\d+""").find(it)?.value?.toIntOrNull() },
-                playEndpointParams = playlistItem.playEndpoint?.params,
-                shuffleEndpointParams = playlistItem.shuffleEndpoint?.params,
-                radioEndpointParams = playlistItem.radioEndpoint?.params
-            )
-        )
-    }
 
     @Upsert
     fun upsert(map: SongAlbumMap)
@@ -867,29 +713,8 @@ interface DatabaseDao {
     @Delete
     fun delete(albumArtistMap: AlbumArtistMap)
 
-    @Delete
-    fun delete(playlist: PlaylistEntity)
-
-    @Delete
-    fun delete(playlistSongMap: PlaylistSongMap)
-
-    @Query("DELETE FROM playlist WHERE browseId = :browseId")
-    fun deletePlaylistById(browseId: String)
 
 
-    @Transaction
-    @Query("SELECT * FROM playlist_song_map WHERE songId = :songId")
-    fun playlistSongMaps(songId: String): List<PlaylistSongMap>
-
-    @Transaction
-    @Query("SELECT * FROM playlist_song_map WHERE playlistId = :playlistId AND position >= :from ORDER BY position")
-    fun playlistSongMaps(
-        playlistId: String,
-        from: Int,
-    ): List<PlaylistSongMap>
-
-    @Query("SELECT MAX(position) FROM playlist_song_map WHERE playlistId = :playlistId")
-    fun maxPlaylistSongPosition(playlistId: String): Int?
 
     @RawQuery
     fun raw(supportSQLiteQuery: SupportSQLiteQuery): Int
