@@ -2044,7 +2044,12 @@ class MusicService :
             player.removeListener(this)
             player.removeListener(sleepTimer)
             player.release()
-        } ca    override fun onBind(
+        } catch (_: Exception) {}
+
+        scopeJob.cancel()
+    }
+
+    override fun onBind(
         intent: Intent?,
     ): android.os.IBinder? {
         playbackLifecycleController.onBound()
