@@ -39,12 +39,15 @@ internal class MainActivityDeepLinkController(
     private var pendingDeepLinkSong: MediaItem? = null
     private var pendingTogetherJoinLink: String? = null
 
-    fun attachNavController(navController: NavHostController) {
+    fun attachNavController(
+        navController: NavHostController,
+        initialIntent: Intent? = null,
+    ) {
         this.navController = navController
-        pendingIntent?.let { intent ->
-            pendingIntent = null
-            handleIntent(intent)
-        }
+
+        val intentToHandle = pendingIntent ?: initialIntent
+        pendingIntent = null
+        intentToHandle?.let { dispatchIntent(it, navController) }
     }
 
     fun handleIntent(intent: Intent) {
