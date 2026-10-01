@@ -1046,8 +1046,10 @@ class MainActivity : ComponentActivity() {
                     }
 
                     LaunchedEffect(navController) {
-                        deepLinkController.attachNavController(navController)
-                        deepLinkController.handleIntent(intent)
+                        deepLinkController.attachNavController(
+                            navController = navController,
+                            initialIntent = intent,
+                        )
                     }
 
                     var showStarDialog by remember { mutableStateOf(false) }
