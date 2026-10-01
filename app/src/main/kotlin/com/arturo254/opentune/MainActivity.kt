@@ -2,13 +2,10 @@ package com.arturo254.opentune
 
 import android.annotation.SuppressLint
 import android.Manifest
-import android.content.ComponentName
 import android.content.Intent
-import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -206,7 +203,6 @@ import com.arturo254.opentune.extensions.toMediaItem
 import com.arturo254.opentune.models.toMediaMetadata
 import com.arturo254.opentune.playback.DownloadUtil
 import com.arturo254.opentune.playback.MusicService
-import com.arturo254.opentune.playback.MusicService.MusicBinder
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.playback.queues.LocalAlbumRadio
 import com.arturo254.opentune.playback.queues.ListQueue
@@ -295,30 +291,10 @@ class MainActivity : ComponentActivity() {
     private var pendingTogetherJoinLink: String? = null
     private var latestVersionName by mutableStateOf(BuildConfig.VERSION_NAME)
 
-    private var playerConnection by mutableStateOf<PlayerConnection?>(null)
-    private var isMusicServiceBound = false
+    private lateinit var serviceBindingController: MainActivityServiceBindingController
 
-    private val serviceConnection =
-        object : ServiceConnection {
-            override fun onServiceConnected(
-                name: ComponentName?,
-                service: IBinder?,
-            ) {
-                isMusicServiceBound = true
-                if (service is MusicBinder) {
-                    playerConnection =
-                        PlayerConnection(this@MainActivity, service, database, lifecycleScope)
-                    playPendingDeepLinkSongIfReady()
-                    joinPendingTogetherIfReady()
-                }
-            }
-
-            override fun onServiceDisconnected(name: ComponentName?) {
-                isMusicServiceBound = false
-                playerConnection?.dispose()
-                playerConnection = null
-            }
-        }
+    private val playerConnection: PlayerConnection?
+        get() = serviceBindingController.playerConnection
 
     private data class PendingDeepLinkSong(
         val mediaItem: MediaItem,
@@ -350,29 +326,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        isMusicServiceBound =
-            bindService(
-                Intent(this, MusicService::class.java),
-                serviceConnection,
-                BIND_AUTO_CREATE
-            )
+        serviceBindingController.bind()
         playPendingDeepLinkSongIfReady()
     }
 
-    private fun safeUnbindMusicService() {
-        if (!isMusicServiceBound) return
-        try {
-            unbindService(serviceConnection)
-        } catch (e: IllegalArgumentException) {
-        } catch (e: Exception) {
-            reportException(e)
-        } finally {
-            isMusicServiceBound = false
-        }
-    }
-
     override fun onStop() {
-        safeUnbindMusicService()
+        serviceBindingController.safeUnbind()
         super.onStop()
     }
 
@@ -390,9 +349,9 @@ class MainActivity : ComponentActivity() {
             }
 
         if (shouldStopOnTaskClear) {
-            safeUnbindMusicService()
+            serviceBindingController.safeUnbind()
             stopService(Intent(this, MusicService::class.java))
-            playerConnection = null
+            serviceBindingController.clearPlayerConnectionReference()
         }
     }
 
@@ -414,6 +373,18 @@ class MainActivity : ComponentActivity() {
     )
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        serviceBindingController =
+            MainActivityServiceBindingController(
+                context = this,
+                database = database,
+                scope = lifecycleScope,
+                onConnected = {
+                    playPendingDeepLinkSongIfReady()
+                    joinPendingTogetherIfReady()
+                },
+            )
+
         window.decorView.layoutDirection = View.LAYOUT_DIRECTION_LTR
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
