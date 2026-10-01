@@ -285,49 +285,18 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var syncUtils: SyncUtils
 
-    private lateinit var navController: NavHostController
-    private var pendingIntent: Intent? = null
-    private var pendingDeepLinkSong: PendingDeepLinkSong? = null
-    private var pendingTogetherJoinLink: String? = null
     private var latestVersionName by mutableStateOf(BuildConfig.VERSION_NAME)
 
     private lateinit var serviceBindingController: MainActivityServiceBindingController
+    private lateinit var deepLinkController: MainActivityDeepLinkController
 
     private val playerConnection: PlayerConnection?
         get() = serviceBindingController.playerConnection
 
-    private data class PendingDeepLinkSong(
-        val mediaItem: MediaItem,
-    )
-
-    private fun playPendingDeepLinkSongIfReady() {
-        val pending = pendingDeepLinkSong ?: return
-        val connection = playerConnection ?: return
-        pendingDeepLinkSong = null
-        connection.playQueue(ListQueue(items = listOf(pending.mediaItem)))
-    }
-
-    private fun joinPendingTogetherIfReady() {
-        val pending = pendingTogetherJoinLink ?: return
-        val connection = playerConnection ?: return
-        pendingTogetherJoinLink = null
-        lifecycleScope.launch(Dispatchers.IO) {
-            val displayName =
-                runCatching { dataStore.data.first()[TogetherDisplayNameKey] }
-                    .getOrNull()
-                    ?.trim()
-                    .orEmpty()
-                    .ifBlank { Build.MODEL ?: getString(R.string.app_name) }
-            withContext(Dispatchers.Main) {
-                connection.service.joinTogether(pending, displayName)
-            }
-        }
-    }
-
     override fun onStart() {
         super.onStart()
         serviceBindingController.bind()
-        playPendingDeepLinkSongIfReady()
+        deepLinkController.onPlayerConnectionAvailable()
     }
 
     override fun onStop() {
@@ -358,11 +327,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        if (::navController.isInitialized) {
-            handleDeepLinkIntent(intent, navController)
-        } else {
-            pendingIntent = intent
-        }
+        deepLinkController.handleIntent(intent)
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
@@ -374,15 +339,19 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        deepLinkController =
+            MainActivityDeepLinkController(
+                context = this,
+                scope = lifecycleScope,
+                playerConnectionProvider = { serviceBindingController.playerConnection },
+            )
+
         serviceBindingController =
             MainActivityServiceBindingController(
                 context = this,
                 database = database,
                 scope = lifecycleScope,
-                onConnected = {
-                    playPendingDeepLinkSongIfReady()
-                    joinPendingTogetherIfReady()
-                },
+                onConnected = deepLinkController::onPlayerConnectionAvailable,
             )
 
         window.decorView.layoutDirection = View.LAYOUT_DIRECTION_LTR
@@ -1076,13 +1045,9 @@ class MainActivity : ComponentActivity() {
                         mutableStateOf(null)
                     }
 
-                    LaunchedEffect(Unit) {
-                        if (pendingIntent != null) {
-                            handleDeepLinkIntent(pendingIntent!!, navController)
-                            pendingIntent = null
-                        } else {
-                            handleDeepLinkIntent(intent, navController)
-                        }
+                    LaunchedEffect(navController) {
+                        deepLinkController.attachNavController(navController)
+                        deepLinkController.handleIntent(intent)
                     }
 
                     var showStarDialog by remember { mutableStateOf(false) }
@@ -1940,96 +1905,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    private fun handleDeepLinkIntent(intent: Intent, navController: NavHostController) {
-        if (intent.action == ACTION_DOWNLOAD_QUEUE) {
-            navController.navigate(Screens.DownloadQueue.route)
-            return
-        }
-
-        val uri = intent.data ?: intent.extras?.getString(Intent.EXTRA_TEXT)?.toUri() ?: return
-        val coroutineScope = lifecycleScope
-
-        val authority = uri.authority?.lowercase()
-        if (uri.scheme.equals("OpenTune", ignoreCase = true) && authority == "together") {
-            pendingTogetherJoinLink = uri.toString()
-            startMusicServiceSafely()
-            joinPendingTogetherIfReady()
-            return
-        }
-
-        if (uri.scheme.equals("OpenTune", ignoreCase = true) && authority == "login") {
-            navController.navigate(buildLoginRoute(uri.getQueryParameter(LOGIN_URL_ARGUMENT)))
-            return
-        }
-
-        when (val path = uri.pathSegments.firstOrNull()) {
-            "playlist" -> uri.getQueryParameter("list")?.let { playlistId ->
-                if (playlistId.startsWith("OLAK5uy_")) {
-                    coroutineScope.launch {
-                        YouTube.albumSongs(playlistId).onSuccess { songs ->
-                            songs.firstOrNull()?.album?.id?.let { browseId ->
-                                navController.navigate("album/$browseId")
-                            }
-                        }.onFailure { reportException(it) }
-                    }
-                } else {
-                    navController.navigate("online_playlist/$playlistId")
-                }
-            }
-
-            "browse" -> uri.lastPathSegment?.let { browseId ->
-                navController.navigate("album/$browseId")
-            }
-
-            "channel", "c" -> uri.lastPathSegment?.let { artistId ->
-                navController.navigate("artist/$artistId")
-            }
-
-            else -> {
-                val videoId = when {
-                    path == "watch" -> uri.getQueryParameter("v")
-                    uri.host == "youtu.be" -> uri.pathSegments.firstOrNull()
-                    else -> null
-                }
-
-                val playlistId = uri.getQueryParameter("list")
-
-                videoId?.let { vid ->
-                    coroutineScope.launch {
-                        val result = withContext(Dispatchers.IO) {
-                            YouTube.queue(listOf(vid), playlistId)
-                        }
-
-                        result.onSuccess { queued ->
-                            val mediaItem =
-                                queued.firstOrNull { it.id == vid }?.toMediaItem()
-                                    ?: queued.firstOrNull()?.toMediaItem()
-                                    ?: MediaItem
-                                        .Builder()
-                                        .setMediaId(vid)
-                                        .setUri(vid)
-                                        .setCustomCacheKey(vid)
-                                        .build()
-                            pendingDeepLinkSong =
-                                PendingDeepLinkSong(
-                                    mediaItem = mediaItem,
-                                )
-                            startMusicServiceSafely()
-                            playPendingDeepLinkSongIfReady()
-                        }.onFailure {
-                            reportException(it)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun startMusicServiceSafely() {
-        runCatching { startService(Intent(this, MusicService::class.java)) }
-            .onFailure { reportException(it) }
     }
 
     @SuppressLint("ObsoleteSdkInt")
