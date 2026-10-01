@@ -163,6 +163,7 @@ abstract class InternalDatabase : RoomDatabase() {
     abstract val historyDao: HistoryDao
     abstract val lyricsDao: LyricsDao
     abstract val statsDao: StatsDao
+    abstract val artistDao: ArtistDao
 
     companion object {
         const val DB_NAME = "song.db"
