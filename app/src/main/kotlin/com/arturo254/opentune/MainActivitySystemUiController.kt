@@ -45,7 +45,7 @@ internal class MainActivitySystemUiController(
         val initialLocale =
             PreferenceStore.get(AppLanguageKey)
                 ?.takeUnless { it == SYSTEM_DEFAULT }
-                ?.let(Locale::forLanguageTag)
+                ?.let { Locale.forLanguageTag(it) }
                 ?: Locale.getDefault()
 
         setAppLocale(activity, initialLocale)
