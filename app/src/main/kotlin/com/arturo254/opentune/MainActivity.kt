@@ -289,6 +289,7 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var serviceBindingController: MainActivityServiceBindingController
     private lateinit var deepLinkController: MainActivityDeepLinkController
+    private lateinit var systemUiController: MainActivitySystemUiController
 
     private val playerConnection: PlayerConnection?
         get() = serviceBindingController.playerConnection
@@ -354,51 +355,14 @@ class MainActivity : ComponentActivity() {
                 onConnected = deepLinkController::onPlayerConnectionAvailable,
             )
 
-        window.decorView.layoutDirection = View.LAYOUT_DIRECTION_LTR
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            val initialLocale = PreferenceStore.get(AppLanguageKey)
-                ?.takeUnless { it == SYSTEM_DEFAULT }
-                ?.let { Locale.forLanguageTag(it) }
-                ?: Locale.getDefault()
-            setAppLocale(this, initialLocale)
-
-            lifecycleScope.launch(Dispatchers.IO) {
-                runCatching {
-                    dataStore.data.first()[AppLanguageKey]
-                }.onSuccess { lang ->
-                    val targetLocale = lang
-                        ?.takeUnless { it == SYSTEM_DEFAULT }
-                        ?.let { Locale.forLanguageTag(it) }
-                        ?: Locale.getDefault()
-                    if (targetLocale != initialLocale) {
-                        withContext(Dispatchers.Main) {
-                            setAppLocale(this@MainActivity, targetLocale)
-                            recreate()
-                        }
-                    }
-                }
-            }
-        }
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            dataStore.data
-                .map { it[DisableScreenshotKey] ?: false }
-                .distinctUntilChanged()
-                .collectLatest {
-                    withContext(Dispatchers.Main) {
-                        if (it) {
-                            window.setFlags(
-                                WindowManager.LayoutParams.FLAG_SECURE,
-                                WindowManager.LayoutParams.FLAG_SECURE,
-                            )
-                        } else {
-                            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                        }
-                    }
-                }
-        }
+        systemUiController =
+            MainActivitySystemUiController(
+                activity = this,
+                scope = lifecycleScope,
+            )
+        systemUiController.configureInitialWindow()
+        systemUiController.initializeLocale()
+        systemUiController.observeScreenshotProtection()
 
         setContent {
             val notificationPermissionLauncher =
@@ -512,7 +476,7 @@ class MainActivity : ComponentActivity() {
                     if (darkTheme == DarkMode.AUTO) isSystemInDarkTheme else darkTheme == DarkMode.ON
                 }
             LaunchedEffect(useDarkTheme) {
-                setSystemBarAppearance(useDarkTheme)
+                systemUiController.setSystemBarAppearance(useDarkTheme)
             }
             val pureBlackEnabled by rememberPreference(PureBlackKey, defaultValue = false)
             val pureBlack = pureBlackEnabled && useDarkTheme
@@ -823,31 +787,12 @@ class MainActivity : ComponentActivity() {
                         isPlayerExpanded,
                         playerFullscreen
                     ) {
-                        val controller = WindowCompat.getInsetsController(window, window.decorView)
-
-                        when {
-                            isAlwaysOnDisplayScreen -> {
-                                controller.systemBarsBehavior =
-                                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                                controller.hide(WindowInsetsCompat.Type.systemBars())
-                            }
-
-                            isPlayerExpanded && playerFullscreen -> {
-                                controller.systemBarsBehavior =
-                                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                                controller.hide(WindowInsetsCompat.Type.systemBars())
-                            }
-
-                            isYearInMusicScreen -> {
-                                controller.systemBarsBehavior =
-                                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                                controller.hide(WindowInsetsCompat.Type.statusBars())
-                            }
-
-                            else -> {
-                                controller.show(WindowInsetsCompat.Type.systemBars())
-                            }
-                        }
+                        systemUiController.updateSystemBarsVisibility(
+                            isYearInMusicScreen = isYearInMusicScreen,
+                            isAlwaysOnDisplayScreen = isAlwaysOnDisplayScreen,
+                            isPlayerExpanded = isPlayerExpanded,
+                            playerFullscreen = playerFullscreen,
+                        )
                     }
 
                     LaunchedEffect(isYearInMusicScreen, playerConnection) {
@@ -1906,22 +1851,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }
-    }
-
-    @SuppressLint("ObsoleteSdkInt")
-    private fun setSystemBarAppearance(isDark: Boolean) {
-        WindowCompat.getInsetsController(window, window.decorView.rootView).apply {
-            isAppearanceLightStatusBars = !isDark
-            isAppearanceLightNavigationBars = !isDark
-        }
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            window.statusBarColor =
-                (if (isDark) Color.Transparent else Color.Black.copy(alpha = 0.2f)).toArgb()
-        }
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            window.navigationBarColor =
-                (if (isDark) Color.Transparent else Color.Black.copy(alpha = 0.2f)).toArgb()
         }
     }
 
