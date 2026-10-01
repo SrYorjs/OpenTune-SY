@@ -47,7 +47,6 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.analytics.PlaybackStats
-import androidx.media3.exoplayer.analytics.PlaybackStatsListener
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.SilenceSkippingAudioProcessor
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -62,7 +61,6 @@ import com.arturo254.opentune.innertube.models.SongItem
 import com.arturo254.opentune.innertube.models.WatchEndpoint
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.AudioQualityKey
-import com.arturo254.opentune.constants.AutoSkipNextOnErrorKey
 import com.arturo254.opentune.constants.EqualizerBandLevelsMbKey
 import com.arturo254.opentune.constants.EqualizerBassBoostEnabledKey
 import com.arturo254.opentune.constants.EqualizerBassBoostStrengthKey
@@ -72,13 +70,10 @@ import com.arturo254.opentune.constants.EqualizerOutputGainMbKey
 import com.arturo254.opentune.constants.EqualizerSelectedProfileIdKey
 import com.arturo254.opentune.constants.EqualizerVirtualizerEnabledKey
 import com.arturo254.opentune.constants.EqualizerVirtualizerStrengthKey
-import com.arturo254.opentune.constants.HideExplicitKey
-import com.arturo254.opentune.constants.HideVideoKey
 import com.arturo254.opentune.constants.MediaSessionConstants.CommandToggleLike
 import com.arturo254.opentune.constants.MediaSessionConstants.CommandToggleStartRadio
 import com.arturo254.opentune.constants.MediaSessionConstants.CommandToggleRepeatMode
 import com.arturo254.opentune.constants.MediaSessionConstants.CommandToggleShuffle
-import com.arturo254.opentune.constants.PermanentShuffleKey
 import com.arturo254.opentune.constants.PersistentQueueKey
 import com.arturo254.opentune.constants.PlayerStreamClient
 import com.arturo254.opentune.constants.PlayerStreamClientKey
@@ -170,28 +165,55 @@ class MusicService :
     @Inject
     lateinit var mediaLibrarySessionCallback: MediaLibrarySessionCallback
 
-    private lateinit var audioFocusController: AudioFocusController
-    private lateinit var playbackLifecycleController:
-        PlaybackLifecycleController
-    private lateinit var mediaSessionNotificationController:
-        MediaSessionNotificationController
-    private lateinit var libraryActionsController:
-        LibraryActionsController
-    private lateinit var presenceHistoryController:
-        PresenceHistoryController
-    private lateinit var playbackEventCoordinator:
-        PlaybackEventCoordinator
-    private lateinit var authRecoveryUiController:
-        AuthRecoveryUiController
-    private lateinit var playbackRuntimeController:
-        PlaybackRuntimeController
+    private lateinit var components:
+        MusicServiceComposition.Components
+
+    private val audioFocusController
+        get() = components.audioFocusController
+
+    private val playbackLifecycleController
+        get() = components.playbackLifecycleController
+
+    private val mediaSessionNotificationController
+        get() = components.mediaSessionNotificationController
+
+    private val libraryActionsController
+        get() = components.libraryActionsController
+
+    private val presenceHistoryController
+        get() = components.presenceHistoryController
+
+    private val playbackEventCoordinator
+        get() = components.playbackEventCoordinator
+
+    private val playbackRuntimeController
+        get() = components.playbackRuntimeController
+
+    private val errorRecoveryController
+        get() = components.errorRecoveryController
+
+    private val streamResolver
+        get() = components.streamResolver
+
+    private val playbackPersistenceController
+        get() = components.playbackPersistenceController
+
+    private val queueController
+        get() = components.queueController
+
+    private val audioEffectsController
+        get() = components.audioEffectsController
+
+    private val automixRadioController
+        get() = components.automixRadioController
+
+    private val togetherController
+        get() = components.togetherController
 
     private var scopeJob = Job()
     private var scope = CoroutineScope(Dispatchers.Main + scopeJob)
     private var ioScope = CoroutineScope(Dispatchers.IO + scopeJob)
     private val binder = MusicBinder()
-
-    private lateinit var errorRecoveryController: ErrorRecoveryController
 
     val waitingForNetworkConnection
         get() = errorRecoveryController.waitingForNetworkConnection
@@ -206,13 +228,6 @@ class MusicService :
         PlayerStreamClientKey,
         PlayerStreamClient.ANDROID_VR
     )
-    private lateinit var streamResolver: StreamResolver
-    private lateinit var playbackEngine: PlaybackEngine
-    private lateinit var playbackPersistenceController:
-        PlaybackPersistenceController
-
-    private lateinit var queueController: QueueController
-
     private var currentQueue: Queue
         get() = queueController.currentQueue
         set(value) {
@@ -239,8 +254,6 @@ class MusicService :
             playbackPersistenceController.queueRestoreCompleted
     var playerVolume = MutableStateFlow(1f)
     private val audioFocusVolumeFactor = MutableStateFlow(1f)
-    lateinit var sleepTimer: SleepTimer
-
     @Inject
     @PlayerCache
     lateinit var playerCache: Cache
@@ -249,14 +262,14 @@ class MusicService :
     @DownloadCache
     lateinit var downloadCache: Cache
 
-    lateinit var player: ExoPlayer
+    val player: ExoPlayer
+        get() = components.player
 
-    private lateinit var audioEffectsController: AudioEffectsController
+    val sleepTimer: SleepTimer
+        get() = components.sleepTimer
 
     val eqCapabilities
         get() = audioEffectsController.eqCapabilities
-
-    private lateinit var automixRadioController: AutomixRadioController
 
     val automixItems
         get() = automixRadioController.automixItems
@@ -270,8 +283,6 @@ class MusicService :
     val autoAddedMediaIds
         get() = automixRadioController.autoAddedMediaIds
 
-
-    private lateinit var togetherController: TogetherController
 
     val togetherSessionState
         get() = togetherController.sessionState
@@ -298,318 +309,39 @@ class MusicService :
         super.onCreate()
         ensureScopesActive()
 
-        authRecoveryUiController =
-            AuthRecoveryUiController(this)
-
-        streamResolver =
-            StreamResolver(
-                context = this,
-                database = database,
-                playerCache = playerCache,
-                downloadCache = downloadCache,
+        components =
+            MusicServiceComposition.create(
+                service = this,
                 scopeProvider = { scope },
-                playerProvider = { player },
-                audioQualityProvider = { audioQuality },
+                ioScopeProvider = { ioScope },
+                audioFocusVolumeFactor =
+                    audioFocusVolumeFactor,
+                audioQualityProvider = {
+                    audioQuality
+                },
                 preferredStreamClientProvider = {
                     preferredStreamClient
                 },
-                errorRecoveryControllerProvider = {
-                    errorRecoveryController
-                },
-                recoverSong = { mediaId, playbackData ->
-                    recoverSong(mediaId, playbackData)
-                },
-                promptLoginRecovery =
-                    authRecoveryUiController
-                        ::promptLoginRecovery,
-            )
-
-        playbackEngine =
-            PlaybackEngine(
-                context = this,
-                streamResolver = streamResolver,
-            )
-
-        player =
-            playbackEngine
-                .createPlayer()
-                .apply {
-                    addListener(this@MusicService)
-                    sleepTimer = SleepTimer(scope, this)
-                    addListener(sleepTimer)
-                    addAnalyticsListener(
-                        PlaybackStatsListener(
-                            false,
-                            this@MusicService,
-                        ),
-                    )
-                    setOffloadEnabled(false)
-                }
-
-        audioEffectsController =
-            AudioEffectsController(
-                context = this,
-                playerProvider = { player },
-                dataStore = dataStore,
-                scopeProvider = { scope },
-                ioScopeProvider = { ioScope },
-            )
-
-        queueController =
-            QueueController(
-                player = player,
-                scopeProvider = { scope },
-                hideExplicitProvider = { dataStore.get(HideExplicitKey, false) },
-                hideVideoProvider = { dataStore.get(HideVideoKey, false) },
-                permanentShuffleProvider = { dataStore.get(PermanentShuffleKey, false) },
-                onCurrentMetadataChanged = {
-                    currentMediaMetadata.value = player.currentMetadata
-                },
-                onQueueRestored = ::updateNotification,
-                onDeferredLoadError = { error ->
-                    Timber.e(error, "Failed to load deferred queue items")
-                },
-            )
-
-        togetherController =
-            TogetherController(
-                context = this,
-                player = player,
-                queueController = queueController,
-                dataStore = dataStore,
-                scopeProvider = { scope },
-                ioScopeProvider = { ioScope },
-                ensureScopesActive =
-                    ::ensureScopesActive,
-                onError = ::reportException,
-            )
-
-        errorRecoveryController =
-            ErrorRecoveryController(
-                player = player,
-                scopeProvider = { scope },
-                downloadCache = downloadCache,
-                playerCache = playerCache,
-                preferredStreamClientProvider = { preferredStreamClient },
-                autoSkipNextOnErrorProvider = {
-                    dataStore.get(AutoSkipNextOnErrorKey, false)
-                },
-                skipSilenceEnabledProvider = {
-                    dataStore.get(SkipSilenceKey, false)
-                },
-                disableSkipSilence = {
-                    dataStore.edit { settings ->
-                        settings[SkipSilenceKey] = false
-                    }
-                },
-            )
-
-        automixRadioController =
-            AutomixRadioController(
-                context = this,
-                player = player,
-                queueController = queueController,
-                dataStore = dataStore,
-                scopeProvider = { scope },
-                addToQueue = ::addToQueue,
-                playNext = ::playNext,
-            )
-
-        playbackPersistenceController =
-            PlaybackPersistenceController(
-                context = this,
-                player = player,
-                queueController = queueController,
-                automixRadioController =
-                    automixRadioController,
-                dataStore = dataStore,
-                scopeProvider = { scope },
-                playerVolume = playerVolume,
-                currentMediaMetadata =
-                    currentMediaMetadata,
-                onRestored = ::updateNotification,
-                onError = ::reportException,
-            )
-
-        audioFocusController =
-            AudioFocusController(
-                context = this,
-                player = player,
-                audioFocusVolumeFactor = audioFocusVolumeFactor,
-            )
-        playbackLifecycleController =
-            PlaybackLifecycleController(
-                service = this,
-                player = player,
-                dataStore = dataStore,
-                scopeProvider = { scope },
-                isTogetherIdle = {
-                    togetherSessionState.value is
-                        com.arturo254.opentune.together.TogetherSessionState.Idle
-                },
-                isTogetherGuest = {
-                    togetherController.isGuestSession()
-                },
-                isHostSessionActive = {
-                    togetherController.isHostSessionActive()
-                },
-                stopTogether = {
-                    togetherController.stop()
-                },
-                markTogetherIdle = {
-                    togetherController.markIdle()
-                },
-                savePlaybackStateBlocking = {
-                    playbackPersistenceController
-                        .saveBlockingIfEnabled()
-                },
-                stopAndClearPlayback = {
-                    stopAndClearPlayback()
-                },
-                clearPresenceOnTaskRemoved = {
-                    presenceHistoryController
-                        .clearOnTaskRemoved()
-                },
-                foregroundNotificationProvider = {
-                    mediaSessionNotificationController
-                        .createForegroundNotification()
-                },
-                onError = ::reportException,
-            )
-
-        libraryActionsController =
-            LibraryActionsController(
-                context = this,
-                database = database,
-                dataStore = dataStore,
-                syncUtils = syncUtils,
-                currentMediaMetadata =
-                    currentMediaMetadata,
-                scope = scope,
-            )
-
-        presenceHistoryController =
-            PresenceHistoryController(
-                context = this,
-                player = player,
-                database = database,
-                dataStore = dataStore,
-                scopeProvider = { scope },
-                ioScopeProvider = { ioScope },
-                currentSong =
-                    libraryActionsController
-                        .currentSong,
-                onCurrentSongChanged = {
-                    refreshPlaybackNotification()
-                },
-                onError = ::reportException,
-            )
-
-        mediaSessionNotificationController =
-            MediaSessionNotificationController(
-                service = this,
-                player = player,
-                mediaLibrarySessionCallback =
-                    mediaLibrarySessionCallback,
-                scopeProvider = { scope },
-                lifecycleController =
-                    playbackLifecycleController,
-                isCurrentSongLiked = {
-                    libraryActionsController
-                        .currentSong
-                        .value
-                        ?.song
-                        ?.liked == true
-                },
-                hasCurrentSong = {
-                    libraryActionsController
-                        .currentSong
-                        .value != null
-                },
-                toggleLike = ::toggleLike,
-                toggleLibrary = ::toggleLibrary,
-                toggleStartRadio = ::toggleStartRadio,
-                installNotificationProvider = { provider ->
-                    setMediaNotificationProvider(provider)
-                },
-                onError = ::reportException,
-            )
-
-        playbackRuntimeController =
-            PlaybackRuntimeController(
-                context = this,
-                player = player,
-                database = database,
-                dataStore = dataStore,
-                lyricsHelper = lyricsHelper,
-                streamResolver = streamResolver,
-                playbackEngine = playbackEngine,
-                audioEffectsController =
-                    audioEffectsController,
-                errorRecoveryController =
-                    errorRecoveryController,
-                presenceHistoryController =
-                    presenceHistoryController,
-                persistenceController =
-                    playbackPersistenceController,
-                mediaSessionNotificationController =
-                    mediaSessionNotificationController,
-                lifecycleController =
-                    playbackLifecycleController,
-                currentMediaMetadata =
-                    currentMediaMetadata,
-                playerVolume = playerVolume,
-                audioFocusVolumeFactor =
-                    audioFocusVolumeFactor,
-                scopeProvider = { scope },
-                ioScopeProvider = { ioScope },
-            )
-
-        playbackEventCoordinator =
-            PlaybackEventCoordinator(
-                player = player,
-                dataStore = dataStore,
-                scopeProvider = { scope },
-                currentMediaMetadata =
-                    currentMediaMetadata,
-                errorRecoveryController =
-                    errorRecoveryController,
-                crossfadeAudioProvider = {
-                    playbackRuntimeController
-                        .crossfadeAudio
-                },
-                lyricsPreloadManagerProvider = {
-                    playbackRuntimeController
-                        .lyricsPreloadManager
-                },
-                streamResolver =
-                    streamResolver,
-                togetherController =
-                    togetherController,
-                automixRadioController =
-                    automixRadioController,
-                queueController =
-                    queueController,
-                persistenceController =
-                    playbackPersistenceController,
-                presenceHistoryController =
-                    presenceHistoryController,
-                lifecycleController =
-                    playbackLifecycleController,
-                audioEffectsController =
-                    audioEffectsController,
-                requestAudioFocus = {
-                    requestAudioFocus()
-                },
-                updateNotification = {
-                    updateNotification()
-                },
-                refreshNotification = {
-                    refreshPlaybackNotification()
-                },
-                updateWidgets = {
-                    updatePlayerWidgets()
-                },
+                callbacks =
+                    MusicServiceComposition.Callbacks(
+                        ensureScopesActive =
+                            ::ensureScopesActive,
+                        recoverSong = {
+                            mediaId,
+                            playbackData,
+                            ->
+                            recoverSong(
+                                mediaId,
+                                playbackData,
+                            )
+                        },
+                        installNotificationProvider = {
+                            provider ->
+                            setMediaNotificationProvider(
+                                provider,
+                            )
+                        },
+                    ),
             )
 
         playbackRuntimeController.start()
