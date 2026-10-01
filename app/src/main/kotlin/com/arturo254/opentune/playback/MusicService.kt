@@ -75,7 +75,6 @@ import com.arturo254.opentune.constants.AudioOffload
 import com.arturo254.opentune.constants.AudioCrossfadeDurationKey
 import com.arturo254.opentune.constants.AudioQualityKey
 import com.arturo254.opentune.constants.AutoLoadMoreKey
-import com.arturo254.opentune.constants.AutoDownloadOnLikeKey
 import com.arturo254.opentune.constants.AutoSkipNextOnErrorKey
 import com.arturo254.opentune.constants.InnerTubeCookieKey
 import com.arturo254.opentune.constants.DiscordTokenKey
@@ -225,6 +224,8 @@ class MusicService :
         PlaybackLifecycleController
     private lateinit var mediaSessionNotificationController:
         MediaSessionNotificationController
+    private lateinit var libraryActionsController:
+        LibraryActionsController
 
     private var scopeJob = Job()
     private var scope = CoroutineScope(Dispatchers.Main + scopeJob)
@@ -285,12 +286,6 @@ class MusicService :
     val queueRestoreCompleted
         get() =
             playbackPersistenceController.queueRestoreCompleted
-    private val currentSong =
-        currentMediaMetadata
-            .flatMapLatest { mediaMetadata ->
-                database.song(mediaMetadata?.id)
-            }.flowOn(Dispatchers.IO)
-            .stateIn(scope, SharingStarted.Lazily, null)
     private val currentFormat =
         currentMediaMetadata.flatMapLatest { mediaMetadata ->
             database.format(mediaMetadata?.id)
@@ -574,6 +569,17 @@ class MusicService :
                 onError = ::reportException,
             )
 
+        libraryActionsController =
+            LibraryActionsController(
+                context = this,
+                database = database,
+                dataStore = dataStore,
+                syncUtils = syncUtils,
+                currentMediaMetadata =
+                    currentMediaMetadata,
+                scope = scope,
+            )
+
         mediaSessionNotificationController =
             MediaSessionNotificationController(
                 service = this,
@@ -584,11 +590,16 @@ class MusicService :
                 lifecycleController =
                     playbackLifecycleController,
                 isCurrentSongLiked = {
-                    currentSong.value?.song?.liked ==
-                        true
+                    libraryActionsController
+                        .currentSong
+                        .value
+                        ?.song
+                        ?.liked == true
                 },
                 hasCurrentSong = {
-                    currentSong.value != null
+                    libraryActionsController
+                        .currentSong
+                        .value != null
                 },
                 toggleLike = ::toggleLike,
                 toggleLibrary = ::toggleLibrary,
@@ -635,7 +646,10 @@ class MusicService :
             }
         }
 
-        currentSong.debounce(300).collect(scope) { song ->
+        libraryActionsController
+            .currentSong
+            .debounce(300)
+            .collect(scope) { song ->
             updateNotification()
             if (song != null && player.playWhenReady && player.playbackState == Player.STATE_READY) {
                 ensurePresenceManager()
@@ -824,7 +838,7 @@ class MusicService :
 
                 if (discordRpc != null) {
                     if (player.playbackState == Player.STATE_READY && player.playWhenReady) {
-                        currentSong.value?.let {
+                        libraryActionsController.currentSong.value?.let {
                             ensurePresenceManager()
                         }
                     }
@@ -952,7 +966,7 @@ class MusicService :
                 DiscordPresenceManager.start(
                     context = this@MusicService,
                     token = key,
-                    songProvider = { player.currentMetadata?.let { createTransientSongFromMedia(it) } ?: currentSong.value },
+                    songProvider = { player.currentMetadata?.let { createTransientSongFromMedia(it) } ?: libraryActionsController.currentSong.value },
                     positionProvider = { player.currentPosition },
                     isPausedProvider = { !player.isPlaying },
                     intervalProvider = { getPresenceIntervalMillis(this@MusicService) }
@@ -1364,37 +1378,11 @@ class MusicService :
     }
 
     private fun toggleLibrary() {
-        database.query {
-            currentSong.value?.let {
-                update(it.song.toggleLibrary())
-            }
-        }
+        libraryActionsController.toggleLibrary()
     }
 
     fun toggleLike() {
-        database.query {
-            currentSong.value?.let {
-                val song = it.song.toggleLike()
-                update(song)
-                syncUtils.likeSong(song)
-
-                // Check if auto-download on like is enabled and the song is now liked
-                if (dataStore.get(AutoDownloadOnLikeKey, false) && song.liked) {
-                    // Trigger download for the liked song
-                    val downloadRequest = androidx.media3.exoplayer.offline.DownloadRequest
-                        .Builder(song.id, song.id.toUri())
-                        .setCustomCacheKey(song.id)
-                        .setData(song.title.toByteArray())
-                        .build()
-                    androidx.media3.exoplayer.offline.DownloadService.sendAddDownload(
-                        this@MusicService,
-                        ExoDownloadService::class.java,
-                        downloadRequest,
-                        false
-                    )
-                }
-            }
-        }
+        libraryActionsController.toggleLike()
     }
 
     fun toggleStartRadio() {
@@ -1568,7 +1556,7 @@ class MusicService :
             try {
                 val token = withContext(Dispatchers.IO) { dataStore.get(DiscordTokenKey, "") }
                 if (token.isNotBlank() && DiscordPresenceManager.isRunning()) {
-                    // Obtain the freshest Song from DB using current media item id to avoid stale currentSong.value
+                    // Obtain the freshest Song from DB using current media item id to avoid stale libraryActionsController.currentSong.value
                     val mediaId = player.currentMediaItem?.mediaId
                     val song = if (mediaId != null) withContext(Dispatchers.IO) { database.song(mediaId).first() } else null
                     val finalSong = song ?: player.currentMetadata?.let { createTransientSongFromMedia(it) }
