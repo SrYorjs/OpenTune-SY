@@ -3,6 +3,7 @@ package com.arturo254.opentune
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MotionScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +43,7 @@ import kotlinx.coroutines.withContext
 /**
  * Owns app theme preferences and dynamic artwork color extraction.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun MainActivityThemeHost(
     activity: ComponentActivity,
