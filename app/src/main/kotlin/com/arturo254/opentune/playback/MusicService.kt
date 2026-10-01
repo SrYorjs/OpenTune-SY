@@ -10,7 +10,6 @@
 
 package com.arturo254.opentune.playback
 
-import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.media.audiofx.AudioEffect
@@ -20,7 +19,6 @@ import android.media.audiofx.LoudnessEnhancer
 import android.media.MediaCodecList
 import android.media.audiofx.Virtualizer
 import android.net.ConnectivityManager
-import android.net.Uri
 import android.os.Binder
 import android.widget.Toast
 import androidx.core.content.getSystemService
@@ -64,7 +62,6 @@ import com.arturo254.opentune.innertube.YouTube
 import com.arturo254.opentune.innertube.models.SongItem
 import com.arturo254.opentune.lyrics.LyricsPreloadManager
 import com.arturo254.opentune.innertube.models.WatchEndpoint
-import com.arturo254.opentune.MainActivity
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.AudioNormalizationKey
 import com.arturo254.opentune.constants.AudioOffload
@@ -200,6 +197,8 @@ class MusicService :
         PresenceHistoryController
     private lateinit var playbackEventCoordinator:
         PlaybackEventCoordinator
+    private lateinit var authRecoveryUiController:
+        AuthRecoveryUiController
 
     private var scopeJob = Job()
     private var scope = CoroutineScope(Dispatchers.Main + scopeJob)
@@ -248,10 +247,6 @@ class MusicService :
             queueController.suppressAutoPlayback = value
         }
 
-    @Volatile
-    private var lastLoginRecoveryPrompt:
-        Pair<String, Long>? = null
-
     val currentMediaMetadata =
         MutableStateFlow<com.arturo254.opentune.models.MediaMetadata?>(null)
 
@@ -271,37 +266,6 @@ class MusicService :
     private val audioNormalizationEnabled = MutableStateFlow(true)
     private var crossfadeAudio: CrossfadeAudio? = null
     private var lyricsPreloadManager: LyricsPreloadManager? = null
-
-    private fun isAppInForeground(): Boolean {
-        val activityManager = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val appProcesses = activityManager.runningAppProcesses ?: return false
-        return appProcesses.any { processInfo ->
-            processInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND &&
-                    processInfo.processName == packageName
-        }
-    }
-
-    private fun promptLoginRecovery(mediaId: String, targetUrl: String) {
-        if (!isAppInForeground()) return
-
-        val now = System.currentTimeMillis()
-        val lastPrompt = lastLoginRecoveryPrompt
-        if (lastPrompt?.first == mediaId && now - lastPrompt.second < 10000L) return
-        lastLoginRecoveryPrompt = mediaId to now
-
-        val deepLink = Uri.parse("OpenTune://login?url=${Uri.encode(targetUrl)}")
-        val intent = Intent(Intent.ACTION_VIEW, deepLink, this, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        }
-
-        runCatching {
-            startActivity(intent)
-        }.onFailure {
-            Timber.e(it, "Failed to open login recovery for %s", mediaId)
-        }
-    }
 
     lateinit var sleepTimer: SleepTimer
 
@@ -363,6 +327,9 @@ class MusicService :
         super.onCreate()
         ensureScopesActive()
 
+        authRecoveryUiController =
+            AuthRecoveryUiController(this)
+
         streamResolver =
             StreamResolver(
                 context = this,
@@ -381,7 +348,9 @@ class MusicService :
                 recoverSong = { mediaId, playbackData ->
                     recoverSong(mediaId, playbackData)
                 },
-                promptLoginRecovery = ::promptLoginRecovery,
+                promptLoginRecovery =
+                    authRecoveryUiController
+                        ::promptLoginRecovery,
             )
 
         playbackEngine =
