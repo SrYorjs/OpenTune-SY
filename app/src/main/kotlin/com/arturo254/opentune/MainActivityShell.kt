@@ -302,7 +302,6 @@ internal fun MainActivityShell(
                                 if (pureBlack) Color.Black else MaterialTheme.colorScheme.surface
                             )
                 ) {
-                    val focusManager = LocalFocusManager.current
                     val density = LocalDensity.current
                     val windowsInsets = WindowInsets.systemBars
                     val bottomInset = with(density) { windowsInsets.getBottom(density).toDp() }
@@ -311,28 +310,19 @@ internal fun MainActivityShell(
                     val useRail = currentWindowAdaptiveInfo().windowSizeClass
                         .isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
 
-                    val navController = rememberNavController()
-                    val homeViewModel: HomeViewModel = hiltViewModel()
-                    val accountImageUrl by homeViewModel.accountImageUrl.collectAsState()
-                    val allLocalItems by homeViewModel.allLocalItems.collectAsState()
-                    val allYtItems by homeViewModel.allYtItems.collectAsState()
-                    val navBackStackEntry by navController.currentBackStackEntryAsState()
-                    val currentRoute = navBackStackEntry?.destination?.route
-                    val normalizedNavigationRoute = when {
-                        currentRoute?.startsWith("search/") == true -> Screens.Search.route
-                        else -> currentRoute
-                    }
-                    var pendingNavigationRoute by rememberSaveable {
-                        mutableStateOf<String?>(null)
-                    }
-
-                    LaunchedEffect(normalizedNavigationRoute) {
-                        if (pendingNavigationRoute == normalizedNavigationRoute) {
-                            pendingNavigationRoute = null
-                        }
-                    }
-                    val isYearInMusicScreen = currentRoute == "year_in_music"
-                    val isAlwaysOnDisplayScreen = currentRoute == "always_on_display"
+                    val navigationState =
+                        rememberMainActivityNavigationState(
+                            activity = activity,
+                            database = database,
+                        )
+                    val navController = navigationState.navController
+                    val accountImageUrl = navigationState.accountImageUrl
+                    val allLocalItems = navigationState.allLocalItems
+                    val allYtItems = navigationState.allYtItems
+                    val navBackStackEntry = navigationState.navBackStackEntry
+                    val currentRoute = navigationState.currentRoute
+                    val isYearInMusicScreen = navigationState.isYearInMusicScreen
+                    val isAlwaysOnDisplayScreen = navigationState.isAlwaysOnDisplayScreen
 
                     val haptic = LocalHapticFeedback.current
                     val (enableHapticFeedback) = rememberPreference(EnableHapticFeedbackKey, true)
@@ -346,102 +336,23 @@ internal fun MainActivityShell(
                         }
                     }
 
-                    val navigationItems = remember { Screens.MainScreens }
-                    val (slimNav) = rememberPreference(SlimNavBarKey, defaultValue = false)
-                    val defaultOpenTab by rememberEnumPreference(DefaultOpenTabKey, NavigationTab.HOME)
-                    val pauseSearchHistory by rememberPreference(PauseSearchHistoryKey, defaultValue = false)
-                    val tabOpenedFromShortcut =
-                        remember {
-                            when (activity.intent?.action) {
-                                MainActivity.ACTION_LIBRARY -> NavigationTab.LIBRARY
-                                MainActivity.ACTION_SEARCH -> NavigationTab.SEARCH
-                                else -> null
-                            }
-                        }
-
-                    val topLevelScreens =
-                        listOf(
-                            Screens.Home.route,
-                            Screens.Search.route,
-                            Screens.MoodAndGenres.route,
-                            Screens.Library.route,
-                            "settings",
-                        )
-
-                    val (query, onQueryChange) =
-                        rememberSaveable(stateSaver = TextFieldValue.Saver) {
-                            mutableStateOf(TextFieldValue())
-                        }
-
-                    var active by rememberSaveable {
-                        mutableStateOf(false)
-                    }
-
-                    val selectedNavigationRoute = when {
-                        active -> Screens.Search.route
-                        pendingNavigationRoute != null -> pendingNavigationRoute
-                        else -> normalizedNavigationRoute
-                    }
-
-                    val onActiveChange: (Boolean) -> Unit = { newActive ->
-                        active = newActive
-                        if (!newActive) {
-                            focusManager.clearFocus()
-                            if (navigationItems.fastAny { it.route == navBackStackEntry?.destination?.route }) {
-                                onQueryChange(TextFieldValue())
-                            }
-                        }
-                    }
-
-                    var searchSource by rememberEnumPreference(SearchSourceKey, SearchSource.ONLINE)
-
-                    val searchBarFocusRequester = remember { FocusRequester() }
-
-                    val onSearch: (String) -> Unit = { searchText ->
-                        if (searchText.isNotEmpty()) {
-                            if (!pauseSearchHistory) {
-                                database.query {
-                                    insert(SearchHistory(query = searchText))
-                                }
-                            }
-
-                            when (searchSource) {
-                                SearchSource.ONLINE -> {
-                                    onActiveChange(false)
-                                    navController.navigate(
-                                        "search/" + URLEncoder.encode(searchText, "UTF-8")
-                                    )
-                                }
-
-                                SearchSource.LOCAL,
-                                SearchSource.DEEZER -> {
-                                    focusManager.clearFocus()
-                                }
-                            }
-                        }
-                    }
-
-                    var openSearchImmediately: Boolean by remember {
-                        mutableStateOf(activity.intent?.action == MainActivity.ACTION_SEARCH)
-                    }
-
-                    val shouldShowSearchBar =
-                        remember(active, navBackStackEntry) {
-                            active ||
-                                    navigationItems.fastAny { it.route == navBackStackEntry?.destination?.route } ||
-                                    navBackStackEntry?.destination?.route?.startsWith("search/") == true
-                        }
-
-                    val shouldShowNavigationBar =
-                        remember(navBackStackEntry, active) {
-                            navBackStackEntry?.destination?.route == null ||
-                                    navigationItems.fastAny { it.route == navBackStackEntry?.destination?.route } &&
-                                    !active
-                        }
-
-                    val shouldShowHomeShuffleButton =
-                        currentRoute == Screens.Home.route &&
-                                (allLocalItems.isNotEmpty() || allYtItems.isNotEmpty())
+                    val navigationItems = navigationState.navigationItems
+                    val slimNav = navigationState.slimNav
+                    val defaultOpenTab = navigationState.defaultOpenTab
+                    val pauseSearchHistory = navigationState.pauseSearchHistory
+                    val tabOpenedFromShortcut = navigationState.tabOpenedFromShortcut
+                    val topLevelScreens = navigationState.topLevelScreens
+                    val query = navigationState.query
+                    val onQueryChange = navigationState.onQueryChange
+                    val active = navigationState.active
+                    val selectedNavigationRoute = navigationState.selectedNavigationRoute
+                    val onActiveChange = navigationState.onActiveChange
+                    val searchSource = navigationState.searchSource
+                    val searchBarFocusRequester = navigationState.searchBarFocusRequester
+                    val onSearch = navigationState.onSearch
+                    val shouldShowSearchBar = navigationState.shouldShowSearchBar
+                    val shouldShowNavigationBar = navigationState.shouldShowNavigationBar
+                    val shouldShowHomeShuffleButton = navigationState.shouldShowHomeShuffleButton
 
                     val bottomNavPadding =
                         if (shouldShowNavigationBar && !useRail) {
@@ -475,95 +386,15 @@ internal fun MainActivityShell(
                     val playerBottomSheetState = playerUiState.bottomSheetState
                     val playerAwareWindowInsets = playerUiState.playerAwareWindowInsets
 
-                    appBarScrollBehavior(
-                        canScroll = {
-                            navBackStackEntry?.destination?.route?.startsWith("search/") == false &&
-                                    (playerBottomSheetState.isCollapsed || playerBottomSheetState.isDismissed)
-                        }
-                    )
-
-                    val searchBarScrollBehavior =
-                        appBarScrollBehavior(
-                            canScroll = {
-                                navBackStackEntry?.destination?.route?.startsWith("search/") == false &&
-                                        (playerBottomSheetState.isCollapsed || playerBottomSheetState.isDismissed)
-                            },
+                    val navigationEffects =
+                        rememberMainActivityNavigationEffects(
+                            navigationState = navigationState,
+                            playerBottomSheetState = playerBottomSheetState,
                         )
-                    val topAppBarScrollBehavior =
-                        appBarScrollBehavior(
-                            canScroll = {
-                                navBackStackEntry?.destination?.route?.startsWith("search/") == false &&
-                                        (playerBottomSheetState.isCollapsed || playerBottomSheetState.isDismissed)
-                            },
-                        )
-
-                    var previousRoute by rememberSaveable { mutableStateOf<String?>(null) }
-
-                    LaunchedEffect(navBackStackEntry) {
-                        val currentRoute = navBackStackEntry?.destination?.route
-                        val wasOnNonTopLevelScreen = previousRoute != null &&
-                                previousRoute !in topLevelScreens &&
-                                previousRoute?.startsWith("search/") != true
-                        val isReturningToHomeOrLibrary = currentRoute == Screens.Home.route ||
-                                currentRoute == Screens.Library.route
-
-                        if (wasOnNonTopLevelScreen && isReturningToHomeOrLibrary) {
-                            searchBarScrollBehavior.state.resetHeightOffset()
-                            topAppBarScrollBehavior.state.resetHeightOffset()
-                        }
-
-                        previousRoute = currentRoute
-
-                        if (navBackStackEntry?.destination?.route?.startsWith("search/") == true) {
-                            val searchQuery =
-                                withContext(Dispatchers.IO) {
-                                    if (navBackStackEntry
-                                            ?.arguments
-                                            ?.getString(
-                                                "query",
-                                            )!!
-                                            .contains(
-                                                "%",
-                                            )
-                                    ) {
-                                        navBackStackEntry?.arguments?.getString(
-                                            "query",
-                                        )!!
-                                    } else {
-                                        URLDecoder.decode(
-                                            navBackStackEntry?.arguments?.getString("query")!!,
-                                            "UTF-8"
-                                        )
-                                    }
-                                }
-                            onQueryChange(
-                                TextFieldValue(
-                                    searchQuery,
-                                    TextRange(searchQuery.length)
-                                )
-                            )
-                        } else if (navigationItems.fastAny { it.route == navBackStackEntry?.destination?.route } || navBackStackEntry?.destination?.route in topLevelScreens) {
-                            onQueryChange(TextFieldValue())
-                            if (navBackStackEntry?.destination?.route != Screens.Home.route) {
-                                searchBarScrollBehavior.state.resetHeightOffset()
-                                topAppBarScrollBehavior.state.resetHeightOffset()
-                            }
-                        }
-                    }
-                    LaunchedEffect(active) {
-                        if (active) {
-                            searchBarScrollBehavior.state.resetHeightOffset()
-                            topAppBarScrollBehavior.state.resetHeightOffset()
-                            searchBarFocusRequester.requestFocus()
-                        }
-                    }
-
-                    var shouldShowTopBar by rememberSaveable { mutableStateOf(false) }
-
-                    LaunchedEffect(navBackStackEntry) {
-                        shouldShowTopBar =
-                            !active && navBackStackEntry?.destination?.route in topLevelScreens && navBackStackEntry?.destination?.route != "settings"
-                    }
+                    val searchBarScrollBehavior = navigationEffects.searchBarScrollBehavior
+                    val topAppBarScrollBehavior = navigationEffects.topAppBarScrollBehavior
+                    val shouldShowTopBar = navigationState.shouldShowTopBar
+                    val currentTitleRes = navigationState.currentTitleRes
 
                     val coroutineScope = rememberCoroutineScope()
                     var sharedSong: SongItem? by remember {
@@ -605,15 +436,6 @@ internal fun MainActivityShell(
                                 waited += waitStep
                             }
                             showStarDialog = true
-                        }
-                    }
-
-                    val currentTitleRes = remember(navBackStackEntry) {
-                        when (navBackStackEntry?.destination?.route) {
-                            Screens.Home.route -> R.string.home
-                            Screens.Search.route -> R.string.search
-                            Screens.Library.route -> R.string.filter_library
-                            else -> null
                         }
                     }
 
@@ -995,7 +817,7 @@ internal fun MainActivityShell(
                                                 SearchSourceSelector(
                                                     selected = searchSource,
                                                     onSelected = { source ->
-                                                        searchSource = source
+                                                        navigationState.setSearchSource(source)
                                                     },
                                                     modifier = Modifier
                                                         .align(Alignment.CenterHorizontally)
@@ -1357,7 +1179,7 @@ internal fun MainActivityShell(
                                                     if (active) {
                                                         onActiveChange(false)
                                                     }
-                                                    pendingNavigationRoute = screen.route
+                                                    navigationState.setPendingNavigationRoute(screen.route)
                                                     navController.navigate(screen.route) {
                                                         popUpTo(navController.graph.startDestinationId) {
                                                             saveState = true
@@ -1418,16 +1240,6 @@ internal fun MainActivityShell(
                         }
                     }
 
-                    LaunchedEffect(shouldShowSearchBar, openSearchImmediately) {
-                        if (shouldShowSearchBar && openSearchImmediately) {
-                            onActiveChange(true)
-                            try {
-                                delay(100)
-                                searchBarFocusRequester.requestFocus()
-                            } catch (_: Exception) {
-                            }
-                            openSearchImmediately = false
-                        }
-                    }
+
                 }
 }
