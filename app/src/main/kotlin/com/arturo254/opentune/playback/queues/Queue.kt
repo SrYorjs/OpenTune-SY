@@ -20,6 +20,8 @@ interface Queue {
 
     fun hasNextPage(): Boolean
 
+    fun updatePagingSeed(mediaId: String?) = Unit
+
     suspend fun nextPage(): List<MediaItem>
 
     data class Status(

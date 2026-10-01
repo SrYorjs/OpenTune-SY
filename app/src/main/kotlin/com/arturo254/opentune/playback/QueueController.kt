@@ -208,6 +208,10 @@ internal class QueueController(
     fun hasNextPage(): Boolean =
         currentQueue.hasNextPage()
 
+    fun updatePagingSeed(mediaId: String?) {
+        currentQueue.updatePagingSeed(mediaId)
+    }
+
     suspend fun nextPage(): List<MediaItem> =
         withContext(Dispatchers.IO) {
             currentQueue

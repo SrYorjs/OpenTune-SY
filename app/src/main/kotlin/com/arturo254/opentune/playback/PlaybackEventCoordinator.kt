@@ -17,6 +17,7 @@ import com.arturo254.opentune.lyrics.LyricsPreloadManager
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.utils.get
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
@@ -53,6 +54,8 @@ internal class PlaybackEventCoordinator(
     private val refreshNotification: () -> Unit,
     private val updateWidgets: () -> Unit,
 ) {
+    private var nextPageLoadJob: Job? = null
+
     fun onMediaItemTransition(
         mediaItem: MediaItem?,
         reason: Int,
@@ -118,6 +121,11 @@ internal class PlaybackEventCoordinator(
                     ?: player.currentMetadata
             }
 
+        queueController.updatePagingSeed(
+            player.currentMediaItem?.mediaId
+                ?: mediaItem?.mediaId,
+        )
+
         automixRadioController
             .onMediaItemTransition(
                 mediaItem = mediaItem,
@@ -140,45 +148,53 @@ internal class PlaybackEventCoordinator(
             reason !=
                 Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT &&
             player.mediaItemCount -
-                player.currentMediaItemIndex <= 5 &&
+                player.currentMediaItemIndex <=
+                    PAGE_PREFETCH_THRESHOLD &&
             queueController.hasNextPage() &&
             player.repeatMode ==
-                Player.REPEAT_MODE_OFF
+                Player.REPEAT_MODE_OFF &&
+            nextPageLoadJob?.isActive != true
         ) {
-            scopeProvider().launch(
-                SilentHandler,
-            ) {
-                val mediaItems =
-                    queueController
-                        .nextPage()
-
-                if (
-                    player.playbackState !=
-                    Player.STATE_IDLE
+            nextPageLoadJob =
+                scopeProvider().launch(
+                    SilentHandler,
                 ) {
-                    val existingIds =
-                        (0 until player.mediaItemCount)
-                            .map {
-                                player
-                                    .getMediaItemAt(it)
-                                    .mediaId
-                            }.toSet()
+                    val mediaItems =
+                        queueController
+                            .nextPage()
 
-                    val newItems =
-                        mediaItems.filter {
-                            it.mediaId !in existingIds
+                    if (
+                        player.playbackState !=
+                        Player.STATE_IDLE
+                    ) {
+                        val existingIds =
+                            (0 until
+                                player.mediaItemCount)
+                                .map {
+                                    player
+                                        .getMediaItemAt(
+                                            it,
+                                        ).mediaId
+                                }.toSet()
+
+                        val newItems =
+                            mediaItems.filter {
+                                it.mediaId !in
+                                    existingIds
+                            }
+
+                        if (
+                            newItems.isNotEmpty()
+                        ) {
+                            player.addMediaItems(
+                                newItems,
+                            )
                         }
-
-                    if (newItems.isNotEmpty()) {
-                        player.addMediaItems(
-                            newItems,
-                        )
+                    } else {
+                        presenceHistoryController
+                            .stopActivity()
                     }
-                } else {
-                    presenceHistoryController
-                        .stopActivity()
                 }
-            }
         }
 
         presenceHistoryController
@@ -400,5 +416,9 @@ internal class PlaybackEventCoordinator(
     ) {
         errorRecoveryController
             .handlePlayerError(error)
+    }
+
+    private companion object {
+        const val PAGE_PREFETCH_THRESHOLD = 10
     }
 }

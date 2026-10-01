@@ -22,9 +22,12 @@ class YouTubeQueue(
 ) : Queue {
     private var continuation: String? = null
     private val seenMediaIds = LinkedHashSet<String>()
+
     private var fallbackSeedMediaId: String? =
         preloadItem?.id ?: endpoint.videoId
-    private var fallbackPagingExhausted = false
+    private var currentPagingSeedMediaId: String? =
+        fallbackSeedMediaId
+    private var consecutiveEmptyPageLoads = 0
 
     private val recommendationMode: Boolean
         get() = preloadItem != null
@@ -39,18 +42,19 @@ class YouTubeQueue(
 
             var latest = first
             val songs =
-                first.items
-                    .toMutableList()
+                first.items.toMutableList()
 
             if (recommendationMode) {
                 var attempts = 0
+
                 while (
-                    songs
-                        .asSequence()
-                        .distinctBy { it.id }
-                        .count() < TARGET_BATCH_SIZE &&
+                    uniqueUnseenCount(
+                        songs,
+                        emptySet(),
+                    ) < TARGET_BATCH_SIZE &&
                     latest.continuation != null &&
-                    attempts < MAX_PAGE_FETCHES_PER_BATCH
+                    attempts <
+                        MAX_PAGE_FETCHES_PER_BATCH
                 ) {
                     val more =
                         runCatching {
@@ -69,12 +73,12 @@ class YouTubeQueue(
                 }
 
                 if (
-                    songs
-                        .asSequence()
-                        .distinctBy { it.id }
-                        .count() < TARGET_BATCH_SIZE
+                    uniqueUnseenCount(
+                        songs,
+                        emptySet(),
+                    ) < TARGET_BATCH_SIZE
                 ) {
-                    val related =
+                    songs +=
                         first.relatedEndpoint
                             ?.let { relatedEndpoint ->
                                 YouTube
@@ -83,8 +87,6 @@ class YouTubeQueue(
                                     ).getOrNull()
                                     ?.songs
                             }.orEmpty()
-
-                    songs += related
                 }
             }
 
@@ -108,6 +110,15 @@ class YouTubeQueue(
                     ?.mediaId
                     ?: fallbackSeedMediaId
 
+            currentPagingSeedMediaId =
+                preloadItem?.id
+                    ?: mediaItems
+                        .lastOrNull()
+                        ?.mediaId
+                    ?: currentPagingSeedMediaId
+
+            consecutiveEmptyPageLoads = 0
+
             Queue.Status(
                 title = first.title,
                 items = mediaItems,
@@ -121,40 +132,109 @@ class YouTubeQueue(
             )
         }
 
+    override fun updatePagingSeed(
+        mediaId: String?,
+    ) {
+        val normalized =
+            mediaId
+                ?.trim()
+                ?.takeIf { it.isNotBlank() }
+                ?: return
+
+        if (
+            normalized !=
+            currentPagingSeedMediaId
+        ) {
+            currentPagingSeedMediaId =
+                normalized
+            consecutiveEmptyPageLoads = 0
+        }
+    }
+
     override fun hasNextPage(): Boolean =
         continuation != null ||
             (
                 recommendationMode &&
-                    !fallbackPagingExhausted
+                    (
+                        currentPagingSeedMediaId != null ||
+                            fallbackSeedMediaId != null
+                    ) &&
+                    consecutiveEmptyPageLoads <
+                        MAX_CONSECUTIVE_EMPTY_LOADS
             )
 
     override suspend fun nextPage(): List<MediaItem> =
         withContext(IO) {
-            val nextItems =
-                if (continuation != null) {
-                    loadContinuationBatch()
-                } else if (
-                    recommendationMode &&
-                    !fallbackPagingExhausted
-                ) {
-                    loadSyntheticRecommendationBatch()
-                } else {
-                    emptyList()
+            val collected =
+                LinkedHashMap<String, MediaItem>()
+
+            if (continuation != null) {
+                loadContinuationBatch()
+                    .forEach { item ->
+                        if (
+                            item.mediaId !in
+                            seenMediaIds
+                        ) {
+                            collected
+                                .putIfAbsent(
+                                    item.mediaId,
+                                    item,
+                                )
+                        }
+                    }
+            }
+
+            if (
+                recommendationMode &&
+                collected.size <
+                    TARGET_BATCH_SIZE
+            ) {
+                val excluded =
+                    buildSet {
+                        addAll(seenMediaIds)
+                        addAll(collected.keys)
+                    }
+
+                loadSyntheticRecommendationBatch(
+                    excludedMediaIds =
+                        excluded,
+                    limit =
+                        TARGET_BATCH_SIZE -
+                            collected.size,
+                ).forEach { item ->
+                    if (
+                        item.mediaId !in
+                        seenMediaIds
+                    ) {
+                        collected
+                            .putIfAbsent(
+                                item.mediaId,
+                                item,
+                            )
+                    }
                 }
+            }
+
+            val nextItems =
+                collected
+                    .values
+                    .take(TARGET_BATCH_SIZE)
 
             if (nextItems.isEmpty()) {
-                if (continuation == null) {
-                    fallbackPagingExhausted = true
-                }
+                consecutiveEmptyPageLoads += 1
                 return@withContext emptyList()
             }
+
+            consecutiveEmptyPageLoads = 0
 
             nextItems.forEach {
                 seenMediaIds += it.mediaId
             }
 
             fallbackSeedMediaId =
-                nextItems.lastOrNull()?.mediaId
+                nextItems
+                    .lastOrNull()
+                    ?.mediaId
                     ?: fallbackSeedMediaId
 
             nextItems
@@ -162,30 +242,37 @@ class YouTubeQueue(
 
     private suspend fun loadContinuationBatch():
         List<MediaItem> {
-        val songs = mutableListOf<SongItem>()
+        val songs =
+            mutableListOf<SongItem>()
+
         var latestEndpoint = endpoint
-        var latestContinuation = continuation
+        var latestContinuation =
+            continuation
         var attempts = 0
 
         while (
             latestContinuation != null &&
-            songs
-                .asSequence()
-                .distinctBy { it.id }
-                .filter {
-                    it.id !in seenMediaIds
-                }.count() < TARGET_BATCH_SIZE &&
-            attempts < MAX_PAGE_FETCHES_PER_BATCH
+            uniqueUnseenCount(
+                songs,
+                seenMediaIds,
+            ) < TARGET_BATCH_SIZE &&
+            attempts <
+                MAX_PAGE_FETCHES_PER_BATCH
         ) {
             val result =
-                loadNextResilient(
-                    endpoint = latestEndpoint,
-                    continuation =
-                        latestContinuation,
-                )
+                runCatching {
+                    loadNextResilient(
+                        endpoint =
+                            latestEndpoint,
+                        continuation =
+                            latestContinuation,
+                    )
+                }.getOrNull()
+                    ?: break
 
             songs += result.items
-            latestEndpoint = result.endpoint
+            latestEndpoint =
+                result.endpoint
             latestContinuation =
                 result.continuation
             attempts += 1
@@ -204,109 +291,139 @@ class YouTubeQueue(
             .toList()
     }
 
-    private suspend fun loadSyntheticRecommendationBatch():
-        List<MediaItem> {
-        val seed =
-            fallbackSeedMediaId
-                ?.trim()
-                ?.takeIf { it.isNotBlank() }
-                ?: preloadItem
+    private suspend fun loadSyntheticRecommendationBatch(
+        excludedMediaIds: Set<String>,
+        limit: Int,
+    ): List<MediaItem> {
+        if (limit <= 0) return emptyList()
+
+        val candidateSeeds =
+            buildList {
+                currentPagingSeedMediaId
+                    ?.let(::add)
+                fallbackSeedMediaId
+                    ?.let(::add)
+
+                seenMediaIds
+                    .toList()
+                    .asReversed()
+                    .take(
+                        RECENT_SEED_CANDIDATES,
+                    ).forEach(::add)
+
+                preloadItem
                     ?.id
-                    ?.trim()
-                    ?.takeIf { it.isNotBlank() }
-                ?: return emptyList()
+                    ?.let(::add)
+            }.asSequence()
+                .map(String::trim)
+                .filter(String::isNotBlank)
+                .distinct()
+                .take(MAX_FALLBACK_SEEDS)
+                .toList()
 
-        val first =
-            runCatching {
-                loadNextResilient(
-                    endpoint =
-                        WatchEndpoint(
-                            videoId = seed,
-                        ),
-                    continuation = null,
-                )
-            }.getOrNull()
-                ?: run {
-                    fallbackPagingExhausted = true
-                    return emptyList()
-                }
+        if (candidateSeeds.isEmpty()) {
+            return emptyList()
+        }
 
-        val songs =
-            first.items
-                .toMutableList()
+        val collected =
+            LinkedHashMap<String, MediaItem>()
 
-        var latest = first
-        var attempts = 0
+        for (seed in candidateSeeds) {
+            if (collected.size >= limit) {
+                break
+            }
 
-        while (
-            songs
-                .asSequence()
-                .distinctBy { it.id }
-                .filter {
-                    it.id !in seenMediaIds
-                }.count() < TARGET_BATCH_SIZE &&
-            latest.continuation != null &&
-            attempts < MAX_PAGE_FETCHES_PER_BATCH
-        ) {
-            val more =
+            val first =
                 runCatching {
                     loadNextResilient(
                         endpoint =
-                            latest.endpoint,
-                        continuation =
-                            latest.continuation,
+                            WatchEndpoint(
+                                videoId = seed,
+                            ),
+                        continuation = null,
                     )
                 }.getOrNull()
-                    ?: break
+                    ?: continue
 
-            songs += more.items
-            latest = more
-            attempts += 1
-        }
+            var latest = first
+            val songs =
+                first.items.toMutableList()
+            var attempts = 0
 
-        if (
+            while (
+                uniqueUnseenCount(
+                    songs,
+                    excludedMediaIds +
+                        collected.keys,
+                ) <
+                    limit -
+                        collected.size &&
+                latest.continuation != null &&
+                attempts <
+                    MAX_PAGE_FETCHES_PER_SEED
+            ) {
+                val more =
+                    runCatching {
+                        loadNextResilient(
+                            endpoint =
+                                latest.endpoint,
+                            continuation =
+                                latest.continuation,
+                        )
+                    }.getOrNull()
+                        ?: break
+
+                songs += more.items
+                latest = more
+                attempts += 1
+            }
+
+            if (
+                uniqueUnseenCount(
+                    songs,
+                    excludedMediaIds +
+                        collected.keys,
+                ) <
+                    limit -
+                        collected.size
+            ) {
+                songs +=
+                    first.relatedEndpoint
+                        ?.let { relatedEndpoint ->
+                            YouTube
+                                .related(
+                                    relatedEndpoint,
+                                ).getOrNull()
+                                ?.songs
+                        }.orEmpty()
+            }
+
             songs
                 .asSequence()
                 .distinctBy { it.id }
                 .filter {
-                    it.id !in seenMediaIds
-                }.count() < TARGET_BATCH_SIZE
-        ) {
-            val related =
-                first.relatedEndpoint
-                    ?.let { relatedEndpoint ->
-                        YouTube
-                            .related(
-                                relatedEndpoint,
-                            ).getOrNull()
-                            ?.songs
-                    }.orEmpty()
+                    it.id != seed &&
+                        it.id !in
+                            excludedMediaIds &&
+                        it.id !in
+                            collected
+                }.take(
+                    limit -
+                        collected.size,
+                ).forEach { song ->
+                    collected[
+                        song.id
+                    ] = song.toMediaItem()
+                }
 
-            songs += related
+            if (collected.isNotEmpty()) {
+                endpoint = latest.endpoint
+                continuation =
+                    latest.continuation
+            }
         }
 
-        endpoint = latest.endpoint
-        continuation = latest.continuation
-
-        val items =
-            songs
-                .asSequence()
-                .distinctBy { it.id }
-                .filter {
-                    it.id !in seenMediaIds &&
-                        it.id != seed
-                }.take(TARGET_BATCH_SIZE)
-                .map { it.toMediaItem() }
-                .toList()
-
-        if (
-            items.isEmpty() &&
-            continuation == null
-        ) {
-            fallbackPagingExhausted = true
-        }
-
-        return items
+        return collected.values.toList()
     }
 
     private suspend fun loadNextResilient(
@@ -379,9 +496,25 @@ class YouTubeQueue(
         return distinctSongs
     }
 
+    private fun uniqueUnseenCount(
+        songs: List<SongItem>,
+        excludedMediaIds: Set<String>,
+    ): Int =
+        songs
+            .asSequence()
+            .map { it.id }
+            .distinct()
+            .count {
+                it !in excludedMediaIds
+            }
+
     companion object {
         private const val TARGET_BATCH_SIZE = 50
-        private const val MAX_PAGE_FETCHES_PER_BATCH = 3
+        private const val MAX_PAGE_FETCHES_PER_BATCH = 4
+        private const val MAX_PAGE_FETCHES_PER_SEED = 2
+        private const val MAX_FALLBACK_SEEDS = 6
+        private const val RECENT_SEED_CANDIDATES = 12
+        private const val MAX_CONSECUTIVE_EMPTY_LOADS = 3
 
         fun radio(
             song: MediaMetadata,
