@@ -285,8 +285,6 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var syncUtils: SyncUtils
 
-    private var latestVersionName by mutableStateOf(BuildConfig.VERSION_NAME)
-
     private lateinit var serviceBindingController: MainActivityServiceBindingController
     private lateinit var deepLinkController: MainActivityDeepLinkController
     private lateinit var systemUiController: MainActivitySystemUiController
@@ -365,106 +363,16 @@ class MainActivity : ComponentActivity() {
         systemUiController.observeScreenshotProtection()
 
         setContent {
-            val notificationPermissionLauncher =
-                rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-                    if (isGranted) {
-                        playerConnection?.service?.refreshPlaybackNotification()
-                    }
-                }
-
-            LaunchedEffect(Unit) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                    ContextCompat.checkSelfPermission(
-                        this@MainActivity,
-                        Manifest.permission.POST_NOTIFICATIONS
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                }
-
-                if (System.currentTimeMillis() - Updater.lastCheckTime > 1.days.inWholeMilliseconds) {
-                    Updater.getLatestVersionName().onSuccess {
-                        latestVersionName = it
-                    }
-                }
-                UpdateNotificationManager.checkForUpdates(this@MainActivity)
-            }
-
             val bottomSheetPageState = remember { BottomSheetPageState() }
-            val (liquidGlassNavBar) = rememberPreference(LiquidGlassNavBarKey, defaultValue = false)
-            val liquidGlassSky = rememberSky()
-            val menuState = remember { MenuState() }
-            val uriHandler = LocalUriHandler.current
-            val releaseNotesState = remember { mutableStateOf<String?>(null) }
-            val updateSheetContent: @Composable ColumnScope.() -> Unit = {
-                Text(
-                    text = stringResource(R.string.new_update_available),
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier.padding(top = 16.dp)
-                )
 
-                Spacer(Modifier.height(8.dp))
-
-                OutlinedButton(
-                    onClick = {},
-                    shape = CircleShape,
-                    contentPadding = PaddingValues(
-                        horizontal = 5.dp,
-                        vertical = 5.dp
-                    )
-                ) {
-                    Text(text = latestVersionName, style = MaterialTheme.typography.labelLarge)
-                }
-
-                Spacer(Modifier.height(12.dp))
-
-                Box(modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f, fill = false)
-                    .verticalScroll(rememberScrollState())
-                ) {
-                    val notes = releaseNotesState.value
-                    if (!notes.isNullOrBlank()) {
-                        Markdown(
-                            content = notes,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(end = 8.dp)
-                        )
-                    } else {
-                        Text(
-                            text = stringResource(R.string.release_notes_unavailable),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
-                }
-
-                Spacer(Modifier.height(12.dp))
-
-                Button(
-                    onClick = {
-                        try {
-                            uriHandler.openUri(Updater.getLatestDownloadUrl())
-                        } catch (_: Exception) {}
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(text = stringResource(R.string.update_text))
-                }
-            }
-
-            LaunchedEffect(latestVersionName) {
-                if (!Updater.isSameVersion(latestVersionName, BuildConfig.VERSION_NAME)) {
-                    Updater.getLatestReleaseNotes().onSuccess {
-                        releaseNotesState.value = it
-                    }.onFailure {
-                        releaseNotesState.value = null
-                    }
-
-                    bottomSheetPageState.show(updateSheetContent)
-                }
-            }
-
+            MainActivityUpdateHost(
+                activity = this@MainActivity,
+                bottomSheetPageState = bottomSheetPageState,
+                playerConnection = playerConnection,
+            ) { latestVersionName ->
+                val (liquidGlassNavBar) = rememberPreference(LiquidGlassNavBarKey, defaultValue = false)
+                val liquidGlassSky = rememberSky()
+                val menuState = remember { MenuState() }
             val enableDynamicTheme by rememberPreference(DynamicThemeKey, defaultValue = true)
             val customThemeColorValue by rememberPreference(CustomThemeColorKey, defaultValue = "default")
             val darkTheme by rememberEnumPreference(DarkModeKey, defaultValue = DarkMode.AUTO)
@@ -1850,6 +1758,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }
+            }
             }
         }
     }
