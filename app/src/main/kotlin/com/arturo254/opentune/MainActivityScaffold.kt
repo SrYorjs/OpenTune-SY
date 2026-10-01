@@ -354,7 +354,6 @@ internal fun MainActivityScaffold(
     )
 
     val coroutineScope = rememberCoroutineScope()
-    var sharedSong: SongItem? by remember { mutableStateOf(null) }
     var showAccountDialog by remember { mutableStateOf(false) }
 
                     CompositionLocalProvider(
@@ -372,438 +371,34 @@ internal fun MainActivityScaffold(
                         LocalMenuState provides menuState,
                     ) {
                         Row rowScope@ {
-                            Box {
-                                this@rowScope.AnimatedVisibility(
-                                    visible = useRail && shouldShowNavigationBar
-                                ) {
-                                    NavigationRail(
-                                        containerColor = if(pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
-                                        contentColor = if(pureBlack) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        header = { Spacer(Modifier.height(24.dp)) }
-                                    ) {
-                                        navigationItems.fastForEach { screen ->
-                                            val isSelected =
-                                                navBackStackEntry?.destination?.hierarchy?.any { it.route == screen.route } == true
-
-                                            NavigationRailItem(
-                                                selected = isSelected,
-                                                icon = {
-                                                    Icon(
-                                                        painter = painterResource(
-                                                            id = if (isSelected) screen.iconIdActive else screen.iconIdInactive
-                                                        ),
-                                                        contentDescription = null,
-                                                    )
-                                                },
-                                                label = {
-                                                    if (!slimNav) {
-                                                        Text(
-                                                            text = stringResource(screen.titleId),
-                                                            maxLines = 1,
-                                                            overflow = TextOverflow.Ellipsis
-                                                        )
-                                                    }
-
-                                                },
-                                                onClick = {
-                                                    val wasPlayerActive = playerBottomSheetState.isExpanded
-
-                                                    if(wasPlayerActive) {
-                                                        playerBottomSheetState.collapse(spring())
-                                                    }
-
-                                                    if (screen.route == Screens.Search.route) {
-                                                        onActiveChange(true)
-                                                    } else if (isSelected) {
-                                                        if(wasPlayerActive) return@NavigationRailItem
-
-                                                        navController.currentBackStackEntry?.savedStateHandle?.set("scrollToTop", true)
-                                                        coroutineScope.launch {
-                                                            searchBarScrollBehavior.state.resetHeightOffset()
-                                                        }
-                                                    } else {
-                                                        navController.navigate(screen.route) {
-                                                            popUpTo(navController.graph.startDestinationId) {
-                                                                saveState = true
-                                                            }
-                                                            launchSingleTop = true
-                                                            restoreState = true
-                                                        }
-                                                    }
-                                                },
-                                            )
-                                        }
-                                    }
-                                }
-                            }
+                            MainActivityNavigationRail(
+                                useRail = useRail,
+                                pureBlack = pureBlack,
+                                navigationState = navigationState,
+                                playerUiState = playerUiState,
+                                navigationEffects = navigationEffects,
+                            )
 
                             Box(
                                 modifier = Modifier.fillMaxSize()
                             ) {
                                 Scaffold(
                                     topBar = {
-                                        if (shouldShowTopBar) {
-                                            val shouldUseFloatingTopBar = remember(navBackStackEntry) {
-                                                navBackStackEntry?.destination?.route == Screens.Home.route ||
-                                                        navBackStackEntry?.destination?.route == Screens.MoodAndGenres.route ||
-                                                        navBackStackEntry?.destination?.route == Screens.Library.route
-                                            }
-                                            val shouldShowBlurBackground = remember(navBackStackEntry) {
-                                                shouldUseFloatingTopBar
-                                            }
-
-                                            val surfaceColor = MaterialTheme.colorScheme.surface
-                                            val currentScrollBehavior = if (shouldUseFloatingTopBar) searchBarScrollBehavior else topAppBarScrollBehavior
-
-                                            Box(
-                                                modifier = Modifier.offset {
-                                                    IntOffset(
-                                                        x = 0,
-                                                        y = currentScrollBehavior.state.heightOffset.toInt()
-                                                    )
-                                                }
-                                            ) {
-                                                if (shouldShowBlurBackground) {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .fillMaxWidth()
-                                                            .height(AppBarHeight + with(LocalDensity.current) {
-                                                                WindowInsets.systemBars.getTop(
-                                                                    LocalDensity.current
-                                                                ).toDp()
-                                                            })
-                                                            .background(
-                                                                Brush.verticalGradient(
-                                                                    colors = listOf(
-                                                                        surfaceColor.copy(alpha = 0.95f),
-                                                                        surfaceColor.copy(alpha = 0.85f),
-                                                                        surfaceColor.copy(alpha = 0.6f),
-                                                                        Color.Transparent
-                                                                    )
-                                                                )
-                                                            )
-                                                    )
-                                                }
-
-                                                TopAppBar(
-                                                    windowInsets = WindowInsets.safeDrawing.only(
-                                                        (if (useRail) {
-                                                            WindowInsetsSides.Right
-                                                        } else {
-                                                            WindowInsetsSides.Horizontal
-                                                        }) + WindowInsetsSides.Top
-                                                    ),
-                                                    title = {
-                                                        Column(
-                                                            verticalArrangement = Arrangement.spacedBy(1.dp),
-                                                        ) {
-                                                            Text(
-                                                                text = stringResource(R.string.app_name),
-                                                                style = MaterialTheme.typography.headlineMedium,
-                                                                fontWeight = FontWeight.Bold,
-                                                                color = MaterialTheme.colorScheme.onSurface,
-                                                                maxLines = 1,
-                                                                overflow = TextOverflow.Ellipsis,
-                                                            )
-                                                            Text(
-                                                                text = "MUSIC",
-                                                                style = MaterialTheme.typography.labelSmall,
-                                                                fontWeight = FontWeight.Bold,
-                                                                color = MaterialTheme.colorScheme.primary,
-                                                                maxLines = 1,
-                                                            )
-                                                        }
-                                                    },
-                                                    actions = {
-                                                        LiquidGlassControlCluster(
-                                                            pureBlack = pureBlack,
-                                                            horizontalSpacing = 0.dp,
-                                                            modifier = Modifier.padding(end = 6.dp),
-                                                        ) {
-                                                            androidx.compose.material3.IconButton(
-                                                                modifier = Modifier.size(34.dp),
-                                                                onClick = { navController.navigate("history") },
-                                                            ) {
-                                                                Icon(
-                                                                    painter = painterResource(R.drawable.history),
-                                                                    contentDescription = stringResource(R.string.history),
-                                                                    modifier = Modifier.size(19.dp),
-                                                                )
-                                                            }
-
-                                                            androidx.compose.material3.IconButton(
-                                                                modifier = Modifier.size(34.dp),
-                                                                onClick = { navController.navigate("stats") },
-                                                            ) {
-                                                                Icon(
-                                                                    painter = painterResource(R.drawable.stats),
-                                                                    contentDescription = stringResource(R.string.stats),
-                                                                    modifier = Modifier.size(19.dp),
-                                                                )
-                                                            }
-
-                                                            androidx.compose.material3.IconButton(
-                                                                modifier = Modifier.size(34.dp),
-                                                                onClick = { navController.navigate("new_release") },
-                                                            ) {
-                                                                Icon(
-                                                                    painter = painterResource(R.drawable.notifications),
-                                                                    contentDescription = stringResource(R.string.new_release_albums),
-                                                                    modifier = Modifier.size(19.dp),
-                                                                )
-                                                            }
-                                                        }
-
-                                                        androidx.compose.material3.IconButton(
-                                                            modifier = Modifier.size(42.dp),
-                                                            onClick = { showAccountDialog = true },
-                                                        ) {
-                                                            BadgedBox(
-                                                                badge = {
-                                                                    if (!Updater.isSameVersion(
-                                                                            latestVersionName,
-                                                                            BuildConfig.VERSION_NAME
-                                                                        )
-                                                                    ) {
-                                                                        Badge()
-                                                                    }
-                                                                }
-                                                            ) {
-                                                                if (accountImageUrl != null) {
-                                                                    AsyncImage(
-                                                                        model = accountImageUrl,
-                                                                        contentDescription = stringResource(R.string.account),
-                                                                        modifier = Modifier
-                                                                            .size(32.dp)
-                                                                            .clip(CircleShape),
-                                                                    )
-                                                                } else {
-                                                                    Box(
-                                                                        modifier = Modifier
-                                                                            .size(32.dp)
-                                                                            .clip(CircleShape)
-                                                                            .background(
-                                                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                                                                            ),
-                                                                        contentAlignment = Alignment.Center,
-                                                                    ) {
-                                                                        Icon(
-                                                                            painter = painterResource(R.drawable.account),
-                                                                            contentDescription = stringResource(R.string.account),
-                                                                            tint = MaterialTheme.colorScheme.primary,
-                                                                            modifier = Modifier.size(20.dp),
-                                                                        )
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    },
-                                                    scrollBehavior = if (shouldUseFloatingTopBar) {
-                                                        searchBarScrollBehavior
-                                                    } else {
-                                                        topAppBarScrollBehavior
-                                                    },
-                                                    colors = TopAppBarDefaults.topAppBarColors(
-                                                        containerColor = if (shouldUseFloatingTopBar) {
-                                                            Color.Transparent
-                                                        } else if (pureBlack) {
-                                                            Color.Black
-                                                        } else {
-                                                            MaterialTheme.colorScheme.surface
-                                                        },
-                                                        scrolledContainerColor = if (shouldUseFloatingTopBar) {
-                                                            Color.Transparent
-                                                        } else if (pureBlack) {
-                                                            Color.Black
-                                                        } else {
-                                                            MaterialTheme.colorScheme.surface
-                                                        },
-                                                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                                                        actionIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
-                                                )
-                                            }
-                                        }
-                                        androidx.compose.animation.AnimatedVisibility(
-                                            visible = active || navBackStackEntry?.destination?.route?.startsWith("search/") == true,
-                                            enter = fadeIn(animationSpec = tween(durationMillis = 300)),
-                                            exit = fadeOut(animationSpec = tween(durationMillis = 200))
-                                        ) {
-                                            TopSearch(
-                                                query = query,
-                                                onQueryChange = onQueryChange,
-                                                onSearch = onSearch,
-                                                active = active,
-                                                onActiveChange = onActiveChange,
-                                                placeholder = {
-                                                    Text(
-                                                        text = stringResource(
-                                                            when (searchSource) {
-                                                                SearchSource.LOCAL -> R.string.search_library
-                                                                SearchSource.ONLINE -> R.string.search_yt_music
-                                                                SearchSource.DEEZER -> R.string.search_deezer
-                                                            }
-                                                        ),
-                                                    )
-                                                },
-                                                leadingIcon = {
-                                                    IconButton(
-                                                        onClick = {
-                                                            when {
-                                                                active -> onActiveChange(false)
-                                                                !navigationItems.fastAny { it.route == navBackStackEntry?.destination?.route } -> {
-                                                                    navController.navigateUp()
-                                                                }
-
-                                                                else -> onActiveChange(true)
-                                                            }
-                                                        },
-                                                        onLongClick = {
-                                                            when {
-                                                                active -> {}
-                                                                !navigationItems.fastAny { it.route == navBackStackEntry?.destination?.route } -> {
-                                                                    navController.backToMain()
-                                                                }
-                                                                else -> {}
-                                                            }
-                                                        },
-                                                    ) {
-                                                        Icon(
-                                                            painterResource(
-                                                                if (active ||
-                                                                    !navigationItems.fastAny { it.route == navBackStackEntry?.destination?.route }
-                                                                ) {
-                                                                    R.drawable.arrow_back
-                                                                } else {
-                                                                    R.drawable.search
-                                                                },
-                                                            ),
-                                                            contentDescription = null,
-                                                        )
-                                                    }
-                                                },
-                                                trailingIcon = {
-                                                    Row {
-                                                        if (active) {
-                                                            if (query.text.isNotEmpty()) {
-                                                                IconButton(
-                                                                    onClick = {
-                                                                        onQueryChange(
-                                                                            TextFieldValue(
-                                                                                ""
-                                                                            )
-                                                                        )
-                                                                    },
-                                                                ) {
-                                                                    Icon(
-                                                                        painter = painterResource(R.drawable.close),
-                                                                        contentDescription = null,
-                                                                    )
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                },
-                                                modifier =
-                                                    Modifier
-                                                        .focusRequester(searchBarFocusRequester)
-                                                        .then(searchBarAlignmentModifier),
-                                                focusRequester = searchBarFocusRequester,
-                                                colors = if (pureBlack && active) {
-                                                    SearchBarDefaults.colors(
-                                                        containerColor = Color.Black,
-                                                        dividerColor = Color.DarkGray,
-                                                        inputFieldColors = TextFieldDefaults.colors(
-                                                            focusedTextColor = Color.White,
-                                                            unfocusedTextColor = Color.Gray,
-                                                            focusedContainerColor = Color.Transparent,
-                                                            unfocusedContainerColor = Color.Transparent,
-                                                            cursorColor = Color.White,
-                                                            focusedIndicatorColor = Color.Transparent,
-                                                            unfocusedIndicatorColor = Color.Transparent,
-                                                        )
-                                                    )
-                                                } else {
-                                                    SearchBarDefaults.colors(
-                                                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                                                    )
-                                                }
-                                            ) {
-                                                SearchSourceSelector(
-                                                    selected = searchSource,
-                                                    onSelected = { source ->
-                                                        navigationState.setSearchSource(source)
-                                                    },
-                                                    modifier = Modifier
-                                                        .align(Alignment.CenterHorizontally)
-                                                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                                                )
-
-                                                AnimatedContent(
-                                                    targetState = searchSource,
-                                                    transitionSpec = {
-                                                        val direction =
-                                                            if (targetState.ordinal >= initialState.ordinal) 1 else -1
-                                                        (
-                                                            slideInHorizontally(
-                                                                animationSpec = spring(
-                                                                    dampingRatio = 0.90f,
-                                                                    stiffness = 560f,
-                                                                ),
-                                                                initialOffsetX = { width -> direction * width / 6 },
-                                                            ) + fadeIn(tween(120))
-                                                        ) togetherWith (
-                                                            slideOutHorizontally(
-                                                                animationSpec = tween(140),
-                                                                targetOffsetX = { width -> -direction * width / 8 },
-                                                            ) + fadeOut(tween(100))
-                                                        )
-                                                    },
-                                                    label = "searchSourceSlide",
-                                                    modifier =
-                                                        Modifier
-                                                            .fillMaxSize()
-                                                            .padding(bottom = if (!playerBottomSheetState.isDismissed) MiniPlayerHeight else 0.dp)
-                                                            .navigationBarsPadding(),
-                                                ) { searchSource ->
-                                                    when (searchSource) {
-                                                        SearchSource.LOCAL ->
-                                                            LocalSearchScreen(
-                                                                query = query.text,
-                                                                navController = navController,
-                                                                onDismiss = { onActiveChange(false) },
-                                                                pureBlack = pureBlack,
-                                                            )
-
-                                                        SearchSource.ONLINE ->
-                                                            OnlineSearchScreen(
-                                                                query = query.text,
-                                                                onQueryChange = onQueryChange,
-                                                                navController = navController,
-                                                                onSearch = { searchedQuery ->
-                                                                    navController.navigate(
-                                                                        "search/" + URLEncoder.encode(searchedQuery, "UTF-8")
-                                                                    )
-                                                                    if (!pauseSearchHistory) {
-                                                                        database.query {
-                                                                            insert(SearchHistory(query = searchedQuery))
-                                                                        }
-                                                                    }
-                                                                },
-                                                                onDismiss = { onActiveChange(false) },
-                                                                pureBlack = pureBlack
-                                                            )
-
-                                                        SearchSource.DEEZER ->
-                                                            DeezerSearchScreen(
-                                                                query = query.text,
-                                                                pureBlack = pureBlack,
-                                                            )
-                                                    }
-                                                }
-                                            }
-                                        }
+                                        MainActivityTopBar(
+                                            useRail = useRail,
+                                            pureBlack = pureBlack,
+                                            latestVersionName = latestVersionName,
+                                            navigationState = navigationState,
+                                            navigationEffects = navigationEffects,
+                                            onShowAccountDialog = { showAccountDialog = true },
+                                        )
+                                        MainActivitySearchBar(
+                                            pureBlack = pureBlack,
+                                            database = database,
+                                            navigationState = navigationState,
+                                            playerUiState = playerUiState,
+                                            searchBarAlignmentModifier = searchBarAlignmentModifier,
+                                        )
                                     },
                                     bottomBar = {
                                         BottomSheetPlayer(
@@ -968,191 +563,26 @@ internal fun MainActivityScaffold(
                                         )
                                     }
                                 }
-                                if (!useRail) {
-                                    val navSlideDistance =
-                                        bottomInset + floatingBarsBottomPadding + navVisibleHeight
-
-                                    Box(
-                                        modifier =
-                                            Modifier
-                                                .align(Alignment.BottomCenter)
-                                                .height(navSlideDistance)
-                                                .offset {
-                                                    if (bottomNavigationBarHeight == 0.dp) {
-                                                        IntOffset(
-                                                            x = 0,
-                                                            y = navSlideDistance.roundToPx(),
-                                                        )
-                                                    } else {
-                                                        val slideOffset =
-                                                            navSlideDistance *
-                                                                    playerBottomSheetState.progress.coerceIn(
-                                                                        0f,
-                                                                        1f,
-                                                                    )
-                                                        val hideOffset =
-                                                            navSlideDistance *
-                                                                    (1 - bottomNavigationBarHeight.coerceAtMost(
-                                                                        navVisibleHeight
-                                                                    ) / navVisibleHeight)
-                                                        IntOffset(
-                                                            x = 0,
-                                                            y = (slideOffset + hideOffset).roundToPx(),
-                                                        )
-                                                    }
-                                                },
-                                    ) {
-                                        FloatingNavigationToolbar(
-                                            items = navigationItems,
-                                            pureBlack = pureBlack,
-                                            modifier = Modifier
-                                                .align(Alignment.BottomCenter)
-                                                .padding(
-                                                    start = FloatingToolbarHorizontalPadding,
-                                                    end = FloatingToolbarHorizontalPadding,
-                                                    bottom = bottomInset + floatingBarsBottomPadding,
-                                                )
-                                                .height(navVisibleHeight),
-                                            onShuffleClick = if (shouldShowHomeShuffleButton) {
-                                                {
-                                                    val useLocalSource = when {
-                                                        allLocalItems.isNotEmpty() && allYtItems.isNotEmpty() -> Random.nextFloat() < 0.5f
-                                                        allLocalItems.isNotEmpty() -> true
-                                                        else -> false
-                                                    }
-
-                                                    coroutineScope.launch(Dispatchers.Main) {
-                                                        if (useLocalSource) {
-                                                            when (val luckyItem = allLocalItems.random()) {
-                                                                is Song -> {
-                                                                    playerConnection?.playQueue(
-                                                                        YouTubeQueue.radio(luckyItem.toMediaMetadata())
-                                                                    )
-                                                                }
-
-                                                                is Album -> {
-                                                                    val albumWithSongs = withContext(Dispatchers.IO) {
-                                                                        database.albumWithSongs(luckyItem.id).first()
-                                                                    }
-
-                                                                    albumWithSongs?.let {
-                                                                        playerConnection?.playQueue(LocalAlbumRadio(it))
-                                                                    }
-                                                                }
-
-                                                                is Artist -> Unit
-                                                                is Playlist -> Unit
-                                                            }
-                                                        } else {
-                                                            when (val luckyItem = allYtItems.random()) {
-                                                                is SongItem -> {
-                                                                    playerConnection?.playQueue(
-                                                                        YouTubeQueue.radio(luckyItem.toMediaMetadata())
-                                                                    )
-                                                                }
-
-                                                                is AlbumItem -> {
-                                                                    playerConnection?.playQueue(
-                                                                        YouTubeAlbumRadio(luckyItem.playlistId)
-                                                                    )
-                                                                }
-
-                                                                is ArtistItem -> {
-                                                                    luckyItem.radioEndpoint?.let {
-                                                                        playerConnection?.playQueue(YouTubeQueue(it))
-                                                                    }
-                                                                }
-
-                                                                is PlaylistItem -> {
-                                                                    luckyItem.playEndpoint?.let {
-                                                                        playerConnection?.playQueue(YouTubeQueue(it))
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            } else null,
-                                            shuffleIconRes = if (shouldShowHomeShuffleButton) R.drawable.shuffle else null,
-                                            shuffleContentDescription = if (shouldShowHomeShuffleButton) stringResource(R.string.shuffle) else "",
-                                            onMusicRecognitionClick = if (shouldShowHomeShuffleButton) {
-                                                { navController.navigate(MusicRecognitionRoute) }
-                                            } else null,
-                                            musicRecognitionContentDescription = if (shouldShowHomeShuffleButton) stringResource(R.string.music_recognition) else "",
-                                            selectedRoute = selectedNavigationRoute,
-                                            onItemClick = { screen, isSelected ->
-                                                if (screen.route == Screens.Search.route) {
-                                                    onActiveChange(true)
-                                                } else if (isSelected && !active) {
-                                                    navController.currentBackStackEntry?.savedStateHandle?.set(
-                                                        "scrollToTop",
-                                                        true
-                                                    )
-                                                    coroutineScope.launch {
-                                                        searchBarScrollBehavior.state.resetHeightOffset()
-                                                    }
-                                                } else {
-                                                    if (active) {
-                                                        onActiveChange(false)
-                                                    }
-                                                    navigationState.setPendingNavigationRoute(screen.route)
-                                                    navController.navigate(screen.route) {
-                                                        popUpTo(navController.graph.startDestinationId) {
-                                                            saveState = true
-                                                        }
-                                                        launchSingleTop = true
-                                                        restoreState = true
-                                                    }
-                                                }
-                                            },
-                                        )
-                                    }
-                                }
+                                MainActivityFloatingToolbar(
+                                    pureBlack = pureBlack,
+                                    useRail = useRail,
+                                    bottomInset = bottomInset,
+                                    database = database,
+                                    playerConnection = playerConnection,
+                                    navigationState = navigationState,
+                                    playerUiState = playerUiState,
+                                    navigationEffects = navigationEffects,
+                                )
                             }
                         }
 
-                        BottomSheetMenu(
-                            state = LocalMenuState.current,
-                            modifier = Modifier.align(Alignment.BottomCenter)
+                        MainActivityOverlays(
+                            bottomSheetPageState = bottomSheetPageState,
+                            navigationState = navigationState,
+                            latestVersionName = latestVersionName,
+                            playerConnection = playerConnection,
+                            showAccountDialog = showAccountDialog,
+                            onDismissAccountDialog = { showAccountDialog = false },
                         )
-
-                        BottomSheetPage(
-                            state = LocalBottomSheetPageState.current,
-                            modifier = Modifier.align(Alignment.BottomCenter)
-                        )
-
-                        if (showAccountDialog) {
-                            AccountSettingsDialog(
-                                navController = navController,
-                                onDismiss = { showAccountDialog = false },
-                                latestVersionName = latestVersionName
-                            )
-                        }
-
-                        sharedSong?.let { song ->
-                            playerConnection?.let {
-                                Dialog(
-                                    onDismissRequest = { sharedSong = null },
-                                    properties = DialogProperties(usePlatformDefaultWidth = false),
-                                ) {
-                                    Surface(
-                                        modifier = Modifier.padding(24.dp),
-                                        shape = RoundedCornerShape(16.dp),
-                                        color = AlertDialogDefaults.containerColor,
-                                        tonalElevation = AlertDialogDefaults.TonalElevation,
-                                    ) {
-                                        Column(
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                        ) {
-                                            YouTubeSongMenu(
-                                                song = song,
-                                                navController = navController,
-                                                onDismiss = { sharedSong = null },
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
                     }
 }
