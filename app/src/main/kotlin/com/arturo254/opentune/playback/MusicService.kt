@@ -248,19 +248,15 @@ class MusicService :
     lateinit var mediaLibrarySessionCallback: MediaLibrarySessionCallback
 
     private lateinit var audioFocusController: AudioFocusController
-    private var pauseOnDeviceMuteEnabled = false
-    private var wasAutoPausedByDeviceMute = false
-    private var autoStartOnBluetoothEnabled = false
-    private var bluetoothReceiverRegistered = false
-    private var wakeLock: PowerManager.WakeLock? = null
-    private var wakelockEnabled = false
+    private lateinit var playbackLifecycleController:
+        PlaybackLifecycleController
+    private lateinit var mediaSessionNotificationController:
+        MediaSessionNotificationController
 
     private var scopeJob = Job()
     private var scope = CoroutineScope(Dispatchers.Main + scopeJob)
     private var ioScope = CoroutineScope(Dispatchers.IO + scopeJob)
     private val binder = MusicBinder()
-    private var hasBoundClients = false
-    private var idleStopJob: Job? = null
 
     private lateinit var connectivityManager: ConnectivityManager
     lateinit var connectivityObserver: NetworkConnectivityObserver
@@ -378,7 +374,6 @@ class MusicService :
     lateinit var downloadCache: Cache
 
     lateinit var player: ExoPlayer
-    private lateinit var mediaSession: MediaLibrarySession
 
     private lateinit var audioEffectsController: AudioEffectsController
 
@@ -405,8 +400,6 @@ class MusicService :
         get() = automixRadioController.autoAddedMediaIds
 
     val maxSafeGainFactor = 1.414f // +3 dB
-    @Volatile
-    private var hasCalledStartForeground = false
 
     private lateinit var togetherController: TogetherController
 
@@ -427,129 +420,28 @@ class MusicService :
     }
 
     private fun ensureStartedAsForeground() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        if (hasCalledStartForeground) return
-
-        val notification =
-            try {
-                val contentIntent =
-                    PendingIntent.getActivity(
-                        this,
-                        0,
-                        Intent(this, MainActivity::class.java),
-                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-                    )
-
-                NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setSmallIcon(R.drawable.opentune_monochrome)
-                    .setContentTitle(getString(R.string.music_player))
-                    .setContentText(getString(R.string.app_name))
-                    .setContentIntent(contentIntent)
-                    .setCategory(Notification.CATEGORY_SERVICE)
-                    .setPriority(NotificationCompat.PRIORITY_LOW)
-                    .setOngoing(true)
-                    .setOnlyAlertOnce(true)
-                    .build()
-            } catch (e: Exception) {
-                reportException(e)
-                return
-            }
-
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(
-                    NOTIFICATION_ID,
-                    notification,
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK,
-                )
-            } else {
-                startForeground(NOTIFICATION_ID, notification)
-            }
-            hasCalledStartForeground = true
-        } catch (e: Exception) {
-            reportException(e)
-        }
+        playbackLifecycleController
+            .ensureStartedAsForeground()
     }
 
     private fun promoteToStartedService() {
-        runCatching { startService(Intent(this, MusicService::class.java)) }
-            .onFailure { reportException(it) }
+        playbackLifecycleController
+            .promoteToStartedService()
     }
 
     private fun cancelIdleStop() {
-        idleStopJob?.cancel()
-        idleStopJob = null
-    }
-
-    private fun stopForegroundAndSelf() {
-        cancelIdleStop()
-        runCatching {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                stopForeground(STOP_FOREGROUND_REMOVE)
-            } else {
-                stopForeground(true)
-            }
-        }
-        hasCalledStartForeground = false
-        stopSelf()
+        playbackLifecycleController
+            .cancelIdleStop()
     }
 
     private fun scheduleStopIfIdle() {
-        if (hasBoundClients) return
-        val state = player.playbackState
-        val keepAlive =
-            player.isPlaying ||
-                    (player.playWhenReady && (state == Player.STATE_BUFFERING || state == Player.STATE_READY))
-        if (keepAlive) {
-            cancelIdleStop()
-            return
-        }
-        val togetherIdle = togetherSessionState.value is com.arturo254.opentune.together.TogetherSessionState.Idle
-        if (!togetherIdle) {
-            cancelIdleStop()
-            return
-        }
-
-        val delayMs =
-            when (state) {
-                Player.STATE_READY -> 5 * 60_000L
-                Player.STATE_ENDED, Player.STATE_IDLE -> 30_000L
-                else -> 60_000L
-            }
-
-        cancelIdleStop()
-        idleStopJob =
-            scope.launch {
-                delay(delayMs)
-                if (hasBoundClients) return@launch
-                val currentState = player.playbackState
-                val shouldKeep =
-                    player.isPlaying ||
-                            (player.playWhenReady && (currentState == Player.STATE_BUFFERING || currentState == Player.STATE_READY))
-                if (shouldKeep) return@launch
-                if (togetherSessionState.value !is com.arturo254.opentune.together.TogetherSessionState.Idle) return@launch
-                stopForegroundAndSelf()
-            }
+        playbackLifecycleController
+            .scheduleStopIfIdle()
     }
 
     override fun onCreate() {
         super.onCreate()
         ensureScopesActive()
-
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val nm = getSystemService(NotificationManager::class.java)
-                nm?.createNotificationChannel(
-                    NotificationChannel(
-                        CHANNEL_ID,
-                        getString(R.string.music_player),
-                        NotificationManager.IMPORTANCE_LOW
-                    )
-                )
-            }
-        } catch (e: Exception) {
-            reportException(e)
-        }
 
         streamResolver =
             StreamResolver(
@@ -685,44 +577,70 @@ class MusicService :
                 player = player,
                 audioFocusVolumeFactor = audioFocusVolumeFactor,
             )
-        wakeLock = (getSystemService(Context.POWER_SERVICE) as PowerManager)
-            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "OpenTune:Playback")
-            .also { it.setReferenceCounted(false) }
+        playbackLifecycleController =
+            PlaybackLifecycleController(
+                service = this,
+                player = player,
+                dataStore = dataStore,
+                scopeProvider = { scope },
+                isTogetherIdle = {
+                    togetherSessionState.value is
+                        com.arturo254.opentune.together.TogetherSessionState.Idle
+                },
+                isTogetherGuest = {
+                    togetherController.isGuestSession()
+                },
+                isHostSessionActive = {
+                    togetherController.isHostSessionActive()
+                },
+                stopTogether = {
+                    togetherController.stop()
+                },
+                markTogetherIdle = {
+                    togetherController.markIdle()
+                },
+                savePlaybackStateBlocking = {
+                    playbackPersistenceController
+                        .saveBlockingIfEnabled()
+                },
+                stopAndClearPlayback = {
+                    stopAndClearPlayback()
+                },
+                clearPresenceOnTaskRemoved = {
+                    clearPresenceOnTaskRemoved()
+                },
+                foregroundNotificationProvider = {
+                    mediaSessionNotificationController
+                        .createForegroundNotification()
+                },
+                onError = ::reportException,
+            )
 
-        mediaLibrarySessionCallback.apply {
-            toggleLike = ::toggleLike
-            toggleStartRadio = ::toggleStartRadio
-            toggleLibrary = ::toggleLibrary
-        }
-        mediaSession =
-            MediaLibrarySession
-                .Builder(this, player, mediaLibrarySessionCallback)
-                .setSessionActivity(
-                    PendingIntent.getActivity(
-                        this,
-                        0,
-                        Intent(this, MainActivity::class.java),
-                        PendingIntent.FLAG_IMMUTABLE,
-                    ),
-                ).setBitmapLoader(CoilBitmapLoader(this, scope))
-                .build()
-        setMediaNotificationProvider(
-            DefaultMediaNotificationProvider(
-                this,
-                { NOTIFICATION_ID },
-                CHANNEL_ID,
-                R.string.music_player
-            ).apply {
-                setSmallIcon(R.drawable.opentune)
-            }
-        )
+        mediaSessionNotificationController =
+            MediaSessionNotificationController(
+                service = this,
+                player = player,
+                mediaLibrarySessionCallback =
+                    mediaLibrarySessionCallback,
+                scopeProvider = { scope },
+                lifecycleController =
+                    playbackLifecycleController,
+                isCurrentSongLiked = {
+                    currentSong.value?.song?.liked ==
+                        true
+                },
+                hasCurrentSong = {
+                    currentSong.value != null
+                },
+                toggleLike = ::toggleLike,
+                toggleLibrary = ::toggleLibrary,
+                toggleStartRadio = ::toggleStartRadio,
+                onError = ::reportException,
+            )
 
-        updateNotification()
-        player.repeatMode = REPEAT_MODE_OFF
+        mediaSessionNotificationController.start()
+        playbackLifecycleController.start()
 
-        val sessionToken = SessionToken(this, ComponentName(this, MusicService::class.java))
-        val controllerFuture = MediaController.Builder(this, sessionToken).buildAsync()
-        controllerFuture.addListener({ controllerFuture.get() }, MoreExecutors.directExecutor())
         scope.launch(Dispatchers.IO) {
             val prefs = dataStore.data.first()
             val repeatMode = prefs[RepeatModeKey] ?: REPEAT_MODE_OFF
@@ -793,30 +711,6 @@ class MusicService :
                 player.skipSilenceEnabled = it
             }
 
-        dataStore.data
-            .map { it[PauseOnDeviceMuteKey] ?: false }
-            .distinctUntilChanged()
-            .collectLatest(scope) { enabled ->
-                pauseOnDeviceMuteEnabled = enabled
-                if (!enabled) {
-                    wasAutoPausedByDeviceMute = false
-                } else {
-                    handleDeviceMuteStateChanged()
-                }
-            }
-
-        dataStore.data
-            .map { it[AutoStartOnBluetoothKey] ?: false }
-            .distinctUntilChanged()
-            .collectLatest(scope) { enabled ->
-                autoStartOnBluetoothEnabled = enabled
-                if (enabled) {
-                    registerBluetoothReceiver()
-                } else {
-                    unregisterBluetoothReceiver()
-                }
-            }
-
         combine(
             dataStore.data
                 .map { it[AudioOffload] ?: false }
@@ -851,14 +745,6 @@ class MusicService :
             .distinctUntilChanged()
             .collectLatest(scope) {
                 crossfadeDurationMs.value = it
-            }
-
-        dataStore.data
-            .map { it[WakelockKey] ?: false }
-            .distinctUntilChanged()
-            .collectLatest(scope) { enabled ->
-                wakelockEnabled = enabled
-                updateWakeLock()
             }
 
         crossfadeAudio =
@@ -1138,173 +1024,22 @@ class MusicService :
     fun hasAudioFocusForPlayback(): Boolean =
         audioFocusController.hasFocus()
 
-    private fun isDeviceMutedNow(): Boolean {
-        return player.isDeviceMuted || player.deviceVolume <= 0
-    }
-
-    private fun isTogetherGuestSession(): Boolean =
-        togetherController.isGuestSession()
-
-    private fun handleDeviceMuteStateChanged() {
-        if (!pauseOnDeviceMuteEnabled || isTogetherGuestSession()) {
-            wasAutoPausedByDeviceMute = false
-            return
-        }
-
-        if (isDeviceMutedNow()) {
-            val canPauseNow =
-                player.currentMediaItem != null &&
-                        player.playWhenReady &&
-                        player.playbackState != Player.STATE_IDLE &&
-                        player.playbackState != Player.STATE_ENDED
-
-            if (canPauseNow) {
-                player.pause()
-                wasAutoPausedByDeviceMute = true
-            }
-            return
-        }
-
-        if (!wasAutoPausedByDeviceMute) return
-
-        wasAutoPausedByDeviceMute = false
-        val canResumeNow =
-            player.currentMediaItem != null &&
-                    player.playbackState != Player.STATE_IDLE &&
-                    player.playbackState != Player.STATE_ENDED
-        if (canResumeNow) {
-            player.play()
-        }
-    }
-
-    private val bluetoothReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action != BluetoothDevice.ACTION_ACL_CONNECTED) return
-            if (!autoStartOnBluetoothEnabled) return
-
-            val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE) ?: return
-
-            val isAudioDevice = try {
-                val majorClass = device.bluetoothClass?.majorDeviceClass
-                majorClass == BluetoothClass.Device.Major.AUDIO_VIDEO ||
-                        majorClass == BluetoothClass.Device.Major.WEARABLE
-            } catch (_: SecurityException) {
-                true
-            }
-
-            if (!isAudioDevice) return
-
-            scope.launch {
-                delay(1500)
-                handleBluetoothAutoStart()
-            }
-        }
-    }
-
-    private fun handleBluetoothAutoStart() {
-        if (isTogetherGuestSession()) return
-
-        if (player.currentMediaItem != null &&
-            player.playbackState != Player.STATE_IDLE &&
-            player.playbackState != Player.STATE_ENDED
-        ) {
-            if (!player.playWhenReady) {
-                player.play()
-            }
-            return
-        }
-
-        if (player.mediaItemCount > 0) {
-            player.prepare()
-            player.play()
-        }
-    }
-
-    @Suppress("DEPRECATION")
-    private fun registerBluetoothReceiver() {
-        if (bluetoothReceiverRegistered) return
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            checkSelfPermission(android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED
-        ) return
-
-        val filter = IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(bluetoothReceiver, filter, RECEIVER_EXPORTED)
-        } else {
-            registerReceiver(bluetoothReceiver, filter)
-        }
-        bluetoothReceiverRegistered = true
-    }
-
-    private fun unregisterBluetoothReceiver() {
-        if (!bluetoothReceiverRegistered) return
-        try {
-            unregisterReceiver(bluetoothReceiver)
-        } catch (_: Exception) {}
-        bluetoothReceiverRegistered = false
-    }
-
     private fun updateNotification() {
-        try {
-            val customLayout = listOf(
-                CommandButton
-                    .Builder()
-                    .setDisplayName(
-                        getString(
-                            if (currentSong.value?.song?.liked == true) {
-                                R.string.action_remove_like
-                            } else {
-                                R.string.action_like
-                            },
-                        ),
-                    )
-                    .setIconResId(if (currentSong.value?.song?.liked == true) R.drawable.favorite else R.drawable.favorite_border)
-                    .setSessionCommand(CommandToggleLike)
-                    .setEnabled(currentSong.value != null)
-                    .build(),
-                CommandButton
-                    .Builder()
-                    .setDisplayName(
-                        getString(
-                            when (player.repeatMode) {
-                                REPEAT_MODE_OFF -> R.string.repeat_mode_off
-                                REPEAT_MODE_ONE -> R.string.repeat_mode_one
-                                REPEAT_MODE_ALL -> R.string.repeat_mode_all
-                                else -> R.string.repeat_mode_off
-                            },
-                        ),
-                    ).setIconResId(
-                        when (player.repeatMode) {
-                            REPEAT_MODE_OFF -> R.drawable.repeat
-                            REPEAT_MODE_ONE -> R.drawable.repeat_one_on
-                            REPEAT_MODE_ALL -> R.drawable.repeat_on
-                            else -> R.drawable.repeat
-                        },
-                    ).setSessionCommand(CommandToggleRepeatMode)
-                    .build(),
-                CommandButton
-                    .Builder()
-                    .setDisplayName(getString(if (player.shuffleModeEnabled) R.string.action_shuffle_off else R.string.action_shuffle_on))
-                    .setIconResId(if (player.shuffleModeEnabled) R.drawable.shuffle_on else R.drawable.shuffle)
-                    .setSessionCommand(CommandToggleShuffle)
-                    .build(),
-                CommandButton.Builder()
-                    .setDisplayName(getString(R.string.start_radio))
-                    .setIconResId(R.drawable.radio)
-                    .setSessionCommand(CommandToggleStartRadio)
-                    .setEnabled(currentSong.value != null)
-                    .build(),
-            )
-            mediaSession.setCustomLayout(customLayout)
-        } catch (e: Exception) {
-            reportException(e)
-        }
+        mediaSessionNotificationController
+            .updateCustomLayout()
     }
 
     fun refreshPlaybackNotification() {
         updateNotification()
-        runCatching { super.onUpdateNotification(mediaSession, player.isPlaying) }
-            .onFailure { reportException(it) }
+        runCatching {
+            super.onUpdateNotification(
+                mediaSessionNotificationController
+                    .session,
+                player.isPlaying,
+            )
+        }.onFailure {
+            reportException(it)
+        }
     }
 
     private suspend fun recoverSong(
@@ -1410,9 +1145,8 @@ class MusicService :
             return
         }
         if (playWhenReady) {
-            cancelIdleStop()
-            promoteToStartedService()
-            ensureStartedAsForeground()
+            playbackLifecycleController
+                .prepareForPlaybackStart()
         }
         ensureScopesActive()
 
@@ -1937,17 +1671,9 @@ class MusicService :
             togetherController
                 .onPlayWhenReadyChanged()
         }
-        if (events.contains(Player.EVENT_DEVICE_VOLUME_CHANGED)) {
-            handleDeviceMuteStateChanged()
-        }
-        if (events.contains(Player.EVENT_PLAY_WHEN_READY_CHANGED) && isDeviceMutedNow() && this.player.playWhenReady) {
-            handleDeviceMuteStateChanged()
-        }
-        if (events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED) &&
-            (this.player.playbackState == Player.STATE_IDLE || this.player.playbackState == Player.STATE_ENDED)
-        ) {
-            wasAutoPausedByDeviceMute = false
-        }
+        playbackLifecycleController
+            .onPlayerEvents(events)
+
         if (events.contains(Player.EVENT_AUDIO_SESSION_ID)) {
             audioEffectsController.onAudioSessionIdChanged(
                 this.player.audioSessionId,
@@ -1969,14 +1695,8 @@ class MusicService :
             } else {
                 audioEffectsController.closeSession()
             }
-            updateWakeLock()
-            if (player.playWhenReady && keepAudioEffectSessionOpen) {
-                cancelIdleStop()
-                promoteToStartedService()
-                ensureStartedAsForeground()
-            } else {
-                scheduleStopIfIdle()
-            }
+            playbackLifecycleController
+                .onPlayerEvents(events)
         }
 
         if (events.containsAny(EVENT_TIMELINE_CHANGED, EVENT_POSITION_DISCONTINUITY)) {
@@ -2153,16 +1873,6 @@ class MusicService :
         errorRecoveryController.retryCurrentFromFreshStream()
     }
 
-    private fun updateWakeLock() {
-        val wl = wakeLock ?: return
-        val shouldHold = wakelockEnabled && player.isPlaying
-        if (shouldHold && !wl.isHeld) {
-            wl.acquire()
-        } else if (!shouldHold && wl.isHeld) {
-            wl.release()
-        }
-    }
-
     override fun onPlaybackStatsReady(
         eventTime: AnalyticsListener.EventTime,
         playbackStats: PlaybackStats,
@@ -2298,7 +2008,6 @@ class MusicService :
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterBluetoothReceiver()
         try {
             scope.launch { togetherController.stop() }
         } catch (_: Exception) {}
@@ -2326,155 +2035,137 @@ class MusicService :
             crossfadeAudio = null
         } catch (_: Exception) {}
         try {
-            if (wakeLock?.isHeld == true) wakeLock?.release()
+            mediaSessionNotificationController.release()
+        } catch (_: Exception) {}
+        try {
+            playbackLifecycleController.release()
         } catch (_: Exception) {}
         try {
             player.removeListener(this)
             player.removeListener(sleepTimer)
             player.release()
-        } catch (_: Exception) {}
-        scopeJob.cancel()
-    }
+        } ca    override fun onBind(
+        intent: Intent?,
+    ): android.os.IBinder? {
+        playbackLifecycleController.onBound()
 
-    override fun onBind(intent: Intent?): android.os.IBinder? {
-        hasBoundClients = true
-        cancelIdleStop()
-        val result = super.onBind(intent) ?: binder
-        if (player.mediaItemCount > 0 && player.currentMediaItem != null) {
-            currentMediaMetadata.value = player.currentMetadata
+        val result =
+            super.onBind(intent) ?: binder
+
+        if (
+            player.mediaItemCount > 0 &&
+            player.currentMediaItem != null
+        ) {
+            currentMediaMetadata.value =
+                player.currentMetadata
+
             scope.launch {
                 delay(50)
                 updateNotification()
             }
         }
+
         return result
     }
 
-    override fun onUnbind(intent: Intent?): Boolean {
-        hasBoundClients = false
-        scheduleStopIfIdle()
+    override fun onUnbind(
+        intent: Intent?,
+    ): Boolean {
+        playbackLifecycleController.onUnbound()
         return super.onUnbind(intent)
     }
 
-    override fun onRebind(intent: Intent?) {
-        hasBoundClients = true
-        cancelIdleStop()
+    override fun onRebind(
+        intent: Intent?,
+    ) {
+        playbackLifecycleController.onRebound()
         super.onRebind(intent)
     }
 
-    override fun onTaskRemoved(rootIntent: Intent?) {
-        super.onTaskRemoved(rootIntent)
-        // When the user clears the app from Recents, ensure we clear Discord rich presence
+    private fun clearPresenceOnTaskRemoved() {
         try {
             scope.launch {
-                try { discordRpc?.stopActivity() } catch (_: Exception) {}
+                try {
+                    discordRpc?.stopActivity()
+                } catch (_: Exception) {
+                }
             }
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+        }
 
         try {
-            if (discordRpc?.isRpcRunning() == true) {
-                try { discordRpc?.closeRPC() } catch (_: Exception) {}
+            if (
+                discordRpc?.isRpcRunning() ==
+                true
+            ) {
+                try {
+                    discordRpc?.closeRPC()
+                } catch (_: Exception) {
+                }
             }
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+        }
+
         discordRpc = null
-        try { DiscordPresenceManager.stop() } catch (_: Exception) {}
-        lastPresenceToken = null
-
-        val stopMusicOnTaskClearEnabled = dataStore.get(StopMusicOnTaskClearKey, false)
 
         try {
-            val isHostSessionActive =
-                togetherController
-                    .isHostSessionActive()
+            DiscordPresenceManager.stop()
+        } catch (_: Exception) {
+        }
 
-            val isPlaybackInactive = player.playbackState == Player.STATE_IDLE || player.mediaItemCount == 0
-
-            if (shouldStopServiceOnTaskRemoved(stopMusicOnTaskClearEnabled, isHostSessionActive, isPlaybackInactive)) {
-                if (isHostSessionActive && isPlaybackInactive) {
-                    runCatching { scope.launch { togetherController.stop() } }
-                    runCatching { togetherController.markIdle() }
-                    stopSelf()
-                    return
-                }
-
-                if (stopMusicOnTaskClearEnabled) {
-                    if (dataStore.get(PersistentQueueKey, true) && player.mediaItemCount > 0) {
-                        playbackPersistenceController.saveBlockingIfEnabled()
-                    }
-                    runCatching { stopAndClearPlayback() }
-                    runCatching {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            stopForeground(STOP_FOREGROUND_REMOVE)
-                        } else {
-                            stopForeground(true)
-                        }
-                    }
-                    stopSelf()
-                    return
-                }
-            }
-        } catch (_: Exception) {}
+        lastPresenceToken = null
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo) = mediaSession
+    override fun onTaskRemoved(
+        rootIntent: Intent?,
+    ) {
+        super.onTaskRemoved(rootIntent)
+        playbackLifecycleController
+            .onTaskRemoved()
+    }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        handlePlayerWidgetAction(intent?.action)
-        super.onStartCommand(intent, flags, startId)
+    override fun onGetSession(
+        controllerInfo: MediaSession.ControllerInfo,
+    ) = mediaSessionNotificationController.session
+
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int,
+    ): Int {
+        mediaSessionNotificationController
+            .handleWidgetAction(intent?.action)
+
+        super.onStartCommand(
+            intent,
+            flags,
+            startId,
+        )
+
         return START_NOT_STICKY
     }
 
-    private fun handlePlayerWidgetAction(action: String?) {
-        when (action) {
-            PlayerWidgetActions.ACTION_PLAY_PAUSE -> {
-                if (!player.playWhenReady) {
-                    cancelIdleStop()
-                    promoteToStartedService()
-                    ensureStartedAsForeground()
-                }
-                player.togglePlayPause()
-                updatePlayerWidgets()
-            }
-
-            PlayerWidgetActions.ACTION_NEXT -> {
-                if (player.hasNextMediaItem()) {
-                    cancelIdleStop()
-                    promoteToStartedService()
-                    ensureStartedAsForeground()
-                    player.seekToNext()
-                    player.playWhenReady = true
-                }
-                updatePlayerWidgets()
-            }
-
-            PlayerWidgetActions.ACTION_PREVIOUS -> {
-                if (player.hasPreviousMediaItem()) {
-                    cancelIdleStop()
-                    promoteToStartedService()
-                    ensureStartedAsForeground()
-                    player.seekToPrevious()
-                    player.playWhenReady = true
-                }
-                updatePlayerWidgets()
-            }
-
-            PlayerWidgetActions.ACTION_REFRESH -> updatePlayerWidgets()
-        }
-    }
-
     private fun updatePlayerWidgets() {
-        if (!::player.isInitialized) return
-
-        scope.launch(SilentHandler) {
-            val state = PlayerWidgetState.fromPlayer(player, this@MusicService)
-            PlayerWidgetUpdater.update(this@MusicService, state)
-        }
+        mediaSessionNotificationController
+            .updateWidgets()
     }
 
-    override fun onUpdateNotification(session: MediaSession, startInForegroundRequired: Boolean) {
-        if (startInForegroundRequired) ensureStartedAsForeground()
-        runCatching { super.onUpdateNotification(session, startInForegroundRequired) }
-            .onFailure { reportException(it) }
+    override fun onUpdateNotification(
+        session: MediaSession,
+        startInForegroundRequired: Boolean,
+    ) {
+        if (startInForegroundRequired) {
+            ensureStartedAsForeground()
+        }
+
+        runCatching {
+            super.onUpdateNotification(
+                session,
+                startInForegroundRequired,
+            )
+        }.onFailure {
+            reportException(it)
+        }
     }
 
     inner class MusicBinder : Binder() {
@@ -2487,7 +2178,16 @@ class MusicService :
             stopMusicOnTaskClearEnabled: Boolean,
             isHostSessionActive: Boolean,
             isPlaybackInactive: Boolean,
-        ): Boolean = (isHostSessionActive && isPlaybackInactive) || stopMusicOnTaskClearEnabled
+        ): Boolean =
+            PlaybackLifecyclePolicy
+                .shouldStopServiceOnTaskRemoved(
+                    stopMusicOnTaskClearEnabled =
+                        stopMusicOnTaskClearEnabled,
+                    isHostSessionActive =
+                        isHostSessionActive,
+                    isPlaybackInactive =
+                        isPlaybackInactive,
+                )
 
         const val ROOT = "root"
         const val SONG = "song"
