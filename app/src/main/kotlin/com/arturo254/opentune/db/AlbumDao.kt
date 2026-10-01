@@ -12,7 +12,6 @@ import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import com.arturo254.opentune.constants.AlbumSortType
 import com.arturo254.opentune.db.entities.Album
-import com.arturo254.opentune.db.entities.AlbumArtistMap
 import com.arturo254.opentune.db.entities.AlbumWithSongs
 import com.arturo254.opentune.db.entities.Song
 import com.arturo254.opentune.extensions.reversed
@@ -236,10 +235,6 @@ interface AlbumDao {
     @Transaction
     @Query("SELECT * FROM album WHERE id = :albumId")
     fun albumWithSongs(albumId: String): Flow<AlbumWithSongs?>
-
-    @Transaction
-    @Query("SELECT * FROM album_artist_map WHERE albumId = :albumId")
-    fun albumArtistMaps(albumId: String): List<AlbumArtistMap>
 
     @Transaction
     @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)
