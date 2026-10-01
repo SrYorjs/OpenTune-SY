@@ -32,8 +32,6 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.common.Player.EVENT_POSITION_DISCONTINUITY
-import androidx.media3.common.Player.EVENT_TIMELINE_CHANGED
 import androidx.media3.common.Player.REPEAT_MODE_ALL
 import androidx.media3.common.Player.REPEAT_MODE_OFF
 import androidx.media3.common.Player.REPEAT_MODE_ONE
@@ -72,7 +70,6 @@ import com.arturo254.opentune.constants.AudioNormalizationKey
 import com.arturo254.opentune.constants.AudioOffload
 import com.arturo254.opentune.constants.AudioCrossfadeDurationKey
 import com.arturo254.opentune.constants.AudioQualityKey
-import com.arturo254.opentune.constants.AutoLoadMoreKey
 import com.arturo254.opentune.constants.AutoSkipNextOnErrorKey
 import com.arturo254.opentune.constants.EqualizerBandLevelsMbKey
 import com.arturo254.opentune.constants.EqualizerBassBoostEnabledKey
@@ -201,6 +198,8 @@ class MusicService :
         LibraryActionsController
     private lateinit var presenceHistoryController:
         PresenceHistoryController
+    private lateinit var playbackEventCoordinator:
+        PlaybackEventCoordinator
 
     private var scopeJob = Job()
     private var scope = CoroutineScope(Dispatchers.Main + scopeJob)
@@ -564,6 +563,48 @@ class MusicService :
                     updateNotification()
                 },
                 onError = ::reportException,
+            )
+
+        playbackEventCoordinator =
+            PlaybackEventCoordinator(
+                player = player,
+                dataStore = dataStore,
+                scopeProvider = { scope },
+                currentMediaMetadata =
+                    currentMediaMetadata,
+                errorRecoveryController =
+                    errorRecoveryController,
+                crossfadeAudioProvider = {
+                    crossfadeAudio
+                },
+                lyricsPreloadManagerProvider = {
+                    lyricsPreloadManager
+                },
+                streamResolver =
+                    streamResolver,
+                togetherController =
+                    togetherController,
+                automixRadioController =
+                    automixRadioController,
+                queueController =
+                    queueController,
+                persistenceController =
+                    playbackPersistenceController,
+                presenceHistoryController =
+                    presenceHistoryController,
+                lifecycleController =
+                    playbackLifecycleController,
+                audioEffectsController =
+                    audioEffectsController,
+                requestAudioFocus = {
+                    requestAudioFocus()
+                },
+                updateNotification = {
+                    updateNotification()
+                },
+                updateWidgets = {
+                    updatePlayerWidgets()
+                },
             )
 
         mediaSessionNotificationController =
@@ -945,10 +986,6 @@ class MusicService :
         )
     }
 
-    private fun applyCurrentFirstShuffleOrder() {
-        queueController.applyCurrentFirstShuffleOrder()
-    }
-
     fun startRadioSeamlessly() {
         val joined =
             togetherSessionState.value as?
@@ -1263,79 +1300,19 @@ class MusicService :
     }
 
 
-    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-        super.onMediaItemTransition(mediaItem, reason)
-
-        errorRecoveryController.onMediaItemTransition(
-            mediaItem?.mediaId
-                ?.trim()
-                ?.takeIf { it.isNotBlank() }
-                ?: player.currentMediaItem?.mediaId,
+    override fun onMediaItemTransition(
+        mediaItem: MediaItem?,
+        reason: Int,
+    ) {
+        super.onMediaItemTransition(
+            mediaItem,
+            reason,
         )
-
-        crossfadeAudio?.onMediaItemTransition(mediaItem, reason)
-
-        // Pre-load lyrics for upcoming songs in queue
-        val currentIndex = player.currentMediaItemIndex
-        // Convert media items to MediaMetadata for lyrics pre-loading
-        val queue = player.mediaItems.mapNotNull { it.metadata }
-        if (queue.isNotEmpty()) {
-            lyricsPreloadManager?.onSongChanged(currentIndex, queue)
-        }
-
-        streamResolver.scheduleNextStreamWarmup()
-
-        if (
-            togetherController.onMediaItemTransition(
+        playbackEventCoordinator
+            .onMediaItemTransition(
                 mediaItem,
                 reason,
             )
-        ) {
-            return
-        }
-
-        val timelineEmpty = player.currentTimeline.isEmpty || player.mediaItemCount == 0 || player.currentMediaItem == null
-        currentMediaMetadata.value = if (timelineEmpty) null else (mediaItem?.metadata ?: player.currentMetadata)
-
-
-        automixRadioController.onMediaItemTransition(
-            mediaItem = mediaItem,
-            reason = reason,
-            timelineEmpty = timelineEmpty,
-            queueHasNextPage = queueController.hasNextPage(),
-        )
-
-        // Auto-load more from queue if available
-        if (!suppressAutoPlayback &&
-            !timelineEmpty &&
-            dataStore.get(AutoLoadMoreKey, true) &&
-            reason != Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT &&
-            player.mediaItemCount - player.currentMediaItemIndex <= 5 &&
-            queueController.hasNextPage() &&
-            player.repeatMode == REPEAT_MODE_OFF
-        ) {
-            scope.launch(SilentHandler) {
-                val mediaItems =
-                    queueController.nextPage()
-                if (player.playbackState != STATE_IDLE) {
-                    player.addMediaItems(mediaItems.drop(1))
-                } else {
-                    presenceHistoryController
-                        .stopActivity()
-                }
-            }
-        }
-
-        presenceHistoryController
-            .onMediaItemTransition()
-
-        scope.launch {
-            val shouldSave = withContext(Dispatchers.IO) { dataStore.get(PersistentQueueKey, true) }
-            if (shouldSave) {
-                playbackPersistenceController.saveIfEnabled()
-            }
-        }
-        updatePlayerWidgets()
     }
 
     override fun onPlaybackStateChanged(
@@ -1344,201 +1321,49 @@ class MusicService :
         super.onPlaybackStateChanged(
             playbackState,
         )
-
-        updatePlayerWidgets()
-
-        errorRecoveryController
-            .onPlaybackStateChanged(
-                playbackState,
-            )
-
-        scope.launch {
-            if (
-                dataStore.get(
-                    PersistentQueueKey,
-                    true,
-                )
-            ) {
-                playbackPersistenceController
-                    .saveIfEnabled()
-            }
-        }
-
-        if (
-            playbackState ==
-                Player.STATE_IDLE ||
-            playbackState ==
-                Player.STATE_ENDED
-        ) {
-            crossfadeAudio?.stop(
-                resetMainFade = true,
-            )
-        }
-
-        automixRadioController
-            .onPlaybackStateChanged(
-                playbackState,
-            )
-
-        presenceHistoryController
+        playbackEventCoordinator
             .onPlaybackStateChanged(
                 playbackState,
             )
     }
-
 
     override fun onEvents(
         player: Player,
         events: Player.Events,
     ) {
-        if (
-            events.contains(
-                Player.EVENT_MEDIA_METADATA_CHANGED,
-            ) &&
-            crossfadeAudio
-                ?.isCrossfading() != true
-        ) {
-            currentMediaMetadata.value =
-                player.currentMetadata
-        }
-
-        if (
-            events.contains(
-                Player.EVENT_PLAY_WHEN_READY_CHANGED,
-            )
-        ) {
-            togetherController
-                .onPlayWhenReadyChanged()
-        }
-
-        playbackLifecycleController
-            .onPlayerEvents(events)
-
-        if (
-            events.contains(
-                Player.EVENT_AUDIO_SESSION_ID,
-            )
-        ) {
-            audioEffectsController
-                .onAudioSessionIdChanged(
-                    this.player.audioSessionId,
-                )
-        }
-
-        if (
-            events.containsAny(
-                Player.EVENT_PLAYBACK_STATE_CHANGED,
-                Player.EVENT_PLAY_WHEN_READY_CHANGED,
-            )
-        ) {
-            val playbackState =
-                player.playbackState
-            val keepAudioEffectSessionOpen =
-                playbackState ==
-                    Player.STATE_BUFFERING ||
-                    playbackState ==
-                        Player.STATE_READY
-
-            if (
-                player.playWhenReady &&
-                keepAudioEffectSessionOpen
-            ) {
-                requestAudioFocus()
-            }
-
-            if (keepAudioEffectSessionOpen) {
-                audioEffectsController.openSession()
-            } else {
-                audioEffectsController.closeSession()
-            }
-        }
-
-        if (
-            events.containsAny(
-                EVENT_TIMELINE_CHANGED,
-                EVENT_POSITION_DISCONTINUITY,
-            ) &&
-            crossfadeAudio
-                ?.isCrossfading() != true
-        ) {
-            currentMediaMetadata.value =
-                player.currentMetadata
-        }
-
-        if (
-            events.contains(
-                Player.EVENT_MEDIA_ITEM_TRANSITION,
-            )
-        ) {
-            currentMediaMetadata.value =
-                player.currentMetadata
-        }
-
-        presenceHistoryController
+        playbackEventCoordinator
             .onEvents(events)
-
-        if (
-            events.containsAny(
-                Player.EVENT_IS_PLAYING_CHANGED,
-                Player.EVENT_MEDIA_ITEM_TRANSITION,
-            )
-        ) {
-            updatePlayerWidgets()
-        }
     }
 
-
-    override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
-        updateNotification()
-        if (
-            togetherController.onShuffleModeChanged(
+    override fun onShuffleModeEnabledChanged(
+        shuffleModeEnabled: Boolean,
+    ) {
+        playbackEventCoordinator
+            .onShuffleModeEnabledChanged(
                 shuffleModeEnabled,
             )
-        ) {
-            return
-        }
-        if (shuffleModeEnabled) {
-            applyCurrentFirstShuffleOrder()
-        }
-
-        // Save state when shuffle mode changes - must be on Main thread to access player
-        scope.launch {
-            if (dataStore.get(PersistentQueueKey, true)) {
-                playbackPersistenceController.saveIfEnabled()
-            }
-        }
     }
 
-    override fun onRepeatModeChanged(repeatMode: Int) {
-        updateNotification()
-        if (
-            togetherController.onRepeatModeChanged(
+    override fun onRepeatModeChanged(
+        repeatMode: Int,
+    ) {
+        playbackEventCoordinator
+            .onRepeatModeChanged(
                 repeatMode,
             )
-        ) {
-            return
-        }
-        scope.launch {
-            dataStore.edit { settings ->
-                settings[RepeatModeKey] = repeatMode
-            }
-        }
-
-        // Save state when repeat mode changes - must be on Main thread to access player
-        scope.launch {
-            if (dataStore.get(PersistentQueueKey, true)) {
-                playbackPersistenceController.saveIfEnabled()
-            }
-        }
     }
 
-    override fun onPlayerError(error: PlaybackException) {
+    override fun onPlayerError(
+        error: PlaybackException,
+    ) {
         super.onPlayerError(error)
-        errorRecoveryController.handlePlayerError(error)
+        playbackEventCoordinator
+            .onPlayerError(error)
     }
 
     fun retryCurrentFromFreshStream() {
-        errorRecoveryController.retryCurrentFromFreshStream()
+        errorRecoveryController
+            .retryCurrentFromFreshStream()
     }
 
     override fun onPlaybackStatsReady(
