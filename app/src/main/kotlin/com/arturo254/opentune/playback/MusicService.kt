@@ -1752,6 +1752,23 @@ class MusicService :
         audioEffectsController.applySystemPreset(presetIndex)
     }
 
+    fun applyEqProfile(
+        profileId: String,
+        bandLevelsMb: List<Int>,
+        outputGainMb: Int,
+        bassBoostStrength: Int,
+        virtualizerStrength: Int,
+    ) {
+        audioEffectsController.applyProfile(
+            profileId = profileId,
+            bandLevelsMb = bandLevelsMb,
+            outputGainMb = outputGainMb,
+            bassBoostStrength = bassBoostStrength,
+            virtualizerStrength = virtualizerStrength,
+        )
+    }
+
+
     override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
         super.onMediaItemTransition(mediaItem, reason)
 

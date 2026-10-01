@@ -153,52 +153,152 @@ internal class AudioEffectsController(
     }
 
     fun applyFlatPreset() {
-        ioScopeProvider().launch {
+        scopeProvider().launch {
+            val sessionId = playerProvider().audioSessionId
+            if (sessionId > 0) {
+                ensureEffects(sessionId)
+            }
+
             val caps = eqCapabilities.value
             val bandCount =
                 caps?.bandCount
-                    ?: runCatching { equalizer?.numberOfBands?.toInt() }.getOrNull()
+                    ?: runCatching {
+                        equalizer?.numberOfBands?.toInt()
+                    }.getOrNull()
                     ?: 0
-            val encoded =
-                encodeBandLevelsMb(List(bandCount.coerceAtLeast(0)) { 0 })
 
-            dataStore.edit { prefs ->
-                prefs[EqualizerEnabledKey] = true
-                prefs[EqualizerBandLevelsMbKey] = encoded
-                prefs[EqualizerSelectedProfileIdKey] = "flat"
+            val levels =
+                List(bandCount.coerceAtLeast(0)) { 0 }
+            val settings =
+                desiredEqSettings.value.copy(
+                    enabled = true,
+                    bandLevelsMb = levels,
+                )
+
+            previewSettings(settings)
+
+            ioScopeProvider().launch {
+                dataStore.edit { prefs ->
+                    prefs[EqualizerEnabledKey] = true
+                    prefs[EqualizerBandLevelsMbKey] =
+                        encodeBandLevelsMb(levels)
+                    prefs[EqualizerSelectedProfileIdKey] =
+                        "flat"
+                }
             }
         }
     }
 
     fun applySystemPreset(presetIndex: Int) {
         scopeProvider().launch {
-            ensureEffects(playerProvider().audioSessionId)
-            val eq = equalizer ?: return@launch
-            val maxPreset =
-                runCatching { eq.numberOfPresets.toInt() }.getOrNull() ?: 0
-            if (presetIndex !in 0 until maxPreset) return@launch
+            val sessionId = playerProvider().audioSessionId
+            if (sessionId <= 0) return@launch
 
-            runCatching { eq.usePreset(presetIndex.toShort()) }.getOrNull()
-                ?: return@launch
+            ensureEffects(sessionId)
+            val eq = equalizer ?: return@launch
+
+            val maxPreset =
+                runCatching {
+                    eq.numberOfPresets.toInt()
+                }.getOrNull() ?: 0
+
+            if (presetIndex !in 0 until maxPreset) {
+                return@launch
+            }
+
+            val applied =
+                runCatching {
+                    eq.enabled = true
+                    eq.usePreset(presetIndex.toShort())
+                    true
+                }.getOrDefault(false)
+
+            if (!applied) return@launch
 
             val bandCount =
-                runCatching { eq.numberOfBands.toInt() }.getOrNull() ?: 0
+                runCatching {
+                    eq.numberOfBands.toInt()
+                }.getOrNull() ?: 0
+
             val levels =
                 (0 until bandCount).map { band ->
                     runCatching {
-                        eq.getBandLevel(band.toShort()).toInt()
+                        eq
+                            .getBandLevel(band.toShort())
+                            .toInt()
                     }.getOrNull() ?: 0
                 }
 
-            val encoded = encodeBandLevelsMb(levels)
-            if (encoded.isBlank()) return@launch
+            if (levels.isEmpty()) return@launch
+
+            val settings =
+                desiredEqSettings.value.copy(
+                    enabled = true,
+                    bandLevelsMb = levels,
+                )
+
+            previewSettings(settings)
 
             ioScopeProvider().launch {
                 dataStore.edit { prefs ->
                     prefs[EqualizerEnabledKey] = true
-                    prefs[EqualizerBandLevelsMbKey] = encoded
-                    prefs[EqualizerSelectedProfileIdKey] = "system:$presetIndex"
+                    prefs[EqualizerBandLevelsMbKey] =
+                        encodeBandLevelsMb(levels)
+                    prefs[EqualizerSelectedProfileIdKey] =
+                        "system:$presetIndex"
                 }
+            }
+        }
+    }
+
+    fun applyProfile(
+        profileId: String,
+        bandLevelsMb: List<Int>,
+        outputGainMb: Int,
+        bassBoostStrength: Int,
+        virtualizerStrength: Int,
+    ) {
+        val settings =
+            EqSettings(
+                enabled = true,
+                bandLevelsMb = bandLevelsMb,
+                outputGainEnabled =
+                    outputGainMb != 0,
+                outputGainMb =
+                    outputGainMb.coerceIn(-1500, 1500),
+                bassBoostEnabled =
+                    bassBoostStrength != 0,
+                bassBoostStrength =
+                    bassBoostStrength.coerceIn(0, 1000),
+                virtualizerEnabled =
+                    virtualizerStrength != 0,
+                virtualizerStrength =
+                    virtualizerStrength.coerceIn(0, 1000),
+            )
+
+        previewSettings(settings)
+
+        ioScopeProvider().launch {
+            dataStore.edit { prefs ->
+                prefs[EqualizerEnabledKey] = true
+                prefs[EqualizerBandLevelsMbKey] =
+                    encodeBandLevelsMb(
+                        settings.bandLevelsMb,
+                    )
+                prefs[EqualizerOutputGainEnabledKey] =
+                    settings.outputGainEnabled
+                prefs[EqualizerOutputGainMbKey] =
+                    settings.outputGainMb
+                prefs[EqualizerBassBoostEnabledKey] =
+                    settings.bassBoostEnabled
+                prefs[EqualizerBassBoostStrengthKey] =
+                    settings.bassBoostStrength
+                prefs[EqualizerVirtualizerEnabledKey] =
+                    settings.virtualizerEnabled
+                prefs[EqualizerVirtualizerStrengthKey] =
+                    settings.virtualizerStrength
+                prefs[EqualizerSelectedProfileIdKey] =
+                    "profile:$profileId"
             }
         }
     }

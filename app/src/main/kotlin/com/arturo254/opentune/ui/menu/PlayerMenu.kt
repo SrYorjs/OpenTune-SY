@@ -1135,8 +1135,25 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
                 }
                 val updatedPayload = EqProfilesPayload(profiles = (profiles + normalizedImported).distinctBy { it.id }.sortedBy { it.name.lowercase() })
                 setCustomProfilesJson(encodeProfilesPayload(updatedPayload))
-                normalizedImported.firstOrNull()?.id?.let { setSelectedProfileId("profile:$it") }
-                Toast.makeText(context, context.getString(R.string.eq_import_success, normalizedImported.size), Toast.LENGTH_SHORT).show()
+                normalizedImported.firstOrNull()?.let { profile ->
+                    playerConnection.service.applyEqProfile(
+                        profileId = profile.id,
+                        bandLevelsMb = profile.bandLevelsMb,
+                        outputGainMb = profile.outputGainMb,
+                        bassBoostStrength =
+                            profile.bassBoostStrength,
+                        virtualizerStrength =
+                            profile.virtualizerStrength,
+                    )
+                }
+                Toast.makeText(
+                    context,
+                    context.getString(
+                        R.string.eq_import_success,
+                        normalizedImported.size,
+                    ),
+                    Toast.LENGTH_SHORT,
+                ).show()
             },
             onDismiss = { showImportProfilesDialog = false },
         )
@@ -1149,15 +1166,17 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()
                         .clickable {
-                            setEqEnabled(true)
-                            setBandLevelsRaw(encodeBandLevelsMb(profile.bandLevelsMb))
-                            setOutputGainMb(profile.outputGainMb)
-                            setOutputGainEnabled(profile.outputGainMb != 0)
-                            setBassBoostStrength(profile.bassBoostStrength)
-                            setBassBoostEnabled(profile.bassBoostStrength != 0)
-                            setVirtualizerStrength(profile.virtualizerStrength)
-                            setVirtualizerEnabled(profile.virtualizerStrength != 0)
-                            setSelectedProfileId("profile:${profile.id}")
+                            playerConnection.service.applyEqProfile(
+                                profileId = profile.id,
+                                bandLevelsMb =
+                                    profile.bandLevelsMb,
+                                outputGainMb =
+                                    profile.outputGainMb,
+                                bassBoostStrength =
+                                    profile.bassBoostStrength,
+                                virtualizerStrength =
+                                    profile.virtualizerStrength,
+                            )
                             showManageProfilesDialog = false
                         }.padding(horizontal = 16.dp, vertical = 12.dp),
                 ) {
@@ -1225,10 +1244,16 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
 
                     EqSection(title = stringResource(R.string.eq_presets), trailing = { TextButton(onClick = openSystemEqualizer) { Text(text = stringResource(R.string.eq_system)) } }) {
                         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).horizontalScroll(rememberScrollState())) {
-                            FilterChip(selected = selectedProfileId == "flat", onClick = { playerConnection.service.applyEqFlatPreset(); setSelectedProfileId("flat") }, label = { Text(text = stringResource(R.string.eq_flat)) }, colors = FilterChipDefaults.filterChipColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh), border = null)
+                            FilterChip(selected = selectedProfileId == "flat", onClick = {
+                                playerConnection.service.applyEqFlatPreset()
+                            }, label = { Text(text = stringResource(R.string.eq_flat)) }, colors = FilterChipDefaults.filterChipColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh), border = null)
                             Spacer(Modifier.width(8.dp))
                             caps.systemPresets.forEachIndexed { index, name ->
-                                FilterChip(selected = selectedProfileId == "system:$index", onClick = { playerConnection.service.applySystemEqPreset(index); setSelectedProfileId("system:$index") }, label = { Text(text = name, maxLines = 1, overflow = TextOverflow.Ellipsis) }, colors = FilterChipDefaults.filterChipColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh), border = null)
+                                FilterChip(selected = selectedProfileId == "system:$index", onClick = {
+                                    playerConnection.service.applySystemEqPreset(
+                                        index,
+                                    )
+                                }, label = { Text(text = name, maxLines = 1, overflow = TextOverflow.Ellipsis) }, colors = FilterChipDefaults.filterChipColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh), border = null)
                                 Spacer(Modifier.width(8.dp))
                             }
                         }
@@ -1256,7 +1281,20 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
                     Spacer(Modifier.height(12.dp))
 
                     EqSection(title = stringResource(R.string.eq_bands), trailing = {
-                        TextButton(onClick = { setSelectedProfileId("manual"); setBandLevelsRaw(encodeBandLevelsMb(List(bandCount) { 0 })) }) { Text(text = stringResource(R.string.reset)) }
+                        TextButton(
+                            onClick = {
+                                val flatLevels =
+                                    List(bandCount) { 0 }
+                                setSelectedProfileId("manual")
+                                bandLevelsMb = flatLevels
+                                playerConnection.service.previewEqBandLevels(
+                                    flatLevels,
+                                )
+                                setBandLevelsRaw(
+                                    encodeBandLevelsMb(flatLevels),
+                                )
+                            },
+                        ) { Text(text = stringResource(R.string.reset)) }
                     }) {
                         caps.centerFreqHz.forEachIndexed { band, hz ->
                             val label = formatHz(hz)
@@ -1272,11 +1310,18 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
                                             while (size < bandCount) add(0)
                                             set(band, coerced)
                                         }
+                                    },
+                                    onValueChangeFinished = {
+                                        setSelectedProfileId("manual")
                                         playerConnection.service.previewEqBandLevels(
                                             bandLevelsMb,
                                         )
+                                        setBandLevelsRaw(
+                                            encodeBandLevelsMb(
+                                                bandLevelsMb,
+                                            ),
+                                        )
                                     },
-                                    onValueChangeFinished = { setSelectedProfileId("manual"); setBandLevelsRaw(encodeBandLevelsMb(bandLevelsMb)) },
                                     valueRange = minMb.toFloat()..maxMb.toFloat(),
                                     colors = SliderDefaults.colors(activeTrackColor = MaterialTheme.colorScheme.primary, inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest),
                                     modifier = Modifier.weight(1f),
@@ -1302,16 +1347,16 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
                             value = outputGainLocal,
                             onValueChange = {
                                 outputGainLocal = it
-                                playerConnection.service.previewEqOutputGain(
-                                    outputGainEnabled,
-                                    it,
-                                )
                             },
                             valueRange = -1500..1500,
                             formatValue = { formatDb(it / 100f) },
                             modifier = Modifier.padding(horizontal = 8.dp),
                             onValueChangeFinished = {
                                 setSelectedProfileId("manual")
+                                playerConnection.service.previewEqOutputGain(
+                                    outputGainEnabled,
+                                    outputGainLocal,
+                                )
                                 setOutputGainMb(outputGainLocal)
                             },
                         )
@@ -1333,17 +1378,19 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
                             value = bassBoostStrengthLocal,
                             onValueChange = {
                                 bassBoostStrengthLocal = it
-                                playerConnection.service.previewEqBassBoost(
-                                    bassBoostEnabled,
-                                    it,
-                                )
                             },
                             valueRange = 0..1000,
                             formatValue = { "${it / 10}%" },
                             modifier = Modifier.padding(horizontal = 8.dp),
                             onValueChangeFinished = {
                                 setSelectedProfileId("manual")
-                                setBassBoostStrength(bassBoostStrengthLocal)
+                                playerConnection.service.previewEqBassBoost(
+                                    bassBoostEnabled,
+                                    bassBoostStrengthLocal,
+                                )
+                                setBassBoostStrength(
+                                    bassBoostStrengthLocal,
+                                )
                             },
                         )
                     }
@@ -1364,17 +1411,19 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
                             value = virtualizerStrengthLocal,
                             onValueChange = {
                                 virtualizerStrengthLocal = it
-                                playerConnection.service.previewEqVirtualizer(
-                                    virtualizerEnabled,
-                                    it,
-                                )
                             },
                             valueRange = 0..1000,
                             formatValue = { "${it / 10}%" },
                             modifier = Modifier.padding(horizontal = 8.dp),
                             onValueChangeFinished = {
                                 setSelectedProfileId("manual")
-                                setVirtualizerStrength(virtualizerStrengthLocal)
+                                playerConnection.service.previewEqVirtualizer(
+                                    virtualizerEnabled,
+                                    virtualizerStrengthLocal,
+                                )
+                                setVirtualizerStrength(
+                                    virtualizerStrengthLocal,
+                                )
                             },
                         )
                     }
