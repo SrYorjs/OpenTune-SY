@@ -191,9 +191,7 @@ internal fun rememberMainActivityNavigationState(
                     )
                 }
 
-                SearchSource.LOCAL,
-                SearchSource.DEEZER,
-                -> focusManager.clearFocus()
+                SearchSource.LOCAL, SearchSource.DEEZER -> focusManager.clearFocus()
             }
         }
     }
@@ -277,6 +275,7 @@ internal fun rememberMainActivityNavigationState(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 internal data class MainActivityNavigationEffects(
     val searchBarScrollBehavior: TopAppBarScrollBehavior,
     val topAppBarScrollBehavior: TopAppBarScrollBehavior,
