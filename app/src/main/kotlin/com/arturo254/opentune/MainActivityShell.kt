@@ -277,6 +277,11 @@ import com.arturo254.opentune.constants.PlayerFullscreenKey
  * Main Compose shell extracted from MainActivity.
  * Owns adaptive navigation chrome, player surface, menus and dialogs.
  */
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalTextApi::class,
+)
 @Composable
 internal fun MainActivityShell(
     activity: ComponentActivity,
