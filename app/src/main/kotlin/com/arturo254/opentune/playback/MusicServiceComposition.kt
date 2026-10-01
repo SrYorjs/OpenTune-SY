@@ -218,7 +218,7 @@ internal object MusicServiceComposition {
                 ensureScopesActive =
                     callbacks.ensureScopesActive,
                 onError = {
-                    service.reportException(it)
+                    reportException(it)
                 },
             )
 
@@ -295,7 +295,7 @@ internal object MusicServiceComposition {
                         ?.updateCustomLayout()
                 },
                 onError = {
-                    service.reportException(it)
+                    reportException(it)
                 },
             )
 
@@ -352,7 +352,7 @@ internal object MusicServiceComposition {
                     ).createForegroundNotification()
                 },
                 onError = {
-                    service.reportException(it)
+                    reportException(it)
                 },
             )
 
@@ -386,7 +386,7 @@ internal object MusicServiceComposition {
                         .refreshPlaybackNotification()
                 },
                 onError = {
-                    service.reportException(it)
+                    reportException(it)
                 },
             )
 
@@ -430,7 +430,7 @@ internal object MusicServiceComposition {
                     callbacks
                         .installNotificationProvider,
                 onError = {
-                    service.reportException(it)
+                    reportException(it)
                 },
             )
 
