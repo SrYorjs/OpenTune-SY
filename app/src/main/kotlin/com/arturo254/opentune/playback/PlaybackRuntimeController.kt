@@ -29,6 +29,7 @@ import com.arturo254.opentune.utils.get
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -44,7 +45,7 @@ import timber.log.Timber
 import kotlin.math.min
 import kotlin.math.pow
 
-@OptIn(FlowPreview::class)
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 internal class PlaybackRuntimeController(
     private val context: Context,
     private val player: ExoPlayer,
@@ -174,16 +175,11 @@ internal class PlaybackRuntimeController(
             normalizeFactor,
             audioFocusVolumeFactor,
             playbackFadeFactor,
-        ) {
-            playerVolume,
-            normalizeFactor,
-            audioFocusVolumeFactor,
-            playbackFadeFactor,
-            ->
-            playerVolume *
-                normalizeFactor *
-                audioFocusVolumeFactor *
-                playbackFadeFactor
+        ) { volume, normalization, focusFactor, fadeFactor ->
+            volume *
+                normalization *
+                focusFactor *
+                fadeFactor
         }.collectLatest(
             scopeProvider(),
         ) { finalVolume ->
@@ -216,12 +212,12 @@ internal class PlaybackRuntimeController(
             metadata to showLyrics
         }.collectLatest(
             ioScopeProvider(),
-        ) {
-                (
-                    metadata,
-                    showLyrics,
-                ),
-            ->
+        ) { values ->
+            val (
+                metadata,
+                showLyrics,
+            ) = values
+
             if (
                 showLyrics &&
                 metadata != null &&
@@ -264,20 +260,16 @@ internal class PlaybackRuntimeController(
                 }.distinctUntilChanged(),
             audioEffectsController
                 .internalDspActive,
-        ) {
-            requestedOffload,
-            dspActive,
-            ->
-            requestedOffload to
-                dspActive
+        ) { requestedOffload, dspActive ->
+            requestedOffload to dspActive
         }.collectLatest(
             scopeProvider(),
-        ) {
-                (
-                    requestedOffload,
-                    dspActive,
-                ),
-            ->
+        ) { values ->
+            val (
+                requestedOffload,
+                dspActive,
+            ) = values
+
             val effectiveOffload =
                 requestedOffload &&
                     !dspActive
@@ -352,12 +344,12 @@ internal class PlaybackRuntimeController(
             format to normalizeAudio
         }.collectLatest(
             scopeProvider(),
-        ) {
-                (
-                    format,
-                    normalizeAudio,
-                ),
-            ->
+        ) { values ->
+            val (
+                format,
+                normalizeAudio,
+            ) = values
+
             audioNormalizationEnabled.value =
                 normalizeAudio
 
@@ -413,12 +405,12 @@ internal class PlaybackRuntimeController(
             .distinctUntilChanged()
             .collectLatest(
                 ioScopeProvider(),
-            ) {
-                    (
-                        enabled,
-                        maxSongCacheSizeMb,
-                    ),
-                ->
+            ) { values ->
+                val (
+                    enabled,
+                    maxSongCacheSizeMb,
+                ) = values
+
                 if (!enabled) {
                     return@collectLatest
                 }
