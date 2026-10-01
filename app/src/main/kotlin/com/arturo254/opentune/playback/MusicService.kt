@@ -47,6 +47,7 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.analytics.PlaybackStats
+import androidx.media3.exoplayer.analytics.PlaybackStatsListener
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.SilenceSkippingAudioProcessor
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
@@ -70,6 +71,8 @@ import com.arturo254.opentune.constants.EqualizerOutputGainMbKey
 import com.arturo254.opentune.constants.EqualizerSelectedProfileIdKey
 import com.arturo254.opentune.constants.EqualizerVirtualizerEnabledKey
 import com.arturo254.opentune.constants.EqualizerVirtualizerStrengthKey
+import com.arturo254.opentune.constants.HideExplicitKey
+import com.arturo254.opentune.constants.HideVideoKey
 import com.arturo254.opentune.constants.MediaSessionConstants.CommandToggleLike
 import com.arturo254.opentune.constants.MediaSessionConstants.CommandToggleStartRadio
 import com.arturo254.opentune.constants.MediaSessionConstants.CommandToggleRepeatMode
