@@ -100,6 +100,10 @@ interface DatabaseDao {
     @Query("SELECT * FROM format WHERE id = :id")
     fun format(id: String?): Flow<FormatEntity?>
 
+    @Transaction
+    @Query("SELECT * FROM album_artist_map WHERE albumId = :albumId")
+    fun albumArtistMaps(albumId: String): List<AlbumArtistMap>
+
 
 
 
