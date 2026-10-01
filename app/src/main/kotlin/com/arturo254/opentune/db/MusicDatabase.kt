@@ -160,6 +160,7 @@ class MusicDatabase(
 abstract class InternalDatabase : RoomDatabase() {
     abstract val dao: DatabaseDao
     abstract val tagDao: TagDao
+    abstract val historyDao: HistoryDao
 
     companion object {
         const val DB_NAME = "song.db"

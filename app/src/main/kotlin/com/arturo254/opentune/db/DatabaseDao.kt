@@ -571,12 +571,6 @@ interface DatabaseDao {
     """)
     fun artistAlbumsPreview(artistId: String, previewSize: Int = 6): Flow<List<Album>>
 
-    @Query("SELECT sum(count) from playCount WHERE song = :songId")
-    fun getLifetimePlayCount(songId: String?): Flow<Int>
-    @Query("SELECT sum(count) from playCount WHERE song = :songId AND year = :year")
-    fun getPlayCountByYear(songId: String?, year: Int): Flow<Int>
-    @Query("SELECT count from playCount WHERE song = :songId AND year = :year AND month = :month")
-    fun getPlayCountByMonth(songId: String?, year: Int, month: Int): Flow<Int>
 
     @Transaction
     @Query(
@@ -1143,46 +1137,6 @@ interface DatabaseDao {
     ): Flow<List<Playlist>>
 
     @Transaction
-    @Query("SELECT * FROM event ORDER BY rowId DESC")
-    fun events(): Flow<List<EventWithSong>>
-
-    @Transaction
-    @Query("SELECT * FROM event ORDER BY rowId ASC LIMIT 1")
-    fun firstEvent(): Flow<EventWithSong?>
-
-    @Transaction
-    @Query("DELETE FROM event")
-    fun clearListenHistory()
-
-    @Transaction
-    @Query("SELECT * FROM search_history WHERE `query` LIKE :query || '%' ORDER BY id DESC")
-    fun searchHistory(query: String = ""): Flow<List<SearchHistory>>
-
-    @Transaction
-    @Query("DELETE FROM search_history")
-    fun clearSearchHistory()
-
-    @Query("UPDATE song SET totalPlayTime = totalPlayTime + :playTime WHERE id = :songId")
-    fun incrementTotalPlayTime(songId: String, playTime: Long)
-
-    @Query("UPDATE playCount SET count = count + 1 WHERE song = :songId AND year = :year AND month = :month")
-    suspend fun incrementPlayCount(songId: String, year: Int, month: Int)
-
-    /**
-     * Increment by one the play count with today's year and month.
-     */
-    suspend fun incrementPlayCount(songId: String) {
-        val time = LocalDateTime.now().atOffset(ZoneOffset.UTC)
-        val oldCount = getPlayCountByMonth(songId, time.year, time.monthValue).first()
-
-        // add new
-        if (oldCount <= 0) {
-            insert(PlayCountEntity(songId, time.year, time.monthValue, 0))
-        }
-        incrementPlayCount(songId, time.year, time.monthValue)
-    }
-
-    @Transaction
     @Query("UPDATE song SET inLibrary = :inLibrary WHERE id = :songId")
     fun inLibrary(
         songId: String,
@@ -1270,17 +1224,11 @@ interface DatabaseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(setVideoIdEntity: SetVideoIdEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(searchHistory: SearchHistory)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insert(event: Event)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insert(map: RelatedSongMap)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insert(playCountEntity: PlayCountEntity): Long
 
     @Transaction
     fun insert(
@@ -1545,11 +1493,6 @@ interface DatabaseDao {
     @Delete
     fun delete(lyrics: LyricsEntity)
 
-    @Delete
-    fun delete(searchHistory: SearchHistory)
-
-    @Delete
-    fun delete(event: Event)
 
     @Transaction
     @Query("SELECT * FROM playlist_song_map WHERE songId = :songId")
