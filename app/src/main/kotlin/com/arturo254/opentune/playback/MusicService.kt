@@ -397,21 +397,6 @@ class MusicService :
             .ensureStartedAsForeground()
     }
 
-    private fun promoteToStartedService() {
-        playbackLifecycleController
-            .promoteToStartedService()
-    }
-
-    private fun cancelIdleStop() {
-        playbackLifecycleController
-            .cancelIdleStop()
-    }
-
-    private fun scheduleStopIfIdle() {
-        playbackLifecycleController
-            .scheduleStopIfIdle()
-    }
-
     override fun onCreate() {
         super.onCreate()
         ensureScopesActive()
