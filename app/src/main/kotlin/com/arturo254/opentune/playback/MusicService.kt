@@ -326,17 +326,13 @@ class MusicService :
                     MusicServiceComposition.Callbacks(
                         ensureScopesActive =
                             ::ensureScopesActive,
-                        recoverSong = {
-                            mediaId,
-                            playbackData,
-                            ->
+                        recoverSong = { mediaId, playbackData ->
                             recoverSong(
                                 mediaId,
                                 playbackData,
                             )
                         },
-                        installNotificationProvider = {
-                            provider ->
+                        installNotificationProvider = { provider ->
                             setMediaNotificationProvider(
                                 provider,
                             )
