@@ -10,16 +10,9 @@
 
 package com.arturo254.opentune.playback
 
-import android.app.PendingIntent
 import android.app.ActivityManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.content.BroadcastReceiver
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothClass
-import android.content.pm.PackageManager
 import android.database.SQLException
 import android.media.audiofx.AudioEffect
 import android.media.audiofx.BassBoost
@@ -30,7 +23,6 @@ import android.media.audiofx.Virtualizer
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Binder
-import android.os.PowerManager
 import android.widget.Toast
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
@@ -70,13 +62,8 @@ import androidx.media3.extractor.ExtractorsFactory
 import androidx.media3.extractor.mkv.MatroskaExtractor
 import androidx.media3.extractor.mp4.FragmentedMp4Extractor
 import androidx.media3.extractor.mp4.Mp4Extractor
-import androidx.media3.session.CommandButton
-import androidx.media3.session.DefaultMediaNotificationProvider
-import androidx.media3.session.MediaController
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
-import androidx.media3.session.SessionToken
-import com.google.common.util.concurrent.MoreExecutors
 import com.arturo254.opentune.innertube.YouTube
 import com.arturo254.opentune.innertube.models.SongItem
 import com.arturo254.opentune.lyrics.LyricsPreloadManager
@@ -90,7 +77,6 @@ import com.arturo254.opentune.constants.AudioQualityKey
 import com.arturo254.opentune.constants.AutoLoadMoreKey
 import com.arturo254.opentune.constants.AutoDownloadOnLikeKey
 import com.arturo254.opentune.constants.AutoSkipNextOnErrorKey
-import com.arturo254.opentune.constants.AutoStartOnBluetoothKey
 import com.arturo254.opentune.constants.InnerTubeCookieKey
 import com.arturo254.opentune.constants.DiscordTokenKey
 import com.arturo254.opentune.constants.EqualizerBandLevelsMbKey
@@ -111,7 +97,6 @@ import com.arturo254.opentune.constants.MediaSessionConstants.CommandToggleStart
 import com.arturo254.opentune.constants.MediaSessionConstants.CommandToggleRepeatMode
 import com.arturo254.opentune.constants.MediaSessionConstants.CommandToggleShuffle
 import com.arturo254.opentune.constants.PauseListenHistoryKey
-import com.arturo254.opentune.constants.PauseOnDeviceMuteKey
 import com.arturo254.opentune.constants.PermanentShuffleKey
 import com.arturo254.opentune.constants.PersistentQueueKey
 import com.arturo254.opentune.constants.PlayerStreamClient
@@ -122,8 +107,6 @@ import com.arturo254.opentune.constants.ShowLyricsKey
 import com.arturo254.opentune.constants.SkipSilenceKey
 import com.arturo254.opentune.constants.MaxSongCacheSizeKey
 import com.arturo254.opentune.constants.SmartTrimmerKey
-import com.arturo254.opentune.constants.StopMusicOnTaskClearKey
-import com.arturo254.opentune.constants.WakelockKey
 import com.arturo254.opentune.constants.YtmSyncKey
 import com.arturo254.opentune.db.MusicDatabase
 import com.arturo254.opentune.db.entities.Event
@@ -155,7 +138,6 @@ import com.arturo254.opentune.playback.queues.Queue
 import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.playback.queues.filterExplicit
 import com.arturo254.opentune.playback.queues.filterVideo
-import com.arturo254.opentune.utils.CoilBitmapLoader
 import com.arturo254.opentune.utils.DiscordRPC
 import com.arturo254.opentune.ui.screens.settings.DiscordPresenceManager
 import com.arturo254.opentune.utils.SyncUtils
@@ -179,9 +161,6 @@ import com.arturo254.opentune.constants.ScrobbleDelayPercentKey
 import com.arturo254.opentune.constants.ScrobbleMinSongDurationKey
 import com.arturo254.opentune.constants.ScrobbleDelaySecondsKey
 import com.arturo254.opentune.constants.TogetherClientIdKey
-import com.arturo254.opentune.widget.PlayerWidgetActions
-import com.arturo254.opentune.widget.PlayerWidgetState
-import com.arturo254.opentune.widget.PlayerWidgetUpdater
 import com.arturo254.jossredconnect.JossRedClient
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
@@ -221,12 +200,6 @@ import kotlin.math.min
 import kotlin.math.pow
 import kotlin.time.Duration.Companion.seconds
 import timber.log.Timber
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Notification
-import android.os.Build
-import android.content.pm.ServiceInfo
-import androidx.core.app.NotificationCompat
 import com.arturo254.opentune.constants.JossRedMultimediaKey
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
