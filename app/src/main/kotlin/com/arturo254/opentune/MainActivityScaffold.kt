@@ -277,6 +277,11 @@ import com.arturo254.opentune.constants.PlayerFullscreenKey
  * Owns the visible app chrome: top bar, navigation rail, floating toolbar,
  * player surface, composition locals, menus and dialogs.
  */
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalTextApi::class,
+)
 @Composable
 internal fun MainActivityScaffold(
     database: MusicDatabase,
