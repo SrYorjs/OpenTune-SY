@@ -223,10 +223,16 @@ internal fun rememberMainActivityNavigationState(
         currentRoute == Screens.Home.route &&
             (allLocalItems.isNotEmpty() || allYtItems.isNotEmpty())
 
-    val shouldShowTopBar =
-        !active &&
-            navBackStackEntry?.destination?.route in topLevelScreens &&
-            navBackStackEntry?.destination?.route != "settings"
+    var shouldShowTopBar by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    LaunchedEffect(navBackStackEntry) {
+        shouldShowTopBar =
+            !active &&
+                navBackStackEntry?.destination?.route in topLevelScreens &&
+                navBackStackEntry?.destination?.route != "settings"
+    }
 
     val currentTitleRes =
         remember(navBackStackEntry) {
