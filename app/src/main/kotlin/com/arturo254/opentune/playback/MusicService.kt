@@ -593,6 +593,9 @@ class MusicService :
                 toggleLike = ::toggleLike,
                 toggleLibrary = ::toggleLibrary,
                 toggleStartRadio = ::toggleStartRadio,
+                installNotificationProvider = { provider ->
+                    setMediaNotificationProvider(provider)
+                },
                 onError = ::reportException,
             )
 
