@@ -224,13 +224,13 @@ internal class PresenceHistoryController(
                         ?: LastFM.DEFAULT_SCROBBLE_DELAY_SECONDS,
                 )
             }.distinctUntilChanged()
-            .collect(scopeProvider()) {
-                    (
-                        delayPercent,
-                        minSongDuration,
-                        delaySeconds,
-                    ),
-                ->
+            .collect(scopeProvider()) { values ->
+                val (
+                    delayPercent,
+                    minSongDuration,
+                    delaySeconds,
+                ) = values
+
                 scrobbleManager?.let {
                     it.scrobbleDelayPercent =
                         delayPercent
