@@ -209,7 +209,6 @@ internal fun rememberMainActivityPlayerUiState(
     DisposableEffect(
         playerConnection,
         playerBottomSheetState,
-        isYearInMusicScreen,
     ) {
         val player =
             playerConnection?.player
