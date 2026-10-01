@@ -370,6 +370,7 @@ internal fun MainActivityScaffold(
                         LocalBottomSheetPageState provides bottomSheetPageState,
                         LocalMenuState provides menuState,
                     ) {
+                        Box(modifier = Modifier.fillMaxSize()) {
                         Row rowScope@ {
                             MainActivityNavigationRail(
                                 useRail = useRail,
@@ -584,5 +585,6 @@ internal fun MainActivityScaffold(
                             showAccountDialog = showAccountDialog,
                             onDismissAccountDialog = { showAccountDialog = false },
                         )
+                        }
                     }
 }
