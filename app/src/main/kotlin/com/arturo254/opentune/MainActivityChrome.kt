@@ -297,9 +297,10 @@ internal fun RowScope.MainActivityNavigationRail(
     val playerBottomSheetState = playerUiState.bottomSheetState
     val searchBarScrollBehavior = navigationEffects.searchBarScrollBehavior
     val coroutineScope = rememberCoroutineScope()
+    val rowScope = this
 
                             Box {
-                                AnimatedVisibility(
+                                rowScope.AnimatedVisibility(
                                     visible = useRail && shouldShowNavigationBar
                                 ) {
                                     NavigationRail(
