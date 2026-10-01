@@ -1695,8 +1695,6 @@ class MusicService :
             } else {
                 audioEffectsController.closeSession()
             }
-            playbackLifecycleController
-                .onPlayerEvents(events)
         }
 
         if (events.containsAny(EVENT_TIMELINE_CHANGED, EVENT_POSITION_DISCONTINUITY)) {
