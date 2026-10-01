@@ -14,6 +14,7 @@ import androidx.media3.session.CommandButton
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaController
 import androidx.media3.session.MediaLibraryService
+import androidx.media3.session.MediaNotification
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionToken
 import com.arturo254.opentune.MainActivity
@@ -45,6 +46,8 @@ internal class MediaSessionNotificationController(
     private val toggleLike: () -> Unit,
     private val toggleLibrary: () -> Unit,
     private val toggleStartRadio: () -> Unit,
+    private val installNotificationProvider:
+        (MediaNotification.Provider) -> Unit,
     private val onError: (Throwable) -> Unit,
 ) {
     lateinit var session: MediaLibraryService.MediaLibrarySession
@@ -88,7 +91,7 @@ internal class MediaSessionNotificationController(
                     ),
                 ).build()
 
-        service.setMediaNotificationProvider(
+        installNotificationProvider(
             DefaultMediaNotificationProvider(
                 service,
                 { MusicService.NOTIFICATION_ID },
