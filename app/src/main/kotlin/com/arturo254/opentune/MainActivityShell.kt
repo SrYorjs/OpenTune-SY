@@ -348,11 +348,6 @@ internal fun MainActivityShell(
 
                     val navigationItems = remember { Screens.MainScreens }
                     val (slimNav) = rememberPreference(SlimNavBarKey, defaultValue = false)
-                    val (useNewMiniPlayerDesign) = rememberPreference(UseNewMiniPlayerDesignKey, defaultValue = true)
-                    val (savedMiniPlayerAnchor, setSavedMiniPlayerAnchor) = rememberPreference(
-                        MiniPlayerLastAnchorKey,
-                        defaultValue = COLLAPSED_ANCHOR
-                    )
                     val defaultOpenTab by rememberEnumPreference(DefaultOpenTabKey, NavigationTab.HOME)
                     val pauseSearchHistory by rememberPreference(PauseSearchHistoryKey, defaultValue = false)
                     val tabOpenedFromShortcut =
@@ -448,13 +443,12 @@ internal fun MainActivityShell(
                         currentRoute == Screens.Home.route &&
                                 (allLocalItems.isNotEmpty() || allYtItems.isNotEmpty())
 
-                    fun getBottomNavPadding(): Dp {
-                        return if (shouldShowNavigationBar && !useRail) {
+                    val bottomNavPadding =
+                        if (shouldShowNavigationBar && !useRail) {
                             if (slimNav) SlimFloatingToolbarHeight else FloatingToolbarHeight
                         } else {
                             0.dp
                         }
-                    }
 
                     val floatingBarsBottomPadding = FloatingToolbarBottomPadding
                     val navVisibleHeight = if (slimNav) SlimFloatingToolbarHeight else FloatingToolbarHeight
@@ -465,118 +459,21 @@ internal fun MainActivityShell(
                         label = "",
                     )
 
-                    val playerBottomSheetState =
-                        rememberBottomSheetState(
-                            dismissedBound = 0.dp,
-                            collapsedBound =
-                                bottomInset +
-                                        (if (shouldShowNavigationBar && !useRail) floatingBarsBottomPadding else 0.dp) +
-                                        getBottomNavPadding() +
-                                        (if (useNewMiniPlayerDesign) MiniPlayerBottomSpacing else 0.dp) +
-                                        MiniPlayerHeight,
-                            expandedBound = maxHeight,
-                        )
-
-                    val miniPlayerAnchor by remember {
-                        derivedStateOf {
-                            when {
-                                playerBottomSheetState.isExpanded -> EXPANDED_ANCHOR
-                                playerBottomSheetState.isDismissed -> DISMISSED_ANCHOR
-                                else -> COLLAPSED_ANCHOR
-                            }
-                        }
-                    }
-
-                    var miniPlayerAnchorPersistenceEnabled by remember(playerConnection) {
-                        mutableStateOf(false)
-                    }
-
-                    val isPlayerExpanded by remember {
-                        derivedStateOf { playerBottomSheetState.isExpanded }
-                    }
-
-                    LaunchedEffect(
-                        miniPlayerAnchor,
-                        isYearInMusicScreen,
-                        isAlwaysOnDisplayScreen,
-                        miniPlayerAnchorPersistenceEnabled
-                    ) {
-                        if (!isYearInMusicScreen && !isAlwaysOnDisplayScreen && miniPlayerAnchorPersistenceEnabled) {
-                            setSavedMiniPlayerAnchor(miniPlayerAnchor)
-                        }
-                    }
-
-                    var yearInMusicSavedPlayerAnchor by rememberSaveable { mutableStateOf(-1) }
-
-                    val (playerFullscreen) = rememberPreference(
-                        PlayerFullscreenKey,
-                        defaultValue = false
-                    )
-
-                    LaunchedEffect(
-                        isYearInMusicScreen,
-                        isAlwaysOnDisplayScreen,
-                        isPlayerExpanded,
-                        playerFullscreen
-                    ) {
-                        systemUiController.updateSystemBarsVisibility(
+                    val playerUiState =
+                        rememberMainActivityPlayerUiState(
+                            playerConnection = playerConnection,
+                            systemUiController = systemUiController,
+                            bottomInset = bottomInset,
+                            bottomNavPadding = bottomNavPadding,
+                            shouldShowNavigationBar = shouldShowNavigationBar,
+                            useRail = useRail,
+                            maxHeight = maxHeight,
+                            windowsInsets = windowsInsets,
                             isYearInMusicScreen = isYearInMusicScreen,
                             isAlwaysOnDisplayScreen = isAlwaysOnDisplayScreen,
-                            isPlayerExpanded = isPlayerExpanded,
-                            playerFullscreen = playerFullscreen,
                         )
-                    }
-
-                    LaunchedEffect(isYearInMusicScreen, playerConnection) {
-                        val player = playerConnection?.player ?: return@LaunchedEffect
-
-                        if (isYearInMusicScreen) {
-                            if (yearInMusicSavedPlayerAnchor == -1) {
-                                yearInMusicSavedPlayerAnchor =
-                                    when {
-                                        playerBottomSheetState.isExpanded -> EXPANDED_ANCHOR
-                                        playerBottomSheetState.isCollapsed -> COLLAPSED_ANCHOR
-                                        playerBottomSheetState.isDismissed -> DISMISSED_ANCHOR
-                                        else -> COLLAPSED_ANCHOR
-                                    }
-                            }
-
-                            if (!playerBottomSheetState.isDismissed) {
-                                playerBottomSheetState.dismiss()
-                            }
-                        } else if (yearInMusicSavedPlayerAnchor != -1) {
-                            val anchorToRestore = yearInMusicSavedPlayerAnchor
-                            yearInMusicSavedPlayerAnchor = -1
-
-                            if (player.currentMediaItem == null) {
-                                playerBottomSheetState.dismiss()
-                            } else {
-                                when (anchorToRestore) {
-                                    EXPANDED_ANCHOR -> playerBottomSheetState.expandSoft()
-                                    COLLAPSED_ANCHOR -> playerBottomSheetState.collapseSoft()
-                                    DISMISSED_ANCHOR -> playerBottomSheetState.dismiss()
-                                    else -> playerBottomSheetState.collapseSoft()
-                                }
-                            }
-                        }
-                    }
-
-                    val playerAwareWindowInsets =
-                        remember(
-                            useRail,
-                            bottomInset,
-                            shouldShowNavigationBar,
-                            playerBottomSheetState.isDismissed,
-                        ) {
-                            var bottom = bottomInset
-                            if (shouldShowNavigationBar && !useRail) bottom += getBottomNavPadding()
-                            if (!playerBottomSheetState.isDismissed) bottom += MiniPlayerHeight
-                            windowsInsets
-                                .only((if(useRail) {
-                                    WindowInsetsSides.Right
-                                } else WindowInsetsSides.Horizontal) + WindowInsetsSides.Top)
-                                .add(WindowInsets(top = AppBarHeight, bottom = bottom))
-                        }
+                    val playerBottomSheetState = playerUiState.bottomSheetState
+                    val playerAwareWindowInsets = playerUiState.playerAwareWindowInsets
 
                     appBarScrollBehavior(
                         canScroll = {
@@ -658,55 +555,6 @@ internal fun MainActivityShell(
                             searchBarScrollBehavior.state.resetHeightOffset()
                             topAppBarScrollBehavior.state.resetHeightOffset()
                             searchBarFocusRequester.requestFocus()
-                        }
-                    }
-
-                    var restoredMiniPlayerAnchor by remember(playerConnection) { mutableStateOf(false) }
-
-                    LaunchedEffect(playerConnection, savedMiniPlayerAnchor, isYearInMusicScreen) {
-                        if (restoredMiniPlayerAnchor) return@LaunchedEffect
-                        val player = playerConnection?.player ?: return@LaunchedEffect
-                        val connection = playerConnection ?: return@LaunchedEffect
-                        connection.queueRestoreCompleted.first { it }
-                        if (player.currentMediaItem == null) {
-                            if (!playerBottomSheetState.isDismissed) {
-                                playerBottomSheetState.dismiss()
-                            }
-                        } else {
-                            if (!isYearInMusicScreen) {
-                                when (savedMiniPlayerAnchor) {
-                                    EXPANDED_ANCHOR -> playerBottomSheetState.expandSoft()
-                                    COLLAPSED_ANCHOR -> playerBottomSheetState.collapseSoft()
-                                    DISMISSED_ANCHOR -> playerBottomSheetState.dismiss()
-                                    else -> playerBottomSheetState.collapseSoft()
-                                }
-                            }
-                        }
-                        restoredMiniPlayerAnchor = true
-                        miniPlayerAnchorPersistenceEnabled = true
-                    }
-
-                    DisposableEffect(playerConnection, playerBottomSheetState) {
-                        val player =
-                            playerConnection?.player ?: return@DisposableEffect onDispose { }
-                        val listener =
-                            object : Player.Listener {
-                                override fun onMediaItemTransition(
-                                    mediaItem: MediaItem?,
-                                    reason: Int,
-                                ) {
-                                    if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED &&
-                                        mediaItem != null &&
-                                        playerBottomSheetState.isDismissed &&
-                                        !isYearInMusicScreen
-                                    ) {
-                                        playerBottomSheetState.collapseSoft()
-                                    }
-                                }
-                            }
-                        player.addListener(listener)
-                        onDispose {
-                            player.removeListener(listener)
                         }
                     }
 
