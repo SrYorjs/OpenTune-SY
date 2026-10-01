@@ -373,103 +373,11 @@ class MainActivity : ComponentActivity() {
                 val (liquidGlassNavBar) = rememberPreference(LiquidGlassNavBarKey, defaultValue = false)
                 val liquidGlassSky = rememberSky()
                 val menuState = remember { MenuState() }
-            val enableDynamicTheme by rememberPreference(DynamicThemeKey, defaultValue = true)
-            val customThemeColorValue by rememberPreference(CustomThemeColorKey, defaultValue = "default")
-            val darkTheme by rememberEnumPreference(DarkModeKey, defaultValue = DarkMode.AUTO)
-            val appFontStyle by rememberEnumPreference(AppFontKey, defaultValue = AppFontStyle.OPEN_TUNE)
-            val lyricsSyncOffset by rememberPreference(LyricsSyncOffsetKey, defaultValue = 0)
-            val isSystemInDarkTheme = isSystemInDarkTheme()
-            val useDarkTheme =
-                remember(darkTheme, isSystemInDarkTheme) {
-                    if (darkTheme == DarkMode.AUTO) isSystemInDarkTheme else darkTheme == DarkMode.ON
-                }
-            LaunchedEffect(useDarkTheme) {
-                systemUiController.setSystemBarAppearance(useDarkTheme)
-            }
-            val pureBlackEnabled by rememberPreference(PureBlackKey, defaultValue = false)
-            val pureBlack = pureBlackEnabled && useDarkTheme
-
-            val customThemeSeedPalette = remember(customThemeColorValue) {
-                if (customThemeColorValue.startsWith("#")) {
-                    null
-                } else if (customThemeColorValue.startsWith("seedPalette:")) {
-                    ThemeSeedPaletteCodec.decodeFromPreference(customThemeColorValue)
-                } else {
-                    ThemePalettes
-                        .findById(customThemeColorValue)
-                        ?.let {
-                            ThemeSeedPalette(
-                                primary = it.primary,
-                                secondary = it.secondary,
-                                tertiary = it.tertiary,
-                                neutral = it.neutral,
-                            )
-                        }
-                }
-            }
-
-            val customThemeColor = remember(customThemeColorValue, customThemeSeedPalette) {
-                if (customThemeColorValue.startsWith("#")) {
-                    try {
-                        val colorString = customThemeColorValue.removePrefix("#")
-                        Color("#$colorString".toColorInt())
-                    } catch (e: Exception) {
-                        DefaultThemeColor
-                    }
-                } else {
-                    customThemeSeedPalette?.primary ?: DefaultThemeColor
-                }
-            }
-
-            var themeColor by rememberSaveable(stateSaver = ColorSaver) {
-                mutableStateOf(DefaultThemeColor)
-            }
-
-            LaunchedEffect(playerConnection, enableDynamicTheme, isSystemInDarkTheme, customThemeColor) {
-                val playerConnection = playerConnection
-                if (!enableDynamicTheme || playerConnection == null) {
-                    themeColor = if (!enableDynamicTheme) customThemeColor else DefaultThemeColor
-                    return@LaunchedEffect
-                }
-                playerConnection.service.currentMediaMetadata.collectLatest { song ->
-                    if (song != null) {
-                        withContext(Dispatchers.Default) {
-                            try {
-                                val result = imageLoader.execute(
-                                    ImageRequest
-                                        .Builder(this@MainActivity)
-                                        .data(song.thumbnailUrl)
-                                        .allowHardware(false)
-                                        .build(),
-                                )
-                                val extractedColor = result.image?.toBitmap()?.extractThemeColor()
-                                withContext(Dispatchers.Main) {
-                                    themeColor = extractedColor ?: DefaultThemeColor
-                                }
-                            } catch (e: Exception) {
-                                withContext(Dispatchers.Main) {
-                                    themeColor = DefaultThemeColor
-                                }
-                            }
-                        }
-                    } else {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            themeColor = DefaultThemeColor
-                        } else {
-                            themeColor = customThemeColor
-                        }
-                    }
-                }
-            }
-
-            OpenTuneTheme(
-                darkTheme = useDarkTheme,
-                pureBlack = pureBlack,
-                motionScheme = MotionScheme.expressive(),
-                themeColor = themeColor,
-                seedPalette = if (!enableDynamicTheme) customThemeSeedPalette else null,
-                appFontStyle = appFontStyle,
-            ) {
+                MainActivityThemeHost(
+                    activity = this@MainActivity,
+                    playerConnection = playerConnection,
+                    systemUiController = systemUiController,
+                ) { pureBlack, lyricsSyncOffset ->
                 BoxWithConstraints(
                     modifier =
                         Modifier
