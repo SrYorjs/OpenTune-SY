@@ -52,8 +52,6 @@ import com.arturo254.opentune.db.entities.SongAlbumMap
 import com.arturo254.opentune.db.entities.SongArtistMap
 import com.arturo254.opentune.db.entities.SongEntity
 import com.arturo254.opentune.db.entities.SongWithStats
-import com.arturo254.opentune.db.entities.TagEntity
-import com.arturo254.opentune.db.entities.PlaylistTagMap
 import com.arturo254.opentune.db.entities.PlaylistWithTags
 import com.arturo254.opentune.extensions.reversed
 import com.arturo254.opentune.extensions.toSQLiteQuery
@@ -73,7 +71,7 @@ import java.time.ZoneOffset
 import java.util.Locale
 
 @Dao
-interface DatabaseDao {
+interface DatabaseDao : TagDao {
     @Transaction
     @Query("SELECT * FROM song WHERE inLibrary IS NOT NULL ORDER BY rowId")
     fun songsByRowIdAsc(): Flow<List<Song>>
@@ -1572,82 +1570,5 @@ interface DatabaseDao {
 
     fun checkpoint() {
         raw("PRAGMA wal_checkpoint(FULL)".toSQLiteQuery())
-    }
-
-    @Transaction
-    @Query("SELECT * FROM tag ORDER BY name")
-    fun allTags(): Flow<List<TagEntity>>
-
-    @Transaction
-    @Query("SELECT * FROM tag WHERE id = :tagId")
-    fun tag(tagId: String): Flow<TagEntity?>
-
-    @Transaction
-    @Query("SELECT * FROM tag WHERE id IN (SELECT tagId FROM playlist_tag_map WHERE playlistId = :playlistId)")
-    fun playlistTags(playlistId: String): Flow<List<TagEntity>>
-
-    @Transaction
-    @Query("SELECT DISTINCT playlistId FROM playlist_tag_map WHERE tagId IN (:tagIds)")
-    fun playlistIdsByTags(tagIds: List<String>): Flow<List<String>>
-
-    @Transaction
-    @Query("SELECT COUNT(*) FROM playlist_tag_map WHERE playlistId = :playlistId AND tagId = :tagId")
-    fun isPlaylistTagged(playlistId: String, tagId: String): Flow<Int>
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insert(tag: TagEntity)
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insert(map: PlaylistTagMap)
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insertAllPlaylistTagMaps(maps: List<PlaylistTagMap>)
-
-    @Update
-    fun update(tag: TagEntity)
-
-    @Delete
-    fun delete(tag: TagEntity)
-
-    @Delete
-    fun delete(playlistTagMap: PlaylistTagMap)
-
-    @Query("DELETE FROM playlist_tag_map WHERE playlistId = :playlistId")
-    fun removeAllPlaylistTags(playlistId: String)
-
-    @Query("DELETE FROM playlist_tag_map WHERE tagId = :tagId")
-    fun removeAllTagPlaylists(tagId: String)
-
-    @Query("DELETE FROM playlist_tag_map WHERE playlistId = :playlistId AND tagId = :tagId")
-    fun removePlaylistTag(playlistId: String, tagId: String)
-
-    @Transaction
-    fun addTagToPlaylist(playlistId: String, tagId: String) {
-        insert(PlaylistTagMap(playlistId = playlistId, tagId = tagId))
-    }
-
-    @Transaction
-    fun addTagsToPlaylists(
-        playlistIds: List<String>,
-        tagIds: List<String>,
-    ) {
-        if (playlistIds.isEmpty() || tagIds.isEmpty()) return
-        val maps =
-            playlistIds.flatMap { playlistId ->
-                tagIds.map { tagId ->
-                    PlaylistTagMap(playlistId = playlistId, tagId = tagId)
-                }
-            }
-        insertAllPlaylistTagMaps(maps)
-    }
-
-    @Transaction
-    suspend fun togglePlaylistTag(playlistId: String, tagId: String) {
-        val isTagged = isPlaylistTagged(playlistId, tagId).first()
-        if (isTagged > 0) {
-            removePlaylistTag(playlistId, tagId)
-        } else {
-            addTagToPlaylist(playlistId, tagId)
-        }
     }
 }
