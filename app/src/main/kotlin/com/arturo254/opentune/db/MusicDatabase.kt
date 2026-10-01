@@ -63,7 +63,14 @@ private const val CURRENT_VERSION = 27
 class MusicDatabase(
     private val delegate: InternalDatabase,
 ) : DatabaseDao by delegate.dao,
-    TagDao by delegate.tagDao {
+    TagDao by delegate.tagDao,
+    HistoryDao by delegate.historyDao,
+    LyricsDao by delegate.lyricsDao,
+    StatsDao by delegate.statsDao,
+    ArtistDao by delegate.artistDao,
+    AlbumDao by delegate.albumDao,
+    PlaylistDao by delegate.playlistDao,
+    SongDao by delegate.songDao {
     val openHelper: SupportSQLiteOpenHelper
         get() = delegate.openHelper
 
