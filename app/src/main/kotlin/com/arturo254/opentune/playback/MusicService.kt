@@ -18,7 +18,6 @@ import android.media.audiofx.Equalizer
 import android.media.audiofx.LoudnessEnhancer
 import android.media.MediaCodecList
 import android.media.audiofx.Virtualizer
-import android.net.ConnectivityManager
 import android.os.Binder
 import android.widget.Toast
 import androidx.core.content.getSystemService
@@ -60,12 +59,8 @@ import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import com.arturo254.opentune.innertube.YouTube
 import com.arturo254.opentune.innertube.models.SongItem
-import com.arturo254.opentune.lyrics.LyricsPreloadManager
 import com.arturo254.opentune.innertube.models.WatchEndpoint
 import com.arturo254.opentune.R
-import com.arturo254.opentune.constants.AudioNormalizationKey
-import com.arturo254.opentune.constants.AudioOffload
-import com.arturo254.opentune.constants.AudioCrossfadeDurationKey
 import com.arturo254.opentune.constants.AudioQualityKey
 import com.arturo254.opentune.constants.AutoSkipNextOnErrorKey
 import com.arturo254.opentune.constants.EqualizerBandLevelsMbKey
@@ -87,15 +82,8 @@ import com.arturo254.opentune.constants.PermanentShuffleKey
 import com.arturo254.opentune.constants.PersistentQueueKey
 import com.arturo254.opentune.constants.PlayerStreamClient
 import com.arturo254.opentune.constants.PlayerStreamClientKey
-import com.arturo254.opentune.constants.PlayerVolumeKey
-import com.arturo254.opentune.constants.RepeatModeKey
-import com.arturo254.opentune.constants.ShowLyricsKey
-import com.arturo254.opentune.constants.SkipSilenceKey
-import com.arturo254.opentune.constants.MaxSongCacheSizeKey
-import com.arturo254.opentune.constants.SmartTrimmerKey
 import com.arturo254.opentune.db.MusicDatabase
 import com.arturo254.opentune.db.entities.FormatEntity
-import com.arturo254.opentune.db.entities.LyricsEntity
 import com.arturo254.opentune.db.entities.RelatedSongMap
 import com.arturo254.opentune.di.DownloadCache
 import com.arturo254.opentune.di.PlayerCache
@@ -107,7 +95,6 @@ import com.arturo254.opentune.extensions.directorySizeBytes
 import com.arturo254.opentune.extensions.findNextMediaItemById
 import com.arturo254.opentune.extensions.mediaItems
 import com.arturo254.opentune.extensions.metadata
-import com.arturo254.opentune.extensions.setOffloadEnabled
 import com.arturo254.opentune.extensions.togglePlayPause
 import com.arturo254.opentune.extensions.toMediaItem
 import com.arturo254.opentune.lyrics.LyricsHelper
@@ -125,7 +112,6 @@ import com.arturo254.opentune.utils.dataStore
 import com.arturo254.opentune.utils.enumPreference
 import com.arturo254.opentune.utils.get
 import com.arturo254.opentune.utils.reportException
-import com.arturo254.opentune.utils.NetworkConnectivityObserver
 import dagger.hilt.android.AndroidEntryPoint
 import com.arturo254.opentune.constants.TogetherClientIdKey
 import com.arturo254.jossredconnect.JossRedClient
@@ -162,8 +148,6 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import javax.inject.Inject
-import kotlin.math.min
-import kotlin.math.pow
 import kotlin.time.Duration.Companion.seconds
 import timber.log.Timber
 import com.arturo254.opentune.constants.JossRedMultimediaKey
@@ -199,14 +183,14 @@ class MusicService :
         PlaybackEventCoordinator
     private lateinit var authRecoveryUiController:
         AuthRecoveryUiController
+    private lateinit var playbackRuntimeController:
+        PlaybackRuntimeController
 
     private var scopeJob = Job()
     private var scope = CoroutineScope(Dispatchers.Main + scopeJob)
     private var ioScope = CoroutineScope(Dispatchers.IO + scopeJob)
     private val binder = MusicBinder()
 
-    private lateinit var connectivityManager: ConnectivityManager
-    lateinit var connectivityObserver: NetworkConnectivityObserver
     private lateinit var errorRecoveryController: ErrorRecoveryController
 
     val waitingForNetworkConnection
@@ -253,20 +237,8 @@ class MusicService :
     val queueRestoreCompleted
         get() =
             playbackPersistenceController.queueRestoreCompleted
-    private val currentFormat =
-        currentMediaMetadata.flatMapLatest { mediaMetadata ->
-            database.format(mediaMetadata?.id)
-        }.flowOn(Dispatchers.IO)
-
-    private val normalizeFactor = MutableStateFlow(1f)
     var playerVolume = MutableStateFlow(1f)
     private val audioFocusVolumeFactor = MutableStateFlow(1f)
-    private val playbackFadeFactor = MutableStateFlow(1f)
-    private val crossfadeDurationMs = MutableStateFlow(0)
-    private val audioNormalizationEnabled = MutableStateFlow(true)
-    private var crossfadeAudio: CrossfadeAudio? = null
-    private var lyricsPreloadManager: LyricsPreloadManager? = null
-
     lateinit var sleepTimer: SleepTimer
 
     @Inject
@@ -298,7 +270,6 @@ class MusicService :
     val autoAddedMediaIds
         get() = automixRadioController.autoAddedMediaIds
 
-    val maxSafeGainFactor = 1.414f // +3 dB
 
     private lateinit var togetherController: TogetherController
 
@@ -534,6 +505,66 @@ class MusicService :
                 onError = ::reportException,
             )
 
+        mediaSessionNotificationController =
+            MediaSessionNotificationController(
+                service = this,
+                player = player,
+                mediaLibrarySessionCallback =
+                    mediaLibrarySessionCallback,
+                scopeProvider = { scope },
+                lifecycleController =
+                    playbackLifecycleController,
+                isCurrentSongLiked = {
+                    libraryActionsController
+                        .currentSong
+                        .value
+                        ?.song
+                        ?.liked == true
+                },
+                hasCurrentSong = {
+                    libraryActionsController
+                        .currentSong
+                        .value != null
+                },
+                toggleLike = ::toggleLike,
+                toggleLibrary = ::toggleLibrary,
+                toggleStartRadio = ::toggleStartRadio,
+                installNotificationProvider = { provider ->
+                    setMediaNotificationProvider(provider)
+                },
+                onError = ::reportException,
+            )
+
+        playbackRuntimeController =
+            PlaybackRuntimeController(
+                context = this,
+                player = player,
+                database = database,
+                dataStore = dataStore,
+                lyricsHelper = lyricsHelper,
+                streamResolver = streamResolver,
+                playbackEngine = playbackEngine,
+                audioEffectsController =
+                    audioEffectsController,
+                errorRecoveryController =
+                    errorRecoveryController,
+                presenceHistoryController =
+                    presenceHistoryController,
+                persistenceController =
+                    playbackPersistenceController,
+                mediaSessionNotificationController =
+                    mediaSessionNotificationController,
+                lifecycleController =
+                    playbackLifecycleController,
+                currentMediaMetadata =
+                    currentMediaMetadata,
+                playerVolume = playerVolume,
+                audioFocusVolumeFactor =
+                    audioFocusVolumeFactor,
+                scopeProvider = { scope },
+                ioScopeProvider = { ioScope },
+            )
+
         playbackEventCoordinator =
             PlaybackEventCoordinator(
                 player = player,
@@ -544,10 +575,12 @@ class MusicService :
                 errorRecoveryController =
                     errorRecoveryController,
                 crossfadeAudioProvider = {
-                    crossfadeAudio
+                    playbackRuntimeController
+                        .crossfadeAudio
                 },
                 lyricsPreloadManagerProvider = {
-                    lyricsPreloadManager
+                    playbackRuntimeController
+                        .lyricsPreloadManager
                 },
                 streamResolver =
                     streamResolver,
@@ -579,226 +612,7 @@ class MusicService :
                 },
             )
 
-        mediaSessionNotificationController =
-            MediaSessionNotificationController(
-                service = this,
-                player = player,
-                mediaLibrarySessionCallback =
-                    mediaLibrarySessionCallback,
-                scopeProvider = { scope },
-                lifecycleController =
-                    playbackLifecycleController,
-                isCurrentSongLiked = {
-                    libraryActionsController
-                        .currentSong
-                        .value
-                        ?.song
-                        ?.liked == true
-                },
-                hasCurrentSong = {
-                    libraryActionsController
-                        .currentSong
-                        .value != null
-                },
-                toggleLike = ::toggleLike,
-                toggleLibrary = ::toggleLibrary,
-                toggleStartRadio = ::toggleStartRadio,
-                installNotificationProvider = { provider ->
-                    setMediaNotificationProvider(provider)
-                },
-                onError = ::reportException,
-            )
-
-        mediaSessionNotificationController.start()
-        playbackLifecycleController.start()
-
-        scope.launch(Dispatchers.IO) {
-            val prefs = dataStore.data.first()
-            val repeatMode = prefs[RepeatModeKey] ?: REPEAT_MODE_OFF
-            val volume = (prefs[PlayerVolumeKey] ?: 1f).coerceIn(0f, 1f)
-            val offload = prefs[AudioOffload] ?: false
-            withContext(Dispatchers.Main) {
-                player.repeatMode = repeatMode
-                playerVolume.value = volume
-                playbackEngine.updateAudioOffload(player, offload)
-            }
-        }
-
-        connectivityManager = getSystemService()!!
-        connectivityObserver = NetworkConnectivityObserver(this)
-
-        scope.launch {
-            connectivityObserver.networkStatus.collect { isConnected ->
-                errorRecoveryController.onNetworkConnectivityChanged(isConnected)
-            }
-        }
-
-        combine(playerVolume, normalizeFactor, audioFocusVolumeFactor, playbackFadeFactor) { playerVolume, normalizeFactor, audioFocusVolumeFactor, playbackFadeFactor ->
-            playerVolume * normalizeFactor * audioFocusVolumeFactor * playbackFadeFactor
-        }.collectLatest(scope) { finalVolume ->
-            player.volume = finalVolume
-        }
-
-        playerVolume.debounce(1000).collect(ioScope) { volume ->
-            dataStore.edit { settings ->
-                settings[PlayerVolumeKey] = volume
-            }
-        }
-
-        combine(
-            currentMediaMetadata.distinctUntilChangedBy { it?.id },
-            dataStore.data.map { it[ShowLyricsKey] ?: false }.distinctUntilChanged(),
-        ) { mediaMetadata, showLyrics ->
-            mediaMetadata to showLyrics
-        }.collectLatest(ioScope) { (mediaMetadata, showLyrics) ->
-            if (showLyrics && mediaMetadata != null && database.lyrics(mediaMetadata.id)
-                    .first() == null
-            ) {
-                val lyrics = lyricsHelper.getLyrics(mediaMetadata)
-                database.query {
-                    upsert(
-                        LyricsEntity(
-                            id = mediaMetadata.id,
-                            lyrics = lyrics,
-                        ),
-                    )
-                }
-            }
-        }
-
-        dataStore.data
-            .map { it[SkipSilenceKey] ?: false }
-            .distinctUntilChanged()
-            .collectLatest(scope) {
-                player.skipSilenceEnabled = it
-            }
-
-        combine(
-            dataStore.data
-                .map { it[AudioOffload] ?: false }
-                .distinctUntilChanged(),
-            audioEffectsController.internalDspActive,
-        ) { requestedOffload, dspActive ->
-            requestedOffload to dspActive
-        }.collectLatest(scope) { (requestedOffload, dspActive) ->
-            val effectiveOffload = requestedOffload && !dspActive
-            playbackEngine.updateAudioOffload(player, effectiveOffload)
-
-            if (effectiveOffload) {
-                val skipSilenceEnabled =
-                    dataStore.get(SkipSilenceKey, false)
-                if (skipSilenceEnabled) {
-                    dataStore.edit { it[SkipSilenceKey] = false }
-                    player.skipSilenceEnabled = false
-                }
-
-                val crossfadeSeconds =
-                    dataStore.get(AudioCrossfadeDurationKey, 0)
-                if (crossfadeSeconds != 0) {
-                    dataStore.edit {
-                        it[AudioCrossfadeDurationKey] = 0
-                    }
-                }
-            }
-        }
-
-        dataStore.data
-            .map { (it[AudioCrossfadeDurationKey] ?: 0) * 1000 }
-            .distinctUntilChanged()
-            .collectLatest(scope) {
-                crossfadeDurationMs.value = it
-            }
-
-        crossfadeAudio =
-            CrossfadeAudio(
-                player = player,
-                database = database,
-                crossfadeDurationMs = crossfadeDurationMs,
-                playbackFadeFactor = playbackFadeFactor,
-                playerVolume = playerVolume,
-                audioFocusVolumeFactor = audioFocusVolumeFactor,
-                audioNormalizationEnabled = audioNormalizationEnabled,
-                maxSafeGainFactor = maxSafeGainFactor,
-                overlapPlayerFactory = {
-                    playbackEngine.createOverlapPlayer()
-                },
-                onCrossfadeStart = { mediaItem ->
-                    currentMediaMetadata.value =
-                        mediaItem.metadata
-                    presenceHistoryController
-                        .onCrossfadeStart(
-                            mediaItem,
-                        )
-                }
-            ).also { it.start(scope) }
-
-        // Initialize lyrics pre-load manager
-        lyricsPreloadManager = LyricsPreloadManager(
-            context = this,
-            database = database,
-            networkConnectivity = connectivityObserver,
-        )
-
-        audioEffectsController.start()
-
-        combine(
-            currentFormat,
-            dataStore.data
-                .map { it[AudioNormalizationKey] ?: true }
-                .distinctUntilChanged(),
-        ) { format, normalizeAudio ->
-            format to normalizeAudio
-        }.collectLatest(scope) { (format, normalizeAudio) ->
-            audioNormalizationEnabled.value = normalizeAudio
-            Timber.tag("AudioNormalization").d("Audio normalization enabled: $normalizeAudio")
-            Timber.tag("AudioNormalization").d("Format loudnessDb: ${format?.loudnessDb}, perceptualLoudnessDb: ${format?.perceptualLoudnessDb}")
-
-            normalizeFactor.value =
-                if (normalizeAudio) {
-                    // Use loudnessDb if available, otherwise fall back to perceptualLoudnessDb
-                    val loudness = format?.loudnessDb ?: format?.perceptualLoudnessDb
-
-                    if (loudness != null) {
-                        val loudnessDb = loudness.toFloat()
-                        var factor = 10f.pow(-loudnessDb / 20)
-
-                        Timber.tag("AudioNormalization").d("Calculated raw normalization factor: $factor (from loudness: $loudnessDb)")
-
-                        if (factor > 1f) {
-                            factor = min(factor, maxSafeGainFactor)
-                            Timber.tag("AudioNormalization").d("Factor capped at maxSafeGainFactor: $factor")
-                        }
-
-                        Timber.tag("AudioNormalization").i("Applying normalization factor: $factor")
-                        factor
-                    } else {
-                        Timber.tag("AudioNormalization").w("Normalization enabled but no loudness data available - no normalization applied")
-                        1f
-                    }
-                } else {
-                    Timber.tag("AudioNormalization").d("Normalization disabled - using factor 1.0")
-                    1f
-                }
-        }
-
-        dataStore.data
-            .map { prefs ->
-                (prefs[SmartTrimmerKey] ?: false) to (prefs[MaxSongCacheSizeKey] ?: 1024)
-            }
-            .debounce(300)
-            .distinctUntilChanged()
-            .collectLatest(ioScope) { (enabled, maxSongCacheSizeMb) ->
-                if (!enabled) return@collectLatest
-                if (maxSongCacheSizeMb <= 0 || maxSongCacheSizeMb == -1) return@collectLatest
-                val bytesPerMb = 1024L * 1024L
-                val safeSizeMb = maxSongCacheSizeMb.toLong().coerceAtMost(Long.MAX_VALUE / bytesPerMb)
-                val limitBytes = safeSizeMb * bytesPerMb
-                streamResolver.trimPlayerCacheToBytes(limitBytes)
-            }
-
-        presenceHistoryController.start()
-
-        playbackPersistenceController.start()
+        playbackRuntimeController.start()
     }
 
     private fun ensureScopesActive() {
@@ -1357,9 +1171,6 @@ class MusicService :
         try {
             presenceHistoryController.release()
         } catch (_: Exception) {}
-        try {
-            connectivityObserver.unregister()
-        } catch (_: Exception) {}
         abandonAudioFocus()
         try {
             audioEffectsController.release()
@@ -1370,8 +1181,7 @@ class MusicService :
         } catch (_: Exception) {}
 
         try {
-            crossfadeAudio?.release()
-            crossfadeAudio = null
+            playbackRuntimeController.release()
         } catch (_: Exception) {}
         try {
             mediaSessionNotificationController.release()
