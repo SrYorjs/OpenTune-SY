@@ -271,10 +271,12 @@ constructor() {
 
     private fun recordingTraits(traits: Set<TrackVersionTrait>): Set<TrackVersionTrait> {
         val explicitRecordingTraits = traits.intersect(RECORDING_TRAITS)
-        return if (explicitRecordingTraits.isEmpty()) {
-            setOf(TrackVersionTrait.ORIGINAL)
-        } else {
-            explicitRecordingTraits - TrackVersionTrait.ORIGINAL
+        return when {
+            explicitRecordingTraits.isEmpty() -> setOf(TrackVersionTrait.ORIGINAL)
+            explicitRecordingTraits == setOf(TrackVersionTrait.ORIGINAL) ->
+                setOf(TrackVersionTrait.ORIGINAL)
+
+            else -> explicitRecordingTraits - TrackVersionTrait.ORIGINAL
         }
     }
 
@@ -289,11 +291,9 @@ constructor() {
             ?.takeIf { it.isNotBlank() }
 
     private fun normalizeTitle(value: String): String {
-        var normalized = normalizeText(value)
-        normalized = FEAT_BRACKET_REGEX.replace(normalized, " ")
-        normalized = VERSION_BRACKET_REGEX.replace(normalized, " ")
-        normalized = MULTI_SPACE_REGEX.replace(normalized, " ").trim()
-        return normalized
+        var stripped = FEAT_BRACKET_REGEX.replace(value, " ")
+        stripped = VERSION_BRACKET_REGEX.replace(stripped, " ")
+        return normalizeText(stripped)
     }
 
     private fun normalizeText(value: String): String {
