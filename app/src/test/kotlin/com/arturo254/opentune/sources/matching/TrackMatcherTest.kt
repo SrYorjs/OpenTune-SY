@@ -201,6 +201,49 @@ class TrackMatcherTest {
     }
 
     @Test
+    fun literalVersionWordInSongNameIsNotTreatedAsQualifier() {
+        val reference =
+            identity(
+                title = "Live Forever",
+                artist = "Oasis",
+                durationMs = 276_000,
+            )
+        val candidate =
+            variant(
+                title = "Live Forever",
+                artist = "Oasis",
+                durationMs = 276_500,
+            )
+
+        val result = matcher.match(reference, candidate)
+
+        assertEquals(TrackMatchStatus.STRONG, result.status)
+        assertFalse(TrackMatchIssue.RECORDING_VERSION_CONFLICT in result.issues)
+    }
+
+    @Test
+    fun explicitOriginalAndImplicitOriginalAreCompatible() {
+        val reference =
+            identity(
+                title = "Song",
+                artist = "Artist",
+                durationMs = 180_000,
+                version = TrackVersion(setOf(TrackVersionTrait.ORIGINAL)),
+            )
+        val candidate =
+            variant(
+                title = "Song",
+                artist = "Artist",
+                durationMs = 180_000,
+            )
+
+        val result = matcher.match(reference, candidate)
+
+        assertEquals(TrackMatchStatus.STRONG, result.status)
+        assertTrue(result.isAccepted)
+    }
+
+    @Test
     fun bestAcceptedMatchSkipsWrongVersion() {
         val reference =
             identity(
