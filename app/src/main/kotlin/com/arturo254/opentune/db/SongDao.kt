@@ -344,6 +344,13 @@ interface SongDao {
     ): Flow<List<Song>>
 
     @Transaction
+    @Query("SELECT * FROM song WHERE isLocal = 1 AND title LIKE '%' || :query || '%' LIMIT :limit")
+    fun searchLocalSongs(
+        query: String,
+        limit: Int = Int.MAX_VALUE,
+    ): Flow<List<Song>>
+
+    @Transaction
     @Query("UPDATE song SET inLibrary = :inLibrary WHERE id = :songId")
     fun inLibrary(
         songId: String,

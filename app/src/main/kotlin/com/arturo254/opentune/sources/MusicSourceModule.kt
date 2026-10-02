@@ -1,0 +1,26 @@
+package com.arturo254.opentune.sources
+
+import com.arturo254.opentune.sources.local.LocalMusicSource
+import com.arturo254.opentune.sources.youtube.YouTubeMusicSource
+import dagger.Binds
+import dagger.Module
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
+
+/**
+ * Registers source adapters without making UI or playback depend on them yet.
+ *
+ * SourceRegistry receives this set when Phase 2 consumers start opting in.
+ */
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class MusicSourceModule {
+    @Binds
+    @IntoSet
+    abstract fun bindYouTubeMusicSource(source: YouTubeMusicSource): MusicSource
+
+    @Binds
+    @IntoSet
+    abstract fun bindLocalMusicSource(source: LocalMusicSource): MusicSource
+}
