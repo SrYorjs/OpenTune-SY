@@ -241,13 +241,27 @@ constructor() {
 
     private fun resolveTraits(descriptor: MatchDescriptor): Set<TrackVersionTrait> =
         descriptor.version.traits +
-            inferTraits(
-                listOfNotNull(
-                    descriptor.title,
-                    descriptor.albumName,
-                    descriptor.version.label,
-                ).joinToString(" "),
-            )
+            inferTitleTraits(descriptor.title) +
+            inferTraits(descriptor.version.label.orEmpty())
+
+    /**
+     * Titles are only treated as version metadata when the qualifier is clearly
+     * separated (parentheses/brackets or a dash suffix). This avoids false
+     * positives for legitimate song names such as "Live Forever" or "Cover Me".
+     */
+    private fun inferTitleTraits(title: String): Set<TrackVersionTrait> =
+        buildSet {
+            TITLE_QUALIFIER_REGEX
+                .findAll(title)
+                .mapNotNull { it.groupValues.getOrNull(1) }
+                .forEach { qualifier -> addAll(inferTraits(qualifier)) }
+
+            TITLE_SUFFIX_REGEX
+                .find(title)
+                ?.groupValues
+                ?.getOrNull(1)
+                ?.let { suffix -> addAll(inferTraits(suffix)) }
+        }
 
     private fun inferTraits(raw: String): Set<TrackVersionTrait> {
         val normalized = normalizeText(raw)
@@ -458,6 +472,16 @@ constructor() {
         private val FEAT_BRACKET_REGEX =
             Regex(
                 """[\[(]\s*(?:feat\.?|ft\.?|featuring|with)\b[^\])]*[\])]""",
+                RegexOption.IGNORE_CASE,
+            )
+        private val TITLE_QUALIFIER_REGEX =
+            Regex(
+                """[\[(]([^\])]+)[\])]""",
+                RegexOption.IGNORE_CASE,
+            )
+        private val TITLE_SUFFIX_REGEX =
+            Regex(
+                """\s*[-–—]\s*(.+)$""",
                 RegexOption.IGNORE_CASE,
             )
         private val VERSION_BRACKET_REGEX =
