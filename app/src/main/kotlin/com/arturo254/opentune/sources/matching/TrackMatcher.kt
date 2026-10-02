@@ -293,6 +293,7 @@ constructor() {
     private fun normalizeTitle(value: String): String {
         var stripped = FEAT_BRACKET_REGEX.replace(value, " ")
         stripped = VERSION_BRACKET_REGEX.replace(stripped, " ")
+        stripped = VERSION_SUFFIX_REGEX.replace(stripped, " ")
         return normalizeText(stripped)
     }
 
@@ -461,7 +462,12 @@ constructor() {
             )
         private val VERSION_BRACKET_REGEX =
             Regex(
-                """[\[(][^\])]*(?:remaster(?:ed)?|live|acoustic|remix|cover|instrumental|clean|sped\s*up|slowed|official\s+(?:music\s+)?video|official\s+audio)[^\])]*[\])]""",
+                """[\[(][^\])]*(?:remaster(?:ed)?|live|acoustic|remix|cover|instrumental|clean|sped\s*up|slowed|official\s+(?:music\s+)?video|official\s+audio|original(?:\s+(?:version|mix))?)[^\])]*[\])]""",
+                RegexOption.IGNORE_CASE,
+            )
+        private val VERSION_SUFFIX_REGEX =
+            Regex(
+                """\s*[-–—]\s*.*\b(?:remaster(?:ed)?|live|acoustic|remix|cover|instrumental|clean|sped\s*up|slowed|official\s+(?:music\s+)?video|official\s+audio|original(?:\s+(?:version|mix))?)\b.*$""",
                 RegexOption.IGNORE_CASE,
             )
 
