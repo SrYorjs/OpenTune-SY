@@ -38,6 +38,8 @@ class LocalMusicSourceTest {
                     AlbumEntity(
                         id = "album-1",
                         title = "Album",
+                        songCount = 1,
+                        duration = 245,
                         isLocal = true,
                     ),
                 format =
