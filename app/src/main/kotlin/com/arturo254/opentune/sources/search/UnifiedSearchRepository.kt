@@ -17,9 +17,11 @@ import com.arturo254.opentune.sources.resolution.SourceResolutionPreferences
 import com.arturo254.opentune.sources.resolution.SourceResolver
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withContext
 
 /**
  * Queries every installed [TrackSearchSource] concurrently and folds provider
@@ -69,15 +71,17 @@ constructor(
                     )
             }
 
-        return buildResult(
-            query = query,
-            variants =
-                sourceResults
-                    .flatMap { result -> result.page?.items.orEmpty() }
-                    .distinctBy { variant -> variant.provider to variant.sourceId },
-            sources = sourceStates,
-            preferredProviderOrder = request.preferredProviderOrder,
-        )
+        return withContext(Dispatchers.Default) {
+            buildResult(
+                query = query,
+                variants =
+                    sourceResults
+                        .flatMap { result -> result.page?.items.orEmpty() }
+                        .distinctBy { variant -> variant.provider to variant.sourceId },
+                sources = sourceStates,
+                preferredProviderOrder = request.preferredProviderOrder,
+            )
+        }
     }
 
     suspend fun loadMore(
@@ -139,12 +143,14 @@ constructor(
                     sourceResults.flatMap { result -> result.page?.items.orEmpty() }
             ).distinctBy { variant -> variant.provider to variant.sourceId }
 
-        return buildResult(
-            query = query,
-            variants = variants,
-            sources = mergedSourceStates,
-            preferredProviderOrder = request.preferredProviderOrder,
-        )
+        return withContext(Dispatchers.Default) {
+            buildResult(
+                query = query,
+                variants = variants,
+                sources = mergedSourceStates,
+                preferredProviderOrder = request.preferredProviderOrder,
+            )
+        }
     }
 
     private fun eligibleSources(
