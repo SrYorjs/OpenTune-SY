@@ -8,8 +8,10 @@ import com.arturo254.opentune.sources.search.UnifiedSearchResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -23,9 +25,10 @@ constructor(
 ) : ViewModel() {
     val query = MutableStateFlow("")
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
     val state =
         query
+            .debounce(250)
             .distinctUntilChanged()
             .flatMapLatest { rawQuery ->
                 flow {
