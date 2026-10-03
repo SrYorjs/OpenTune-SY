@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class UniversalSearchViewModel
 @Inject
@@ -31,7 +32,6 @@ constructor(
 
     private var loadMoreJob: Job? = null
 
-    @OptIn(FlowPreview::class)
     init {
         viewModelScope.launch {
             query
