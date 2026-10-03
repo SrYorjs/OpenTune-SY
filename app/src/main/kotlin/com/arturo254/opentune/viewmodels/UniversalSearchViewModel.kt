@@ -7,15 +7,16 @@ import com.arturo254.opentune.sources.search.UnifiedSearchRequest
 import com.arturo254.opentune.sources.search.UnifiedSearchResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class UniversalSearchViewModel
@@ -25,56 +26,122 @@ constructor(
 ) : ViewModel() {
     val query = MutableStateFlow("")
 
-    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-    val state =
-        query
-            .debounce(250)
-            .distinctUntilChanged()
-            .flatMapLatest { rawQuery ->
-                flow {
-                    val normalizedQuery = rawQuery.trim()
-                    if (normalizedQuery.isEmpty()) {
-                        emit(UniversalSearchUiState())
-                        return@flow
-                    }
+    private val _state = MutableStateFlow(UniversalSearchUiState())
+    val state: StateFlow<UniversalSearchUiState> = _state.asStateFlow()
 
-                    emit(
-                        UniversalSearchUiState(
-                            query = normalizedQuery,
-                            isLoading = true,
-                        ),
-                    )
+    private var loadMoreJob: Job? = null
 
-                    runCatching {
-                        repository.search(
-                            UnifiedSearchRequest(query = normalizedQuery),
-                        )
-                    }.onSuccess { result ->
-                        emit(
-                            UniversalSearchUiState(
-                                query = normalizedQuery,
-                                result = result,
-                            ),
-                        )
-                    }.onFailure { throwable ->
-                        emit(
-                            UniversalSearchUiState(
-                                query = normalizedQuery,
-                                error = throwable,
-                            ),
-                        )
+    @OptIn(FlowPreview::class)
+    init {
+        viewModelScope.launch {
+            query
+                .debounce(250)
+                .distinctUntilChanged()
+                .collectLatest { rawQuery ->
+                    loadMoreJob?.cancel()
+                    performSearch(rawQuery)
+                }
+        }
+    }
+
+    fun loadMore() {
+        val snapshot = _state.value
+        if (
+            snapshot.query.isBlank() ||
+            snapshot.isLoading ||
+            snapshot.isLoadingMore ||
+            !snapshot.result.hasMore
+        ) {
+            return
+        }
+        if (loadMoreJob?.isActive == true) return
+
+        val requestedQuery = snapshot.query
+        val previousResult = snapshot.result
+
+        loadMoreJob =
+            viewModelScope.launch {
+                _state.update { current ->
+                    if (current.query == requestedQuery) {
+                        current.copy(isLoadingMore = true)
+                    } else {
+                        current
                     }
                 }
-            }.stateIn(
-                viewModelScope,
-                SharingStarted.WhileSubscribed(5_000),
-                UniversalSearchUiState(),
+
+                runCatching {
+                    repository.loadMore(
+                        request = UnifiedSearchRequest(query = requestedQuery),
+                        previous = previousResult,
+                    )
+                }.onSuccess { result ->
+                    _state.update { current ->
+                        if (current.query == requestedQuery) {
+                            current.copy(
+                                isLoadingMore = false,
+                                result = result,
+                                error = null,
+                            )
+                        } else {
+                            current
+                        }
+                    }
+                }.onFailure { throwable ->
+                    _state.update { current ->
+                        if (current.query == requestedQuery) {
+                            current.copy(
+                                isLoadingMore = false,
+                                error = throwable,
+                            )
+                        } else {
+                            current
+                        }
+                    }
+                }
+            }
+    }
+
+    private suspend fun performSearch(rawQuery: String) {
+        val normalizedQuery = rawQuery.trim()
+        if (normalizedQuery.isEmpty()) {
+            _state.value = UniversalSearchUiState()
+            return
+        }
+
+        _state.value =
+            UniversalSearchUiState(
+                query = normalizedQuery,
+                isLoading = true,
             )
+
+        runCatching {
+            repository.search(
+                UnifiedSearchRequest(query = normalizedQuery),
+            )
+        }.onSuccess { result ->
+            if (query.value.trim() == normalizedQuery) {
+                _state.value =
+                    UniversalSearchUiState(
+                        query = normalizedQuery,
+                        result = result,
+                    )
+            }
+        }.onFailure { throwable ->
+            if (query.value.trim() == normalizedQuery) {
+                _state.value =
+                    UniversalSearchUiState(
+                        query = normalizedQuery,
+                        error = throwable,
+                    )
+            }
+        }
+    }
 }
 
 data class UniversalSearchUiState(
     val query: String = "",
     val isLoading: Boolean = false,
+    val isLoadingMore: Boolean = false,
     val result: UnifiedSearchResult = UnifiedSearchResult(query = ""),
     val error: Throwable? = null,
 )

@@ -267,6 +267,91 @@ class UnifiedSearchRepositoryTest {
         }
 
     @Test
+    fun loadMoreUsesProviderContinuationAndMergesResults() =
+        runBlocking {
+            var continuationSeen: String? = null
+            val youtube =
+                FakeSearchSource(
+                    id = ProviderId.YOUTUBE_MUSIC,
+                    onSearch = { request ->
+                        if (request.continuationToken == null) {
+                            Result.success(
+                                TrackSearchPage(
+                                    items =
+                                        listOf(
+                                            variant(
+                                                ProviderId.YOUTUBE_MUSIC,
+                                                "first",
+                                                title = "First Song",
+                                            ),
+                                        ),
+                                    continuationToken = "next-page",
+                                ),
+                            )
+                        } else {
+                            continuationSeen = request.continuationToken
+                            Result.success(
+                                TrackSearchPage(
+                                    items =
+                                        listOf(
+                                            variant(
+                                                ProviderId.YOUTUBE_MUSIC,
+                                                "second",
+                                                title = "Second Song",
+                                            ),
+                                        ),
+                                    continuationToken = null,
+                                ),
+                            )
+                        }
+                    },
+                )
+            val repository = repository(youtube)
+            val request = UnifiedSearchRequest("song")
+            val first = repository.search(request)
+
+            assertTrue(first.hasMore)
+
+            val second = repository.loadMore(request, first)
+
+            assertEquals("next-page", continuationSeen)
+            assertEquals(2, second.tracks.size)
+            assertEquals(2, second.sources[ProviderId.YOUTUBE_MUSIC]?.itemCount)
+            assertTrue(!second.hasMore)
+        }
+
+    @Test
+    fun loadMoreDoesNotDuplicateProviderTrackIds() =
+        runBlocking {
+            val youtube =
+                FakeSearchSource(
+                    id = ProviderId.YOUTUBE_MUSIC,
+                    onSearch = { request ->
+                        Result.success(
+                            TrackSearchPage(
+                                items =
+                                    listOf(
+                                        variant(
+                                            ProviderId.YOUTUBE_MUSIC,
+                                            "same-id",
+                                        ),
+                                    ),
+                                continuationToken =
+                                    if (request.continuationToken == null) "again" else null,
+                            ),
+                        )
+                    },
+                )
+            val repository = repository(youtube)
+            val request = UnifiedSearchRequest("song")
+            val first = repository.search(request)
+            val second = repository.loadMore(request, first)
+
+            assertEquals(1, second.tracks.size)
+            assertEquals(1, second.tracks.single().variants.size)
+        }
+
+    @Test
     fun blankQueryDoesNotCallProviders() =
         runBlocking {
             var calls = 0

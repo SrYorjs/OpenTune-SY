@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -26,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,6 +58,8 @@ import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
 import com.arturo254.opentune.ui.component.liquidGlassScreenBackground
 import com.arturo254.opentune.viewmodels.UniversalSearchViewModel
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 
 @Composable
 fun UniversalSearchScreen(
@@ -66,6 +70,7 @@ fun UniversalSearchScreen(
     val context = LocalContext.current
     val playerConnection = LocalPlayerConnection.current ?: return
     val state by viewModel.state.collectAsState()
+    val lazyListState = rememberLazyListState()
     val activeMetadata by playerConnection.mediaMetadata.collectAsState()
     val isPlaying by playerConnection.isPlaying.collectAsState()
 
@@ -73,7 +78,28 @@ fun UniversalSearchScreen(
         viewModel.query.value = query
     }
 
+    LaunchedEffect(lazyListState, state.result.tracks.size, state.result.hasMore) {
+        if (!state.result.hasMore) return@LaunchedEffect
+
+        snapshotFlow {
+            val layoutInfo = lazyListState.layoutInfo
+            val lastVisibleIndex =
+                layoutInfo.visibleItemsInfo
+                    .lastOrNull()
+                    ?.index
+                    ?: -1
+
+            layoutInfo.totalItemsCount > 0 &&
+                lastVisibleIndex >= layoutInfo.totalItemsCount - 5
+        }.distinctUntilChanged()
+            .filter { it }
+            .collect {
+                viewModel.loadMore()
+            }
+    }
+
     LazyColumn(
+        state = lazyListState,
         contentPadding =
             PaddingValues(
                 start = 12.dp,
@@ -168,6 +194,20 @@ fun UniversalSearchScreen(
                         }
                     },
             )
+        }
+
+        if (state.isLoadingMore) {
+            item(key = "loading_more") {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp),
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                }
+            }
         }
     }
 }

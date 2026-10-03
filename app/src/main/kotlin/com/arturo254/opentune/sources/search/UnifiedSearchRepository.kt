@@ -15,11 +15,11 @@ import com.arturo254.opentune.sources.resolution.PlaybackAvailability
 import com.arturo254.opentune.sources.resolution.SourcePlaybackCandidate
 import com.arturo254.opentune.sources.resolution.SourceResolutionPreferences
 import com.arturo254.opentune.sources.resolution.SourceResolver
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
-import javax.inject.Inject
-import javax.inject.Singleton
 
 /**
  * Queries every installed [TrackSearchSource] concurrently and folds provider
@@ -45,78 +45,142 @@ constructor(
             return UnifiedSearchResult(query = query)
         }
 
-        val sources =
-            registry
-                .trackSearchSources()
-                .filter { source ->
-                    request.providers.isNullOrEmpty() || source.id in request.providers
-                }
-                .sortedWith(sourceComparator(request.preferredProviderOrder))
-
+        val sources = eligibleSources(request)
         if (sources.isEmpty()) {
             return UnifiedSearchResult(query = query)
         }
 
         val sourceResults =
-            supervisorScope {
-                sources
-                    .map { source ->
-                        async {
-                            searchSource(
-                                source = source,
-                                query = query,
-                                limit = request.limitPerSource,
-                            )
-                        }
-                    }.awaitAll()
+            searchSources(
+                sources = sources,
+                query = query,
+                limit = request.limitPerSource,
+                continuationTokens = emptyMap(),
+            )
+
+        val sourceStates =
+            sourceResults.associate { sourceResult ->
+                sourceResult.provider to
+                    UnifiedSearchSourceResult(
+                        provider = sourceResult.provider,
+                        itemCount = sourceResult.page?.items?.size ?: 0,
+                        continuationToken = sourceResult.page?.continuationToken,
+                        error = sourceResult.error,
+                    )
             }
 
-        val variants =
-            sourceResults
-                .flatMap { result -> result.page?.items.orEmpty() }
-                .distinctBy { variant -> variant.provider to variant.sourceId }
-
-        val groups = groupVariants(variants)
-
-        return UnifiedSearchResult(
+        return buildResult(
             query = query,
-            tracks =
-                groups.map { group ->
-                    val resolution =
-                        sourceResolver.resolve(
-                            reference = group.identity,
-                            candidates = group.variants.map(::toPlaybackCandidate),
-                            preferences =
-                                SourceResolutionPreferences(
-                                    preferOffline = true,
-                                    preferLocal = true,
-                                    preferredProviders = request.preferredProviderOrder,
-                                ),
-                        )
-
-                    UnifiedTrackSearchResult(
-                        identity = group.identity,
-                        variants = group.variants,
-                        recommendedVariant = resolution.selected?.candidate?.variant,
-                    )
-                },
-            sources =
-                sourceResults.associate { sourceResult ->
-                    sourceResult.provider to
-                        UnifiedSearchSourceResult(
-                            provider = sourceResult.provider,
-                            itemCount = sourceResult.page?.items?.size ?: 0,
-                            continuationToken = sourceResult.page?.continuationToken,
-                            error = sourceResult.error,
-                        )
-                },
+            variants =
+                sourceResults
+                    .flatMap { result -> result.page?.items.orEmpty() }
+                    .distinctBy { variant -> variant.provider to variant.sourceId },
+            sources = sourceStates,
+            preferredProviderOrder = request.preferredProviderOrder,
         )
     }
+
+    suspend fun loadMore(
+        request: UnifiedSearchRequest,
+        previous: UnifiedSearchResult,
+    ): UnifiedSearchResult {
+        val query = request.query.trim()
+        if (query.isEmpty()) return UnifiedSearchResult(query = query)
+        if (previous.query != query) return search(request)
+
+        val continuationTokens =
+            previous.sources
+                .mapNotNull { (provider, state) ->
+                    state.continuationToken
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { provider to it }
+                }.toMap()
+
+        if (continuationTokens.isEmpty()) return previous
+
+        val sources =
+            eligibleSources(request)
+                .filter { source -> source.id in continuationTokens }
+
+        if (sources.isEmpty()) return previous
+
+        val sourceResults =
+            searchSources(
+                sources = sources,
+                query = query,
+                limit = request.limitPerSource,
+                continuationTokens = continuationTokens,
+            )
+
+        val mergedSourceStates = previous.sources.toMutableMap()
+        sourceResults.forEach { sourceResult ->
+            val oldState =
+                mergedSourceStates[sourceResult.provider]
+                    ?: UnifiedSearchSourceResult(
+                        provider = sourceResult.provider,
+                        itemCount = 0,
+                    )
+
+            mergedSourceStates[sourceResult.provider] =
+                if (sourceResult.page != null) {
+                    oldState.copy(
+                        itemCount = oldState.itemCount + sourceResult.page.items.size,
+                        continuationToken = sourceResult.page.continuationToken,
+                        error = null,
+                    )
+                } else {
+                    oldState.copy(error = sourceResult.error)
+                }
+        }
+
+        val variants =
+            (
+                previous.tracks.flatMap { track -> track.variants } +
+                    sourceResults.flatMap { result -> result.page?.items.orEmpty() }
+            ).distinctBy { variant -> variant.provider to variant.sourceId }
+
+        return buildResult(
+            query = query,
+            variants = variants,
+            sources = mergedSourceStates,
+            preferredProviderOrder = request.preferredProviderOrder,
+        )
+    }
+
+    private fun eligibleSources(
+        request: UnifiedSearchRequest,
+    ): List<TrackSearchSource> =
+        registry
+            .trackSearchSources()
+            .filter { source ->
+                request.providers.isNullOrEmpty() || source.id in request.providers
+            }.sortedWith(sourceComparator(request.preferredProviderOrder))
+
+    private suspend fun searchSources(
+        sources: List<TrackSearchSource>,
+        query: String,
+        limit: Int,
+        continuationTokens: Map<ProviderId, String>,
+    ): List<RawSourceSearchResult> =
+        supervisorScope {
+            sources
+                .map { source ->
+                    async {
+                        searchSource(
+                            source = source,
+                            query = query,
+                            limit = limit,
+                            continuationToken = continuationTokens[source.id],
+                        )
+                    }
+                }.awaitAll()
+        }
 
     private suspend fun searchSource(
         source: TrackSearchSource,
         query: String,
         limit: Int,
+        continuationToken: String?,
     ): RawSourceSearchResult {
         val result =
             runCatching {
@@ -124,6 +188,7 @@ constructor(
                     TrackSearchRequest(
                         query = query,
                         limit = limit,
+                        continuationToken = continuationToken,
                     ),
                 )
             }.fold(
@@ -148,6 +213,40 @@ constructor(
                         ),
                 )
             },
+        )
+    }
+
+    private fun buildResult(
+        query: String,
+        variants: List<SourceVariant>,
+        sources: Map<ProviderId, UnifiedSearchSourceResult>,
+        preferredProviderOrder: List<ProviderId>,
+    ): UnifiedSearchResult {
+        val groups = groupVariants(variants)
+
+        return UnifiedSearchResult(
+            query = query,
+            tracks =
+                groups.map { group ->
+                    val resolution =
+                        sourceResolver.resolve(
+                            reference = group.identity,
+                            candidates = group.variants.map(::toPlaybackCandidate),
+                            preferences =
+                                SourceResolutionPreferences(
+                                    preferOffline = true,
+                                    preferLocal = true,
+                                    preferredProviders = preferredProviderOrder,
+                                ),
+                        )
+
+                    UnifiedTrackSearchResult(
+                        identity = group.identity,
+                        variants = group.variants,
+                        recommendedVariant = resolution.selected?.candidate?.variant,
+                    )
+                },
+            sources = sources,
         )
     }
 
@@ -306,6 +405,9 @@ data class UnifiedSearchResult(
 
     val failedSourceCount: Int
         get() = sources.values.count { it.error != null }
+
+    val hasMore: Boolean
+        get() = sources.values.any { !it.continuationToken.isNullOrBlank() }
 }
 
 data class UnifiedTrackSearchResult(
