@@ -49,8 +49,10 @@ import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.core.model.TrackVersionTrait
 import com.arturo254.opentune.extensions.ExtraIsMusicVideo
 import com.arturo254.opentune.extensions.togglePlayPause
+import com.arturo254.opentune.innertube.models.WatchEndpoint
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.queues.ListQueue
+import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
 import com.arturo254.opentune.ui.component.liquidGlassScreenBackground
 import com.arturo254.opentune.viewmodels.UniversalSearchViewModel
@@ -145,12 +147,23 @@ fun UniversalSearchScreen(
                             if (variant.sourceId == activeMetadata?.id) {
                                 playerConnection.player.togglePlayPause()
                             } else {
-                                playerConnection.playQueue(
-                                    ListQueue(
-                                        title = context.getString(R.string.queue_searched_songs),
-                                        items = listOf(variant.toPlayableMediaItem()),
-                                    ),
-                                )
+                                when (variant.provider) {
+                                    ProviderId.YOUTUBE_MUSIC ->
+                                        playerConnection.playQueue(
+                                            YouTubeQueue(
+                                                endpoint = WatchEndpoint(videoId = variant.sourceId),
+                                                preloadItem = variant.toOpenTuneMetadata(),
+                                            ),
+                                        )
+
+                                    else ->
+                                        playerConnection.playQueue(
+                                            ListQueue(
+                                                title = context.getString(R.string.queue_searched_songs),
+                                                items = listOf(variant.toPlayableMediaItem()),
+                                            ),
+                                        )
+                                }
                             }
                         }
                     },
@@ -338,7 +351,7 @@ private fun qualitySummary(variant: SourceVariant?): String? {
     return parts.takeIf { it.isNotEmpty() }?.joinToString(" • ")
 }
 
-private fun SourceVariant.toPlayableMediaItem(): MediaItem {
+private fun SourceVariant.toOpenTuneMetadata(): MediaMetadata {
     val durationSeconds =
         durationMs
             ?.takeIf { it >= 0L }
@@ -347,28 +360,31 @@ private fun SourceVariant.toPlayableMediaItem(): MediaItem {
             ?.toInt()
             ?: MediaMetadata.UNKNOWN_DURATION
 
-    val metadata =
-        MediaMetadata(
-            id = sourceId,
-            title = title,
-            artists =
-                artists.map { artist ->
-                    MediaMetadata.Artist(
-                        id = null,
-                        name = artist,
-                    )
-                },
-            duration = durationSeconds,
-            thumbnailUrl = artworkUrl,
-            album =
-                albumId?.let { id ->
-                    MediaMetadata.Album(
-                        id = id,
-                        title = albumName.orEmpty(),
-                    )
-                },
-            explicit = explicit ?: false,
-        )
+    return MediaMetadata(
+        id = sourceId,
+        title = title,
+        artists =
+            artists.map { artist ->
+                MediaMetadata.Artist(
+                    id = null,
+                    name = artist,
+                )
+            },
+        duration = durationSeconds,
+        thumbnailUrl = artworkUrl,
+        album =
+            albumId?.let { id ->
+                MediaMetadata.Album(
+                    id = id,
+                    title = albumName.orEmpty(),
+                )
+            },
+        explicit = explicit ?: false,
+    )
+}
+
+private fun SourceVariant.toPlayableMediaItem(): MediaItem {
+    val metadata = toOpenTuneMetadata()
 
     return MediaItem
         .Builder()
