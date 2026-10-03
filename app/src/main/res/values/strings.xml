@@ -49,6 +49,8 @@
     <string name="most_played_albums">Most played albums</string>
     <!-- Search -->
     <string name="search">Search</string>
+    <string name="search_all_sources">Search all sources…</string>
+    <string name="some_sources_unavailable">Some sources are temporarily unavailable</string>
     <string name="search_yt_music">Search YouTube Music…</string>
     <string name="search_library">Search library…</string>
     <string name="filter_library">Library</string>

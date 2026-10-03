@@ -241,6 +241,7 @@ import com.arturo254.opentune.ui.screens.navigationBuilder
 import com.arturo254.opentune.ui.screens.search.DeezerSearchScreen
 import com.arturo254.opentune.ui.screens.search.LocalSearchScreen
 import com.arturo254.opentune.ui.screens.search.OnlineSearchScreen
+import com.arturo254.opentune.ui.screens.search.UniversalSearchScreen
 import com.arturo254.opentune.ui.screens.settings.DarkMode
 import com.arturo254.opentune.ui.screens.settings.DiscordPresenceManager
 import com.arturo254.opentune.ui.screens.settings.NavigationTab
@@ -612,6 +613,7 @@ internal fun MainActivitySearchBar(
                                                     Text(
                                                         text = stringResource(
                                                             when (searchSource) {
+                                                                SearchSource.UNIVERSAL -> R.string.search_all_sources
                                                                 SearchSource.LOCAL -> R.string.search_library
                                                                 SearchSource.ONLINE -> R.string.search_yt_music
                                                                 SearchSource.DEEZER -> R.string.search_deezer
@@ -740,6 +742,12 @@ internal fun MainActivitySearchBar(
                                                             .navigationBarsPadding(),
                                                 ) { searchSource ->
                                                     when (searchSource) {
+                                                        SearchSource.UNIVERSAL ->
+                                                            UniversalSearchScreen(
+                                                                query = query.text,
+                                                                pureBlack = pureBlack,
+                                                            )
+
                                                         SearchSource.LOCAL ->
                                                             LocalSearchScreen(
                                                                 query = query.text,
