@@ -58,9 +58,20 @@ constructor(
                 )
 
         val selected = accepted.firstOrNull()
+        val selectedWithReasons =
+            selected?.copy(selectionReasons = selectionReasons(selected, preferences))
+        val rankedWithSelectedReasons =
+            if (selectedWithReasons == null) {
+                accepted
+            } else {
+                accepted.mapIndexed { index, candidate ->
+                    if (index == 0) selectedWithReasons else candidate
+                }
+            }
+
         return SourceResolutionResult(
-            selected = selected?.copy(selectionReasons = selectionReasons(selected, preferences)),
-            rankedCandidates = accepted,
+            selected = selectedWithReasons,
+            rankedCandidates = rankedWithSelectedReasons,
             rejectedCandidates = rejected,
         )
     }
@@ -118,9 +129,14 @@ constructor(
         return when (candidate.availability) {
             PlaybackAvailability.UNAVAILABLE -> SourceRejectionReason.UNAVAILABLE
 
-            PlaybackAvailability.OPEN_TUNE_OFFLINE,
-            PlaybackAvailability.LOCAL_FILE,
-            -> null
+            PlaybackAvailability.OPEN_TUNE_OFFLINE -> null
+
+            PlaybackAvailability.LOCAL_FILE ->
+                if (variant.provider == ProviderId.LOCAL) {
+                    null
+                } else {
+                    SourceRejectionReason.INVALID_LOCAL_FILE_PROVIDER
+                }
 
             PlaybackAvailability.PROVIDER_OFFLINE -> {
                 val source = registry[variant.provider]
@@ -356,7 +372,17 @@ data class SourceResolutionPreferences(
     val forcedVariant: SourceVariantKey? = null,
     val qualityMode: AudioSelectionMode = AudioSelectionMode.AUTOMATIC,
     val presentationPreference: PresentationPreference = PresentationPreference.ANY,
-)
+) {
+    init {
+        require(
+            forcedProvider == null ||
+                forcedVariant == null ||
+                forcedProvider == forcedVariant.provider,
+        ) {
+            "forcedProvider must match forcedVariant.provider when both are set"
+        }
+    }
+}
 
 enum class SourceRejectionReason {
     MATCH_NOT_ACCEPTED,
@@ -364,6 +390,7 @@ enum class SourceRejectionReason {
     SOURCE_NOT_REGISTERED,
     STREAM_NOT_SUPPORTED,
     PROVIDER_OFFLINE_NOT_SUPPORTED,
+    INVALID_LOCAL_FILE_PROVIDER,
     FORCED_PROVIDER_MISMATCH,
     FORCED_VARIANT_MISMATCH,
 }
