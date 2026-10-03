@@ -403,6 +403,40 @@ class SourceResolverTest {
     }
 
     @Test
+    fun localFileAvailabilityCannotMasqueradeAsRemoteProvider() {
+        val resolver = resolver(youtube)
+        val result =
+            resolver.resolve(
+                identity(),
+                listOf(
+                    candidate(
+                        provider = ProviderId.YOUTUBE_MUSIC,
+                        sourceId = "bad-local",
+                        availability = PlaybackAvailability.LOCAL_FILE,
+                    ),
+                ),
+            )
+
+        assertNull(result.selected)
+        assertEquals(
+            SourceRejectionReason.INVALID_LOCAL_FILE_PROVIDER,
+            result.rejectedCandidates.single().rejectionReason,
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun forcedProviderMustAgreeWithForcedVariantProvider() {
+        SourceResolutionPreferences(
+            forcedProvider = ProviderId.YOUTUBE_MUSIC,
+            forcedVariant =
+                SourceVariantKey(
+                    provider = ProviderId.DEEZER,
+                    sourceId = "track",
+                ),
+        )
+    }
+
+    @Test
     fun localFileCanBeSelectedWithoutNetworkAndKeepsLocalProviderIdentity() {
         val resolver = resolver(youtube, local)
         val localCandidate =
