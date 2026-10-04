@@ -24,6 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import com.arturo254.opentune.constants.DefaultOpenTabKey
 import com.arturo254.opentune.constants.PauseSearchHistoryKey
 import com.arturo254.opentune.constants.SearchSource
+import com.arturo254.opentune.constants.SearchSourceKey
 import com.arturo254.opentune.constants.SlimNavBarKey
 import com.arturo254.opentune.db.MusicDatabase
 import com.arturo254.opentune.db.entities.LocalItem
@@ -167,9 +168,10 @@ internal fun rememberMainActivityNavigationState(
         }
     }
 
-    var searchSource by rememberSaveable {
-        mutableStateOf(SearchSource.UNIVERSAL)
-    }
+    var searchSource by rememberEnumPreference(
+        SearchSourceKey,
+        SearchSource.UNIVERSAL,
+    )
 
     val searchBarFocusRequester = remember { FocusRequester() }
 
