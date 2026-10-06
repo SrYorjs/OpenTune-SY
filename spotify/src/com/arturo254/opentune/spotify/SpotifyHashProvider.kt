@@ -56,6 +56,37 @@ object SpotifyHashProvider {
         defaults.forEach { (op, hash) ->
             hashes[op] = GqlHashEntry(hash = hash, source = HashSource.HARDCODED)
         }
+
+        // Spotify Web Player catalog hashes. Keep the previous OpenTune values
+        // as fallbacks because Spotify rotates persisted queries independently.
+        hashes["searchDesktop"] =
+            GqlHashEntry(
+                hash = "fcad5a3e0d5af727fb76966f06971c19cfa2275e6ff7671196753e008611873c",
+                previousHash = "4801118d4a100f756e833d33984436a3899cff359c532f8fd3aaf174b60b3b49",
+            )
+        hashes["fetchPlaylist"] =
+            GqlHashEntry(
+                hash = "bb67e0af06e8d6f52b531f97468ee4acd44cd0f82b988e15c2ea47b1148efc77",
+                previousHash = "346811f856fb0b7e4f6c59f8ebea78dd081c6e2fb01b77c954b26259d5fc6763",
+            )
+        hashes["queryArtistOverview"] =
+            GqlHashEntry(
+                hash = "446130b4a0aa6522a686aafccddb0ae849165b5e0436fd802f96e0243617b5d8",
+                previousHash = "5b9e64f43843fa3a9b6a98543600299b0a2cbbbccfdcdcef2402eb9c1017ca4c",
+            )
+        hashes["home"] =
+            GqlHashEntry(
+                hash = "3a67ee0ea6abad2ebad2e588a9aa130fc98d6b553f5b05ac6467503d02133bdc",
+                previousHash = "23e37f2e58d82d567f27080101d36609009d8c3676457b1086cb0acc55b72a5d",
+            )
+        hashes["getTrack"] =
+            GqlHashEntry(
+                hash = "612585ae06ba435ad26369870deaae23b5c8800a256cd8a57e08eddc25a37294",
+            )
+        hashes["browseAll"] =
+            GqlHashEntry(
+                hash = "864fdecccb9bb893141df3776d0207886c7fa781d9e586b9d4eb3afa387eea42",
+            )
     }
 
     /**
