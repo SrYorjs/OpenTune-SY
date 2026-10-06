@@ -27,6 +27,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +50,7 @@ import androidx.media3.common.MediaMetadata.MEDIA_TYPE_MUSIC
 import coil3.compose.AsyncImage
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
+import com.arturo254.opentune.catalog.CatalogPlaybackResolver
 import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.core.model.TrackVersionTrait
@@ -55,11 +60,13 @@ import com.arturo254.opentune.innertube.models.WatchEndpoint
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.queues.ListQueue
 import com.arturo254.opentune.playback.queues.YouTubeQueue
+import com.arturo254.opentune.sources.deezer.toDeezerCatalogReference
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
 import com.arturo254.opentune.ui.component.liquidGlassScreenBackground
 import com.arturo254.opentune.viewmodels.UniversalSearchViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.launch
 
 @Composable
 fun UniversalSearchScreen(
@@ -73,6 +80,8 @@ fun UniversalSearchScreen(
     val lazyListState = rememberLazyListState()
     val activeMetadata by playerConnection.mediaMetadata.collectAsState()
     val isPlaying by playerConnection.isPlaying.collectAsState()
+    val scope = rememberCoroutineScope()
+    var resolvingCatalogKey by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(query) {
         viewModel.query.value = query
@@ -163,35 +172,100 @@ fun UniversalSearchScreen(
             },
         ) { result ->
             val playable = result.recommendedVariant
+            val deezerFallback =
+                if (playable == null) {
+                    result.variants.firstOrNull { it.provider == ProviderId.DEEZER }
+                } else {
+                    null
+                }
+            val resultKey =
+                result.variants.joinToString("|") { variant ->
+                    variant.provider.value + ":" + variant.sourceId
+                }
+            val isActive =
+                playable?.sourceId == activeMetadata?.id ||
+                    (
+                        playable == null &&
+                            activeMetadata?.title.equals(result.identity.title, ignoreCase = true) &&
+                            result.identity.artists.any { identityArtist ->
+                                activeMetadata?.artists
+                                    ?.any {
+                                        it.name.equals(
+                                            identityArtist.name,
+                                            ignoreCase = true,
+                                        )
+                                    } == true
+                            }
+                    )
+
             UnifiedTrackRow(
                 result = result,
-                isActive = playable?.sourceId == activeMetadata?.id,
+                isActive = isActive,
                 isPlaying = isPlaying,
+                isResolving = resolvingCatalogKey == resultKey,
                 onClick =
-                    playable?.let { variant ->
-                        {
-                            if (variant.sourceId == activeMetadata?.id) {
-                                playerConnection.player.togglePlayPause()
-                            } else {
-                                when (variant.provider) {
-                                    ProviderId.YOUTUBE_MUSIC ->
-                                        playerConnection.playQueue(
-                                            YouTubeQueue(
-                                                endpoint = WatchEndpoint(videoId = variant.sourceId),
-                                                preloadItem = variant.toOpenTuneMetadata(),
-                                            ),
-                                        )
-
-                                    else ->
-                                        playerConnection.playQueue(
-                                            ListQueue(
-                                                title = context.getString(R.string.queue_searched_songs),
-                                                items = listOf(variant.toPlayableMediaItem()),
-                                            ),
-                                        )
+                    when {
+                        isActive ->
+                            {
+                                {
+                                    playerConnection.player.togglePlayPause()
                                 }
                             }
-                        }
+
+                        playable != null ->
+                            {
+                                {
+                                    when (playable.provider) {
+                                        ProviderId.YOUTUBE_MUSIC ->
+                                            playerConnection.playQueue(
+                                                YouTubeQueue(
+                                                    endpoint =
+                                                        WatchEndpoint(
+                                                            videoId = playable.sourceId,
+                                                        ),
+                                                    preloadItem = playable.toOpenTuneMetadata(),
+                                                ),
+                                            )
+
+                                        else ->
+                                            playerConnection.playQueue(
+                                                ListQueue(
+                                                    title =
+                                                        context.getString(
+                                                            R.string.queue_searched_songs,
+                                                        ),
+                                                    items = listOf(playable.toPlayableMediaItem()),
+                                                ),
+                                            )
+                                    }
+                                }
+                            }
+
+                        deezerFallback != null ->
+                            {
+                                {
+                                    if (resolvingCatalogKey == null) {
+                                        scope.launch {
+                                            resolvingCatalogKey = resultKey
+                                            try {
+                                                val selected =
+                                                    CatalogPlaybackResolver.resolveToMediaItem(
+                                                        deezerFallback
+                                                            .toDeezerCatalogReference(),
+                                                    ) ?: return@launch
+
+                                                playerConnection.player.setMediaItem(selected)
+                                                playerConnection.player.prepare()
+                                                playerConnection.player.playWhenReady = true
+                                            } finally {
+                                                resolvingCatalogKey = null
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                        else -> null
                     },
             )
         }
@@ -217,6 +291,7 @@ private fun UnifiedTrackRow(
     result: UnifiedTrackSearchResult,
     isActive: Boolean,
     isPlaying: Boolean,
+    isResolving: Boolean,
     onClick: (() -> Unit)?,
 ) {
     val recommended = result.recommendedVariant
@@ -279,6 +354,18 @@ private fun UnifiedTrackRow(
                         tint = Color.White,
                         modifier = Modifier.size(28.dp),
                     )
+                } else if (isResolving) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.24f)),
+                    )
+                    CircularProgressIndicator(
+                        strokeWidth = 2.dp,
+                        color = Color.White,
+                        modifier = Modifier.size(25.dp),
+                    )
                 }
             }
 
@@ -329,10 +416,16 @@ private fun UnifiedTrackRow(
                 }
             }
 
-            if (recommended != null) {
+            val displayProvider =
+                recommended?.provider
+                    ?: result.variants
+                        .firstOrNull { it.provider == ProviderId.DEEZER }
+                        ?.provider
+
+            if (displayProvider != null) {
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = providerShortName(recommended.provider),
+                    text = providerShortName(displayProvider),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary,
