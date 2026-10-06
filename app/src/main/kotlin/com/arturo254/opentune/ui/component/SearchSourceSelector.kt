@@ -88,6 +88,8 @@ fun SearchSourceSelector(
                     SearchSource.ONLINE -> R.drawable.language
                     SearchSource.DEEZER -> R.drawable.graphic_eq
                     SearchSource.SPOTIFY -> R.drawable.spotify_icon
+                    SearchSource.TIDAL -> R.drawable.music_note
+                    SearchSource.APPLE_MUSIC -> R.drawable.lyrics_apple
                 }
             val label =
                 stringResource(
@@ -97,6 +99,8 @@ fun SearchSourceSelector(
                         SearchSource.ONLINE -> R.string.provider_youtube
                         SearchSource.DEEZER -> R.string.provider_deezer
                         SearchSource.SPOTIFY -> R.string.provider_spotify
+                        SearchSource.TIDAL -> R.string.provider_tidal
+                        SearchSource.APPLE_MUSIC -> R.string.provider_apple_music
                     }
                 )
 
