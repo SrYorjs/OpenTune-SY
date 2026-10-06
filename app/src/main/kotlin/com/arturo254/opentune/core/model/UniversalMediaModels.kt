@@ -18,6 +18,8 @@ value class ProviderId(
         val YOUTUBE_MUSIC = ProviderId("youtube_music")
         val SPOTIFY = ProviderId("spotify")
         val DEEZER = ProviderId("deezer")
+        val TIDAL = ProviderId("tidal")
+        val APPLE_MUSIC = ProviderId("apple_music")
         val LOCAL = ProviderId("local")
     }
 }
