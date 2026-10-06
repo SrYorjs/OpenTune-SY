@@ -87,6 +87,7 @@ fun SearchSourceSelector(
                     SearchSource.LOCAL -> R.drawable.library_music
                     SearchSource.ONLINE -> R.drawable.language
                     SearchSource.DEEZER -> R.drawable.graphic_eq
+                    SearchSource.SPOTIFY -> R.drawable.spotify_icon
                 }
             val label =
                 stringResource(
@@ -95,6 +96,7 @@ fun SearchSourceSelector(
                         SearchSource.LOCAL -> R.string.provider_local
                         SearchSource.ONLINE -> R.string.provider_youtube
                         SearchSource.DEEZER -> R.string.provider_deezer
+                        SearchSource.SPOTIFY -> R.string.provider_spotify
                     }
                 )
 
@@ -113,7 +115,12 @@ fun SearchSourceSelector(
                 Icon(
                     painter = painterResource(icon),
                     contentDescription = null,
-                    tint = contentColor,
+                    tint =
+                        if (source == SearchSource.SPOTIFY) {
+                            Color.Unspecified
+                        } else {
+                            contentColor
+                        },
                     modifier = Modifier.size(16.dp),
                 )
                 Spacer(Modifier.width(6.dp))
