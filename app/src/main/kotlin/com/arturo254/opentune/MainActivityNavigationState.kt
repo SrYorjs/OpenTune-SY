@@ -195,6 +195,8 @@ internal fun rememberMainActivityNavigationState(
                 SearchSource.LOCAL,
                 SearchSource.DEEZER,
                 SearchSource.SPOTIFY,
+                SearchSource.TIDAL,
+                SearchSource.APPLE_MUSIC,
                 ->
                     focusManager.clearFocus()
             }
