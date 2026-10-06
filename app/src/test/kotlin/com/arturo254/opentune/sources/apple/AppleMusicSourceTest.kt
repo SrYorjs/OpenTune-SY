@@ -139,7 +139,16 @@ class AppleMusicSourceTest {
     private class FakeGateway(
         var page: AppleMusicTrackPage =
             AppleMusicTrackPage(
-                items = listOf(track("default")),
+                items =
+                    listOf(
+                        AppleMusicTrack(
+                            id = "default",
+                            title = "Song",
+                            artistName = "Artist",
+                            albumName = "Album",
+                            durationMs = 180_000L,
+                        ),
+                    ),
                 limit = 25,
                 offset = 0,
                 hasMore = false,
