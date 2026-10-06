@@ -373,7 +373,7 @@ object Spotify {
         for (attempt in 0 until maxRetries) {
             log(
                 "D",
-                "REST GET $endpoint (token: ${credentials.accessToken.take(8)}...)" +
+                "REST GET $endpoint (token: ${token.take(8)}...)" +
                         if (attempt > 0) " [retry $attempt]" else "",
             )
             val response =
