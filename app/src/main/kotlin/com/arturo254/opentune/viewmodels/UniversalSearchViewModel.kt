@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.arturo254.opentune.sources.search.UnifiedSearchRepository
 import com.arturo254.opentune.sources.search.UnifiedSearchRequest
 import com.arturo254.opentune.sources.search.UnifiedSearchResult
+import com.arturo254.opentune.sources.soundcloud.SoundCloudPlaybackResolver
+import com.arturo254.opentune.core.model.SourceVariant
+import androidx.media3.common.MediaItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.FlowPreview
@@ -24,6 +27,7 @@ class UniversalSearchViewModel
 @Inject
 constructor(
     private val repository: UnifiedSearchRepository,
+    private val soundCloudPlaybackResolver: SoundCloudPlaybackResolver,
 ) : ViewModel() {
     val query = MutableStateFlow("")
 
@@ -43,6 +47,9 @@ constructor(
                 }
         }
     }
+
+    suspend fun resolveSoundCloud(variant: SourceVariant): MediaItem? =
+        soundCloudPlaybackResolver.resolveToMediaItem(variant)
 
     fun loadMore() {
         val snapshot = _state.value
