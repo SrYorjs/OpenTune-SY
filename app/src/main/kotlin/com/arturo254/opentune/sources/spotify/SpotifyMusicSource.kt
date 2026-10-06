@@ -8,11 +8,16 @@ import com.arturo254.opentune.sources.SourceCapability
 import com.arturo254.opentune.sources.TrackSearchPage
 import com.arturo254.opentune.sources.TrackSearchRequest
 import com.arturo254.opentune.sources.TrackSearchSource
-import com.arturo254.opentune.spotify.SpotifyLibraryRepository
+import com.arturo254.opentune.spotify.Spotify
+import com.arturo254.opentune.spotify.SpotifyNativeTrackMetadata
+import com.arturo254.opentune.spotify.SpotifyWebMetadataClient
 import com.arturo254.opentune.spotify.models.SpotifyPaging
 import com.arturo254.opentune.spotify.models.SpotifyTrack
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 interface SpotifyCatalogGateway {
     suspend fun searchTracksPage(
@@ -20,36 +25,37 @@ interface SpotifyCatalogGateway {
         limit: Int,
         offset: Int,
     ): Result<SpotifyPaging<SpotifyTrack>>
+
+    suspend fun trackMetadata(trackId: String): Result<SpotifyNativeTrackMetadata>
 }
 
 @Singleton
 class DefaultSpotifyCatalogGateway
 @Inject
-constructor(
-    private val repository: SpotifyLibraryRepository,
-) : SpotifyCatalogGateway {
+constructor() : SpotifyCatalogGateway {
     override suspend fun searchTracksPage(
         query: String,
         limit: Int,
         offset: Int,
     ): Result<SpotifyPaging<SpotifyTrack>> =
-        runCatching {
-            val session = repository.restoreSession()
-            if (!session.isAuthenticated) {
-                return@runCatching SpotifyPaging(
-                    items = emptyList(),
-                    total = 0,
-                    limit = limit,
-                    offset = offset,
-                )
-            }
-
-            repository.searchTracksPage(
+        Spotify
+            .search(
                 query = query,
+                types = listOf("track"),
                 limit = limit,
                 offset = offset,
-            )
-        }
+            ).map { result ->
+                result.tracks
+                    ?: SpotifyPaging(
+                        items = emptyList(),
+                        total = 0,
+                        limit = limit,
+                        offset = offset,
+                    )
+            }
+
+    override suspend fun trackMetadata(trackId: String): Result<SpotifyNativeTrackMetadata> =
+        SpotifyWebMetadataClient.trackMetadata(trackId)
 }
 
 /**
@@ -89,27 +95,46 @@ constructor(
             runCatching { decodeContinuation(request.continuationToken) }
                 .getOrElse { return Result.failure(it) }
 
-        return gateway
-            .searchTracksPage(
-                query = query,
-                limit = request.limit.coerceAtMost(MAX_PAGE_SIZE),
-                offset = offset,
-            ).map { page ->
-                val nextOffset =
-                    (page.offset + page.items.size)
-                        .takeIf { page.items.isNotEmpty() && it < page.total }
+        val page =
+            gateway
+                .searchTracksPage(
+                    query = query,
+                    limit = request.limit.coerceAtMost(MAX_PAGE_SIZE),
+                    offset = offset,
+                ).getOrElse { return Result.failure(it) }
 
-                TrackSearchPage(
-                    items =
-                        page.items
-                            .asSequence()
-                            .filterNot(SpotifyTrack::isLocal)
-                            .filter { it.id.isNotBlank() && it.name.isNotBlank() }
-                            .map(SpotifyTrack::toSpotifySourceVariant)
-                            .toList(),
-                    continuationToken = nextOffset?.let(::encodeContinuation),
-                )
+        val validTracks =
+            page.items
+                .asSequence()
+                .filterNot(SpotifyTrack::isLocal)
+                .filter { it.id.isNotBlank() && it.name.isNotBlank() }
+                .toList()
+
+        val variants =
+            coroutineScope {
+                validTracks.mapIndexed { index, track ->
+                    async {
+                        val nativeMetadata =
+                            if (index < NATIVE_METADATA_ENRICH_LIMIT) {
+                                gateway.trackMetadata(track.id).getOrNull()
+                            } else {
+                                null
+                            }
+                        track.toSpotifySourceVariant(nativeMetadata)
+                    }
+                }.awaitAll()
             }
+
+        val nextOffset =
+            (page.offset + page.items.size)
+                .takeIf { page.items.isNotEmpty() && it < page.total }
+
+        return Result.success(
+            TrackSearchPage(
+                items = variants,
+                continuationToken = nextOffset?.let(::encodeContinuation),
+            ),
+        )
     }
 
     private fun decodeContinuation(token: String?): Int {
@@ -130,10 +155,13 @@ constructor(
     companion object {
         private const val CONTINUATION_PREFIX = "offset:"
         private const val MAX_PAGE_SIZE = 50
+        private const val NATIVE_METADATA_ENRICH_LIMIT = 12
     }
 }
 
-internal fun SpotifyTrack.toSpotifySourceVariant(): SourceVariant =
+internal fun SpotifyTrack.toSpotifySourceVariant(
+    nativeMetadata: SpotifyNativeTrackMetadata? = null,
+): SourceVariant =
     SourceVariant(
         provider = ProviderId.SPOTIFY,
         sourceId = id,
@@ -141,8 +169,11 @@ internal fun SpotifyTrack.toSpotifySourceVariant(): SourceVariant =
         artists = artists.map { it.name }.filter(String::isNotBlank),
         albumId = album?.id?.takeIf(String::isNotBlank),
         albumName = album?.name?.takeIf(String::isNotBlank),
-        durationMs = durationMs.takeIf { it > 0 }?.toLong(),
-        explicit = explicit,
+        durationMs =
+            nativeMetadata?.durationMs
+                ?: durationMs.takeIf { it > 0 }?.toLong(),
+        isrc = nativeMetadata?.isrc,
+        explicit = nativeMetadata?.explicit ?: explicit,
         artworkUrl = bestArtworkUrl(),
     )
 
