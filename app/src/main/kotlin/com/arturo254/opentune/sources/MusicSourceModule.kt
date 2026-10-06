@@ -4,6 +4,9 @@ import com.arturo254.opentune.sources.deezer.DeezerCatalogGateway
 import com.arturo254.opentune.sources.deezer.DeezerMusicSource
 import com.arturo254.opentune.sources.deezer.DefaultDeezerCatalogGateway
 import com.arturo254.opentune.sources.local.LocalMusicSource
+import com.arturo254.opentune.sources.spotify.DefaultSpotifyCatalogGateway
+import com.arturo254.opentune.sources.spotify.SpotifyCatalogGateway
+import com.arturo254.opentune.sources.spotify.SpotifyMusicSource
 import com.arturo254.opentune.sources.youtube.YouTubeMusicSource
 import dagger.Binds
 import dagger.Module
@@ -35,4 +38,13 @@ abstract class MusicSourceModule {
     abstract fun bindDeezerCatalogGateway(
         gateway: DefaultDeezerCatalogGateway,
     ): DeezerCatalogGateway
+
+    @Binds
+    @IntoSet
+    abstract fun bindSpotifyMusicSource(source: SpotifyMusicSource): MusicSource
+
+    @Binds
+    abstract fun bindSpotifyCatalogGateway(
+        gateway: DefaultSpotifyCatalogGateway,
+    ): SpotifyCatalogGateway
 }
