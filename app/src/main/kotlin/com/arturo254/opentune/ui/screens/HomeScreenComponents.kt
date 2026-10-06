@@ -116,6 +116,7 @@ import com.arturo254.opentune.models.toMediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.playback.queues.ListQueue
 import com.arturo254.opentune.playback.queues.YouTubeQueue
+import com.arturo254.opentune.sources.deezer.toDeezerCatalogReference
 import com.arturo254.opentune.ui.component.AlbumGridItem
 import com.arturo254.opentune.ui.component.ArtistGridItem
 import com.arturo254.opentune.ui.component.LocalMenuState
@@ -176,12 +177,14 @@ fun DeezerTrendingHomeSection(
         ) {
             items(
                 items = tracks,
-                key = { "deezer_home_" + it.id },
+                key = { "deezer_home_" + it.sourceId },
             ) { track ->
                 val active =
                     mediaMetadata?.title.equals(track.title, ignoreCase = true) &&
-                        mediaMetadata?.artists
-                            ?.any { it.name.equals(track.artistName, ignoreCase = true) } == true
+                        track.artists.any { sourceArtist ->
+                            mediaMetadata?.artists
+                                ?.any { it.name.equals(sourceArtist, ignoreCase = true) } == true
+                        }
                 val interaction = remember { MutableInteractionSource() }
                 val pressed by interaction.collectIsPressedAsState()
                 val scale by animateFloatAsState(
@@ -224,7 +227,7 @@ fun DeezerTrendingHomeSection(
                                     } else {
                                         scope.launch {
                                             CatalogPlaybackResolver
-                                                .resolveToMediaItem(track.toCatalogReference())
+                                                .resolveToMediaItem(track.toDeezerCatalogReference())
                                                 ?.let { mediaItem ->
                                                     playerConnection.player.setMediaItem(mediaItem)
                                                     playerConnection.player.prepare()
@@ -282,7 +285,7 @@ fun DeezerTrendingHomeSection(
                         overflow = TextOverflow.Ellipsis,
                     )
                     Text(
-                        text = track.artistName,
+                        text = track.artists.joinToString(),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
