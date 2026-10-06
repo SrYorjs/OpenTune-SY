@@ -22,7 +22,7 @@ data class SpotifySearchState(
     val tracks: List<SourceVariant> = emptyList(),
     val loading: Boolean = false,
     val error: String? = null,
-    val isConnected: Boolean = false,
+    val isConnected: Boolean = true,
 )
 
 @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -40,7 +40,7 @@ constructor(
             .distinctUntilChanged()
             .flatMapLatest { rawQuery ->
                 flow {
-                    emit(SpotifySearchState(loading = true))
+                    emit(SpotifySearchState(loading = true, isConnected = true))
 
                     val normalizedQuery = rawQuery.trim()
                     if (normalizedQuery.isEmpty()) {
