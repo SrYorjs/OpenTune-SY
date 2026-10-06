@@ -1,5 +1,8 @@
 package com.arturo254.opentune.sources
 
+import com.arturo254.opentune.sources.deezer.DeezerCatalogGateway
+import com.arturo254.opentune.sources.deezer.DeezerMusicSource
+import com.arturo254.opentune.sources.deezer.DefaultDeezerCatalogGateway
 import com.arturo254.opentune.sources.local.LocalMusicSource
 import com.arturo254.opentune.sources.youtube.YouTubeMusicSource
 import dagger.Binds
@@ -23,4 +26,13 @@ abstract class MusicSourceModule {
     @Binds
     @IntoSet
     abstract fun bindLocalMusicSource(source: LocalMusicSource): MusicSource
+
+    @Binds
+    @IntoSet
+    abstract fun bindDeezerMusicSource(source: DeezerMusicSource): MusicSource
+
+    @Binds
+    abstract fun bindDeezerCatalogGateway(
+        gateway: DefaultDeezerCatalogGateway,
+    ): DeezerCatalogGateway
 }
