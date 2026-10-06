@@ -185,41 +185,73 @@ object Spotify {
         operationName: String,
         variables: JsonObject = buildJsonObject {},
     ): JsonObject {
-        val token =
-            accessToken ?: throw SpotifyException(401, "Not authenticated").also {
-                log("E", "GQL $operationName — no token")
-            }
-
-        val primaryHash = SpotifyHashProvider.getHash(operationName)
-        val hashCandidates =
-            buildList {
-                add(primaryHash)
-                SpotifyHashProvider.getPreviousHash(operationName)?.let { prev ->
-                    if (prev != primaryHash) add(prev)
-                }
-            }
-
-        for ((hashIdx, sha256Hash) in hashCandidates.withIndex()) {
-            val body = buildGqlBody(operationName, sha256Hash, variables)
-            val result = executeGqlWithRetries(operationName, token, body)
-
-            if (result.isPersistedQueryNotFound) {
-                if (hashIdx < hashCandidates.lastIndex) {
-                    log("W", "GQL $operationName hash rejected, trying previous_hash")
-                    continue
-                }
-                log("E", "GQL $operationName all known hashes rejected, triggering remote refresh")
-                onHashExpired?.invoke(operationName)
-                throw SpotifyException(
-                    412,
-                    "PersistedQueryNotFound for $operationName — hash may have rotated"
+        val accountToken = accessToken
+        var credentials =
+            if (accountToken != null) {
+                SpotifyWebSession.Credentials(
+                    accessToken = accountToken,
+                    clientToken = null,
+                    clientVersion = null,
                 )
+            } else {
+                SpotifyWebSession.credentials()
             }
 
-            return result.json!!
+        repeat(2) { authAttempt ->
+            try {
+                val primaryHash = SpotifyHashProvider.getHash(operationName)
+                val hashCandidates =
+                    buildList {
+                        add(primaryHash)
+                        SpotifyHashProvider.getPreviousHash(operationName)?.let { prev ->
+                            if (prev != primaryHash) add(prev)
+                        }
+                    }
+
+                for ((hashIdx, sha256Hash) in hashCandidates.withIndex()) {
+                    val body = buildGqlBody(operationName, sha256Hash, variables)
+                    val result =
+                        executeGqlWithRetries(
+                            operationName = operationName,
+                            credentials = credentials,
+                            body = body,
+                        )
+
+                    if (result.isPersistedQueryNotFound) {
+                        if (hashIdx < hashCandidates.lastIndex) {
+                            log("W", "GQL $operationName hash rejected, trying previous_hash")
+                            continue
+                        }
+                        log(
+                            "E",
+                            "GQL $operationName all known hashes rejected, triggering remote refresh",
+                        )
+                        onHashExpired?.invoke(operationName)
+                        throw SpotifyException(
+                            412,
+                            "PersistedQueryNotFound for $operationName — hash may have rotated",
+                        )
+                    }
+
+                    return result.json!!
+                }
+
+                throw SpotifyException(412, "No valid hash found for $operationName")
+            } catch (error: SpotifyException) {
+                if (
+                    error.statusCode == 401 &&
+                    accountToken == null &&
+                    authAttempt == 0
+                ) {
+                    SpotifyWebSession.invalidate()
+                    credentials = SpotifyWebSession.credentials()
+                } else {
+                    throw error
+                }
+            }
         }
 
-        throw SpotifyException(412, "No valid hash found for $operationName")
+        throw SpotifyException(401, "Spotify Web session could not be refreshed")
     }
 
     private fun buildGqlBody(
@@ -245,20 +277,26 @@ object Spotify {
 
     private suspend fun executeGqlWithRetries(
         operationName: String,
-        token: String,
+        credentials: SpotifyWebSession.Credentials,
         body: JsonObject,
     ): GqlResult {
         val maxRetries = 3
         for (attempt in 0 until maxRetries) {
             log(
                 "D",
-                "GQL POST $operationName (token: ${token.take(8)}...)" +
+                "GQL POST $operationName (token: ${credentials.accessToken.take(8)}...)" +
                         if (attempt > 0) " [retry $attempt]" else "",
             )
 
             val response =
                 gqlClient.post(GQL_URL) {
-                    header("Authorization", "Bearer $token")
+                    header("Authorization", "Bearer ${credentials.accessToken}")
+                    credentials.clientToken
+                        ?.takeIf(String::isNotBlank)
+                        ?.let { header("Client-Token", it) }
+                    credentials.clientVersion
+                        ?.takeIf(String::isNotBlank)
+                        ?.let { header("Spotify-App-Version", it) }
                     setBody(
                         TextContent(
                             body.toString(),
@@ -335,7 +373,7 @@ object Spotify {
         for (attempt in 0 until maxRetries) {
             log(
                 "D",
-                "REST GET $endpoint (token: ${token.take(8)}...)" +
+                "REST GET $endpoint (token: ${credentials.accessToken.take(8)}...)" +
                         if (attempt > 0) " [retry $attempt]" else "",
             )
             val response =
