@@ -23,8 +23,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.arturo254.opentune.constants.DefaultOpenTabKey
 import com.arturo254.opentune.constants.PauseSearchHistoryKey
-import com.arturo254.opentune.constants.SearchSource
-import com.arturo254.opentune.constants.SearchSourceKey
 import com.arturo254.opentune.constants.SlimNavBarKey
 import com.arturo254.opentune.db.MusicDatabase
 import com.arturo254.opentune.db.entities.LocalItem
@@ -35,11 +33,9 @@ import com.arturo254.opentune.ui.screens.Screens
 import com.arturo254.opentune.ui.screens.settings.NavigationTab
 import com.arturo254.opentune.ui.utils.appBarScrollBehavior
 import com.arturo254.opentune.ui.utils.resetHeightOffset
-import com.arturo254.opentune.utils.rememberEnumPreference
 import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.viewmodels.HomeViewModel
 import java.net.URLDecoder
-import java.net.URLEncoder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -67,8 +63,6 @@ internal data class MainActivityNavigationState(
     val active: Boolean,
     val selectedNavigationRoute: String?,
     val onActiveChange: (Boolean) -> Unit,
-    val searchSource: SearchSource,
-    val setSearchSource: (SearchSource) -> Unit,
     val searchBarFocusRequester: FocusRequester,
     val onSearch: (String) -> Unit,
     val openSearchImmediately: Boolean,
@@ -168,11 +162,6 @@ internal fun rememberMainActivityNavigationState(
         }
     }
 
-    var searchSource by rememberEnumPreference(
-        SearchSourceKey,
-        SearchSource.UNIVERSAL,
-    )
-
     val searchBarFocusRequester = remember { FocusRequester() }
 
     val onSearch: (String) -> Unit = { searchText ->
@@ -183,23 +172,7 @@ internal fun rememberMainActivityNavigationState(
                 }
             }
 
-            when (searchSource) {
-                SearchSource.ONLINE -> {
-                    onActiveChange(false)
-                    navController.navigate(
-                        "search/" + URLEncoder.encode(searchText, "UTF-8"),
-                    )
-                }
-
-                SearchSource.UNIVERSAL,
-                SearchSource.LOCAL,
-                SearchSource.DEEZER,
-                SearchSource.SPOTIFY,
-                SearchSource.TIDAL,
-                SearchSource.APPLE_MUSIC,
-                ->
-                    focusManager.clearFocus()
-            }
+            focusManager.clearFocus()
         }
     }
 
@@ -274,8 +247,6 @@ internal fun rememberMainActivityNavigationState(
         active = active,
         selectedNavigationRoute = selectedNavigationRoute,
         onActiveChange = onActiveChange,
-        searchSource = searchSource,
-        setSearchSource = { searchSource = it },
         searchBarFocusRequester = searchBarFocusRequester,
         onSearch = onSearch,
         openSearchImmediately = openSearchImmediately,
