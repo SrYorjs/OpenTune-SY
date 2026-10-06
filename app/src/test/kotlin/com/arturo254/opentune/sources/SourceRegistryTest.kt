@@ -23,6 +23,36 @@ class SourceRegistryTest {
     }
 
     @Test
+    fun capabilityMatrixReflectsInstalledSourcesWithoutHardcodedProviders() {
+        val streamSource =
+            object : MusicSource {
+                override val id = ProviderId.SOUNDCLOUD
+                override val displayName = "SoundCloud"
+                override val capabilities =
+                    SourceCapabilities.of(
+                        SourceCapability.TRACK_SEARCH,
+                        SourceCapability.STREAM,
+                    )
+            }
+        val metadataSource = FakeMetadataSource(ProviderId.APPLE_MUSIC)
+        val registry = SourceRegistry(setOf(streamSource, metadataSource))
+
+        val matrix = registry.capabilityMatrix()
+
+        assertEquals(
+            setOf(
+                SourceCapability.TRACK_SEARCH,
+                SourceCapability.STREAM,
+            ),
+            matrix[ProviderId.SOUNDCLOUD],
+        )
+        assertEquals(
+            setOf(SourceCapability.TRACK_METADATA),
+            matrix[ProviderId.APPLE_MUSIC],
+        )
+    }
+
+    @Test
     fun registryOrderIsStableByProviderId() {
         val z = FakeMetadataSource(ProviderId("z_source"))
         val a = FakeMetadataSource(ProviderId("a_source"))
