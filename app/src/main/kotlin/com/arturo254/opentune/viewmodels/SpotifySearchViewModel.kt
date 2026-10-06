@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.sources.TrackSearchRequest
 import com.arturo254.opentune.sources.spotify.SpotifyMusicSource
-import com.arturo254.opentune.spotify.SpotifyLibraryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,7 +31,6 @@ class SpotifySearchViewModel
 @Inject
 constructor(
     private val spotifySource: SpotifyMusicSource,
-    private val spotifyRepository: SpotifyLibraryRepository,
 ) : ViewModel() {
     val query = MutableStateFlow("")
 
@@ -43,17 +41,6 @@ constructor(
             .flatMapLatest { rawQuery ->
                 flow {
                     emit(SpotifySearchState(loading = true))
-
-                    val session = spotifyRepository.restoreSession()
-                    if (!session.isAuthenticated) {
-                        emit(
-                            SpotifySearchState(
-                                isConnected = false,
-                                loading = false,
-                            ),
-                        )
-                        return@flow
-                    }
 
                     val normalizedQuery = rawQuery.trim()
                     if (normalizedQuery.isEmpty()) {
@@ -95,6 +82,9 @@ constructor(
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = SpotifySearchState(loading = true),
+                initialValue = SpotifySearchState(
+                    loading = false,
+                    isConnected = true,
+                ),
             )
 }
