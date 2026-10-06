@@ -50,8 +50,9 @@ import coil3.compose.AsyncImage
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
 import com.arturo254.opentune.catalog.CatalogPlaybackResolver
-import com.arturo254.opentune.deezer.DeezerTrack
+import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.extensions.togglePlayPause
+import com.arturo254.opentune.sources.deezer.toDeezerCatalogReference
 import com.arturo254.opentune.ui.component.LiquidGlassCard
 import com.arturo254.opentune.ui.component.liquidGlassScreenBackground
 import com.arturo254.opentune.utils.joinByBullet
@@ -140,18 +141,20 @@ fun DeezerSearchScreen(
 
         itemsIndexed(
             items = state.tracks,
-            key = { _, track -> track.id },
+            key = { _, track -> track.sourceId },
         ) { index, track ->
             val active =
                 activeMetadata?.title.equals(track.title, ignoreCase = true) &&
-                    activeMetadata?.artists
-                        ?.any { it.name.equals(track.artistName, ignoreCase = true) } == true
+                    track.artists.any { sourceArtist ->
+                        activeMetadata?.artists
+                            ?.any { it.name.equals(sourceArtist, ignoreCase = true) } == true
+                    }
 
             DeezerTrackRow(
                 track = track,
                 isActive = active,
                 isPlaying = active && isPlaying,
-                isResolving = resolvingId == track.id,
+                isResolving = resolvingId == track.sourceId,
                 onClick = {
                     if (active) {
                         playerConnection.player.togglePlayPause()
@@ -160,11 +163,11 @@ fun DeezerSearchScreen(
                     if (resolvingId != null) return@DeezerTrackRow
 
                     scope.launch {
-                        resolvingId = track.id
+                        resolvingId = track.sourceId
                         try {
                             val selected =
                                 CatalogPlaybackResolver.resolveToMediaItem(
-                                    track.toCatalogReference()
+                                    track.toDeezerCatalogReference()
                                 ) ?: return@launch
 
                             playerConnection.player.setMediaItem(selected)
@@ -265,7 +268,7 @@ private fun DeezerProviderHeader(
 
 @Composable
 private fun DeezerTrackRow(
-    track: DeezerTrack,
+    track: SourceVariant,
     isActive: Boolean,
     isPlaying: Boolean,
     isResolving: Boolean,
@@ -346,7 +349,7 @@ private fun DeezerTrackRow(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = track.artistName,
+                    text = track.artists.joinToString(),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -356,9 +359,9 @@ private fun DeezerTrackRow(
                     text =
                         joinByBullet(
                             track.albumName,
-                            track.durationSeconds
-                                .takeIf { it > 0 }
-                                ?.let { makeTimeString(it * 1000L) },
+                            track.durationMs
+                                ?.takeIf { it > 0L }
+                                ?.let(::makeTimeString),
                         ),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f),
