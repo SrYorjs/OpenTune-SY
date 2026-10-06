@@ -174,14 +174,14 @@ fun UniversalSearchScreen(
             },
         ) { result ->
             val playable = result.recommendedVariant
-            val catalogFallback =
+            val catalogFallbacks =
                 if (playable == null) {
-                    result.variants.firstOrNull { variant ->
+                    result.variants.filter { variant ->
                         variant.provider == ProviderId.DEEZER ||
                             variant.provider == ProviderId.SPOTIFY
                     }
                 } else {
-                    null
+                    emptyList()
                 }
             val resultKey =
                 result.variants.joinToString("|") { variant ->
@@ -246,19 +246,23 @@ fun UniversalSearchScreen(
                                 }
                             }
 
-                        catalogFallback != null ->
+                        catalogFallbacks.isNotEmpty() ->
                             {
                                 {
                                     if (resolvingCatalogKey == null) {
                                         scope.launch {
                                             resolvingCatalogKey = resultKey
                                             try {
-                                                val selected =
-                                                    CatalogPlaybackResolver.resolveToMediaItem(
-                                                        catalogFallback
-                                                            .toCatalogPlaybackReference(),
-                                                    ) ?: return@launch
+                                                var selected: MediaItem? = null
+                                                for (fallback in catalogFallbacks) {
+                                                    selected =
+                                                        CatalogPlaybackResolver.resolveToMediaItem(
+                                                            fallback.toCatalogPlaybackReference(),
+                                                        )
+                                                    if (selected != null) break
+                                                }
 
+                                                selected ?: return@launch
                                                 playerConnection.player.setMediaItem(selected)
                                                 playerConnection.player.prepare()
                                                 playerConnection.player.playWhenReady = true
