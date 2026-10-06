@@ -46,4 +46,14 @@ constructor(
     fun trackSearchSources(): List<TrackSearchSource> =
         withCapability(SourceCapability.TRACK_SEARCH)
             .filterIsInstance<TrackSearchSource>()
+
+    /**
+     * Snapshot used by diagnostics/tests to verify what every installed provider
+     * actually promises. Keeping this provider-neutral prevents UI code from
+     * maintaining a second, stale capability table.
+     */
+    fun capabilityMatrix(): Map<ProviderId, Set<SourceCapability>> =
+        all.associate { source ->
+            source.id to source.capabilities.values
+        }
 }
