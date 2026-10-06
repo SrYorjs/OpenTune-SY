@@ -118,6 +118,82 @@ class UnifiedSearchRepositoryTest {
         }
 
     @Test
+    fun sameIsrcAcrossAllMajorProvidersMergesIntoOneTrack() =
+        runBlocking {
+            val providers =
+                listOf(
+                    ProviderId.YOUTUBE_MUSIC,
+                    ProviderId.SPOTIFY,
+                    ProviderId.DEEZER,
+                    ProviderId.TIDAL,
+                    ProviderId.APPLE_MUSIC,
+                    ProviderId.SOUNDCLOUD,
+                )
+            val sources =
+                providers.mapIndexed { index, provider ->
+                    FakeSearchSource(
+                        id = provider,
+                        onSearch = {
+                            page(
+                                variant(
+                                    provider = provider,
+                                    sourceId = provider.value + "-" + index,
+                                    isrc = "USAAA2600020",
+                                ),
+                            )
+                        },
+                    )
+                }
+
+            val result =
+                repository(*sources.toTypedArray())
+                    .search(UnifiedSearchRequest("song"))
+
+            assertEquals(1, result.tracks.size)
+            assertEquals(6, result.tracks.single().variants.size)
+            assertEquals(
+                providers.toSet(),
+                result.tracks.single().variants.map { it.provider }.toSet(),
+            )
+            assertEquals("USAAA2600020", result.tracks.single().identity.isrc)
+        }
+
+    @Test
+    fun multipleProviderFailuresStillReturnHealthyProviders() =
+        runBlocking {
+            val youtube =
+                FakeSearchSource(
+                    id = ProviderId.YOUTUBE_MUSIC,
+                    onSearch = { page(variant(ProviderId.YOUTUBE_MUSIC, "yt")) },
+                )
+            val soundCloud =
+                FakeSearchSource(
+                    id = ProviderId.SOUNDCLOUD,
+                    onSearch = { page(variant(ProviderId.SOUNDCLOUD, "sc", title = "SC Song")) },
+                )
+            val brokenTidal =
+                FakeSearchSource(
+                    id = ProviderId.TIDAL,
+                    onSearch = { Result.failure(IllegalStateException("tidal down")) },
+                )
+            val brokenApple =
+                FakeSearchSource(
+                    id = ProviderId.APPLE_MUSIC,
+                    onSearch = { Result.failure(IllegalStateException("apple down")) },
+                )
+
+            val result =
+                repository(youtube, soundCloud, brokenTidal, brokenApple)
+                    .search(UnifiedSearchRequest("song"))
+
+            assertEquals(2, result.successfulSourceCount)
+            assertEquals(2, result.failedSourceCount)
+            assertEquals(2, result.tracks.size)
+            assertTrue(result.sources[ProviderId.TIDAL]?.error != null)
+            assertTrue(result.sources[ProviderId.APPLE_MUSIC]?.error != null)
+        }
+
+    @Test
     fun liveVersionIsNotMergedWithOriginal() =
         runBlocking {
             val youtube =
