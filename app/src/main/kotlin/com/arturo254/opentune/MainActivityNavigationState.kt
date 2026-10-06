@@ -191,7 +191,11 @@ internal fun rememberMainActivityNavigationState(
                     )
                 }
 
-                SearchSource.UNIVERSAL, SearchSource.LOCAL, SearchSource.DEEZER ->
+                SearchSource.UNIVERSAL,
+                SearchSource.LOCAL,
+                SearchSource.DEEZER,
+                SearchSource.SPOTIFY,
+                ->
                     focusManager.clearFocus()
             }
         }
