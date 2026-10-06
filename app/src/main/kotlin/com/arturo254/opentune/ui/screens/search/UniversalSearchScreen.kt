@@ -64,6 +64,8 @@ import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.sources.deezer.toDeezerCatalogReference
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
 import com.arturo254.opentune.sources.spotify.toSpotifyCatalogReference
+import com.arturo254.opentune.sources.tidal.toTidalCatalogReference
+import com.arturo254.opentune.sources.apple.toAppleMusicCatalogReference
 import com.arturo254.opentune.ui.component.liquidGlassScreenBackground
 import com.arturo254.opentune.viewmodels.UniversalSearchViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -178,7 +180,9 @@ fun UniversalSearchScreen(
                 if (playable == null) {
                     result.variants.filter { variant ->
                         variant.provider == ProviderId.DEEZER ||
-                            variant.provider == ProviderId.SPOTIFY
+                            variant.provider == ProviderId.SPOTIFY ||
+                            variant.provider == ProviderId.TIDAL ||
+                            variant.provider == ProviderId.APPLE_MUSIC
                     }
                 } else {
                     emptyList()
@@ -430,7 +434,9 @@ private fun UnifiedTrackRow(
                     ?: result.variants
                         .firstOrNull { variant ->
                             variant.provider == ProviderId.DEEZER ||
-                                variant.provider == ProviderId.SPOTIFY
+                                variant.provider == ProviderId.SPOTIFY ||
+                                variant.provider == ProviderId.TIDAL ||
+                                variant.provider == ProviderId.APPLE_MUSIC
                         }
                         ?.provider
 
@@ -456,6 +462,8 @@ private fun SourceVariant.toCatalogPlaybackReference(): CatalogTrackReference =
     when (provider) {
         ProviderId.DEEZER -> toDeezerCatalogReference()
         ProviderId.SPOTIFY -> toSpotifyCatalogReference()
+        ProviderId.TIDAL -> toTidalCatalogReference()
+        ProviderId.APPLE_MUSIC -> toAppleMusicCatalogReference()
         else -> error("Provider does not use catalog playback bridge: " + provider.value)
     }
 
@@ -465,6 +473,8 @@ private fun providerName(provider: ProviderId): String =
         ProviderId.LOCAL -> "Local"
         ProviderId.DEEZER -> "Deezer"
         ProviderId.SPOTIFY -> "Spotify"
+        ProviderId.TIDAL -> "TIDAL"
+        ProviderId.APPLE_MUSIC -> "Apple Music"
         else -> provider.value
     }
 
@@ -474,6 +484,8 @@ private fun providerShortName(provider: ProviderId): String =
         ProviderId.LOCAL -> "Local"
         ProviderId.DEEZER -> "Deezer"
         ProviderId.SPOTIFY -> "Spotify"
+        ProviderId.TIDAL -> "TIDAL"
+        ProviderId.APPLE_MUSIC -> "Apple"
         else -> provider.value
     }
 
