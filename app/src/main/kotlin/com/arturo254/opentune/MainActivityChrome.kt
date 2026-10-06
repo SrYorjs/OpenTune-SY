@@ -241,6 +241,7 @@ import com.arturo254.opentune.ui.screens.navigationBuilder
 import com.arturo254.opentune.ui.screens.search.DeezerSearchScreen
 import com.arturo254.opentune.ui.screens.search.LocalSearchScreen
 import com.arturo254.opentune.ui.screens.search.OnlineSearchScreen
+import com.arturo254.opentune.ui.screens.search.SpotifySearchScreen
 import com.arturo254.opentune.ui.screens.search.UniversalSearchScreen
 import com.arturo254.opentune.ui.screens.settings.DarkMode
 import com.arturo254.opentune.ui.screens.settings.DiscordPresenceManager
@@ -617,6 +618,7 @@ internal fun MainActivitySearchBar(
                                                                 SearchSource.LOCAL -> R.string.search_library
                                                                 SearchSource.ONLINE -> R.string.search_yt_music
                                                                 SearchSource.DEEZER -> R.string.search_deezer
+                                                                SearchSource.SPOTIFY -> R.string.search_spotify
                                                             }
                                                         ),
                                                     )
@@ -777,6 +779,12 @@ internal fun MainActivitySearchBar(
 
                                                         SearchSource.DEEZER ->
                                                             DeezerSearchScreen(
+                                                                query = query.text,
+                                                                pureBlack = pureBlack,
+                                                            )
+
+                                                        SearchSource.SPOTIFY ->
+                                                            SpotifySearchScreen(
                                                                 query = query.text,
                                                                 pureBlack = pureBlack,
                                                             )
