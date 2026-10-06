@@ -13,7 +13,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateDpAsState
@@ -23,9 +22,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -182,8 +178,6 @@ import com.arturo254.opentune.constants.PauseSearchHistoryKey
 import com.arturo254.opentune.constants.PureBlackKey
 import com.arturo254.opentune.constants.RemindAfterKey
 import com.arturo254.opentune.constants.SYSTEM_DEFAULT
-import com.arturo254.opentune.constants.SearchSource
-import com.arturo254.opentune.constants.SearchSourceKey
 import com.arturo254.opentune.constants.SlimFloatingToolbarHeight
 import com.arturo254.opentune.constants.SlimNavBarKey
 import com.arturo254.opentune.constants.StopMusicOnTaskClearKey
@@ -228,7 +222,6 @@ import com.arturo254.opentune.constants.TogetherDisplayNameKey
 import com.arturo254.opentune.ui.component.BottomSheetPageState
 import com.arturo254.opentune.ui.component.MenuState
 import com.arturo254.opentune.ui.component.TopSearch
-import com.arturo254.opentune.ui.component.SearchSourceSelector
 import com.arturo254.opentune.ui.component.rememberBottomSheetState
 import com.arturo254.opentune.ui.component.shimmer.ShimmerTheme
 import com.arturo254.opentune.ui.menu.YouTubeSongMenu
@@ -238,12 +231,6 @@ import com.arturo254.opentune.ui.screens.Screens
 import com.arturo254.opentune.ui.screens.buildLoginRoute
 import com.arturo254.opentune.ui.screens.musicrecognition.MusicRecognitionRoute
 import com.arturo254.opentune.ui.screens.navigationBuilder
-import com.arturo254.opentune.ui.screens.search.DeezerSearchScreen
-import com.arturo254.opentune.ui.screens.search.LocalSearchScreen
-import com.arturo254.opentune.ui.screens.search.OnlineSearchScreen
-import com.arturo254.opentune.ui.screens.search.SpotifySearchScreen
-import com.arturo254.opentune.ui.screens.search.TidalSearchScreen
-import com.arturo254.opentune.ui.screens.search.AppleMusicSearchScreen
 import com.arturo254.opentune.ui.screens.search.UniversalSearchScreen
 import com.arturo254.opentune.ui.screens.settings.DarkMode
 import com.arturo254.opentune.ui.screens.settings.DiscordPresenceManager
@@ -269,7 +256,6 @@ import com.arturo254.opentune.utils.reportException
 import com.arturo254.opentune.utils.setAppLocale
 import com.arturo254.opentune.viewmodels.HomeViewModel
 import java.net.URLDecoder
-import java.net.URLEncoder
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.random.Random
@@ -596,9 +582,7 @@ internal fun MainActivitySearchBar(
     val onSearch = navigationState.onSearch
     val active = navigationState.active
     val onActiveChange = navigationState.onActiveChange
-    val searchSource = navigationState.searchSource
     val searchBarFocusRequester = navigationState.searchBarFocusRequester
-    val pauseSearchHistory = navigationState.pauseSearchHistory
     val playerBottomSheetState = playerUiState.bottomSheetState
 
                                         androidx.compose.animation.AnimatedVisibility(
@@ -614,17 +598,7 @@ internal fun MainActivitySearchBar(
                                                 onActiveChange = onActiveChange,
                                                 placeholder = {
                                                     Text(
-                                                        text = stringResource(
-                                                            when (searchSource) {
-                                                                SearchSource.UNIVERSAL -> R.string.search_all_sources
-                                                                SearchSource.LOCAL -> R.string.search_library
-                                                                SearchSource.ONLINE -> R.string.search_yt_music
-                                                                SearchSource.DEEZER -> R.string.search_deezer
-                                                                SearchSource.SPOTIFY -> R.string.search_spotify
-                                                                SearchSource.TIDAL -> R.string.search_tidal
-                                                                SearchSource.APPLE_MUSIC -> R.string.search_apple_music
-                                                            }
-                                                        ),
+                                                        text = stringResource(R.string.search_all_sources),
                                                     )
                                                 },
                                                 leadingIcon = {
@@ -710,101 +684,23 @@ internal fun MainActivitySearchBar(
                                                     )
                                                 }
                                             ) {
-                                                SearchSourceSelector(
-                                                    selected = searchSource,
-                                                    onSelected = { source ->
-                                                        navigationState.setSearchSource(source)
-                                                    },
-                                                    modifier = Modifier
-                                                        .align(Alignment.CenterHorizontally)
-                                                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                                                )
-
-                                                AnimatedContent(
-                                                    targetState = searchSource,
-                                                    transitionSpec = {
-                                                        val direction =
-                                                            if (targetState.ordinal >= initialState.ordinal) 1 else -1
-                                                        (
-                                                            slideInHorizontally(
-                                                                animationSpec = spring(
-                                                                    dampingRatio = 0.90f,
-                                                                    stiffness = 560f,
-                                                                ),
-                                                                initialOffsetX = { width -> direction * width / 6 },
-                                                            ) + fadeIn(tween(120))
-                                                        ) togetherWith (
-                                                            slideOutHorizontally(
-                                                                animationSpec = tween(140),
-                                                                targetOffsetX = { width -> -direction * width / 8 },
-                                                            ) + fadeOut(tween(100))
-                                                        )
-                                                    },
-                                                    label = "searchSourceSlide",
+                                                Box(
                                                     modifier =
                                                         Modifier
                                                             .fillMaxSize()
-                                                            .padding(bottom = if (!playerBottomSheetState.isDismissed) MiniPlayerHeight else 0.dp)
-                                                            .navigationBarsPadding(),
-                                                ) { searchSource ->
-                                                    when (searchSource) {
-                                                        SearchSource.UNIVERSAL ->
-                                                            UniversalSearchScreen(
-                                                                query = query.text,
-                                                                pureBlack = pureBlack,
-                                                            )
-
-                                                        SearchSource.LOCAL ->
-                                                            LocalSearchScreen(
-                                                                query = query.text,
-                                                                navController = navController,
-                                                                onDismiss = { onActiveChange(false) },
-                                                                pureBlack = pureBlack,
-                                                            )
-
-                                                        SearchSource.ONLINE ->
-                                                            OnlineSearchScreen(
-                                                                query = query.text,
-                                                                onQueryChange = onQueryChange,
-                                                                navController = navController,
-                                                                onSearch = { searchedQuery ->
-                                                                    navController.navigate(
-                                                                        "search/" + URLEncoder.encode(searchedQuery, "UTF-8")
-                                                                    )
-                                                                    if (!pauseSearchHistory) {
-                                                                        database.query {
-                                                                            insert(SearchHistory(query = searchedQuery))
-                                                                        }
-                                                                    }
-                                                                },
-                                                                onDismiss = { onActiveChange(false) },
-                                                                pureBlack = pureBlack
-                                                            )
-
-                                                        SearchSource.DEEZER ->
-                                                            DeezerSearchScreen(
-                                                                query = query.text,
-                                                                pureBlack = pureBlack,
-                                                            )
-
-                                                        SearchSource.SPOTIFY ->
-                                                            SpotifySearchScreen(
-                                                                query = query.text,
-                                                                pureBlack = pureBlack,
-                                                            )
-
-                                                        SearchSource.TIDAL ->
-                                                            TidalSearchScreen(
-                                                                query = query.text,
-                                                                pureBlack = pureBlack,
-                                                            )
-
-                                                        SearchSource.APPLE_MUSIC ->
-                                                            AppleMusicSearchScreen(
-                                                                query = query.text,
-                                                                pureBlack = pureBlack,
-                                                            )
-                                                    }
+                                                            .padding(
+                                                                bottom =
+                                                                    if (!playerBottomSheetState.isDismissed) {
+                                                                        MiniPlayerHeight
+                                                                    } else {
+                                                                        0.dp
+                                                                    },
+                                                            ).navigationBarsPadding(),
+                                                ) {
+                                                    UniversalSearchScreen(
+                                                        query = query.text,
+                                                        pureBlack = pureBlack,
+                                                    )
                                                 }
                                             }
                                         }
