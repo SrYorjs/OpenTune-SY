@@ -30,7 +30,6 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.longOrNull
-import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -447,12 +446,7 @@ constructor() : SoundCloudCatalogGateway, SoundCloudStreamGateway {
                     publisher?.stringValue("isrc")
                         ?: item.stringValue("isrc")
                 )?.uppercase(),
-            explicit =
-                item["policy"]
-                    ?.jsonPrimitive
-                    ?.contentOrNull
-                    ?.equals("BLOCK", ignoreCase = true)
-                    ?.let { false },
+            explicit = null,
             artworkUrl = artwork,
             permalinkUrl = item.stringValue("permalink_url"),
             streamable = item["streamable"]?.jsonPrimitive?.booleanOrNull ?: true,
