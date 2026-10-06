@@ -3,6 +3,7 @@ package com.arturo254.opentune.sources.soundcloud
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata.MEDIA_TYPE_MUSIC
+import com.arturo254.opentune.catalog.CatalogTrackReference
 import com.arturo254.opentune.core.model.AudioQualityInfo
 import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.core.model.SourceVariant
@@ -647,6 +648,23 @@ internal fun SoundCloudTrack.toSourceVariant(): SourceVariant =
                 lossless = false,
             ),
     )
+
+internal fun SourceVariant.toSoundCloudCatalogReference(): CatalogTrackReference {
+    require(provider == ProviderId.SOUNDCLOUD) {
+        "Only SoundCloud variants can be converted to SoundCloud catalog references"
+    }
+
+    return CatalogTrackReference(
+        cacheId = "soundcloud:" + sourceId,
+        title = title,
+        artists = artists,
+        durationMs = durationMs ?: 0L,
+        thumbnailUrl = artworkUrl,
+        albumId = albumId?.let { "soundcloud-album:" + it },
+        albumName = albumName,
+        explicit = explicit ?: false,
+    )
+}
 
 private fun SourceVariant.toOpenTuneMetadata(): MediaMetadata {
     val durationSeconds =
