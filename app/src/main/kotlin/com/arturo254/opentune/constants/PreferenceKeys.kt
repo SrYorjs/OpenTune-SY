@@ -457,6 +457,7 @@ enum class SearchSource {
     LOCAL,
     ONLINE,
     DEEZER,
+    SPOTIFY,
     ;
 
     fun toggle() =
@@ -464,7 +465,8 @@ enum class SearchSource {
             UNIVERSAL -> LOCAL
             LOCAL -> ONLINE
             ONLINE -> DEEZER
-            DEEZER -> UNIVERSAL
+            DEEZER -> SPOTIFY
+            SPOTIFY -> UNIVERSAL
         }
 }
 
