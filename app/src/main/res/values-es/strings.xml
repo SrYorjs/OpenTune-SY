@@ -34,7 +34,7 @@
     <string name="search_library">Buscar en biblioteca…</string>
     <string name="provider_spotify">Spotify</string>
     <string name="search_spotify">Buscar en el catálogo de Spotify…</string>
-    <string name="spotify_source_ready">Búsqueda de catálogo conectada</string>
+    <string name="spotify_source_ready">Catálogo Spotify Web disponible</string>
     <string name="filter_library">Biblioteca</string>
     <string name="filter_liked">Me gustan</string>
     <string name="filter_downloaded">Descargado</string>
