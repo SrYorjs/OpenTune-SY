@@ -180,8 +180,6 @@ import com.arturo254.opentune.constants.PauseSearchHistoryKey
 import com.arturo254.opentune.constants.PureBlackKey
 import com.arturo254.opentune.constants.RemindAfterKey
 import com.arturo254.opentune.constants.SYSTEM_DEFAULT
-import com.arturo254.opentune.constants.SearchSource
-import com.arturo254.opentune.constants.SearchSourceKey
 import com.arturo254.opentune.constants.SlimFloatingToolbarHeight
 import com.arturo254.opentune.constants.SlimNavBarKey
 import com.arturo254.opentune.constants.StopMusicOnTaskClearKey
@@ -226,7 +224,6 @@ import com.arturo254.opentune.constants.TogetherDisplayNameKey
 import com.arturo254.opentune.ui.component.BottomSheetPageState
 import com.arturo254.opentune.ui.component.MenuState
 import com.arturo254.opentune.ui.component.TopSearch
-import com.arturo254.opentune.ui.component.SearchSourceSelector
 import com.arturo254.opentune.ui.component.rememberBottomSheetState
 import com.arturo254.opentune.ui.component.shimmer.ShimmerTheme
 import com.arturo254.opentune.ui.menu.YouTubeSongMenu
@@ -333,7 +330,6 @@ internal fun MainActivityScaffold(
     val active = navigationState.active
     val selectedNavigationRoute = navigationState.selectedNavigationRoute
     val onActiveChange = navigationState.onActiveChange
-    val searchSource = navigationState.searchSource
     val searchBarFocusRequester = navigationState.searchBarFocusRequester
     val onSearch = navigationState.onSearch
     val shouldShowNavigationBar = navigationState.shouldShowNavigationBar
