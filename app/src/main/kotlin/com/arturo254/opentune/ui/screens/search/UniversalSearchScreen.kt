@@ -51,6 +51,7 @@ import coil3.compose.AsyncImage
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
 import com.arturo254.opentune.catalog.CatalogPlaybackResolver
+import com.arturo254.opentune.catalog.CatalogTrackReference
 import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.core.model.TrackVersionTrait
@@ -62,6 +63,7 @@ import com.arturo254.opentune.playback.queues.ListQueue
 import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.sources.deezer.toDeezerCatalogReference
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
+import com.arturo254.opentune.sources.spotify.toSpotifyCatalogReference
 import com.arturo254.opentune.ui.component.liquidGlassScreenBackground
 import com.arturo254.opentune.viewmodels.UniversalSearchViewModel
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -172,9 +174,12 @@ fun UniversalSearchScreen(
             },
         ) { result ->
             val playable = result.recommendedVariant
-            val deezerFallback =
+            val catalogFallback =
                 if (playable == null) {
-                    result.variants.firstOrNull { it.provider == ProviderId.DEEZER }
+                    result.variants.firstOrNull { variant ->
+                        variant.provider == ProviderId.DEEZER ||
+                            variant.provider == ProviderId.SPOTIFY
+                    }
                 } else {
                     null
                 }
@@ -241,7 +246,7 @@ fun UniversalSearchScreen(
                                 }
                             }
 
-                        deezerFallback != null ->
+                        catalogFallback != null ->
                             {
                                 {
                                     if (resolvingCatalogKey == null) {
@@ -250,8 +255,8 @@ fun UniversalSearchScreen(
                                             try {
                                                 val selected =
                                                     CatalogPlaybackResolver.resolveToMediaItem(
-                                                        deezerFallback
-                                                            .toDeezerCatalogReference(),
+                                                        catalogFallback
+                                                            .toCatalogPlaybackReference(),
                                                     ) ?: return@launch
 
                                                 playerConnection.player.setMediaItem(selected)
@@ -419,7 +424,10 @@ private fun UnifiedTrackRow(
             val displayProvider =
                 recommended?.provider
                     ?: result.variants
-                        .firstOrNull { it.provider == ProviderId.DEEZER }
+                        .firstOrNull { variant ->
+                            variant.provider == ProviderId.DEEZER ||
+                                variant.provider == ProviderId.SPOTIFY
+                        }
                         ?.provider
 
             if (displayProvider != null) {
@@ -439,6 +447,13 @@ private fun UnifiedTrackRow(
         }
     }
 }
+
+private fun SourceVariant.toCatalogPlaybackReference(): CatalogTrackReference =
+    when (provider) {
+        ProviderId.DEEZER -> toDeezerCatalogReference()
+        ProviderId.SPOTIFY -> toSpotifyCatalogReference()
+        else -> error("Provider does not use catalog playback bridge: " + provider.value)
+    }
 
 private fun providerName(provider: ProviderId): String =
     when (provider) {
