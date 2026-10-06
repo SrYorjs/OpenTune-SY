@@ -1,10 +1,10 @@
 package com.arturo254.opentune.spotify
 
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.request.get
 import io.ktor.client.request.header
-import io.ktor.client.statement.bodyAsBytes
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.ConcurrentHashMap
 
@@ -86,7 +86,7 @@ object SpotifyWebMetadataClient {
             )
         }
 
-        return parseTrackMetadata(response.bodyAsBytes())
+        return parseTrackMetadata(response.body<ByteArray>())
     }
 
     internal fun parseTrackMetadata(bytes: ByteArray): SpotifyNativeTrackMetadata {
