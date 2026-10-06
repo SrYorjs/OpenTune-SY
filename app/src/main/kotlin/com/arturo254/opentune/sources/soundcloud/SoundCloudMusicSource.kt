@@ -691,10 +691,10 @@ private fun SourceVariant.toOpenTuneMetadata(): MediaMetadata {
         duration = durationSeconds,
         thumbnailUrl = artworkUrl,
         album =
-            albumName?.let { title ->
+            albumId?.let { id ->
                 MediaMetadata.Album(
-                    id = albumId,
-                    title = title,
+                    id = id,
+                    title = albumName.orEmpty(),
                 )
             },
         explicit = explicit ?: false,
