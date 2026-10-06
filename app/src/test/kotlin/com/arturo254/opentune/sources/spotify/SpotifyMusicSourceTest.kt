@@ -3,6 +3,7 @@ package com.arturo254.opentune.sources.spotify
 import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.sources.SourceCapability
 import com.arturo254.opentune.sources.TrackSearchRequest
+import com.arturo254.opentune.spotify.SpotifyNativeTrackMetadata
 import com.arturo254.opentune.spotify.models.SpotifyImage
 import com.arturo254.opentune.spotify.models.SpotifyPaging
 import com.arturo254.opentune.spotify.models.SpotifySimpleAlbum
@@ -137,6 +138,43 @@ class SpotifyMusicSourceTest {
         }
 
     @Test
+    fun nativeSpotifyMetadataEnrichesIsrcAndPlaybackIdentity() =
+        runBlocking {
+            val gateway =
+                FakeGateway(
+                    page =
+                        SpotifyPaging(
+                            items = listOf(track(id = "native")),
+                            total = 1,
+                            limit = 50,
+                            offset = 0,
+                        ),
+                    metadata =
+                        SpotifyNativeTrackMetadata(
+                            isrc = "USAAA2600001",
+                            durationMs = 181_234L,
+                            explicit = true,
+                        ),
+                )
+            val source = SpotifyMusicSource(gateway)
+
+            val result =
+                source
+                    .searchTracks(
+                        TrackSearchRequest(
+                            query = "Song",
+                            limit = 50,
+                        ),
+                    ).getOrThrow()
+
+            val variant = result.items.single()
+            assertEquals("USAAA2600001", variant.isrc)
+            assertEquals(181_234L, variant.durationMs)
+            assertEquals(true, variant.explicit)
+            assertEquals(1, gateway.metadataCalls)
+        }
+
+    @Test
     fun invalidContinuationFailsBeforeGatewayCall() =
         runBlocking {
             val gateway = FakeGateway()
@@ -204,8 +242,10 @@ class SpotifyMusicSourceTest {
                 limit = 50,
                 offset = 0,
             ),
+        var metadata: SpotifyNativeTrackMetadata = SpotifyNativeTrackMetadata(),
     ) : SpotifyCatalogGateway {
         var calls: Int = 0
+        var metadataCalls: Int = 0
         var lastQuery: String? = null
         var lastLimit: Int? = null
         var lastOffset: Int? = null
@@ -220,6 +260,11 @@ class SpotifyMusicSourceTest {
             lastLimit = limit
             lastOffset = offset
             return Result.success(page)
+        }
+
+        override suspend fun trackMetadata(trackId: String): Result<SpotifyNativeTrackMetadata> {
+            metadataCalls++
+            return Result.success(metadata)
         }
     }
 }
