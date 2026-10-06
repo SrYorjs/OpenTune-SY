@@ -242,6 +242,8 @@ import com.arturo254.opentune.ui.screens.search.DeezerSearchScreen
 import com.arturo254.opentune.ui.screens.search.LocalSearchScreen
 import com.arturo254.opentune.ui.screens.search.OnlineSearchScreen
 import com.arturo254.opentune.ui.screens.search.SpotifySearchScreen
+import com.arturo254.opentune.ui.screens.search.TidalSearchScreen
+import com.arturo254.opentune.ui.screens.search.AppleMusicSearchScreen
 import com.arturo254.opentune.ui.screens.search.UniversalSearchScreen
 import com.arturo254.opentune.ui.screens.settings.DarkMode
 import com.arturo254.opentune.ui.screens.settings.DiscordPresenceManager
@@ -619,6 +621,8 @@ internal fun MainActivitySearchBar(
                                                                 SearchSource.ONLINE -> R.string.search_yt_music
                                                                 SearchSource.DEEZER -> R.string.search_deezer
                                                                 SearchSource.SPOTIFY -> R.string.search_spotify
+                                                                SearchSource.TIDAL -> R.string.search_tidal
+                                                                SearchSource.APPLE_MUSIC -> R.string.search_apple_music
                                                             }
                                                         ),
                                                     )
@@ -785,6 +789,18 @@ internal fun MainActivitySearchBar(
 
                                                         SearchSource.SPOTIFY ->
                                                             SpotifySearchScreen(
+                                                                query = query.text,
+                                                                pureBlack = pureBlack,
+                                                            )
+
+                                                        SearchSource.TIDAL ->
+                                                            TidalSearchScreen(
+                                                                query = query.text,
+                                                                pureBlack = pureBlack,
+                                                            )
+
+                                                        SearchSource.APPLE_MUSIC ->
+                                                            AppleMusicSearchScreen(
                                                                 query = query.text,
                                                                 pureBlack = pureBlack,
                                                             )
