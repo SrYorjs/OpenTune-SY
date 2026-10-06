@@ -552,10 +552,11 @@ constructor(
                     (page.offset + page.limit)
                         .takeIf { next ->
                             page.items.isNotEmpty() &&
-                                (
-                                    page.total == null ||
-                                        next < page.total
-                                )
+                                if (page.total != null) {
+                                    next < page.total
+                                } else {
+                                    page.items.size >= page.limit
+                                }
                         }
 
                 TrackSearchPage(
