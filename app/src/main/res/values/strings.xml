@@ -34,6 +34,9 @@
     <string name="provider_audius">Audius</string>
     <string name="search_deezer">Search Deezer catalog</string>
     <string name="provider_deezer">Deezer</string>
+    <string name="provider_spotify">Spotify</string>
+    <string name="search_spotify">Search Spotify catalog</string>
+    <string name="spotify_source_ready">Connected catalog search</string>
     <string name="deezer_trending">Trending worldwide</string>
     <string name="global_catalog">Global catalog</string>
     <string name="audius_trending">Trending on Audius</string>
