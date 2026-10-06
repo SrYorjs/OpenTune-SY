@@ -185,7 +185,7 @@ fun DeezerSearchScreen(
                                         .map { candidate ->
                                             async {
                                                 CatalogPlaybackResolver.resolveToMediaItem(
-                                                    candidate.toCatalogReference()
+                                                    candidate.toDeezerCatalogReference()
                                                 )
                                             }
                                         }
