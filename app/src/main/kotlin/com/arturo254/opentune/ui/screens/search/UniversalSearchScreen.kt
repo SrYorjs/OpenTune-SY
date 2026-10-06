@@ -64,6 +64,7 @@ import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.sources.deezer.toDeezerCatalogReference
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
 import com.arturo254.opentune.sources.spotify.toSpotifyCatalogReference
+import com.arturo254.opentune.sources.soundcloud.toSoundCloudCatalogReference
 import com.arturo254.opentune.sources.tidal.toTidalCatalogReference
 import com.arturo254.opentune.sources.apple.toAppleMusicCatalogReference
 import com.arturo254.opentune.ui.component.liquidGlassScreenBackground
@@ -235,6 +236,30 @@ fun UniversalSearchScreen(
                                                     preloadItem = playable.toOpenTuneMetadata(),
                                                 ),
                                             )
+
+                                        ProviderId.SOUNDCLOUD -> {
+                                            if (resolvingCatalogKey == null) {
+                                                scope.launch {
+                                                    resolvingCatalogKey = resultKey
+                                                    try {
+                                                        val selected =
+                                                            viewModel.resolveSoundCloud(playable)
+                                                                ?: CatalogPlaybackResolver
+                                                                    .resolveToMediaItem(
+                                                                        playable
+                                                                            .toSoundCloudCatalogReference(),
+                                                                    )
+                                                                ?: return@launch
+
+                                                        playerConnection.player.setMediaItem(selected)
+                                                        playerConnection.player.prepare()
+                                                        playerConnection.player.playWhenReady = true
+                                                    } finally {
+                                                        resolvingCatalogKey = null
+                                                    }
+                                                }
+                                            }
+                                        }
 
                                         else ->
                                             playerConnection.playQueue(
@@ -464,6 +489,7 @@ private fun SourceVariant.toCatalogPlaybackReference(): CatalogTrackReference =
         ProviderId.SPOTIFY -> toSpotifyCatalogReference()
         ProviderId.TIDAL -> toTidalCatalogReference()
         ProviderId.APPLE_MUSIC -> toAppleMusicCatalogReference()
+        ProviderId.SOUNDCLOUD -> toSoundCloudCatalogReference()
         else -> error("Provider does not use catalog playback bridge: " + provider.value)
     }
 
@@ -475,6 +501,7 @@ private fun providerName(provider: ProviderId): String =
         ProviderId.SPOTIFY -> "Spotify"
         ProviderId.TIDAL -> "TIDAL"
         ProviderId.APPLE_MUSIC -> "Apple Music"
+        ProviderId.SOUNDCLOUD -> "SoundCloud"
         else -> provider.value
     }
 
@@ -486,6 +513,7 @@ private fun providerShortName(provider: ProviderId): String =
         ProviderId.SPOTIFY -> "Spotify"
         ProviderId.TIDAL -> "TIDAL"
         ProviderId.APPLE_MUSIC -> "Apple"
+        ProviderId.SOUNDCLOUD -> "SC"
         else -> provider.value
     }
 
