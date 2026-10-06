@@ -33,6 +33,7 @@ import com.arturo254.opentune.ui.screens.Screens
 import com.arturo254.opentune.ui.screens.settings.NavigationTab
 import com.arturo254.opentune.ui.utils.appBarScrollBehavior
 import com.arturo254.opentune.ui.utils.resetHeightOffset
+import com.arturo254.opentune.utils.rememberEnumPreference
 import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.viewmodels.HomeViewModel
 import java.net.URLDecoder
