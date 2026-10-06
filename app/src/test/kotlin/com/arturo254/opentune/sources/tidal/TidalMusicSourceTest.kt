@@ -145,7 +145,17 @@ class TidalMusicSourceTest {
     private class FakeGateway(
         var page: TidalTrackPage =
             TidalTrackPage(
-                items = listOf(track("default")),
+                items =
+                    listOf(
+                        TidalTrack(
+                            id = "default",
+                            title = "Song",
+                            artists = listOf("Artist"),
+                            albumId = "album-default",
+                            albumTitle = "Album",
+                            durationSeconds = 180,
+                        ),
+                    ),
                 total = 1,
                 limit = 50,
                 offset = 0,
