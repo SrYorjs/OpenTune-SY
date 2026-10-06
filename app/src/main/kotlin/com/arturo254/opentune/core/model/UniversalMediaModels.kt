@@ -20,6 +20,7 @@ value class ProviderId(
         val DEEZER = ProviderId("deezer")
         val TIDAL = ProviderId("tidal")
         val APPLE_MUSIC = ProviderId("apple_music")
+        val SOUNDCLOUD = ProviderId("soundcloud")
         val LOCAL = ProviderId("local")
     }
 }
