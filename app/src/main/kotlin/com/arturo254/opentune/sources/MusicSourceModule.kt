@@ -7,6 +7,12 @@ import com.arturo254.opentune.sources.local.LocalMusicSource
 import com.arturo254.opentune.sources.spotify.DefaultSpotifyCatalogGateway
 import com.arturo254.opentune.sources.spotify.SpotifyCatalogGateway
 import com.arturo254.opentune.sources.spotify.SpotifyMusicSource
+import com.arturo254.opentune.sources.tidal.DefaultTidalCatalogGateway
+import com.arturo254.opentune.sources.tidal.TidalCatalogGateway
+import com.arturo254.opentune.sources.tidal.TidalMusicSource
+import com.arturo254.opentune.sources.apple.AppleMusicCatalogGateway
+import com.arturo254.opentune.sources.apple.AppleMusicSource
+import com.arturo254.opentune.sources.apple.DefaultAppleMusicCatalogGateway
 import com.arturo254.opentune.sources.youtube.YouTubeMusicSource
 import dagger.Binds
 import dagger.Module
@@ -47,4 +53,22 @@ abstract class MusicSourceModule {
     abstract fun bindSpotifyCatalogGateway(
         gateway: DefaultSpotifyCatalogGateway,
     ): SpotifyCatalogGateway
+
+    @Binds
+    @IntoSet
+    abstract fun bindTidalMusicSource(source: TidalMusicSource): MusicSource
+
+    @Binds
+    abstract fun bindTidalCatalogGateway(
+        gateway: DefaultTidalCatalogGateway,
+    ): TidalCatalogGateway
+
+    @Binds
+    @IntoSet
+    abstract fun bindAppleMusicSource(source: AppleMusicSource): MusicSource
+
+    @Binds
+    abstract fun bindAppleMusicCatalogGateway(
+        gateway: DefaultAppleMusicCatalogGateway,
+    ): AppleMusicCatalogGateway
 }
