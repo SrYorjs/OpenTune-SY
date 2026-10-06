@@ -27,6 +27,7 @@ import com.arturo254.opentune.constants.SpotifyAccountNameKey
 import com.arturo254.opentune.constants.SpotifyLibraryPlaylistsCacheKey
 import com.arturo254.opentune.constants.SpotifySpDcKey
 import com.arturo254.opentune.constants.SpotifySpKeyKey
+import com.arturo254.opentune.spotify.models.SpotifyPaging
 import com.arturo254.opentune.spotify.models.SpotifyPlaylist
 import com.arturo254.opentune.spotify.models.SpotifyPlaylistTracksRef
 import com.arturo254.opentune.spotify.models.SpotifyTrack
@@ -190,6 +191,44 @@ constructor(
             ensureAuthenticated()
             spotifyCallWithTokenRetry {
                 Spotify.playlist(playlistId).getOrThrow()
+            }
+        }
+
+    suspend fun searchTracksPage(
+        query: String,
+        limit: Int = 50,
+        offset: Int = 0,
+    ): SpotifyPaging<SpotifyTrack> =
+        withContext(Dispatchers.IO) {
+            require(limit > 0) { "Spotify search limit must be positive" }
+            require(offset >= 0) { "Spotify search offset cannot be negative" }
+
+            val normalizedQuery = query.trim()
+            if (normalizedQuery.isEmpty()) {
+                return@withContext SpotifyPaging(
+                    items = emptyList(),
+                    total = 0,
+                    limit = limit,
+                    offset = offset,
+                )
+            }
+
+            ensureAuthenticated()
+            spotifyCallWithTokenRetry {
+                Spotify
+                    .search(
+                        query = normalizedQuery,
+                        types = listOf("track"),
+                        limit = limit.coerceAtMost(50),
+                        offset = offset,
+                    ).getOrThrow()
+                    .tracks
+                    ?: SpotifyPaging(
+                        items = emptyList(),
+                        total = 0,
+                        limit = limit.coerceAtMost(50),
+                        offset = offset,
+                    )
             }
         }
 
