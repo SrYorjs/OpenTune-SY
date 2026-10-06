@@ -2,8 +2,9 @@ package com.arturo254.opentune.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.arturo254.opentune.deezer.Deezer
-import com.arturo254.opentune.deezer.DeezerTrack
+import com.arturo254.opentune.core.model.SourceVariant
+import com.arturo254.opentune.sources.TrackSearchRequest
+import com.arturo254.opentune.sources.deezer.DeezerMusicSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -18,7 +19,7 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 data class DeezerSearchState(
-    val tracks: List<DeezerTrack> = emptyList(),
+    val tracks: List<SourceVariant> = emptyList(),
     val loading: Boolean = false,
     val error: String? = null,
     val showingTrending: Boolean = true,
@@ -28,7 +29,9 @@ data class DeezerSearchState(
 @HiltViewModel
 class DeezerSearchViewModel
 @Inject
-constructor() : ViewModel() {
+constructor(
+    private val deezerSource: DeezerMusicSource,
+) : ViewModel() {
     val query = MutableStateFlow("")
 
     val state: StateFlow<DeezerSearchState> =
@@ -46,12 +49,15 @@ constructor() : ViewModel() {
 
                     val result =
                         if (rawQuery.isBlank()) {
-                            Deezer.trendingTracks(limit = 30)
+                            deezerSource.trendingTracks(limit = 30)
                         } else {
-                            Deezer.searchTracks(
-                                query = rawQuery.trim(),
-                                limit = 42,
-                            )
+                            deezerSource
+                                .searchTracks(
+                                    TrackSearchRequest(
+                                        query = rawQuery.trim(),
+                                        limit = 42,
+                                    ),
+                                ).map { page -> page.items }
                         }
 
                     result.fold(
