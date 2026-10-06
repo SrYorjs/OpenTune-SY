@@ -25,6 +25,7 @@ data class CatalogProviderSearchState(
     val error: String? = null,
 )
 
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 private fun searchState(
     scope: kotlinx.coroutines.CoroutineScope,
     query: MutableStateFlow<String>,
