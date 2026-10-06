@@ -458,6 +458,8 @@ enum class SearchSource {
     ONLINE,
     DEEZER,
     SPOTIFY,
+    TIDAL,
+    APPLE_MUSIC,
     ;
 
     fun toggle() =
@@ -466,7 +468,9 @@ enum class SearchSource {
             LOCAL -> ONLINE
             ONLINE -> DEEZER
             DEEZER -> SPOTIFY
-            SPOTIFY -> UNIVERSAL
+            SPOTIFY -> TIDAL
+            TIDAL -> APPLE_MUSIC
+            APPLE_MUSIC -> UNIVERSAL
         }
 }
 
