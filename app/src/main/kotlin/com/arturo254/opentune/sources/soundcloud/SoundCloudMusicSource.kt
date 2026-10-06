@@ -3,6 +3,7 @@ package com.arturo254.opentune.sources.soundcloud
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata.MEDIA_TYPE_MUSIC
+import androidx.media3.common.MimeTypes
 import com.arturo254.opentune.catalog.CatalogTrackReference
 import com.arturo254.opentune.core.model.AudioQualityInfo
 import com.arturo254.opentune.core.model.ProviderId
@@ -611,6 +612,13 @@ constructor(
             .Builder()
             .setMediaId(variant.sourceId)
             .setUri(stream.url)
+            .setMimeType(
+                if (stream.protocol == "hls") {
+                    MimeTypes.APPLICATION_M3U8
+                } else {
+                    stream.mimeType
+                },
+            )
             .setCustomCacheKey("soundcloud:" + variant.sourceId)
             .setTag(metadata)
             .setMediaMetadata(
