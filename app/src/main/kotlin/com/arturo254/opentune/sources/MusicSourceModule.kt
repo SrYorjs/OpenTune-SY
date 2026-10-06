@@ -4,6 +4,7 @@ import com.arturo254.opentune.sources.deezer.DeezerCatalogGateway
 import com.arturo254.opentune.sources.deezer.DeezerMusicSource
 import com.arturo254.opentune.sources.deezer.DefaultDeezerCatalogGateway
 import com.arturo254.opentune.sources.local.LocalMusicSource
+import com.arturo254.opentune.sources.offline.OfflineMusicSource
 import com.arturo254.opentune.sources.spotify.DefaultSpotifyCatalogGateway
 import com.arturo254.opentune.sources.spotify.SpotifyCatalogGateway
 import com.arturo254.opentune.sources.spotify.SpotifyMusicSource
@@ -39,6 +40,10 @@ abstract class MusicSourceModule {
     @Binds
     @IntoSet
     abstract fun bindLocalMusicSource(source: LocalMusicSource): MusicSource
+
+    @Binds
+    @IntoSet
+    abstract fun bindOfflineMusicSource(source: OfflineMusicSource): MusicSource
 
     @Binds
     @IntoSet
