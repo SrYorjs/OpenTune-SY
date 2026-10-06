@@ -31,18 +31,35 @@ object Deezer {
         query: String,
         limit: Int = 40,
     ): Result<List<DeezerTrack>> =
+        searchTracksPage(
+            query = query,
+            limit = limit,
+        ).map(DeezerTrackPage::items)
+
+    suspend fun searchTracksPage(
+        query: String,
+        limit: Int = 40,
+        index: Int = 0,
+    ): Result<DeezerTrackPage> =
         withContext(Dispatchers.IO) {
             runCatching {
+                require(index >= 0) { "Deezer search index cannot be negative" }
+
+                val safeLimit = limit.coerceIn(1, 50)
                 val url =
                     (BASE_URL + "/search")
                         .toHttpUrl()
                         .newBuilder()
                         .addQueryParameter("q", query.trim())
-                        .addQueryParameter("limit", limit.coerceIn(1, 50).toString())
+                        .addQueryParameter("limit", safeLimit.toString())
+                        .addQueryParameter("index", index.toString())
                         .addQueryParameter("strict", "on")
                         .build()
 
-                requestTracks(url.toString())
+                requestTrackPage(
+                    url = url.toString(),
+                    index = index,
+                )
             }
         }
 
@@ -131,6 +148,41 @@ object Deezer {
             }
         }
 
+    private fun requestTrackPage(
+        url: String,
+        index: Int,
+    ): DeezerTrackPage {
+        val request =
+            Request.Builder()
+                .url(url)
+                .header("Accept", "application/json")
+                .header("User-Agent", "OpenTune-SY/3")
+                .get()
+                .build()
+
+        client.newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                error("Deezer HTTP " + response.code)
+            }
+
+            val root = JSONObject(response.body.string())
+            root.optJSONObject("error")?.let { apiError ->
+                error(apiError.optString("message", "Deezer catalog error"))
+            }
+
+            val tracks = parseTracks(root.optJSONArray("data") ?: JSONArray())
+            val total = root.optInt("total", index + tracks.size)
+            val nextIndex =
+                (index + tracks.size)
+                    .takeIf { tracks.isNotEmpty() && it < total }
+
+            return DeezerTrackPage(
+                items = tracks,
+                nextIndex = nextIndex,
+            )
+        }
+    }
+
     private fun requestTracks(url: String): List<DeezerTrack> {
         val request =
             Request.Builder()
@@ -181,6 +233,11 @@ object Deezer {
             }
         }
 }
+
+data class DeezerTrackPage(
+    val items: List<DeezerTrack>,
+    val nextIndex: Int? = null,
+)
 
 data class DeezerTrack(
     val id: String,
