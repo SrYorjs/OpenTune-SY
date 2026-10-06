@@ -330,7 +330,7 @@ object SpotifyWebSession {
     private fun escapeJson(value: String): String =
         value
             .replace("\\", "\\\\")
-            .replace(""", "\\"")
+            .replace("\"", "\\\"")
 
     private const val SPOTIFY_WEB_URL = "https://open.spotify.com/"
     private const val SPOTIFY_TOKEN_URL = "https://open.spotify.com/api/token"
