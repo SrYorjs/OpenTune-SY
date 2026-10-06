@@ -64,8 +64,8 @@ class SoundCloudMusicSourceTest {
                                     track("2", streamable = false),
                                     track("3", access = "blocked"),
                                 ),
-                            total = 4,
-                            limit = 3,
+                            total = 51,
+                            limit = 50,
                             offset = 0,
                         ),
                 )
