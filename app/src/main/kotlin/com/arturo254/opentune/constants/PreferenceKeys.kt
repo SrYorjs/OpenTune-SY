@@ -448,6 +448,7 @@ val QueueLyricsPreloadCountKey = intPreferencesKey("queue_lyrics_preload_count")
 val PlayerVolumeKey = floatPreferencesKey("playerVolume")
 val RepeatModeKey = intPreferencesKey("repeatMode")
 
+val UniversalAudioSelectionModeKey = stringPreferencesKey("universalAudioSelectionMode")
 val SearchSourceKey = stringPreferencesKey("searchSource")
 val SwipeThumbnailKey = booleanPreferencesKey("swipeThumbnail")
 val SwipeSensitivityKey = floatPreferencesKey("swipeSensitivity")
