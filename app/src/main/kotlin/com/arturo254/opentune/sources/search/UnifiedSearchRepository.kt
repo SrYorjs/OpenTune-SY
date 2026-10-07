@@ -355,10 +355,10 @@ constructor(
         SourcePlaybackCandidate(
             variant = variant,
             availability =
-                if (variant.provider == ProviderId.LOCAL) {
-                    PlaybackAvailability.LOCAL_FILE
-                } else {
-                    PlaybackAvailability.ONLINE
+                when (variant.provider) {
+                    ProviderId.LOCAL -> PlaybackAvailability.LOCAL_FILE
+                    ProviderId.OPEN_TUNE_OFFLINE -> PlaybackAvailability.OPEN_TUNE_OFFLINE
+                    else -> PlaybackAvailability.ONLINE
                 },
         )
 
