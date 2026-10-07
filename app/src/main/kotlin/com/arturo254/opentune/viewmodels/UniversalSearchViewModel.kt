@@ -8,6 +8,8 @@ import com.arturo254.opentune.sources.search.UnifiedSearchResult
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
 import com.arturo254.opentune.sources.offline.OfflineDownloadCoordinator
 import com.arturo254.opentune.sources.offline.OfflineTrackAsset
+import com.arturo254.opentune.sources.offline.OfflineTrackRegistry
+import com.arturo254.opentune.sources.offline.OfflineTrackState
 import com.arturo254.opentune.sources.soundcloud.SoundCloudPlaybackResolver
 import com.arturo254.opentune.core.model.SourceVariant
 import androidx.media3.common.MediaItem
@@ -21,6 +23,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -32,6 +36,7 @@ constructor(
     private val repository: UnifiedSearchRepository,
     private val soundCloudPlaybackResolver: SoundCloudPlaybackResolver,
     private val offlineDownloadCoordinator: OfflineDownloadCoordinator,
+    private val offlineTrackRegistry: OfflineTrackRegistry,
 ) : ViewModel() {
     val query = MutableStateFlow("")
 
@@ -48,6 +53,24 @@ constructor(
                 .collectLatest { rawQuery ->
                     loadMoreJob?.cancel()
                     performSearch(rawQuery)
+                }
+        }
+
+        viewModelScope.launch {
+            offlineTrackRegistry.assets
+                .map { assets ->
+                    assets
+                        .filter { it.state == OfflineTrackState.AVAILABLE }
+                        .map { it.mediaId }
+                        .toSet()
+                }
+                .distinctUntilChanged()
+                .drop(1)
+                .collect {
+                    val currentQuery = query.value.trim()
+                    if (currentQuery.isNotEmpty()) {
+                        performSearch(currentQuery)
+                    }
                 }
         }
     }
