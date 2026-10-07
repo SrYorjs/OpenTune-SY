@@ -55,10 +55,13 @@ import com.arturo254.opentune.ui.player.fetchCanvasArtworkForPlayback
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import okhttp3.ConnectionPool
 import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import java.time.LocalDateTime
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -81,6 +84,7 @@ constructor(
     private val audioQuality by enumPreference(context, AudioQualityKey, AudioQuality.AUTO)
     private val preferredStreamClient by enumPreference(context, PlayerStreamClientKey, PlayerStreamClient.ANDROID_VR)
     private val songUrlCache = HashMap<String, Pair<String, Long>>()
+    private val offlineBundleMutexes = ConcurrentHashMap<String, Mutex>()
     private val avoidStreamCodecs: Set<String> by lazy {
         if (deviceSupportsMimeType("audio/opus")) emptySet() else setOf("opus")
     }
@@ -607,7 +611,10 @@ constructor(
     }
 
     private suspend fun ensureOfflineBundleByLookup(mediaId: String) {
-        val song = database.getSongByIdBlocking(mediaId) ?: return
+        val mutex = offlineBundleMutexes.getOrPut(mediaId) { Mutex() }
+
+        mutex.withLock {
+            val song = database.getSongByIdBlocking(mediaId) ?: return@withLock
         val title = song.song.title
         val artistNames = song.artists.map { it.name }
         val artists = artistNames.joinToString()
@@ -745,6 +752,7 @@ constructor(
                     )
                 }
             }
+        }
         }
     }
 
