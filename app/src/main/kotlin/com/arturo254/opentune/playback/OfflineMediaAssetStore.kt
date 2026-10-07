@@ -41,6 +41,7 @@ data class OfflineManifestSourceRef(
 )
 
 data class OfflineMediaAssetManifest(
+    val schemaVersion: Int = 1,
     val mediaId: String,
     val title: String,
     val artists: List<String>,
@@ -414,6 +415,7 @@ class OfflineMediaAssetStore internal constructor(
 
     private fun encodeManifest(manifest: OfflineMediaAssetManifest): JsonObject =
         buildJsonObject {
+            put("schemaVersion", manifest.schemaVersion)
             put("mediaId", manifest.mediaId)
             put("title", manifest.title)
             put(
@@ -485,6 +487,11 @@ class OfflineMediaAssetStore internal constructor(
 
     private fun decodeManifest(obj: JsonObject): OfflineMediaAssetManifest =
         OfflineMediaAssetManifest(
+            schemaVersion =
+                obj["schemaVersion"]
+                    ?.jsonPrimitive
+                    ?.intOrNull
+                    ?: 1,
             mediaId = obj.string("mediaId") ?: error("Offline metadata manifest missing mediaId"),
             title = obj.string("title").orEmpty(),
             artists =
