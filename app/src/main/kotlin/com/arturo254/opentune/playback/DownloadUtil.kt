@@ -328,8 +328,10 @@ constructor(
                     Download.STATE_FAILED ->
                         offlineTrackRegistry.markFailed(download.request.id)
 
-                    Download.STATE_REMOVING ->
+                    Download.STATE_REMOVING -> {
                         offlineTrackRegistry.remove(download.request.id)
+                        offlineAssets.removeBundle(download.request.id)
+                    }
                 }
             }
 
@@ -365,6 +367,11 @@ constructor(
                     durationSeconds = metadata.duration,
                     explicit = metadata.explicit,
                     remoteArtworkUrl = metadata.thumbnailUrl,
+                    remoteAnimationUrl = asset.animatedArtworkUrl,
+                    isrc = asset.isrc,
+                    versionTraits = asset.version.traits.map { it.name }.sorted(),
+                    versionLabel = asset.version.label,
+                    quality = asset.quality,
                     backingProvider = asset.backingProvider.value,
                     discoveryProviders =
                         asset.discoverySources
@@ -481,9 +488,14 @@ constructor(
         val artistNames = song.artists.map { it.name }
         val artists = artistNames.joinToString()
         val album = song.album?.title ?: song.song.albumName
+        val trackedAsset = offlineTrackRegistry.findByMediaId(mediaId)
+        val previousManifest = offlineAssets.readManifest(mediaId)
         val originalArtworkUrl =
-            offlineAssets.readManifest(mediaId)?.remoteArtworkUrl
+            previousManifest?.remoteArtworkUrl
                 ?: song.song.thumbnailUrl
+        val preferredAnimationUrl =
+            trackedAsset?.animatedArtworkUrl
+                ?: previousManifest?.remoteAnimationUrl
 
         coroutineScope {
             val lyricsJob =
@@ -512,26 +524,25 @@ constructor(
 
             val canvasJob =
                 async(Dispatchers.IO) {
-                    val canvas =
-                        runCatching {
-                            fetchCanvasArtworkForPlayback(
-                                songTitleRaw = title,
-                                artistNameRaw = artists,
-                                albumName = album,
-                            )
-                        }.getOrNull()
+                    val animationUrl =
+                        preferredAnimationUrl
+                            ?: runCatching {
+                                fetchCanvasArtworkForPlayback(
+                                    songTitleRaw = title,
+                                    artistNameRaw = artists,
+                                    albumName = album,
+                                )?.preferredAnimationUrl
+                            }.getOrNull()
 
                     offlineAssets.cacheAnimatedArtwork(
                         mediaId = mediaId,
-                        url = canvas?.preferredAnimationUrl,
+                        url = animationUrl,
                     )
                 }
 
             val lyricsUri = lyricsJob.await()
             val coverUri = coverJob.await()
             val animationUri = canvasJob.await()
-            val trackedAsset = offlineTrackRegistry.findByMediaId(mediaId)
-            val previousManifest = offlineAssets.readManifest(mediaId)
 
             val manifestUri =
                 offlineAssets.saveManifest(
@@ -546,6 +557,25 @@ constructor(
                         remoteArtworkUrl =
                             previousManifest?.remoteArtworkUrl
                                 ?: originalArtworkUrl,
+                        remoteAnimationUrl =
+                            trackedAsset?.animatedArtworkUrl
+                                ?: previousManifest?.remoteAnimationUrl,
+                        isrc =
+                            trackedAsset?.isrc
+                                ?: previousManifest?.isrc,
+                        versionTraits =
+                            trackedAsset
+                                ?.version
+                                ?.traits
+                                ?.map { it.name }
+                                ?.sorted()
+                                ?: previousManifest?.versionTraits.orEmpty(),
+                        versionLabel =
+                            trackedAsset?.version?.label
+                                ?: previousManifest?.versionLabel,
+                        quality =
+                            trackedAsset?.quality
+                                ?: previousManifest?.quality,
                         localArtworkUri = coverUri,
                         localLyricsUri = lyricsUri,
                         localAnimationUri = animationUri,
