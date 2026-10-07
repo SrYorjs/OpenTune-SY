@@ -2,6 +2,7 @@ package com.arturo254.opentune.playback
 
 import android.content.Context
 import com.arturo254.opentune.db.entities.LyricsEntity.Companion.LYRICS_NOT_FOUND
+import com.arturo254.opentune.models.MediaMetadata
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -10,6 +11,20 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import timber.log.Timber
@@ -18,6 +33,48 @@ import java.net.URI
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+
+data class OfflineMediaAssetManifest(
+    val mediaId: String,
+    val title: String,
+    val artists: List<String>,
+    val albumId: String? = null,
+    val albumName: String? = null,
+    val durationSeconds: Int = MediaMetadata.UNKNOWN_DURATION,
+    val explicit: Boolean = false,
+    val remoteArtworkUrl: String? = null,
+    val localArtworkUri: String? = null,
+    val localLyricsUri: String? = null,
+    val localAnimationUri: String? = null,
+    val backingProvider: String? = null,
+    val discoveryProviders: List<String> = emptyList(),
+    val updatedAtMs: Long = System.currentTimeMillis(),
+) {
+    fun toMediaMetadata(): MediaMetadata =
+        MediaMetadata(
+            id = mediaId,
+            title = title,
+            artists =
+                artists.map { artist ->
+                    MediaMetadata.Artist(
+                        id = null,
+                        name = artist,
+                    )
+                },
+            duration = durationSeconds,
+            thumbnailUrl = localArtworkUri ?: remoteArtworkUrl,
+            album =
+                albumName
+                    ?.takeIf(String::isNotBlank)
+                    ?.let { albumTitle ->
+                        MediaMetadata.Album(
+                            id = albumId.orEmpty(),
+                            title = albumTitle,
+                        )
+                    },
+            explicit = explicit,
+        )
+}
 
 /**
  * Sidecar assets that belong to an offline song.
@@ -41,6 +98,7 @@ constructor(
             .build()
 
     private val root = File(context.filesDir, "offline_media").apply { mkdirs() }
+    private val json = Json { ignoreUnknownKeys = true }
 
     fun getCoverUri(mediaId: String): String? =
         assetDir(mediaId)
@@ -67,6 +125,54 @@ constructor(
     }
 
     fun getLyricsFile(mediaId: String): File = File(assetDir(mediaId), "lyrics.lrc")
+
+    fun getManifestUri(mediaId: String): String? =
+        manifestFile(mediaId)
+            .takeIf { it.isFile && it.length() > 0L }
+            ?.toURI()
+            ?.toString()
+
+    fun readLyrics(mediaId: String): String? =
+        getLyricsFile(mediaId)
+            .takeIf { it.isFile && it.length() > 0L }
+            ?.let { file ->
+                runCatching { file.readText() }.getOrNull()
+            }
+
+    fun readManifest(mediaId: String): OfflineMediaAssetManifest? {
+        val file = manifestFile(mediaId)
+        if (!file.isFile || file.length() == 0L) return null
+
+        return runCatching {
+            decodeManifest(
+                json.parseToJsonElement(file.readText()).jsonObject,
+            )
+        }.onFailure {
+            Timber.tag("OfflineAssets").w(it, "Unable to read asset manifest for %s", mediaId)
+        }.getOrNull()
+    }
+
+    suspend fun saveManifest(
+        manifest: OfflineMediaAssetManifest,
+    ): String =
+        withContext(Dispatchers.IO) {
+            val target = manifestFile(manifest.mediaId)
+            atomicWrite(
+                target,
+                encodeManifest(
+                    manifest.copy(updatedAtMs = System.currentTimeMillis()),
+                ).toString().toByteArray(Charsets.UTF_8),
+            )
+            target.toURI().toString()
+        }
+
+    suspend fun removeBundle(mediaId: String) =
+        withContext(Dispatchers.IO) {
+            val dir = rawAssetDir(mediaId)
+            if (dir.exists()) {
+                dir.deleteRecursively()
+            }
+        }
 
     suspend fun saveLyrics(
         mediaId: String,
@@ -284,6 +390,82 @@ constructor(
         }
     }
 
+    private fun manifestFile(mediaId: String): File =
+        File(assetDir(mediaId), "metadata.json")
+
+    private fun encodeManifest(manifest: OfflineMediaAssetManifest): JsonObject =
+        buildJsonObject {
+            put("mediaId", manifest.mediaId)
+            put("title", manifest.title)
+            put(
+                "artists",
+                buildJsonArray {
+                    manifest.artists.forEach { artist ->
+                        add(JsonPrimitive(artist))
+                    }
+                },
+            )
+            manifest.albumId?.let { put("albumId", it) }
+            manifest.albumName?.let { put("albumName", it) }
+            put("durationSeconds", manifest.durationSeconds)
+            put("explicit", manifest.explicit)
+            manifest.remoteArtworkUrl?.let { put("remoteArtworkUrl", it) }
+            manifest.localArtworkUri?.let { put("localArtworkUri", it) }
+            manifest.localLyricsUri?.let { put("localLyricsUri", it) }
+            manifest.localAnimationUri?.let { put("localAnimationUri", it) }
+            manifest.backingProvider?.let { put("backingProvider", it) }
+            put(
+                "discoveryProviders",
+                buildJsonArray {
+                    manifest.discoveryProviders.forEach { provider ->
+                        add(JsonPrimitive(provider))
+                    }
+                },
+            )
+            put("updatedAtMs", manifest.updatedAtMs)
+        }
+
+    private fun decodeManifest(obj: JsonObject): OfflineMediaAssetManifest =
+        OfflineMediaAssetManifest(
+            mediaId = obj.string("mediaId") ?: error("Offline metadata manifest missing mediaId"),
+            title = obj.string("title").orEmpty(),
+            artists =
+                obj["artists"]
+                    ?.let { runCatching { it.jsonArray }.getOrNull() }
+                    ?.mapNotNull { value -> value.jsonPrimitive.contentOrNull }
+                    .orEmpty(),
+            albumId = obj.string("albumId"),
+            albumName = obj.string("albumName"),
+            durationSeconds =
+                obj["durationSeconds"]
+                    ?.jsonPrimitive
+                    ?.intOrNull
+                    ?: MediaMetadata.UNKNOWN_DURATION,
+            explicit =
+                obj["explicit"]
+                    ?.jsonPrimitive
+                    ?.booleanOrNull
+                    ?: false,
+            remoteArtworkUrl = obj.string("remoteArtworkUrl"),
+            localArtworkUri = obj.string("localArtworkUri"),
+            localLyricsUri = obj.string("localLyricsUri"),
+            localAnimationUri = obj.string("localAnimationUri"),
+            backingProvider = obj.string("backingProvider"),
+            discoveryProviders =
+                obj["discoveryProviders"]
+                    ?.let { runCatching { it.jsonArray }.getOrNull() }
+                    ?.mapNotNull { value -> value.jsonPrimitive.contentOrNull }
+                    .orEmpty(),
+            updatedAtMs =
+                obj["updatedAtMs"]
+                    ?.jsonPrimitive
+                    ?.longOrNull
+                    ?: 0L,
+        )
+
+    private fun JsonObject.string(name: String): String? =
+        this[name]?.jsonPrimitive?.contentOrNull
+
     private fun extensionFor(
         url: String,
         fallback: String,
@@ -301,9 +483,12 @@ constructor(
             ?: fallback
     }
 
-    private fun assetDir(mediaId: String): File =
+    private fun rawAssetDir(mediaId: String): File =
         File(
             root,
             mediaId.replace(Regex("""[^A-Za-z0-9._-]"""), "_"),
-        ).apply { mkdirs() }
+        )
+
+    private fun assetDir(mediaId: String): File =
+        rawAssetDir(mediaId).apply { mkdirs() }
 }
