@@ -28,9 +28,11 @@ constructor(
         // A manual selection may be a catalog reference. Its actual audio is
         // resolved separately and its catalog quality must not be promised.
         val forced =
-            variants.firstOrNull { variant ->
-                variant.provider == manualVariant?.provider &&
-                    variant.sourceId == manualVariant.sourceId
+            manualVariant?.let { key ->
+                variants.firstOrNull { variant ->
+                    variant.provider == key.provider &&
+                        variant.sourceId == key.sourceId
+                }
             }
         if (forced != null) return forced
 
