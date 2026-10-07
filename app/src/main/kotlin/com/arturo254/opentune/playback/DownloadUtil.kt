@@ -274,26 +274,44 @@ constructor(
                 val download = cursor.download
                 result[download.request.id] = download
 
-                if (
-                    download.state == Download.STATE_COMPLETED &&
-                    offlineTrackRegistry.findByMediaId(download.request.id) == null
-                ) {
-                    val song = database.getSongByIdBlocking(download.request.id)
-                    offlineTrackRegistry.adoptLegacy(
-                        mediaId = download.request.id,
-                        title = song?.song?.title ?: download.request.id,
-                        artists = song?.artists?.map { it.name }.orEmpty(),
-                        albumId = song?.album?.id ?: song?.song?.albumId,
-                        albumName = song?.album?.title ?: song?.song?.albumName,
-                        durationMs =
-                            song?.song?.duration
-                                ?.takeIf { it >= 0 }
-                                ?.toLong()
-                                ?.times(1_000L),
-                        artworkUrl = song?.song?.thumbnailUrl,
-                    )
+                when (download.state) {
+                    Download.STATE_COMPLETED -> {
+                        if (offlineTrackRegistry.findByMediaId(download.request.id) == null) {
+                            val song = database.getSongByIdBlocking(download.request.id)
+                            offlineTrackRegistry.adoptLegacy(
+                                mediaId = download.request.id,
+                                title = song?.song?.title ?: download.request.id,
+                                artists = song?.artists?.map { it.name }.orEmpty(),
+                                albumId = song?.album?.id ?: song?.song?.albumId,
+                                albumName = song?.album?.title ?: song?.song?.albumName,
+                                durationMs =
+                                    song?.song?.duration
+                                        ?.takeIf { it >= 0 }
+                                        ?.toLong()
+                                        ?.times(1_000L),
+                                artworkUrl = song?.song?.thumbnailUrl,
+                            )
+                        } else {
+                            offlineTrackRegistry.markAvailable(download.request.id)
+                        }
+                    }
+
+                    Download.STATE_FAILED ->
+                        offlineTrackRegistry.markFailed(download.request.id)
+
+                    Download.STATE_REMOVING ->
+                        offlineTrackRegistry.remove(download.request.id)
                 }
             }
+
+            val indexedIds = result.keys
+            offlineTrackRegistry
+                .snapshot()
+                .filter { asset -> asset.mediaId !in indexedIds }
+                .forEach { asset ->
+                    offlineTrackRegistry.remove(asset.mediaId)
+                }
+
             downloads.value = result
         }
     }
