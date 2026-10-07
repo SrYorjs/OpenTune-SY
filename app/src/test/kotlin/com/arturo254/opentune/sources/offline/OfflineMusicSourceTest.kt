@@ -99,7 +99,8 @@ class OfflineMusicSourceTest {
 
         assertTrue(source.supports(SourceCapability.TRACK_SEARCH))
         assertTrue(source.supports(SourceCapability.TRACK_METADATA))
-        assertTrue(source.supports(SourceCapability.OPEN_TUNE_MANAGED_DOWNLOAD))
+        assertTrue(source.supports(SourceCapability.OFFLINE_LIBRARY))
+        assertFalse(source.supports(SourceCapability.OPEN_TUNE_MANAGED_DOWNLOAD))
         assertFalse(source.supports(SourceCapability.STREAM))
         assertFalse(source.supports(SourceCapability.PROVIDER_MANAGED_OFFLINE))
     }
