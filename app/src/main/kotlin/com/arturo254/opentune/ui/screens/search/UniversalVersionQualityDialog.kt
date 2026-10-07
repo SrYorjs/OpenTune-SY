@@ -1,6 +1,8 @@
 package com.arturo254.opentune.ui.screens.search
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -65,7 +67,10 @@ internal fun UniversalVersionQualityDialog(
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(5.dp),
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
                 ) {
                     listOf(
                         AudioSelectionMode.AUTOMATIC to R.string.universal_quality_auto,
@@ -150,8 +155,10 @@ internal fun UniversalVersionQualityDialog(
                         ) { offset ->
                             val variant = recording.variants[offset]
                             val chosen =
-                                manualVariant?.provider == variant.provider &&
-                                    manualVariant.sourceId == variant.sourceId
+                                manualVariant?.let { key ->
+                                    key.provider == variant.provider &&
+                                        key.sourceId == variant.sourceId
+                                } == true
                             Surface(
                                 shape = RoundedCornerShape(12.dp),
                                 color =
