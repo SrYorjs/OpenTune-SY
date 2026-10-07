@@ -1,5 +1,6 @@
 package com.arturo254.opentune.playback
 
+import com.arturo254.opentune.core.model.AudioQualityInfo
 import java.nio.file.Files
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -25,6 +26,20 @@ class OfflineMediaAssetStoreTest {
                     durationSeconds = 205,
                     explicit = true,
                     remoteArtworkUrl = "https://example.test/cover.jpg",
+                    remoteAnimationUrl = "https://example.test/canvas.m3u8",
+                    isrc = "USAAA2600500",
+                    versionTraits = listOf("REMASTER"),
+                    versionLabel = "2024 Remaster",
+                    quality =
+                        AudioQualityInfo(
+                            mimeType = "audio/mp4",
+                            codec = "aac",
+                            bitrateBitsPerSecond = 256_000,
+                            sampleRateHz = 48_000,
+                            bitDepth = 24,
+                            channelCount = 2,
+                            lossless = false,
+                        ),
                     localArtworkUri = "file:///tmp/cover.jpg",
                     localLyricsUri = "file:///tmp/lyrics.lrc",
                     localAnimationUri = "file:///tmp/canvas.mp4",
@@ -42,6 +57,16 @@ class OfflineMediaAssetStoreTest {
             assertEquals("Album", restored?.albumName)
             assertEquals(205, restored?.durationSeconds)
             assertEquals(true, restored?.explicit)
+            assertEquals("https://example.test/canvas.m3u8", restored?.remoteAnimationUrl)
+            assertEquals("USAAA2600500", restored?.isrc)
+            assertEquals(listOf("REMASTER"), restored?.versionTraits)
+            assertEquals("2024 Remaster", restored?.versionLabel)
+            assertEquals("aac", restored?.quality?.codec)
+            assertEquals(256_000, restored?.quality?.bitrateBitsPerSecond)
+            assertEquals(48_000, restored?.quality?.sampleRateHz)
+            assertEquals(24, restored?.quality?.bitDepth)
+            assertEquals(2, restored?.quality?.channelCount)
+            assertEquals(false, restored?.quality?.lossless)
             assertEquals("youtube_music", restored?.backingProvider)
             assertEquals(
                 listOf("spotify", "tidal", "apple_music"),
