@@ -490,6 +490,10 @@ constructor(
                 request,
                 false,
             )
+
+            CoroutineScope(Dispatchers.IO).launch {
+                ensureOfflineBundleByLookup(asset.mediaId)
+            }
         } catch (error: Throwable) {
             offlineTrackRegistry.markFailed(asset.mediaId)
             throw error
