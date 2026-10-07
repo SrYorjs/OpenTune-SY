@@ -311,7 +311,14 @@ fun UniversalSearchScreen(
                     ?: result.variants.firstOrNull {
                         it.provider == ProviderId.OPEN_TUNE_OFFLINE
                     }
-            val playable = offlineVariant ?: result.recommendedVariant
+            val resultKey = result.stableResultKey()
+            val playable =
+                viewModel.selectVariant(
+                    result = result,
+                    variants = result.variants + listOfNotNull(offlineVariant),
+                    mode = qualityMode,
+                    manualVariant = manualChoices[resultKey],
+                )
             val catalogFallbacks =
                 if (playable == null) {
                     result.variants.filter { variant ->
@@ -323,11 +330,10 @@ fun UniversalSearchScreen(
                 } else {
                     emptyList()
                 }
-            val resultKey = result.stableResultKey()
             val isActive =
                 playable?.sourceId == activeMetadata?.id ||
                     (
-                        playable == null &&
+                        (playable == null || playable.isCatalogOnly()) &&
                             activeMetadata?.title.equals(result.identity.title, ignoreCase = true) &&
                             result.identity.artists.any { identityArtist ->
                                 activeMetadata?.artists
@@ -354,7 +360,8 @@ fun UniversalSearchScreen(
 
             UnifiedTrackRow(
                 result = result,
-                preferredDisplayVariant = offlineVariant,
+                preferredDisplayVariant = playable,
+                onVersionsClick = { selectionDialogKey = resultKey },
                 isActive = isActive,
                 isPlaying = isPlaying,
                 isResolving = resolvingCatalogKey == resultKey,
@@ -396,96 +403,16 @@ fun UniversalSearchScreen(
                         null
                     },
                 onClick =
-                    when {
-                        isActive ->
-                            {
-                                {
-                                    playerConnection.player.togglePlayPause()
-                                }
+                    if (isActive || playable != null || catalogFallbacks.isNotEmpty()) {
+                        {
+                            if (isActive) {
+                                playerConnection.player.togglePlayPause()
+                            } else {
+                                playResult(result, playable, catalogFallbacks)
                             }
-
-                        playable != null ->
-                            {
-                                {
-                                    when (playable.provider) {
-                                        ProviderId.YOUTUBE_MUSIC ->
-                                            playerConnection.playQueue(
-                                                YouTubeQueue(
-                                                    endpoint =
-                                                        WatchEndpoint(
-                                                            videoId = playable.sourceId,
-                                                        ),
-                                                    preloadItem = playable.toOpenTuneMetadata(),
-                                                ),
-                                            )
-
-                                        ProviderId.SOUNDCLOUD -> {
-                                            if (resolvingCatalogKey == null) {
-                                                scope.launch {
-                                                    resolvingCatalogKey = resultKey
-                                                    try {
-                                                        val selected =
-                                                            viewModel.resolveSoundCloud(playable)
-                                                                ?: CatalogPlaybackResolver
-                                                                    .resolveToMediaItem(
-                                                                        playable
-                                                                            .toSoundCloudCatalogReference(),
-                                                                    )
-                                                                ?: return@launch
-
-                                                        playerConnection.player.setMediaItem(selected)
-                                                        playerConnection.player.prepare()
-                                                        playerConnection.player.playWhenReady = true
-                                                    } finally {
-                                                        resolvingCatalogKey = null
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        else ->
-                                            playerConnection.playQueue(
-                                                ListQueue(
-                                                    title =
-                                                        context.getString(
-                                                            R.string.queue_searched_songs,
-                                                        ),
-                                                    items = listOf(playable.toPlayableMediaItem()),
-                                                ),
-                                            )
-                                    }
-                                }
-                            }
-
-                        catalogFallbacks.isNotEmpty() ->
-                            {
-                                {
-                                    if (resolvingCatalogKey == null) {
-                                        scope.launch {
-                                            resolvingCatalogKey = resultKey
-                                            try {
-                                                var selected: MediaItem? = null
-                                                for (fallback in catalogFallbacks) {
-                                                    selected =
-                                                        CatalogPlaybackResolver.resolveToMediaItem(
-                                                            fallback.toCatalogPlaybackReference(),
-                                                        )
-                                                    if (selected != null) break
-                                                }
-
-                                                selected ?: return@launch
-                                                playerConnection.player.setMediaItem(selected)
-                                                playerConnection.player.prepare()
-                                                playerConnection.player.playWhenReady = true
-                                            } finally {
-                                                resolvingCatalogKey = null
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                        else -> null
+                        }
+                    } else {
+                        null
                     },
             )
         }
@@ -504,6 +431,32 @@ fun UniversalSearchScreen(
             }
         }
     }
+
+    val selectedRecording =
+        state.result.tracks.firstOrNull { it.stableResultKey() == selectionDialogKey }
+    if (selectedRecording != null) {
+        UniversalVersionQualityDialog(
+            selected = selectedRecording,
+            relatedVersions = viewModel.relatedVersions(selectedRecording),
+            qualityMode = qualityMode,
+            manualVariant = manualChoices[selectedRecording.stableResultKey()],
+            onQualityModeChange = { qualityMode = it },
+            onSelectVariant = { recording, variant ->
+                manualChoices[recording.stableResultKey()] =
+                    SourceVariantKey(
+                        provider = variant.provider,
+                        sourceId = variant.sourceId,
+                    )
+                selectionDialogKey = null
+                playResult(recording, variant, emptyList())
+            },
+            onClearManual = {
+                manualChoices.remove(selectedRecording.stableResultKey())
+                selectionDialogKey = null
+            },
+            onDismiss = { selectionDialogKey = null },
+        )
+    }
 }
 
 @Composable
@@ -516,6 +469,7 @@ private fun UnifiedTrackRow(
     isOfflineAvailable: Boolean,
     isPreparingOffline: Boolean,
     onDownload: (() -> Unit)?,
+    onVersionsClick: () -> Unit,
     onClick: (() -> Unit)?,
 ) {
     val recommended = preferredDisplayVariant ?: result.recommendedVariant
@@ -633,7 +587,12 @@ private fun UnifiedTrackRow(
 
                 qualitySummary(recommended)?.let { quality ->
                     Text(
-                        text = quality,
+                        text =
+                            if (recommended?.isCatalogOnly() == true) {
+                                quality + " (catálogo)"
+                            } else {
+                                quality
+                            },
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
@@ -665,6 +624,17 @@ private fun UnifiedTrackRow(
                             .clip(RoundedCornerShape(12.dp))
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f))
                             .padding(horizontal = 8.dp, vertical = 5.dp),
+                )
+            }
+
+            IconButton(
+                onClick = onVersionsClick,
+                modifier = Modifier.size(36.dp),
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.tune),
+                    contentDescription = stringResource(R.string.universal_versions_action),
+                    modifier = Modifier.size(21.dp),
                 )
             }
 
