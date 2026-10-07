@@ -29,6 +29,9 @@ import com.arturo254.opentune.constants.AudioQuality
 import com.arturo254.opentune.constants.AudioQualityKey
 import com.arturo254.opentune.constants.PlayerStreamClient
 import com.arturo254.opentune.constants.PlayerStreamClientKey
+import com.arturo254.opentune.core.model.ProviderId
+import com.arturo254.opentune.core.model.TrackVersion
+import com.arturo254.opentune.core.model.TrackVersionTrait
 import com.arturo254.opentune.db.MusicDatabase
 import com.arturo254.opentune.db.entities.FormatEntity
 import com.arturo254.opentune.db.entities.LyricsEntity
@@ -38,6 +41,7 @@ import com.arturo254.opentune.di.DownloadCache
 import com.arturo254.opentune.di.PlayerCache
 import com.arturo254.opentune.lyrics.LyricsHelper
 import com.arturo254.opentune.models.MediaMetadata
+import com.arturo254.opentune.sources.offline.OfflineSourceRef
 import com.arturo254.opentune.sources.offline.OfflineTrackAsset
 import com.arturo254.opentune.sources.offline.OfflineTrackRegistry
 import com.arturo254.opentune.utils.YTPlayerUtils
@@ -306,19 +310,94 @@ constructor(
                         }
 
                         if (offlineTrackRegistry.findByMediaId(download.request.id) == null) {
-                            offlineTrackRegistry.adoptLegacy(
-                                mediaId = download.request.id,
-                                title = song?.song?.title ?: download.request.id,
-                                artists = song?.artists?.map { it.name }.orEmpty(),
-                                albumId = song?.album?.id ?: song?.song?.albumId,
-                                albumName = song?.album?.title ?: song?.song?.albumName,
-                                durationMs =
-                                    song?.song?.duration
-                                        ?.takeIf { it >= 0 }
-                                        ?.toLong()
-                                        ?.times(1_000L),
-                                artworkUrl = song?.song?.thumbnailUrl,
-                            )
+                            val manifest = offlineAssets.readManifest(download.request.id)
+
+                            if (manifest != null) {
+                                val backingProvider =
+                                    manifest.backingProvider
+                                        ?.takeIf(String::isNotBlank)
+                                        ?.let(::ProviderId)
+                                        ?: ProviderId.YOUTUBE_MUSIC
+                                val backingSourceId =
+                                    manifest.backingSourceId
+                                        ?.takeIf(String::isNotBlank)
+                                        ?: download.request.id
+                                val discoverySources =
+                                    manifest.discoverySources
+                                        .mapNotNull { source ->
+                                            source.provider
+                                                .takeIf(String::isNotBlank)
+                                                ?.let(::ProviderId)
+                                                ?.let { provider ->
+                                                    OfflineSourceRef(
+                                                        provider = provider,
+                                                        sourceId = source.sourceId,
+                                                    )
+                                                }
+                                        }.ifEmpty {
+                                            listOf(
+                                                OfflineSourceRef(
+                                                    provider = backingProvider,
+                                                    sourceId = backingSourceId,
+                                                ),
+                                            )
+                                        }
+                                val version =
+                                    TrackVersion(
+                                        traits =
+                                            manifest.versionTraits
+                                                .mapNotNull { trait ->
+                                                    runCatching {
+                                                        TrackVersionTrait.valueOf(trait)
+                                                    }.getOrNull()
+                                                }.toSet(),
+                                        label = manifest.versionLabel,
+                                    )
+
+                                offlineTrackRegistry.registerPending(
+                                    OfflineTrackAsset(
+                                        mediaId = download.request.id,
+                                        discoverySources = discoverySources,
+                                        backingProvider = backingProvider,
+                                        backingSourceId = backingSourceId,
+                                        title = manifest.title,
+                                        artists = manifest.artists,
+                                        albumId = manifest.albumId,
+                                        albumName = manifest.albumName,
+                                        durationMs =
+                                            manifest.durationSeconds
+                                                .takeIf { it >= 0 }
+                                                ?.toLong()
+                                                ?.times(1_000L),
+                                        isrc = manifest.isrc,
+                                        explicit = manifest.explicit,
+                                        version = version,
+                                        artworkUrl = manifest.remoteArtworkUrl,
+                                        animatedArtworkUrl = manifest.remoteAnimationUrl,
+                                        offlineArtworkUri = manifest.localArtworkUri,
+                                        offlineLyricsUri = manifest.localLyricsUri,
+                                        offlineAnimationUri = manifest.localAnimationUri,
+                                        assetManifestUri =
+                                            offlineAssets.getManifestUri(download.request.id),
+                                        quality = manifest.quality,
+                                    ),
+                                )
+                                offlineTrackRegistry.markAvailable(download.request.id)
+                            } else {
+                                offlineTrackRegistry.adoptLegacy(
+                                    mediaId = download.request.id,
+                                    title = song?.song?.title ?: download.request.id,
+                                    artists = song?.artists?.map { it.name }.orEmpty(),
+                                    albumId = song?.album?.id ?: song?.song?.albumId,
+                                    albumName = song?.album?.title ?: song?.song?.albumName,
+                                    durationMs =
+                                        song?.song?.duration
+                                            ?.takeIf { it >= 0 }
+                                            ?.toLong()
+                                            ?.times(1_000L),
+                                    artworkUrl = song?.song?.thumbnailUrl,
+                                )
+                            }
                         } else {
                             offlineTrackRegistry.markAvailable(download.request.id)
                         }
@@ -376,10 +455,18 @@ constructor(
                     versionLabel = asset.version.label,
                     quality = asset.quality,
                     backingProvider = asset.backingProvider.value,
+                    backingSourceId = asset.backingSourceId,
                     discoveryProviders =
                         asset.discoverySources
                             .map { it.provider.value }
                             .distinct(),
+                    discoverySources =
+                        asset.discoverySources.map { source ->
+                            OfflineManifestSourceRef(
+                                provider = source.provider.value,
+                                sourceId = source.sourceId,
+                            )
+                        },
                 ),
             )
 
@@ -615,12 +702,25 @@ constructor(
                         backingProvider =
                             trackedAsset?.backingProvider?.value
                                 ?: previousManifest?.backingProvider,
+                        backingSourceId =
+                            trackedAsset?.backingSourceId
+                                ?: previousManifest?.backingSourceId,
                         discoveryProviders =
                             trackedAsset
                                 ?.discoverySources
                                 ?.map { it.provider.value }
                                 ?.distinct()
                                 ?: previousManifest?.discoveryProviders.orEmpty(),
+                        discoverySources =
+                            trackedAsset
+                                ?.discoverySources
+                                ?.map { source ->
+                                    OfflineManifestSourceRef(
+                                        provider = source.provider.value,
+                                        sourceId = source.sourceId,
+                                    )
+                                }
+                                ?: previousManifest?.discoverySources.orEmpty(),
                     ),
                 )
 
