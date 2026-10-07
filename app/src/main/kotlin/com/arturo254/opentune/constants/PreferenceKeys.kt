@@ -449,31 +449,8 @@ val PlayerVolumeKey = floatPreferencesKey("playerVolume")
 val RepeatModeKey = intPreferencesKey("repeatMode")
 
 val UniversalAudioSelectionModeKey = stringPreferencesKey("universalAudioSelectionMode")
-val SearchSourceKey = stringPreferencesKey("searchSource")
 val SwipeThumbnailKey = booleanPreferencesKey("swipeThumbnail")
 val SwipeSensitivityKey = floatPreferencesKey("swipeSensitivity")
-
-enum class SearchSource {
-    UNIVERSAL,
-    LOCAL,
-    ONLINE,
-    DEEZER,
-    SPOTIFY,
-    TIDAL,
-    APPLE_MUSIC,
-    ;
-
-    fun toggle() =
-        when (this) {
-            UNIVERSAL -> LOCAL
-            LOCAL -> ONLINE
-            ONLINE -> DEEZER
-            DEEZER -> SPOTIFY
-            SPOTIFY -> TIDAL
-            TIDAL -> APPLE_MUSIC
-            APPLE_MUSIC -> UNIVERSAL
-        }
-}
 
 val VisitorDataKey = stringPreferencesKey("visitorData")
 val DataSyncIdKey = stringPreferencesKey("dataSyncId")
