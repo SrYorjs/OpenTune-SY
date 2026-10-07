@@ -294,7 +294,7 @@ class OfflineTrackRegistry internal constructor(
                 "artists",
                 buildJsonArray {
                     asset.artists.forEach { artist ->
-                        add(artist)
+                        add(JsonPrimitive(artist))
                     }
                 },
             )
@@ -308,7 +308,7 @@ class OfflineTrackRegistry internal constructor(
                 "versionTraits",
                 buildJsonArray {
                     asset.version.traits.forEach { trait ->
-                        add(trait.name)
+                        add(JsonPrimitive(trait.name))
                     }
                 },
             )
