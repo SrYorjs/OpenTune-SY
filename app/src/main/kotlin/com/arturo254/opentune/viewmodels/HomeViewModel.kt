@@ -34,6 +34,10 @@ import com.arturo254.opentune.extensions.toEnum
 import com.arturo254.opentune.models.ItemMetadata
 import com.arturo254.opentune.models.SimilarRecommendation
 import com.arturo254.opentune.playback.DownloadUtil
+import com.arturo254.opentune.playback.PlayerConnection
+import com.arturo254.opentune.core.model.SourceVariant
+import com.arturo254.opentune.sources.deezer.DeezerMusicSource
+import com.arturo254.opentune.sources.playback.SourcePlaybackCoordinator
 import com.arturo254.opentune.utils.dataStore
 import com.arturo254.opentune.constants.PlaylistSortType
 import com.arturo254.opentune.utils.get
@@ -55,6 +59,8 @@ class HomeViewModel @Inject constructor(
     val database: MusicDatabase,
     val syncUtils: SyncUtils,
     val downloadUtil: DownloadUtil,
+    private val deezerSource: DeezerMusicSource,
+    private val sourcePlaybackCoordinator: SourcePlaybackCoordinator,
 ) : ViewModel() {
     val isRefreshing = MutableStateFlow(false)
     val isLoading = MutableStateFlow(false)
@@ -72,6 +78,7 @@ class HomeViewModel @Inject constructor(
     val accountPlaylists = MutableStateFlow<List<PlaylistItem>?>(null)
     val homePage = MutableStateFlow<HomePage?>(null)
     val explorePage = MutableStateFlow<ExplorePage?>(null)
+    val globalCatalogTrending = MutableStateFlow<List<SourceVariant>>(emptyList())
     val selectedChip = MutableStateFlow<HomePage.Chip?>(null)
     private val previousHomePage = MutableStateFlow<HomePage?>(null)
 
@@ -187,6 +194,7 @@ class HomeViewModel @Inject constructor(
 
                 launch { getQuickPicks() }
                 launch { loadSpeedDialSongs() }
+                launch { loadGlobalCatalogTrending() }
                 launch { forgottenFavorites.value = database.forgottenFavorites().first().shuffled().take(20) }
                 
                 launch {
@@ -254,6 +262,27 @@ class HomeViewModel @Inject constructor(
             isLoading.value = false
         }
     }
+
+    private suspend fun loadGlobalCatalogTrending() {
+        deezerSource
+            .trendingTracks(limit = 24)
+            .onSuccess { tracks ->
+                globalCatalogTrending.value = tracks
+            }.onFailure { error ->
+                Timber.w(error, "Failed to load global catalog discovery")
+            }
+    }
+
+    suspend fun playSourceVariant(
+        connection: PlayerConnection,
+        variant: SourceVariant,
+        queueTitle: String,
+    ): Boolean =
+        sourcePlaybackCoordinator.play(
+            connection = connection,
+            variant = variant,
+            queueTitle = queueTitle,
+        )
 
     private suspend fun loadSimilarRecommendations() {
         val hideExplicit = context.dataStore.get(HideExplicitKey, false)
