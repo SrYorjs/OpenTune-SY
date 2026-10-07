@@ -233,9 +233,6 @@ import com.arturo254.opentune.ui.screens.Screens
 import com.arturo254.opentune.ui.screens.buildLoginRoute
 import com.arturo254.opentune.ui.screens.musicrecognition.MusicRecognitionRoute
 import com.arturo254.opentune.ui.screens.navigationBuilder
-import com.arturo254.opentune.ui.screens.search.DeezerSearchScreen
-import com.arturo254.opentune.ui.screens.search.LocalSearchScreen
-import com.arturo254.opentune.ui.screens.search.OnlineSearchScreen
 import com.arturo254.opentune.ui.screens.settings.DarkMode
 import com.arturo254.opentune.ui.screens.settings.DiscordPresenceManager
 import com.arturo254.opentune.ui.screens.settings.NavigationTab
