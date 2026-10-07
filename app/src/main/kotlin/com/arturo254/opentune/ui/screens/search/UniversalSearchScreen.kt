@@ -112,8 +112,8 @@ fun UniversalSearchScreen(
         playback@{ recording, chosen, fallbackList ->
             if (resolvingCatalogKey != null) return@playback
 
-            when (chosen?.provider) {
-                ProviderId.YOUTUBE_MUSIC ->
+            when {
+                chosen != null && chosen.provider == ProviderId.YOUTUBE_MUSIC ->
                     playerConnection.playQueue(
                         YouTubeQueue(
                             endpoint = WatchEndpoint(videoId = chosen.sourceId),
@@ -121,7 +121,9 @@ fun UniversalSearchScreen(
                         ),
                     )
 
-                ProviderId.LOCAL, ProviderId.OPEN_TUNE_OFFLINE ->
+                chosen != null &&
+                    (chosen.provider == ProviderId.LOCAL ||
+                        chosen.provider == ProviderId.OPEN_TUNE_OFFLINE) ->
                     playerConnection.playQueue(
                         ListQueue(
                             title = context.getString(R.string.queue_searched_songs),
@@ -136,7 +138,7 @@ fun UniversalSearchScreen(
                         resolvingCatalogKey = recording.stableResultKey()
                         try {
                             val resolved =
-                                if (chosen?.provider == ProviderId.SOUNDCLOUD) {
+                                if (chosen != null && chosen.provider == ProviderId.SOUNDCLOUD) {
                                     viewModel.resolveSoundCloud(chosen)
                                         ?: CatalogPlaybackResolver.resolveToMediaItem(
                                             chosen.toSoundCloudCatalogReference(),
