@@ -79,6 +79,7 @@ fun HomeScreen(
     val forgottenFavorites by viewModel.forgottenFavorites.collectAsState()
     val keepListening by viewModel.keepListening.collectAsState()
     val homePage by viewModel.homePage.collectAsState()
+    val globalCatalogTrending by viewModel.globalCatalogTrending.collectAsState()
     val allItemsMetadata by viewModel.allItemsMetadata.collectAsState()
 
     val selectedChip by viewModel.selectedChip.collectAsState()
@@ -181,8 +182,10 @@ fun HomeScreen(
 
                 if (selectedChip == null) {
                     item(key = "global_catalog_discovery") {
-                        DeezerTrendingHomeSection(
+                        GlobalCatalogHomeSection(
+                            tracks = globalCatalogTrending,
                             playerConnection = playerConnection,
+                            onPlay = viewModel::playSourceVariant,
                             modifier = Modifier.animateItem(),
                         )
                     }
