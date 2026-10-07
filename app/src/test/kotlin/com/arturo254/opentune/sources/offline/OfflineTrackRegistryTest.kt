@@ -73,6 +73,35 @@ class OfflineTrackRegistryTest {
         }
 
     @Test
+    fun registryPersistsOfflineAssetSidecarUris() =
+        runBlocking {
+            val file = Files.createTempDirectory("offline-registry-assets").resolve("offline.json").toFile()
+            val registry = OfflineTrackRegistry(file)
+
+            registry.registerPending(asset(ProviderId.SPOTIFY, "spotify-assets"))
+            registry.updateOfflineAssets(
+                mediaId = "yt-1",
+                artworkUri = "file:///offline/cover.jpg",
+                lyricsUri = "file:///offline/lyrics.lrc",
+                animationUri = "file:///offline/canvas.mp4",
+                manifestUri = "file:///offline/metadata.json",
+            )
+            registry.markAvailable("yt-1")
+
+            val reloaded = OfflineTrackRegistry(file)
+            val restored = reloaded.findByMediaId("yt-1")
+
+            assertEquals("file:///offline/cover.jpg", restored?.offlineArtworkUri)
+            assertEquals("file:///offline/lyrics.lrc", restored?.offlineLyricsUri)
+            assertEquals("file:///offline/canvas.mp4", restored?.offlineAnimationUri)
+            assertEquals("file:///offline/metadata.json", restored?.assetManifestUri)
+            assertEquals(
+                "file:///offline/cover.jpg",
+                restored?.toSourceVariant()?.artworkUrl,
+            )
+        }
+
+    @Test
     fun removingDownloadRemovesOfflineAsset() =
         runBlocking {
             val file = Files.createTempDirectory("offline-registry-remove").resolve("offline.json").toFile()
