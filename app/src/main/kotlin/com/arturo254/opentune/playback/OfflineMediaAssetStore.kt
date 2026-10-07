@@ -35,6 +35,11 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
+data class OfflineManifestSourceRef(
+    val provider: String,
+    val sourceId: String,
+)
+
 data class OfflineMediaAssetManifest(
     val mediaId: String,
     val title: String,
@@ -53,7 +58,9 @@ data class OfflineMediaAssetManifest(
     val localLyricsUri: String? = null,
     val localAnimationUri: String? = null,
     val backingProvider: String? = null,
+    val backingSourceId: String? = null,
     val discoveryProviders: List<String> = emptyList(),
+    val discoverySources: List<OfflineManifestSourceRef> = emptyList(),
     val updatedAtMs: Long = System.currentTimeMillis(),
 ) {
     fun toMediaMetadata(): MediaMetadata =
@@ -451,11 +458,25 @@ class OfflineMediaAssetStore internal constructor(
             manifest.localLyricsUri?.let { put("localLyricsUri", it) }
             manifest.localAnimationUri?.let { put("localAnimationUri", it) }
             manifest.backingProvider?.let { put("backingProvider", it) }
+            manifest.backingSourceId?.let { put("backingSourceId", it) }
             put(
                 "discoveryProviders",
                 buildJsonArray {
                     manifest.discoveryProviders.forEach { provider ->
                         add(JsonPrimitive(provider))
+                    }
+                },
+            )
+            put(
+                "discoverySources",
+                buildJsonArray {
+                    manifest.discoverySources.forEach { source ->
+                        add(
+                            buildJsonObject {
+                                put("provider", source.provider)
+                                put("sourceId", source.sourceId)
+                            },
+                        )
                     }
                 },
             )
@@ -510,11 +531,27 @@ class OfflineMediaAssetStore internal constructor(
             localLyricsUri = obj.string("localLyricsUri"),
             localAnimationUri = obj.string("localAnimationUri"),
             backingProvider = obj.string("backingProvider"),
+            backingSourceId = obj.string("backingSourceId"),
             discoveryProviders =
                 obj["discoveryProviders"]
                     ?.let { runCatching { it.jsonArray }.getOrNull() }
                     ?.mapNotNull { value -> value.jsonPrimitive.contentOrNull }
                     .orEmpty(),
+            discoverySources =
+                obj["discoverySources"]
+                    ?.let { runCatching { it.jsonArray }.getOrNull() }
+                    ?.mapNotNull { value ->
+                        val source = runCatching { value.jsonObject }.getOrNull()
+                            ?: return@mapNotNull null
+                        val provider = source.string("provider")
+                            ?: return@mapNotNull null
+                        val sourceId = source.string("sourceId")
+                            ?: return@mapNotNull null
+                        OfflineManifestSourceRef(
+                            provider = provider,
+                            sourceId = sourceId,
+                        )
+                    }.orEmpty(),
             updatedAtMs =
                 obj["updatedAtMs"]
                     ?.jsonPrimitive
