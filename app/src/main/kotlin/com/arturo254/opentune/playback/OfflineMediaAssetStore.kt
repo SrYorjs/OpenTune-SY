@@ -2,6 +2,7 @@ package com.arturo254.opentune.playback
 
 import android.content.Context
 import com.arturo254.opentune.db.entities.LyricsEntity.Companion.LYRICS_NOT_FOUND
+import com.arturo254.opentune.core.model.AudioQualityInfo
 import com.arturo254.opentune.models.MediaMetadata
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +44,11 @@ data class OfflineMediaAssetManifest(
     val durationSeconds: Int = MediaMetadata.UNKNOWN_DURATION,
     val explicit: Boolean = false,
     val remoteArtworkUrl: String? = null,
+    val remoteAnimationUrl: String? = null,
+    val isrc: String? = null,
+    val versionTraits: List<String> = emptyList(),
+    val versionLabel: String? = null,
+    val quality: AudioQualityInfo? = null,
     val localArtworkUri: String? = null,
     val localLyricsUri: String? = null,
     val localAnimationUri: String? = null,
@@ -416,6 +422,31 @@ class OfflineMediaAssetStore internal constructor(
             put("durationSeconds", manifest.durationSeconds)
             put("explicit", manifest.explicit)
             manifest.remoteArtworkUrl?.let { put("remoteArtworkUrl", it) }
+            manifest.remoteAnimationUrl?.let { put("remoteAnimationUrl", it) }
+            manifest.isrc?.let { put("isrc", it) }
+            put(
+                "versionTraits",
+                buildJsonArray {
+                    manifest.versionTraits.forEach { trait ->
+                        add(JsonPrimitive(trait))
+                    }
+                },
+            )
+            manifest.versionLabel?.let { put("versionLabel", it) }
+            manifest.quality?.let { quality ->
+                put(
+                    "quality",
+                    buildJsonObject {
+                        quality.mimeType?.let { put("mimeType", it) }
+                        quality.codec?.let { put("codec", it) }
+                        quality.bitrateBitsPerSecond?.let { put("bitrate", it) }
+                        quality.sampleRateHz?.let { put("sampleRate", it) }
+                        quality.bitDepth?.let { put("bitDepth", it) }
+                        quality.channelCount?.let { put("channels", it) }
+                        quality.lossless?.let { put("lossless", it) }
+                    },
+                )
+            }
             manifest.localArtworkUri?.let { put("localArtworkUri", it) }
             manifest.localLyricsUri?.let { put("localLyricsUri", it) }
             manifest.localAnimationUri?.let { put("localAnimationUri", it) }
@@ -453,6 +484,28 @@ class OfflineMediaAssetStore internal constructor(
                     ?.booleanOrNull
                     ?: false,
             remoteArtworkUrl = obj.string("remoteArtworkUrl"),
+            remoteAnimationUrl = obj.string("remoteAnimationUrl"),
+            isrc = obj.string("isrc"),
+            versionTraits =
+                obj["versionTraits"]
+                    ?.let { runCatching { it.jsonArray }.getOrNull() }
+                    ?.mapNotNull { value -> value.jsonPrimitive.contentOrNull }
+                    .orEmpty(),
+            versionLabel = obj.string("versionLabel"),
+            quality =
+                obj["quality"]
+                    ?.let { runCatching { it.jsonObject }.getOrNull() }
+                    ?.let { qualityObj ->
+                        AudioQualityInfo(
+                            mimeType = qualityObj.string("mimeType"),
+                            codec = qualityObj.string("codec"),
+                            bitrateBitsPerSecond = qualityObj["bitrate"]?.jsonPrimitive?.intOrNull,
+                            sampleRateHz = qualityObj["sampleRate"]?.jsonPrimitive?.intOrNull,
+                            bitDepth = qualityObj["bitDepth"]?.jsonPrimitive?.intOrNull,
+                            channelCount = qualityObj["channels"]?.jsonPrimitive?.intOrNull,
+                            lossless = qualityObj["lossless"]?.jsonPrimitive?.booleanOrNull,
+                        )
+                    },
             localArtworkUri = obj.string("localArtworkUri"),
             localLyricsUri = obj.string("localLyricsUri"),
             localAnimationUri = obj.string("localAnimationUri"),
