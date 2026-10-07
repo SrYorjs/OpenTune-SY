@@ -40,6 +40,7 @@ constructor(
     private val offlineTrackRegistry: OfflineTrackRegistry,
 ) : ViewModel() {
     val query = MutableStateFlow("")
+    val offlineAssets = offlineTrackRegistry.assets
 
     private val _state = MutableStateFlow(UniversalSearchUiState())
     val state: StateFlow<UniversalSearchUiState> = _state.asStateFlow()
