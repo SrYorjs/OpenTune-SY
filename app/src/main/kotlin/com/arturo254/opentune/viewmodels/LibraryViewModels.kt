@@ -14,7 +14,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.media3.exoplayer.offline.Download
 import com.arturo254.opentune.innertube.YouTube
 import com.arturo254.opentune.constants.AlbumFilter
 import com.arturo254.opentune.constants.AlbumFilterKey
@@ -47,7 +46,8 @@ import com.arturo254.opentune.extensions.filterExplicit
 import com.arturo254.opentune.extensions.filterExplicitAlbums
 import com.arturo254.opentune.extensions.reversed
 import com.arturo254.opentune.extensions.toEnum
-import com.arturo254.opentune.playback.DownloadUtil
+import com.arturo254.opentune.sources.offline.OfflineTrackRegistry
+import com.arturo254.opentune.sources.offline.OfflineTrackState
 import com.arturo254.opentune.utils.SyncUtils
 import com.arturo254.opentune.utils.dataStore
 import com.arturo254.opentune.utils.get
@@ -82,7 +82,7 @@ class LibrarySongsViewModel
 constructor(
     @ApplicationContext context: Context,
     database: MusicDatabase,
-    downloadUtil: DownloadUtil,
+    offlineTrackRegistry: OfflineTrackRegistry,
     private val syncUtils: SyncUtils,
 ) : ViewModel() {
     private val _isRefreshing = MutableStateFlow(false)
@@ -109,15 +109,19 @@ constructor(
                     SongFilter.DOWNLOADED ->
                         combine(
                             database.allSongs().flowOn(Dispatchers.IO),
-                            downloadUtil.downloads
-                        ) { songs, downloads ->
-                            songs.filter {
-                                downloads[it.id]?.state == Download.STATE_COMPLETED
-                            }.let { filteredSongs ->
+                            offlineTrackRegistry.assets,
+                        ) { songs, assets ->
+                            val available =
+                                assets
+                                    .filter { it.state == OfflineTrackState.AVAILABLE }
+                                    .associateBy { it.mediaId }
+
+                            songs.filter { it.id in available }.let { filteredSongs ->
                                 when (sortType) {
-                                    SongSortType.CREATE_DATE -> filteredSongs.sortedBy {
-                                        downloads[it.id]?.updateTimeMs ?: 0L
-                                    }
+                                    SongSortType.CREATE_DATE ->
+                                        filteredSongs.sortedBy {
+                                            available[it.id]?.updatedAtMs ?: 0L
+                                        }
                                     SongSortType.NAME -> filteredSongs.sortedBy { it.song.title }
                                     SongSortType.ARTIST -> {
                                         val collator = Collator.getInstance(Locale.getDefault())
@@ -125,7 +129,7 @@ constructor(
                                         filteredSongs.sortedWith(
                                             compareBy(collator) { song ->
                                                 song.artists.joinToString("") { it.name }
-                                            }
+                                            },
                                         )
                                     }
                                     SongSortType.PLAY_TIME -> filteredSongs.sortedBy { it.song.totalPlayTime }
@@ -236,7 +240,7 @@ class LibraryAlbumsViewModel
 constructor(
     @ApplicationContext context: Context,
     database: MusicDatabase,
-    downloadUtil: DownloadUtil,
+    offlineTrackRegistry: OfflineTrackRegistry,
     private val syncUtils: SyncUtils,
 ) : ViewModel() {
     private val _isRefreshing = MutableStateFlow(false)
@@ -260,10 +264,17 @@ constructor(
                     AlbumFilter.DOWNLOADED ->
                         combine(
                             database.allSongs().flowOn(Dispatchers.IO),
-                            downloadUtil.downloads
-                        ) { songs, downloads ->
-                            songs.filter { downloads[it.id]?.state == Download.STATE_COMPLETED }
-                                .mapNotNull { it.song.albumId }.toSet()
+                            offlineTrackRegistry.assets,
+                        ) { songs, assets ->
+                            val availableIds =
+                                assets
+                                    .asSequence()
+                                    .filter { it.state == OfflineTrackState.AVAILABLE }
+                                    .map { it.mediaId }
+                                    .toSet()
+                            songs.filter { it.id in availableIds }
+                                .mapNotNull { it.song.albumId }
+                                .toSet()
                         }.flatMapLatest { downloadedAlbumIds ->
                             database.albumsByIds(downloadedAlbumIds, sortType, descending)
                                 .map { albums -> albums.filterExplicitAlbums(hideExplicit) }
@@ -272,9 +283,15 @@ constructor(
                     AlbumFilter.DOWNLOADED_FULL ->
                         combine(
                             database.allSongs().flowOn(Dispatchers.IO),
-                            downloadUtil.downloads
-                        ) { songs, downloads ->
-                            songs.filter { downloads[it.id]?.state == Download.STATE_COMPLETED }
+                            offlineTrackRegistry.assets,
+                        ) { songs, assets ->
+                            val availableIds =
+                                assets
+                                    .asSequence()
+                                    .filter { it.state == OfflineTrackState.AVAILABLE }
+                                    .map { it.mediaId }
+                                    .toSet()
+                            songs.filter { it.id in availableIds }
                                 .mapNotNull { song -> song.song.albumId?.let { it to song } }
                                 .groupBy({ it.first }, { it.second })
                                 .mapValues { it.value.size }
