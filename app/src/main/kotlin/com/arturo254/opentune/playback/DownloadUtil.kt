@@ -258,6 +258,7 @@ constructor(
 
                             Download.STATE_REMOVING ->
                                 CoroutineScope(Dispatchers.IO).launch {
+                                    restoreRemoteArtworkAfterOfflineRemoval(download.request.id)
                                     offlineTrackRegistry.remove(download.request.id)
                                     offlineAssets.removeBundle(download.request.id)
                                 }
@@ -329,6 +330,7 @@ constructor(
                         offlineTrackRegistry.markFailed(download.request.id)
 
                     Download.STATE_REMOVING -> {
+                        restoreRemoteArtworkAfterOfflineRemoval(download.request.id)
                         offlineTrackRegistry.remove(download.request.id)
                         offlineAssets.removeBundle(download.request.id)
                     }
@@ -340,6 +342,7 @@ constructor(
                 .snapshot()
                 .filter { asset -> asset.mediaId !in indexedIds }
                 .forEach { asset ->
+                    restoreRemoteArtworkAfterOfflineRemoval(asset.mediaId)
                     offlineTrackRegistry.remove(asset.mediaId)
                     offlineAssets.removeBundle(asset.mediaId)
                 }
@@ -637,6 +640,26 @@ constructor(
                         ),
                     )
                 }
+            }
+        }
+    }
+
+    private suspend fun restoreRemoteArtworkAfterOfflineRemoval(mediaId: String) {
+        val remoteArtwork =
+            offlineAssets
+                .readManifest(mediaId)
+                ?.remoteArtworkUrl
+                ?.takeIf(String::isNotBlank)
+                ?: return
+        val song = database.getSongByIdBlocking(mediaId) ?: return
+
+        if (song.song.thumbnailUrl?.startsWith("file:") == true) {
+            database.query {
+                upsert(
+                    song.song.copy(
+                        thumbnailUrl = remoteArtwork,
+                    ),
+                )
             }
         }
     }
