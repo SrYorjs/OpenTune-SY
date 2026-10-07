@@ -91,7 +91,6 @@ import coil3.request.crossfade
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import com.arturo254.opentune.R
-import com.arturo254.opentune.catalog.CatalogPlaybackResolver
 import com.arturo254.opentune.constants.GridThumbnailHeight
 import com.arturo254.opentune.constants.ListItemHeight
 import com.arturo254.opentune.constants.ListThumbnailSize
@@ -101,6 +100,7 @@ import com.arturo254.opentune.db.entities.Artist
 import com.arturo254.opentune.db.entities.LocalItem
 import com.arturo254.opentune.db.entities.Playlist
 import com.arturo254.opentune.db.entities.Song
+import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.extensions.toMediaItem
 import com.arturo254.opentune.extensions.togglePlayPause
 import com.arturo254.opentune.innertube.models.AlbumItem
@@ -116,7 +116,6 @@ import com.arturo254.opentune.models.toMediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.playback.queues.ListQueue
 import com.arturo254.opentune.playback.queues.YouTubeQueue
-import com.arturo254.opentune.sources.deezer.toDeezerCatalogReference
 import com.arturo254.opentune.ui.component.AlbumGridItem
 import com.arturo254.opentune.ui.component.ArtistGridItem
 import com.arturo254.opentune.ui.component.LocalMenuState
@@ -145,11 +144,151 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.arturo254.opentune.viewmodels.DeezerSearchViewModel
 import com.arturo254.opentune.viewmodels.HomeViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun GlobalCatalogHomeSection(
+    tracks: List<SourceVariant>,
+    playerConnection: PlayerConnection,
+    onPlay: suspend (PlayerConnection, SourceVariant, String) -> Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val mediaMetadata by playerConnection.mediaMetadata.collectAsState()
+    val isPlaying by playerConnection.isPlaying.collectAsState()
+    val scope = rememberCoroutineScope()
+    val queueTitle = stringResource(R.string.deezer_trending)
+    val visibleTracks = tracks.take(12)
+
+    if (visibleTracks.isEmpty()) return
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        NavigationTitle(
+            label = stringResource(R.string.global_catalog),
+            title = stringResource(R.string.deezer_trending),
+        )
+
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 18.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            items(
+                items = visibleTracks,
+                key = { "global_catalog_" + it.provider.value + ":" + it.sourceId },
+            ) { track ->
+                val active =
+                    mediaMetadata?.title.equals(track.title, ignoreCase = true) &&
+                        track.artists.any { sourceArtist ->
+                            mediaMetadata?.artists
+                                ?.any { it.name.equals(sourceArtist, ignoreCase = true) } == true
+                        }
+                val interaction = remember { MutableInteractionSource() }
+                val pressed by interaction.collectIsPressedAsState()
+                val scale by animateFloatAsState(
+                    targetValue = if (pressed) 0.955f else 1f,
+                    animationSpec = spring(
+                        dampingRatio = 0.86f,
+                        stiffness = 640f,
+                    ),
+                    label = "globalCatalogHomeCard",
+                )
+                val shape = RoundedCornerShape(26.dp)
+
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier =
+                        Modifier
+                            .width(160.dp)
+                            .graphicsLayer {
+                                scaleX = scale
+                                scaleY = scale
+                            }
+                            .clip(shape)
+                            .background(
+                                MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.50f)
+                            )
+                            .border(
+                                0.75.dp,
+                                if (active) {
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.34f)
+                                } else {
+                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.17f)
+                                },
+                                shape,
+                            )
+                            .combinedClickable(
+                                interactionSource = interaction,
+                                onClick = {
+                                    if (active) {
+                                        playerConnection.player.togglePlayPause()
+                                    } else {
+                                        scope.launch {
+                                            onPlay(playerConnection, track, queueTitle)
+                                        }
+                                    }
+                                },
+                                onLongClick = {},
+                            )
+                            .padding(10.dp),
+                ) {
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier =
+                            Modifier
+                                .size(140.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                    ) {
+                        AsyncImage(
+                            model = track.artworkUrl,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+
+                        if (active) {
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .fillMaxSize()
+                                        .background(Color.Black.copy(alpha = 0.24f))
+                            )
+                            Icon(
+                                painter =
+                                    painterResource(
+                                        if (isPlaying) R.drawable.pause else R.drawable.play
+                                    ),
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(32.dp),
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = track.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                        color =
+                            if (active) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = track.artists.joinToString(),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun DeezerTrendingHomeSection(
     playerConnection: PlayerConnection,
