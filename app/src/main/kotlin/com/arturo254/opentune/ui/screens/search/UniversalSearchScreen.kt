@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -55,6 +57,7 @@ import com.arturo254.opentune.R
 import com.arturo254.opentune.catalog.CatalogPlaybackResolver
 import com.arturo254.opentune.catalog.CatalogTrackReference
 import com.arturo254.opentune.core.model.ProviderId
+import com.arturo254.opentune.constants.UniversalAudioSelectionModeKey
 import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.core.model.TrackVersionTrait
 import com.arturo254.opentune.extensions.ExtraIsMusicVideo
@@ -66,12 +69,15 @@ import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.sources.deezer.toDeezerCatalogReference
 import com.arturo254.opentune.sources.offline.OfflineTrackState
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
+import com.arturo254.opentune.sources.resolution.AudioSelectionMode
+import com.arturo254.opentune.sources.resolution.SourceVariantKey
 import com.arturo254.opentune.sources.spotify.toSpotifyCatalogReference
 import com.arturo254.opentune.sources.soundcloud.toSoundCloudCatalogReference
 import com.arturo254.opentune.sources.tidal.toTidalCatalogReference
 import com.arturo254.opentune.sources.apple.toAppleMusicCatalogReference
 import com.arturo254.opentune.ui.component.liquidGlassScreenBackground
 import com.arturo254.opentune.viewmodels.UniversalSearchViewModel
+import com.arturo254.opentune.utils.rememberEnumPreference
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -92,6 +98,87 @@ fun UniversalSearchScreen(
     val scope = rememberCoroutineScope()
     var resolvingCatalogKey by remember { mutableStateOf<String?>(null) }
     var preparingOfflineKey by remember { mutableStateOf<String?>(null) }
+    var selectionDialogKey by remember { mutableStateOf<String?>(null) }
+    val manualChoices = remember { mutableStateMapOf<String, SourceVariantKey>() }
+    var qualityMode by rememberEnumPreference(
+        UniversalAudioSelectionModeKey,
+        AudioSelectionMode.AUTOMATIC,
+    )
+
+    val playResult:
+        (UnifiedTrackSearchResult, SourceVariant?, List<SourceVariant>) -> Unit =
+        playback@{ recording, chosen, fallbackList ->
+            if (resolvingCatalogKey != null) return@playback
+
+            when (chosen?.provider) {
+                ProviderId.YOUTUBE_MUSIC ->
+                    playerConnection.playQueue(
+                        YouTubeQueue(
+                            endpoint = WatchEndpoint(videoId = chosen.sourceId),
+                            preloadItem = chosen.toOpenTuneMetadata(),
+                        ),
+                    )
+
+                ProviderId.LOCAL, ProviderId.OPEN_TUNE_OFFLINE ->
+                    playerConnection.playQueue(
+                        ListQueue(
+                            title = context.getString(R.string.queue_searched_songs),
+                            items = listOf(chosen.toPlayableMediaItem()),
+                        ),
+                    )
+
+                else -> {
+                    if (chosen == null && fallbackList.isEmpty()) return@playback
+
+                    scope.launch {
+                        resolvingCatalogKey = recording.stableResultKey()
+                        try {
+                            val resolved =
+                                if (chosen?.provider == ProviderId.SOUNDCLOUD) {
+                                    viewModel.resolveSoundCloud(chosen)
+                                        ?: CatalogPlaybackResolver.resolveToMediaItem(
+                                            chosen.toSoundCloudCatalogReference(),
+                                        )
+                                } else {
+                                    var playableItem: MediaItem? = null
+                                    val choices = listOfNotNull(chosen) + fallbackList
+                                    for (variant in choices) {
+                                        if (!variant.isCatalogOnly()) continue
+                                        playableItem =
+                                            runCatching {
+                                                CatalogPlaybackResolver.resolveToMediaItem(
+                                                    variant.toCatalogPlaybackReference(),
+                                                )
+                                            }.getOrNull()
+                                        if (playableItem != null) break
+                                    }
+                                    playableItem
+                                }
+
+                            if (resolved == null) {
+                                Toast.makeText(
+                                    context,
+                                    R.string.universal_versions_play_error,
+                                    Toast.LENGTH_SHORT,
+                                ).show()
+                            } else {
+                                playerConnection.player.setMediaItem(resolved)
+                                playerConnection.player.prepare()
+                                playerConnection.player.playWhenReady = true
+                            }
+                        } catch (_: Exception) {
+                            Toast.makeText(
+                                context,
+                                R.string.universal_versions_play_error,
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        } finally {
+                            resolvingCatalogKey = null
+                        }
+                    }
+                }
+            }
+        }
 
     LaunchedEffect(query) {
         viewModel.query.value = query
@@ -132,6 +219,37 @@ fun UniversalSearchScreen(
                 .fillMaxSize()
                 .liquidGlassScreenBackground(pureBlack = pureBlack),
     ) {
+        item(key = "universal_quality_mode") {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    text = stringResource(R.string.universal_quality_title),
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(end = 3.dp),
+                )
+                listOf(
+                    AudioSelectionMode.AUTOMATIC to R.string.universal_quality_auto,
+                    AudioSelectionMode.BEST_QUALITY to R.string.universal_quality_best,
+                    AudioSelectionMode.DATA_SAVER to R.string.universal_quality_saver,
+                ).forEach { (mode, label) ->
+                    FilterChip(
+                        selected = qualityMode == mode,
+                        onClick = { qualityMode = mode },
+                        label = {
+                            Text(
+                                text = stringResource(label),
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 1,
+                            )
+                        },
+                    )
+                }
+            }
+        }
+
         if (state.result.failedSourceCount > 0) {
             item(key = "source_warning") {
                 Text(
