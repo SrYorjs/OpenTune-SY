@@ -57,6 +57,10 @@ data class OfflineTrackAsset(
     val explicit: Boolean? = null,
     val version: TrackVersion = TrackVersion(),
     val artworkUrl: String? = null,
+    val offlineArtworkUri: String? = null,
+    val offlineLyricsUri: String? = null,
+    val offlineAnimationUri: String? = null,
+    val assetManifestUri: String? = null,
     val quality: AudioQualityInfo? = null,
     val state: OfflineTrackState = OfflineTrackState.PENDING,
     val createdAtMs: Long = System.currentTimeMillis(),
@@ -74,7 +78,7 @@ data class OfflineTrackAsset(
             isrc = isrc,
             explicit = explicit,
             version = version,
-            artworkUrl = artworkUrl,
+            artworkUrl = offlineArtworkUri ?: artworkUrl,
             quality = quality,
         )
 }
@@ -157,6 +161,10 @@ class OfflineTrackRegistry internal constructor(
                                 existing.version
                             },
                         artworkUrl = asset.artworkUrl ?: existing.artworkUrl,
+                        offlineArtworkUri = asset.offlineArtworkUri ?: existing.offlineArtworkUri,
+                        offlineLyricsUri = asset.offlineLyricsUri ?: existing.offlineLyricsUri,
+                        offlineAnimationUri = asset.offlineAnimationUri ?: existing.offlineAnimationUri,
+                        assetManifestUri = asset.assetManifestUri ?: existing.assetManifestUri,
                         quality = asset.quality ?: existing.quality,
                         state =
                             if (existing.state == OfflineTrackState.AVAILABLE) {
@@ -184,6 +192,30 @@ class OfflineTrackRegistry internal constructor(
     suspend fun remove(mediaId: String) {
         mutate { current ->
             current.filterNot { it.mediaId == mediaId }
+        }
+    }
+
+    suspend fun updateOfflineAssets(
+        mediaId: String,
+        artworkUri: String?,
+        lyricsUri: String?,
+        animationUri: String?,
+        manifestUri: String?,
+    ) {
+        mutate { current ->
+            current.map { asset ->
+                if (asset.mediaId == mediaId) {
+                    asset.copy(
+                        offlineArtworkUri = artworkUri ?: asset.offlineArtworkUri,
+                        offlineLyricsUri = lyricsUri ?: asset.offlineLyricsUri,
+                        offlineAnimationUri = animationUri ?: asset.offlineAnimationUri,
+                        assetManifestUri = manifestUri ?: asset.assetManifestUri,
+                        updatedAtMs = System.currentTimeMillis(),
+                    )
+                } else {
+                    asset
+                }
+            }
         }
     }
 
@@ -313,6 +345,10 @@ class OfflineTrackRegistry internal constructor(
                 },
             )
             asset.artworkUrl?.let { put("artworkUrl", it) }
+            asset.offlineArtworkUri?.let { put("offlineArtworkUri", it) }
+            asset.offlineLyricsUri?.let { put("offlineLyricsUri", it) }
+            asset.offlineAnimationUri?.let { put("offlineAnimationUri", it) }
+            asset.assetManifestUri?.let { put("assetManifestUri", it) }
             asset.quality?.let { quality ->
                 put(
                     "quality",
@@ -421,6 +457,10 @@ class OfflineTrackRegistry internal constructor(
                     label = obj.string("versionLabel"),
                 ),
             artworkUrl = obj.string("artworkUrl"),
+            offlineArtworkUri = obj.string("offlineArtworkUri"),
+            offlineLyricsUri = obj.string("offlineLyricsUri"),
+            offlineAnimationUri = obj.string("offlineAnimationUri"),
+            assetManifestUri = obj.string("assetManifestUri"),
             quality = quality,
             state =
                 obj.string("state")
