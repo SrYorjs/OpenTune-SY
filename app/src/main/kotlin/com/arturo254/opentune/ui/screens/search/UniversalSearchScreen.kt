@@ -174,12 +174,7 @@ fun UniversalSearchScreen(
 
         items(
             items = state.result.tracks,
-            key = { result ->
-                result.variants
-                    .joinToString("|") { variant ->
-                        variant.provider.value + ":" + variant.sourceId
-                    }
-            },
+            key = UnifiedTrackSearchResult::stableResultKey,
         ) { result ->
             val playable = result.recommendedVariant
             val catalogFallbacks =
@@ -193,10 +188,7 @@ fun UniversalSearchScreen(
                 } else {
                     emptyList()
                 }
-            val resultKey =
-                result.variants.joinToString("|") { variant ->
-                    variant.provider.value + ":" + variant.sourceId
-                }
+            val resultKey = result.stableResultKey()
             val isActive =
                 playable?.sourceId == activeMetadata?.id ||
                     (
@@ -592,6 +584,32 @@ private fun SourceVariant.toCatalogPlaybackReference(): CatalogTrackReference =
         ProviderId.SOUNDCLOUD -> toSoundCloudCatalogReference()
         else -> error("Provider does not use catalog playback bridge: " + provider.value)
     }
+
+private fun UnifiedTrackSearchResult.stableResultKey(): String =
+    identity.isrc
+        ?.takeIf(String::isNotBlank)
+        ?.let { "isrc:" + it.uppercase() }
+        ?: buildString {
+            append(identity.title.trim().lowercase())
+            append('|')
+            append(
+                identity.artists
+                    .joinToString(",") { artist -> artist.name.trim().lowercase() },
+            )
+            append('|')
+            append(identity.durationMs ?: -1L)
+            append('|')
+            append(identity.album?.canonicalId ?: identity.album?.title.orEmpty())
+            append('|')
+            append(
+                identity.version.traits
+                    .map { trait -> trait.name }
+                    .sorted()
+                    .joinToString(","),
+            )
+            append('|')
+            append(identity.version.label.orEmpty().trim().lowercase())
+        }
 
 private fun providerName(provider: ProviderId): String =
     when (provider) {
