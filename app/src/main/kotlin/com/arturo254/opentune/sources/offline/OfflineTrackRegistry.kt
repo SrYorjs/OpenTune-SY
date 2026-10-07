@@ -293,7 +293,9 @@ class OfflineTrackRegistry internal constructor(
             put(
                 "artists",
                 buildJsonArray {
-                    asset.artists.forEach(::add)
+                    asset.artists.forEach { artist ->
+                        add(artist)
+                    }
                 },
             )
             asset.albumId?.let { put("albumId", it) }
