@@ -342,14 +342,15 @@ fun UniversalSearchScreen(
                     (
                         activeMetadata != null &&
                             (playable == null || playable.isCatalogOnly()) &&
-                            activeMetadata.title.equals(result.identity.title, ignoreCase = true) &&
+                            activeMetadata?.title.equals(result.identity.title, ignoreCase = true) &&
                             result.identity.artists.any { identityArtist ->
-                                activeMetadata.artists.any {
-                                    it.name.equals(
-                                        identityArtist.name,
-                                        ignoreCase = true,
-                                    )
-                                }
+                                activeMetadata?.artists
+                                    ?.any {
+                                        it.name.equals(
+                                            identityArtist.name,
+                                            ignoreCase = true,
+                                        )
+                                    } == true
                             }
                     )
 
