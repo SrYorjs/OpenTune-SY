@@ -135,6 +135,8 @@ constructor() {
                         artworkUrl =
                             variants.firstNotNullOfOrNull { it.artworkUrl }
                                 ?: metadata.thumbnailUrl,
+                        animatedArtworkUrl =
+                            variants.firstNotNullOfOrNull { it.animatedArtworkUrl },
                         quality = backingVariant.quality,
                     ),
                 metadata =
