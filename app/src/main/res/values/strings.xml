@@ -884,4 +884,20 @@ OpenTune will only extract your token, and everything else is stored locally.</s
     <string name="playlist_mix_melt">Melt</string>
     <string name="playlist_mix_seconds">%1$d s</string>
 
+    <string name="universal_quality_title">Calidad</string>
+    <string name="universal_quality_auto">Automatic</string>
+    <string name="universal_quality_best">Best quality</string>
+    <string name="universal_quality_saver">Data saver</string>
+    <string name="universal_versions_title">Versions and sources</string>
+    <string name="universal_versions_action">Versions</string>
+    <string name="universal_versions_related">Other versions</string>
+    <string name="universal_versions_current">Current recording</string>
+    <string name="universal_versions_reset">Use automatic selection</string>
+    <string name="universal_versions_catalog">Catalog only: playback resolved via another source</string>
+    <string name="universal_versions_unknown_quality">Unknown quality</string>
+    <string name="universal_versions_quality_note">Catalog quality does not guarantee actual playback quality.</string>
+    <string name="universal_versions_select">Select</string>
+    <string name="universal_versions_close">Close</string>
+    <string name="universal_versions_original">Original / unspecified version</string>
+    <string name="universal_versions_play_error">Unable to play selected version</string>
 </resources>
