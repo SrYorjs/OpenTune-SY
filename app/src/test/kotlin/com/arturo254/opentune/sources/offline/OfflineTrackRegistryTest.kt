@@ -78,7 +78,11 @@ class OfflineTrackRegistryTest {
             val file = Files.createTempDirectory("offline-registry-assets").resolve("offline.json").toFile()
             val registry = OfflineTrackRegistry(file)
 
-            registry.registerPending(asset(ProviderId.SPOTIFY, "spotify-assets"))
+            registry.registerPending(
+                asset(ProviderId.SPOTIFY, "spotify-assets").copy(
+                    animatedArtworkUrl = "https://example.test/canvas.mp4",
+                ),
+            )
             registry.updateOfflineAssets(
                 mediaId = "yt-1",
                 artworkUri = "file:///offline/cover.jpg",
@@ -93,11 +97,16 @@ class OfflineTrackRegistryTest {
 
             assertEquals("file:///offline/cover.jpg", restored?.offlineArtworkUri)
             assertEquals("file:///offline/lyrics.lrc", restored?.offlineLyricsUri)
+            assertEquals("https://example.test/canvas.mp4", restored?.animatedArtworkUrl)
             assertEquals("file:///offline/canvas.mp4", restored?.offlineAnimationUri)
             assertEquals("file:///offline/metadata.json", restored?.assetManifestUri)
             assertEquals(
                 "file:///offline/cover.jpg",
                 restored?.toSourceVariant()?.artworkUrl,
+            )
+            assertEquals(
+                "file:///offline/canvas.mp4",
+                restored?.toSourceVariant()?.animatedArtworkUrl,
             )
         }
 
