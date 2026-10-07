@@ -423,6 +423,21 @@ constructor(
             return
         }
 
+        offlineAssets
+            .readLyrics(mediaId)
+            ?.takeIf { lyrics -> lyrics.isNotBlank() && lyrics != LYRICS_NOT_FOUND }
+            ?.let { lyrics ->
+                database.query {
+                    upsert(
+                        LyricsEntity(
+                            id = mediaId,
+                            lyrics = lyrics,
+                        ),
+                    )
+                }
+                return
+            }
+
         val song = database.getSongByIdBlocking(mediaId) ?: run {
             Timber.tag("DownloadUtil").w("No se encontró la canción $mediaId en la BD, no se puede buscar letra todavía")
             return
@@ -457,6 +472,21 @@ constructor(
             }
             return
         }
+
+        offlineAssets
+            .readLyrics(mediaId)
+            ?.takeIf { lyrics -> lyrics.isNotBlank() && lyrics != LYRICS_NOT_FOUND }
+            ?.let { lyrics ->
+                database.query {
+                    upsert(
+                        LyricsEntity(
+                            id = mediaId,
+                            lyrics = lyrics,
+                        ),
+                    )
+                }
+                return
+            }
 
         val mediaMetadata = MediaMetadata(
             id = mediaId,
