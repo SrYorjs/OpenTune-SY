@@ -331,6 +331,62 @@ class UnifiedSearchRepositoryTest {
         }
 
     @Test
+    fun offlineResultsRemainPlayableWhenOnlineProvidersFail() =
+        runBlocking {
+            val offline =
+                FakeSearchSource(
+                    id = ProviderId.OPEN_TUNE_OFFLINE,
+                    capabilities =
+                        SourceCapabilities.of(
+                            SourceCapability.TRACK_SEARCH,
+                            SourceCapability.TRACK_METADATA,
+                            SourceCapability.OPEN_TUNE_MANAGED_DOWNLOAD,
+                        ),
+                    onSearch = {
+                        page(
+                            variant(
+                                provider = ProviderId.OPEN_TUNE_OFFLINE,
+                                sourceId = "yt-cached",
+                                title = "Offline Song",
+                                isrc = "USAAA2600400",
+                            ),
+                        )
+                    },
+                )
+            val brokenProviders =
+                listOf(
+                    ProviderId.YOUTUBE_MUSIC,
+                    ProviderId.SPOTIFY,
+                    ProviderId.DEEZER,
+                    ProviderId.TIDAL,
+                    ProviderId.APPLE_MUSIC,
+                    ProviderId.SOUNDCLOUD,
+                ).map { provider ->
+                    FakeSearchSource(
+                        id = provider,
+                        onSearch = {
+                            Result.failure(IllegalStateException(provider.value + " offline"))
+                        },
+                    )
+                }
+
+            val result =
+                repository(
+                    offline,
+                    *brokenProviders.toTypedArray(),
+                ).search(UnifiedSearchRequest("offline song"))
+
+            assertEquals(1, result.tracks.size)
+            assertEquals(1, result.successfulSourceCount)
+            assertEquals(6, result.failedSourceCount)
+            assertEquals(
+                ProviderId.OPEN_TUNE_OFFLINE,
+                result.tracks.single().recommendedVariant?.provider,
+            )
+            assertEquals("yt-cached", result.tracks.single().recommendedVariant?.sourceId)
+        }
+
+    @Test
     fun providerFilterQueriesOnlyRequestedSources() =
         runBlocking {
             var youtubeCalls = 0
