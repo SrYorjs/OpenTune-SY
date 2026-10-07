@@ -1,6 +1,7 @@
 package com.arturo254.opentune.ui.screens.search
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -87,6 +89,7 @@ fun UniversalSearchScreen(
     val isPlaying by playerConnection.isPlaying.collectAsState()
     val scope = rememberCoroutineScope()
     var resolvingCatalogKey by remember { mutableStateOf<String?>(null) }
+    var preparingOfflineKey by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(query) {
         viewModel.query.value = query
@@ -208,11 +211,55 @@ fun UniversalSearchScreen(
                             }
                     )
 
+            val hasOfflineCopy =
+                result.variants.any { it.provider == ProviderId.OPEN_TUNE_OFFLINE }
+            val canDownload =
+                !hasOfflineCopy &&
+                    result.variants.any { variant ->
+                        variant.provider != ProviderId.LOCAL &&
+                            variant.provider != ProviderId.OPEN_TUNE_OFFLINE
+                    }
+
             UnifiedTrackRow(
                 result = result,
                 isActive = isActive,
                 isPlaying = isPlaying,
                 isResolving = resolvingCatalogKey == resultKey,
+                isOfflineAvailable = hasOfflineCopy,
+                isPreparingOffline = preparingOfflineKey == resultKey,
+                onDownload =
+                    if (canDownload) {
+                        {
+                            if (preparingOfflineKey == null) {
+                                scope.launch {
+                                    preparingOfflineKey = resultKey
+                                    viewModel
+                                        .enqueueOffline(result)
+                                        .onSuccess {
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    R.string.catalog_offline_download_started,
+                                                    Toast.LENGTH_SHORT,
+                                                ).show()
+                                        }.onFailure {
+                                            Toast
+                                                .makeText(
+                                                    context,
+                                                    it.message
+                                                        ?: context.getString(
+                                                            R.string.catalog_source_unplayable,
+                                                        ),
+                                                    Toast.LENGTH_SHORT,
+                                                ).show()
+                                        }
+                                    preparingOfflineKey = null
+                                }
+                            }
+                        }
+                    } else {
+                        null
+                    },
                 onClick =
                     when {
                         isActive ->
@@ -330,6 +377,9 @@ private fun UnifiedTrackRow(
     isActive: Boolean,
     isPlaying: Boolean,
     isResolving: Boolean,
+    isOfflineAvailable: Boolean,
+    isPreparingOffline: Boolean,
+    onDownload: (() -> Unit)?,
     onClick: (() -> Unit)?,
 ) {
     val recommended = result.recommendedVariant
@@ -479,6 +529,38 @@ private fun UnifiedTrackRow(
                             .padding(horizontal = 8.dp, vertical = 5.dp),
                 )
             }
+
+            when {
+                isOfflineAvailable -> {
+                    Spacer(Modifier.width(6.dp))
+                    Icon(
+                        painter = painterResource(R.drawable.offline),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp),
+                    )
+                }
+
+                onDownload != null -> {
+                    Spacer(Modifier.width(2.dp))
+                    IconButton(
+                        onClick = onDownload,
+                        enabled = !isPreparingOffline,
+                    ) {
+                        if (isPreparingOffline) {
+                            CircularProgressIndicator(
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(20.dp),
+                            )
+                        } else {
+                            Icon(
+                                painter = painterResource(R.drawable.download),
+                                contentDescription = null,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -502,6 +584,7 @@ private fun providerName(provider: ProviderId): String =
         ProviderId.TIDAL -> "TIDAL"
         ProviderId.APPLE_MUSIC -> "Apple Music"
         ProviderId.SOUNDCLOUD -> "SoundCloud"
+        ProviderId.OPEN_TUNE_OFFLINE -> "Offline"
         else -> provider.value
     }
 
@@ -514,6 +597,7 @@ private fun providerShortName(provider: ProviderId): String =
         ProviderId.TIDAL -> "TIDAL"
         ProviderId.APPLE_MUSIC -> "Apple"
         ProviderId.SOUNDCLOUD -> "SC"
+        ProviderId.OPEN_TUNE_OFFLINE -> "Offline"
         else -> provider.value
     }
 
