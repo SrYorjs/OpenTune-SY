@@ -5,6 +5,9 @@ import androidx.lifecycle.viewModelScope
 import com.arturo254.opentune.sources.search.UnifiedSearchRepository
 import com.arturo254.opentune.sources.search.UnifiedSearchRequest
 import com.arturo254.opentune.sources.search.UnifiedSearchResult
+import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
+import com.arturo254.opentune.sources.offline.OfflineDownloadCoordinator
+import com.arturo254.opentune.sources.offline.OfflineTrackAsset
 import com.arturo254.opentune.sources.soundcloud.SoundCloudPlaybackResolver
 import com.arturo254.opentune.core.model.SourceVariant
 import androidx.media3.common.MediaItem
@@ -28,6 +31,7 @@ class UniversalSearchViewModel
 constructor(
     private val repository: UnifiedSearchRepository,
     private val soundCloudPlaybackResolver: SoundCloudPlaybackResolver,
+    private val offlineDownloadCoordinator: OfflineDownloadCoordinator,
 ) : ViewModel() {
     val query = MutableStateFlow("")
 
@@ -50,6 +54,12 @@ constructor(
 
     suspend fun resolveSoundCloud(variant: SourceVariant): MediaItem? =
         soundCloudPlaybackResolver.resolveToMediaItem(variant)
+
+    suspend fun enqueueOffline(result: UnifiedTrackSearchResult): Result<OfflineTrackAsset> =
+        offlineDownloadCoordinator.enqueue(
+            identity = result.identity,
+            variants = result.variants,
+        )
 
     fun loadMore() {
         val snapshot = _state.value
