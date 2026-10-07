@@ -338,18 +338,18 @@ fun UniversalSearchScreen(
                     emptyList()
                 }
             val isActive =
-                playable?.sourceId == activeMetadata?.id ||
+                (playable != null && playable.sourceId == activeMetadata?.id) ||
                     (
-                        (playable == null || playable.isCatalogOnly()) &&
-                            activeMetadata?.title.equals(result.identity.title, ignoreCase = true) &&
+                        activeMetadata != null &&
+                            (playable == null || playable.isCatalogOnly()) &&
+                            activeMetadata.title.equals(result.identity.title, ignoreCase = true) &&
                             result.identity.artists.any { identityArtist ->
-                                activeMetadata?.artists
-                                    ?.any {
-                                        it.name.equals(
-                                            identityArtist.name,
-                                            ignoreCase = true,
-                                        )
-                                    } == true
+                                activeMetadata.artists.any {
+                                    it.name.equals(
+                                        identityArtist.name,
+                                        ignoreCase = true,
+                                    )
+                                }
                             }
                     )
 
