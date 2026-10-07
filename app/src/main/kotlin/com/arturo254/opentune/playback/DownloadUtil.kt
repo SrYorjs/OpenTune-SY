@@ -317,12 +317,17 @@ constructor(
                 .setData(metadata.title.toByteArray())
                 .build()
 
-        DownloadService.sendAddDownload(
-            context,
-            ExoDownloadService::class.java,
-            request,
-            false,
-        )
+        try {
+            DownloadService.sendAddDownload(
+                context,
+                ExoDownloadService::class.java,
+                request,
+                false,
+            )
+        } catch (error: Throwable) {
+            offlineTrackRegistry.markFailed(asset.mediaId)
+            throw error
+        }
     }
 
     fun getDownload(songId: String): Flow<Download?> = downloads.map { it[songId] }
