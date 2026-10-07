@@ -84,11 +84,14 @@ data class OfflineMediaAssetManifest(
  * animated artwork/canvas whenever the provider exposes one.
  */
 @Singleton
-class OfflineMediaAssetStore
-@Inject
-constructor(
-    @ApplicationContext private val context: Context,
+class OfflineMediaAssetStore internal constructor(
+    private val root: File,
 ) {
+    @Inject
+    constructor(
+        @ApplicationContext context: Context,
+    ) : this(File(context.filesDir, "offline_media"))
+
     private val client =
         OkHttpClient.Builder()
             .connectTimeout(8, TimeUnit.SECONDS)
@@ -97,8 +100,11 @@ constructor(
             .retryOnConnectionFailure(true)
             .build()
 
-    private val root = File(context.filesDir, "offline_media").apply { mkdirs() }
     private val json = Json { ignoreUnknownKeys = true }
+
+    init {
+        root.mkdirs()
+    }
 
     fun getCoverUri(mediaId: String): String? =
         assetDir(mediaId)
