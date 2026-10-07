@@ -259,6 +259,7 @@ constructor(
                             Download.STATE_REMOVING ->
                                 CoroutineScope(Dispatchers.IO).launch {
                                     offlineTrackRegistry.remove(download.request.id)
+                                    offlineAssets.removeBundle(download.request.id)
                                 }
                         }
                     }
@@ -276,8 +277,34 @@ constructor(
 
                 when (download.state) {
                     Download.STATE_COMPLETED -> {
+                        var song = database.getSongByIdBlocking(download.request.id)
+
+                        if (song == null) {
+                            offlineAssets.readManifest(download.request.id)?.let { manifest ->
+                                database.query {
+                                    insert(manifest.toMediaMetadata())
+                                }
+                                song = database.getSongByIdBlocking(download.request.id)
+                            }
+                        }
+
+                        if (database.getLyricsById(download.request.id) == null) {
+                            offlineAssets
+                                .readLyrics(download.request.id)
+                                ?.takeIf { lyrics -> lyrics.isNotBlank() && lyrics != LYRICS_NOT_FOUND }
+                                ?.let { lyrics ->
+                                    database.query {
+                                        upsert(
+                                            LyricsEntity(
+                                                id = download.request.id,
+                                                lyrics = lyrics,
+                                            ),
+                                        )
+                                    }
+                                }
+                        }
+
                         if (offlineTrackRegistry.findByMediaId(download.request.id) == null) {
-                            val song = database.getSongByIdBlocking(download.request.id)
                             offlineTrackRegistry.adoptLegacy(
                                 mediaId = download.request.id,
                                 title = song?.song?.title ?: download.request.id,
@@ -294,6 +321,8 @@ constructor(
                         } else {
                             offlineTrackRegistry.markAvailable(download.request.id)
                         }
+
+                        ensureOfflineBundleByLookup(download.request.id)
                     }
 
                     Download.STATE_FAILED ->
@@ -310,6 +339,7 @@ constructor(
                 .filter { asset -> asset.mediaId !in indexedIds }
                 .forEach { asset ->
                     offlineTrackRegistry.remove(asset.mediaId)
+                    offlineAssets.removeBundle(asset.mediaId)
                 }
 
             downloads.value = result
@@ -324,7 +354,28 @@ constructor(
             insert(metadata)
         }
 
-        offlineTrackRegistry.registerPending(asset)
+        val manifestUri =
+            offlineAssets.saveManifest(
+                OfflineMediaAssetManifest(
+                    mediaId = asset.mediaId,
+                    title = metadata.title,
+                    artists = metadata.artists.map { it.name },
+                    albumId = metadata.album?.id,
+                    albumName = metadata.album?.title,
+                    durationSeconds = metadata.duration,
+                    explicit = metadata.explicit,
+                    remoteArtworkUrl = metadata.thumbnailUrl,
+                    backingProvider = asset.backingProvider.value,
+                    discoveryProviders =
+                        asset.discoverySources
+                            .map { it.provider.value }
+                            .distinct(),
+                ),
+            )
+
+        offlineTrackRegistry.registerPending(
+            asset.copy(assetManifestUri = manifestUri),
+        )
 
         val request =
             DownloadRequest
@@ -427,8 +478,12 @@ constructor(
     private suspend fun ensureOfflineBundleByLookup(mediaId: String) {
         val song = database.getSongByIdBlocking(mediaId) ?: return
         val title = song.song.title
-        val artists = song.artists.joinToString { it.name }
+        val artistNames = song.artists.map { it.name }
+        val artists = artistNames.joinToString()
         val album = song.album?.title ?: song.song.albumName
+        val originalArtworkUrl =
+            offlineAssets.readManifest(mediaId)?.remoteArtworkUrl
+                ?: song.song.thumbnailUrl
 
         coroutineScope {
             val lyricsJob =
@@ -440,13 +495,18 @@ constructor(
                         album = album,
                         duration = song.song.duration,
                     )
+                    offlineAssets
+                        .getLyricsFile(mediaId)
+                        .takeIf { it.isFile && it.length() > 0L }
+                        ?.toURI()
+                        ?.toString()
                 }
 
             val coverJob =
                 async(Dispatchers.IO) {
                     offlineAssets.cacheCover(
                         mediaId = mediaId,
-                        url = song.song.thumbnailUrl,
+                        url = originalArtworkUrl,
                     )
                 }
 
@@ -467,7 +527,57 @@ constructor(
                     )
                 }
 
-            awaitAll(lyricsJob, coverJob, canvasJob)
+            val lyricsUri = lyricsJob.await()
+            val coverUri = coverJob.await()
+            val animationUri = canvasJob.await()
+            val trackedAsset = offlineTrackRegistry.findByMediaId(mediaId)
+            val previousManifest = offlineAssets.readManifest(mediaId)
+
+            val manifestUri =
+                offlineAssets.saveManifest(
+                    OfflineMediaAssetManifest(
+                        mediaId = mediaId,
+                        title = title,
+                        artists = artistNames,
+                        albumId = song.album?.id ?: song.song.albumId,
+                        albumName = album,
+                        durationSeconds = song.song.duration,
+                        explicit = song.song.explicit,
+                        remoteArtworkUrl =
+                            previousManifest?.remoteArtworkUrl
+                                ?: originalArtworkUrl,
+                        localArtworkUri = coverUri,
+                        localLyricsUri = lyricsUri,
+                        localAnimationUri = animationUri,
+                        backingProvider =
+                            trackedAsset?.backingProvider?.value
+                                ?: previousManifest?.backingProvider,
+                        discoveryProviders =
+                            trackedAsset
+                                ?.discoverySources
+                                ?.map { it.provider.value }
+                                ?.distinct()
+                                ?: previousManifest?.discoveryProviders.orEmpty(),
+                    ),
+                )
+
+            offlineTrackRegistry.updateOfflineAssets(
+                mediaId = mediaId,
+                artworkUri = coverUri,
+                lyricsUri = lyricsUri,
+                animationUri = animationUri,
+                manifestUri = manifestUri,
+            )
+
+            if (coverUri != null && song.song.thumbnailUrl != coverUri) {
+                database.query {
+                    upsert(
+                        song.song.copy(
+                            thumbnailUrl = coverUri,
+                        ),
+                    )
+                }
+            }
         }
     }
 
