@@ -559,23 +559,23 @@ private fun UnifiedTrackRow(
                     )
                 }
 
+                isPreparingOffline -> {
+                    Spacer(Modifier.width(10.dp))
+                    CircularProgressIndicator(
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
+
                 onDownload != null -> {
                     Spacer(Modifier.width(2.dp))
                     IconButton(
                         onClick = onDownload,
-                        enabled = !isPreparingOffline,
                     ) {
-                        if (isPreparingOffline) {
-                            CircularProgressIndicator(
-                                strokeWidth = 2.dp,
-                                modifier = Modifier.size(20.dp),
-                            )
-                        } else {
-                            Icon(
-                                painter = painterResource(R.drawable.download),
-                                contentDescription = null,
-                            )
-                        }
+                        Icon(
+                            painter = painterResource(R.drawable.download),
+                            contentDescription = null,
+                        )
                     }
                 }
             }
