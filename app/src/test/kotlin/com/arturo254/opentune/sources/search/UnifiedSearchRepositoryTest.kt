@@ -284,7 +284,7 @@ class UnifiedSearchRepositoryTest {
                         SourceCapabilities.of(
                             SourceCapability.TRACK_SEARCH,
                             SourceCapability.TRACK_METADATA,
-                            SourceCapability.OPEN_TUNE_MANAGED_DOWNLOAD,
+                            SourceCapability.OFFLINE_LIBRARY,
                         ),
                     onSearch = {
                         page(
@@ -340,7 +340,7 @@ class UnifiedSearchRepositoryTest {
                         SourceCapabilities.of(
                             SourceCapability.TRACK_SEARCH,
                             SourceCapability.TRACK_METADATA,
-                            SourceCapability.OPEN_TUNE_MANAGED_DOWNLOAD,
+                            SourceCapability.OFFLINE_LIBRARY,
                         ),
                     onSearch = {
                         page(
