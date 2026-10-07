@@ -176,7 +176,24 @@ fun UniversalSearchScreen(
             items = state.result.tracks,
             key = UnifiedTrackSearchResult::stableResultKey,
         ) { result ->
-            val playable = result.recommendedVariant
+            val variantKeys =
+                result.variants
+                    .map { variant -> variant.provider to variant.sourceId }
+                    .toSet()
+            val trackedOfflineAsset =
+                offlineAssets.firstOrNull { asset ->
+                    asset.discoverySources.any { ref ->
+                        (ref.provider to ref.sourceId) in variantKeys
+                    }
+                }
+            val offlineVariant =
+                trackedOfflineAsset
+                    ?.takeIf { asset -> asset.state == OfflineTrackState.AVAILABLE }
+                    ?.toSourceVariant()
+                    ?: result.variants.firstOrNull {
+                        it.provider == ProviderId.OPEN_TUNE_OFFLINE
+                    }
+            val playable = offlineVariant ?: result.recommendedVariant
             val catalogFallbacks =
                 if (playable == null) {
                     result.variants.filter { variant ->
@@ -205,19 +222,8 @@ fun UniversalSearchScreen(
                             }
                     )
 
-            val variantKeys =
-                result.variants
-                    .map { variant -> variant.provider to variant.sourceId }
-                    .toSet()
-            val trackedOfflineAsset =
-                offlineAssets.firstOrNull { asset ->
-                    asset.discoverySources.any { ref ->
-                        (ref.provider to ref.sourceId) in variantKeys
-                    }
-                }
             val hasOfflineCopy =
-                result.variants.any { it.provider == ProviderId.OPEN_TUNE_OFFLINE } ||
-                    trackedOfflineAsset?.state == OfflineTrackState.AVAILABLE
+                offlineVariant != null
             val isOfflinePending =
                 trackedOfflineAsset?.state == OfflineTrackState.PENDING
             val canDownload =
@@ -230,6 +236,7 @@ fun UniversalSearchScreen(
 
             UnifiedTrackRow(
                 result = result,
+                preferredDisplayVariant = offlineVariant,
                 isActive = isActive,
                 isPlaying = isPlaying,
                 isResolving = resolvingCatalogKey == resultKey,
@@ -384,6 +391,7 @@ fun UniversalSearchScreen(
 @Composable
 private fun UnifiedTrackRow(
     result: UnifiedTrackSearchResult,
+    preferredDisplayVariant: SourceVariant?,
     isActive: Boolean,
     isPlaying: Boolean,
     isResolving: Boolean,
@@ -392,7 +400,7 @@ private fun UnifiedTrackRow(
     onDownload: (() -> Unit)?,
     onClick: (() -> Unit)?,
 ) {
-    val recommended = result.recommendedVariant
+    val recommended = preferredDisplayVariant ?: result.recommendedVariant
     val artwork =
         recommended?.artworkUrl
             ?: result.variants.firstNotNullOfOrNull { it.artworkUrl }
@@ -494,8 +502,10 @@ private fun UnifiedTrackRow(
 
                 Text(
                     text =
-                        result.variants
-                            .distinctBy { it.provider }
+                        (
+                            result.variants +
+                                listOfNotNull(preferredDisplayVariant)
+                        ).distinctBy { it.provider }
                             .joinToString(" • ") { variant -> providerName(variant.provider) },
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.76f),
