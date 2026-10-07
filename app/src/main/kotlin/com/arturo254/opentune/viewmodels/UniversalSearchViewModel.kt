@@ -9,7 +9,6 @@ import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
 import com.arturo254.opentune.sources.offline.OfflineDownloadCoordinator
 import com.arturo254.opentune.sources.offline.OfflineTrackAsset
 import com.arturo254.opentune.sources.offline.OfflineTrackRegistry
-import com.arturo254.opentune.sources.offline.OfflineTrackState
 import com.arturo254.opentune.sources.soundcloud.SoundCloudPlaybackResolver
 import com.arturo254.opentune.core.model.SourceVariant
 import androidx.media3.common.MediaItem
@@ -20,12 +19,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -58,26 +54,6 @@ constructor(
                 }
         }
 
-        viewModelScope.launch {
-            offlineTrackRegistry.assets
-                .map { assets ->
-                    assets
-                        .filter { it.state == OfflineTrackState.AVAILABLE }
-                        .map { it.mediaId }
-                        .toSet()
-                }
-                .distinctUntilChanged()
-                .drop(1)
-                .collect {
-                    val currentQuery = query.value.trim()
-                    if (currentQuery.isNotEmpty()) {
-                        performSearch(
-                            rawQuery = currentQuery,
-                            preserveCurrentResults = true,
-                        )
-                    }
-                }
-        }
     }
 
     suspend fun resolveSoundCloud(variant: SourceVariant): MediaItem? =
@@ -146,30 +122,18 @@ constructor(
             }
     }
 
-    private suspend fun performSearch(
-        rawQuery: String,
-        preserveCurrentResults: Boolean = false,
-    ) {
+    private suspend fun performSearch(rawQuery: String) {
         val normalizedQuery = rawQuery.trim()
         if (normalizedQuery.isEmpty()) {
             _state.value = UniversalSearchUiState()
             return
         }
 
-        if (preserveCurrentResults && _state.value.query == normalizedQuery) {
-            _state.update { current ->
-                current.copy(
-                    isLoading = false,
-                    error = null,
-                )
-            }
-        } else {
-            _state.value =
-                UniversalSearchUiState(
-                    query = normalizedQuery,
-                    isLoading = true,
-                )
-        }
+        _state.value =
+            UniversalSearchUiState(
+                query = normalizedQuery,
+                isLoading = true,
+            )
 
         runCatching {
             repository.search(
@@ -178,33 +142,18 @@ constructor(
         }.onSuccess { result ->
             if (query.value.trim() == normalizedQuery) {
                 _state.value =
-                    if (preserveCurrentResults && _state.value.query == normalizedQuery) {
-                        _state.value.copy(
-                            isLoading = false,
-                            result = result,
-                            error = null,
-                        )
-                    } else {
-                        UniversalSearchUiState(
-                            query = normalizedQuery,
-                            result = result,
-                        )
-                    }
+                    UniversalSearchUiState(
+                        query = normalizedQuery,
+                        result = result,
+                    )
             }
         }.onFailure { throwable ->
             if (query.value.trim() == normalizedQuery) {
                 _state.value =
-                    if (preserveCurrentResults && _state.value.query == normalizedQuery) {
-                        _state.value.copy(
-                            isLoading = false,
-                            error = throwable,
-                        )
-                    } else {
-                        UniversalSearchUiState(
-                            query = normalizedQuery,
-                            error = throwable,
-                        )
-                    }
+                    UniversalSearchUiState(
+                        query = normalizedQuery,
+                        error = throwable,
+                    )
             }
         }
     }
