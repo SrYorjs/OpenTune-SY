@@ -57,6 +57,7 @@ data class OfflineTrackAsset(
     val explicit: Boolean? = null,
     val version: TrackVersion = TrackVersion(),
     val artworkUrl: String? = null,
+    val animatedArtworkUrl: String? = null,
     val offlineArtworkUri: String? = null,
     val offlineLyricsUri: String? = null,
     val offlineAnimationUri: String? = null,
@@ -79,6 +80,7 @@ data class OfflineTrackAsset(
             explicit = explicit,
             version = version,
             artworkUrl = offlineArtworkUri ?: artworkUrl,
+            animatedArtworkUrl = offlineAnimationUri ?: animatedArtworkUrl,
             quality = quality,
         )
 }
@@ -161,6 +163,7 @@ class OfflineTrackRegistry internal constructor(
                                 existing.version
                             },
                         artworkUrl = asset.artworkUrl ?: existing.artworkUrl,
+                        animatedArtworkUrl = asset.animatedArtworkUrl ?: existing.animatedArtworkUrl,
                         offlineArtworkUri = asset.offlineArtworkUri ?: existing.offlineArtworkUri,
                         offlineLyricsUri = asset.offlineLyricsUri ?: existing.offlineLyricsUri,
                         offlineAnimationUri = asset.offlineAnimationUri ?: existing.offlineAnimationUri,
@@ -345,6 +348,7 @@ class OfflineTrackRegistry internal constructor(
                 },
             )
             asset.artworkUrl?.let { put("artworkUrl", it) }
+            asset.animatedArtworkUrl?.let { put("animatedArtworkUrl", it) }
             asset.offlineArtworkUri?.let { put("offlineArtworkUri", it) }
             asset.offlineLyricsUri?.let { put("offlineLyricsUri", it) }
             asset.offlineAnimationUri?.let { put("offlineAnimationUri", it) }
@@ -457,6 +461,7 @@ class OfflineTrackRegistry internal constructor(
                     label = obj.string("versionLabel"),
                 ),
             artworkUrl = obj.string("artworkUrl"),
+            animatedArtworkUrl = obj.string("animatedArtworkUrl"),
             offlineArtworkUri = obj.string("offlineArtworkUri"),
             offlineLyricsUri = obj.string("offlineLyricsUri"),
             offlineAnimationUri = obj.string("offlineAnimationUri"),
