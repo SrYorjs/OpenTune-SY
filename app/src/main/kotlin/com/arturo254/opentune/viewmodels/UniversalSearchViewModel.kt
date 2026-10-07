@@ -71,7 +71,10 @@ constructor(
                 .collect {
                     val currentQuery = query.value.trim()
                     if (currentQuery.isNotEmpty()) {
-                        performSearch(currentQuery)
+                        performSearch(
+                            rawQuery = currentQuery,
+                            preserveCurrentResults = true,
+                        )
                     }
                 }
         }
@@ -143,18 +146,30 @@ constructor(
             }
     }
 
-    private suspend fun performSearch(rawQuery: String) {
+    private suspend fun performSearch(
+        rawQuery: String,
+        preserveCurrentResults: Boolean = false,
+    ) {
         val normalizedQuery = rawQuery.trim()
         if (normalizedQuery.isEmpty()) {
             _state.value = UniversalSearchUiState()
             return
         }
 
-        _state.value =
-            UniversalSearchUiState(
-                query = normalizedQuery,
-                isLoading = true,
-            )
+        if (preserveCurrentResults && _state.value.query == normalizedQuery) {
+            _state.update { current ->
+                current.copy(
+                    isLoading = false,
+                    error = null,
+                )
+            }
+        } else {
+            _state.value =
+                UniversalSearchUiState(
+                    query = normalizedQuery,
+                    isLoading = true,
+                )
+        }
 
         runCatching {
             repository.search(
@@ -163,18 +178,33 @@ constructor(
         }.onSuccess { result ->
             if (query.value.trim() == normalizedQuery) {
                 _state.value =
-                    UniversalSearchUiState(
-                        query = normalizedQuery,
-                        result = result,
-                    )
+                    if (preserveCurrentResults && _state.value.query == normalizedQuery) {
+                        _state.value.copy(
+                            isLoading = false,
+                            result = result,
+                            error = null,
+                        )
+                    } else {
+                        UniversalSearchUiState(
+                            query = normalizedQuery,
+                            result = result,
+                        )
+                    }
             }
         }.onFailure { throwable ->
             if (query.value.trim() == normalizedQuery) {
                 _state.value =
-                    UniversalSearchUiState(
-                        query = normalizedQuery,
-                        error = throwable,
-                    )
+                    if (preserveCurrentResults && _state.value.query == normalizedQuery) {
+                        _state.value.copy(
+                            isLoading = false,
+                            error = throwable,
+                        )
+                    } else {
+                        UniversalSearchUiState(
+                            query = normalizedQuery,
+                            error = throwable,
+                        )
+                    }
             }
         }
     }
