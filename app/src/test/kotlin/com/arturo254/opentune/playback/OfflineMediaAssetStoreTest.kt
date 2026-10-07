@@ -59,6 +59,7 @@ class OfflineMediaAssetStoreTest {
 
             assertTrue(uri.startsWith("file:"))
             assertNotNull(restored)
+            assertEquals(1, restored?.schemaVersion)
             assertEquals("Song", restored?.title)
             assertEquals(listOf("Artist A", "Artist B"), restored?.artists)
             assertEquals("Album", restored?.albumName)
