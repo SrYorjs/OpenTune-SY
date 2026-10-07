@@ -67,7 +67,7 @@ import com.arturo254.opentune.ui.screens.playlist.LocalPlaylistScreen
 import com.arturo254.opentune.ui.screens.playlist.OnlinePlaylistScreen
 import com.arturo254.opentune.ui.screens.playlist.TopPlaylistScreen
 import com.arturo254.opentune.ui.screens.playlist.CachePlaylistScreen
-import com.arturo254.opentune.ui.screens.search.OnlineSearchResult
+import com.arturo254.opentune.ui.screens.search.UniversalSearchScreen
 import com.arturo254.opentune.ui.screens.settings.AboutScreen
 import com.arturo254.opentune.ui.screens.settings.AccountSettings
 import com.arturo254.opentune.ui.screens.settings.AppearanceSettings
@@ -181,8 +181,17 @@ fun NavGraphBuilder.navigationBuilder(
         popExitTransition = {
             fadeOut(tween(200))
         },
-    ) {
-        OnlineSearchResult(navController)
+    ) { backStackEntry ->
+        val query =
+            backStackEntry.arguments
+                ?.getString("query")
+                .orEmpty()
+        val (pureBlack) = rememberPreference(PureBlackKey, false)
+
+        UniversalSearchScreen(
+            query = query,
+            pureBlack = pureBlack,
+        )
     }
     composable(
         route = "album/{albumId}",
