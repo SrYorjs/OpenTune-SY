@@ -30,6 +30,8 @@ class OfflineDownloadPlannerTest {
                         artists = listOf("Artist"),
                         durationMs = 180_000L,
                         isrc = "USAAA2600200",
+                        artworkUrl = "https://example.test/cover.jpg",
+                        animatedArtworkUrl = "https://example.test/canvas.m3u8",
                     ),
                     SourceVariant(
                         provider = ProviderId.YOUTUBE_MUSIC,
@@ -47,6 +49,8 @@ class OfflineDownloadPlannerTest {
             assertEquals(ProviderId.YOUTUBE_MUSIC, plan.asset.backingProvider)
             assertEquals("yt-1", plan.asset.backingSourceId)
             assertEquals("USAAA2600200", plan.asset.isrc)
+            assertEquals("https://example.test/cover.jpg", plan.asset.artworkUrl)
+            assertEquals("https://example.test/canvas.m3u8", plan.asset.animatedArtworkUrl)
             assertEquals(
                 setOf(
                     ProviderId.TIDAL,
