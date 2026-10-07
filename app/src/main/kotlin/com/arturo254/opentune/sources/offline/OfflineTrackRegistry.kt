@@ -87,7 +87,7 @@ data class OfflineTrackAsset(
  * and which concrete provider/source OpenTune actually downloaded.
  */
 @Singleton
-class OfflineTrackRegistry private constructor(
+class OfflineTrackRegistry internal constructor(
     private val file: File,
 ) {
     @Inject
