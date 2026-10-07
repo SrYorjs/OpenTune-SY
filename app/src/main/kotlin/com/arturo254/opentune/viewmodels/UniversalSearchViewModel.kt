@@ -9,12 +9,12 @@ import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
 import com.arturo254.opentune.sources.offline.OfflineDownloadCoordinator
 import com.arturo254.opentune.sources.offline.OfflineTrackAsset
 import com.arturo254.opentune.sources.offline.OfflineTrackRegistry
-import com.arturo254.opentune.sources.soundcloud.SoundCloudPlaybackResolver
+import com.arturo254.opentune.sources.playback.SourcePlaybackCoordinator
+import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.sources.resolution.AudioSelectionMode
 import com.arturo254.opentune.sources.resolution.SourceVariantKey
 import com.arturo254.opentune.sources.resolution.UniversalVersionQualityPolicy
-import androidx.media3.common.MediaItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.FlowPreview
@@ -34,7 +34,7 @@ class UniversalSearchViewModel
 @Inject
 constructor(
     private val repository: UnifiedSearchRepository,
-    private val soundCloudPlaybackResolver: SoundCloudPlaybackResolver,
+    private val sourcePlaybackCoordinator: SourcePlaybackCoordinator,
     private val offlineDownloadCoordinator: OfflineDownloadCoordinator,
     private val offlineTrackRegistry: OfflineTrackRegistry,
     private val versionQualityPolicy: UniversalVersionQualityPolicy,
@@ -79,8 +79,27 @@ constructor(
             results = state.value.result.tracks,
         )
 
-    suspend fun resolveSoundCloud(variant: SourceVariant): MediaItem? =
-        soundCloudPlaybackResolver.resolveToMediaItem(variant)
+    suspend fun playVariant(
+        connection: PlayerConnection,
+        variant: SourceVariant,
+        queueTitle: String,
+    ): Boolean =
+        sourcePlaybackCoordinator.play(
+            connection = connection,
+            variant = variant,
+            queueTitle = queueTitle,
+        )
+
+    suspend fun playFirstAvailable(
+        connection: PlayerConnection,
+        variants: List<SourceVariant>,
+        queueTitle: String,
+    ): Boolean =
+        sourcePlaybackCoordinator.playFirstAvailable(
+            connection = connection,
+            variants = variants,
+            queueTitle = queueTitle,
+        )
 
     suspend fun enqueueOffline(result: UnifiedTrackSearchResult): Result<OfflineTrackAsset> =
         offlineDownloadCoordinator.enqueue(
