@@ -262,6 +262,54 @@ class UnifiedSearchRepositoryTest {
         }
 
     @Test
+    fun downloadedOfflineVariantWinsOverMatchingOnlineProviders() =
+        runBlocking {
+            val youtube =
+                FakeSearchSource(
+                    id = ProviderId.YOUTUBE_MUSIC,
+                    onSearch = {
+                        page(
+                            variant(
+                                provider = ProviderId.YOUTUBE_MUSIC,
+                                sourceId = "yt-online",
+                                isrc = "USAAA2600300",
+                            ),
+                        )
+                    },
+                )
+            val offline =
+                FakeSearchSource(
+                    id = ProviderId.OPEN_TUNE_OFFLINE,
+                    capabilities =
+                        SourceCapabilities.of(
+                            SourceCapability.TRACK_SEARCH,
+                            SourceCapability.TRACK_METADATA,
+                            SourceCapability.OPEN_TUNE_MANAGED_DOWNLOAD,
+                        ),
+                    onSearch = {
+                        page(
+                            variant(
+                                provider = ProviderId.OPEN_TUNE_OFFLINE,
+                                sourceId = "yt-downloaded",
+                                isrc = "USAAA2600300",
+                            ),
+                        )
+                    },
+                )
+
+            val result =
+                repository(youtube, offline)
+                    .search(UnifiedSearchRequest("song"))
+
+            assertEquals(1, result.tracks.size)
+            assertEquals(
+                ProviderId.OPEN_TUNE_OFFLINE,
+                result.tracks.single().recommendedVariant?.provider,
+            )
+            assertEquals("yt-downloaded", result.tracks.single().recommendedVariant?.sourceId)
+        }
+
+    @Test
     fun metadataOnlyProviderCanContributeVariantButIsNotRecommendedForPlayback() =
         runBlocking {
             val metadataProvider = ProviderId("metadata")
