@@ -98,7 +98,13 @@ constructor(
             title
                 .replace(
                     Regex(
-                        """(?i)[\[(][^\])]*(?:live|acoustic|remaster|remix|sped[ -]?up|slowed|instrumental|cover|radio edit|music video)[^\])]*[\])]""",
+                        """(?i)\s*\([^)]*(?:live|acoustic|remaster|remix|sped[ -]?up|slowed|instrumental|cover|radio edit|music video)[^)]*\)""",
+                    ),
+                    " ",
+                )
+                .replace(
+                    Regex(
+                        """(?i)\s*\[[^\]]*(?:live|acoustic|remaster|remix|sped[ -]?up|slowed|instrumental|cover|radio edit|music video)[^\]]*\]""",
                     ),
                     " ",
                 )
