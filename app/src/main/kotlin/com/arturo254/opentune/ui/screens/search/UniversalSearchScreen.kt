@@ -64,6 +64,7 @@ import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.queues.ListQueue
 import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.sources.deezer.toDeezerCatalogReference
+import com.arturo254.opentune.sources.offline.OfflineTrackState
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
 import com.arturo254.opentune.sources.spotify.toSpotifyCatalogReference
 import com.arturo254.opentune.sources.soundcloud.toSoundCloudCatalogReference
@@ -84,6 +85,7 @@ fun UniversalSearchScreen(
     val context = LocalContext.current
     val playerConnection = LocalPlayerConnection.current ?: return
     val state by viewModel.state.collectAsState()
+    val offlineAssets by viewModel.offlineAssets.collectAsState()
     val lazyListState = rememberLazyListState()
     val activeMetadata by playerConnection.mediaMetadata.collectAsState()
     val isPlaying by playerConnection.isPlaying.collectAsState()
@@ -211,10 +213,24 @@ fun UniversalSearchScreen(
                             }
                     )
 
+            val variantKeys =
+                result.variants
+                    .map { variant -> variant.provider to variant.sourceId }
+                    .toSet()
+            val trackedOfflineAsset =
+                offlineAssets.firstOrNull { asset ->
+                    asset.discoverySources.any { ref ->
+                        (ref.provider to ref.sourceId) in variantKeys
+                    }
+                }
             val hasOfflineCopy =
-                result.variants.any { it.provider == ProviderId.OPEN_TUNE_OFFLINE }
+                result.variants.any { it.provider == ProviderId.OPEN_TUNE_OFFLINE } ||
+                    trackedOfflineAsset?.state == OfflineTrackState.AVAILABLE
+            val isOfflinePending =
+                trackedOfflineAsset?.state == OfflineTrackState.PENDING
             val canDownload =
                 !hasOfflineCopy &&
+                    !isOfflinePending &&
                     result.variants.any { variant ->
                         variant.provider != ProviderId.LOCAL &&
                             variant.provider != ProviderId.OPEN_TUNE_OFFLINE
@@ -226,7 +242,9 @@ fun UniversalSearchScreen(
                 isPlaying = isPlaying,
                 isResolving = resolvingCatalogKey == resultKey,
                 isOfflineAvailable = hasOfflineCopy,
-                isPreparingOffline = preparingOfflineKey == resultKey,
+                isPreparingOffline =
+                    preparingOfflineKey == resultKey ||
+                        isOfflinePending,
                 onDownload =
                     if (canDownload) {
                         {
