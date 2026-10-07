@@ -1,6 +1,5 @@
 package com.arturo254.opentune.ui.screens.search
 
-import android.os.Bundle
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -49,34 +48,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata.MEDIA_TYPE_MUSIC
 import coil3.compose.AsyncImage
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
-import com.arturo254.opentune.catalog.CatalogPlaybackResolver
-import com.arturo254.opentune.catalog.CatalogTrackReference
 import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.constants.UniversalAudioSelectionModeKey
 import com.arturo254.opentune.core.model.SourceVariant
-import com.arturo254.opentune.core.model.TrackVersionTrait
-import com.arturo254.opentune.extensions.ExtraIsMusicVideo
 import com.arturo254.opentune.extensions.togglePlayPause
-import com.arturo254.opentune.innertube.models.WatchEndpoint
-import com.arturo254.opentune.models.MediaMetadata
-import com.arturo254.opentune.playback.queues.ListQueue
-import com.arturo254.opentune.playback.queues.YouTubeQueue
-import com.arturo254.opentune.sources.deezer.toDeezerCatalogReference
 import com.arturo254.opentune.sources.offline.OfflineTrackState
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
 import com.arturo254.opentune.sources.resolution.AudioSelectionMode
 import com.arturo254.opentune.sources.resolution.SourceVariantKey
-import com.arturo254.opentune.sources.spotify.toSpotifyCatalogReference
-import com.arturo254.opentune.sources.soundcloud.toSoundCloudCatalogReference
-import com.arturo254.opentune.sources.tidal.toTidalCatalogReference
-import com.arturo254.opentune.sources.apple.toAppleMusicCatalogReference
 import com.arturo254.opentune.ui.component.liquidGlassScreenBackground
 import com.arturo254.opentune.viewmodels.UniversalSearchViewModel
 import com.arturo254.opentune.utils.rememberEnumPreference
@@ -98,7 +81,7 @@ fun UniversalSearchScreen(
     val activeMetadata by playerConnection.mediaMetadata.collectAsState()
     val isPlaying by playerConnection.isPlaying.collectAsState()
     val scope = rememberCoroutineScope()
-    var resolvingCatalogKey by remember { mutableStateOf<String?>(null) }
+    var resolvingPlaybackKey by remember { mutableStateOf<String?>(null) }
     var preparingOfflineKey by remember { mutableStateOf<String?>(null) }
     var selectionDialogKey by remember { mutableStateOf<String?>(null) }
     val manualChoices = remember { mutableStateMapOf<String, SourceVariantKey>() }
@@ -110,76 +93,28 @@ fun UniversalSearchScreen(
     val playResult:
         (UnifiedTrackSearchResult, SourceVariant?, List<SourceVariant>) -> Unit =
         playback@{ recording, chosen, fallbackList ->
-            if (resolvingCatalogKey != null) return@playback
+            if (resolvingPlaybackKey != null) return@playback
+            val candidates = listOfNotNull(chosen) + fallbackList
+            if (candidates.isEmpty()) return@playback
 
-            when {
-                chosen != null && chosen.provider == ProviderId.YOUTUBE_MUSIC ->
-                    playerConnection.playQueue(
-                        YouTubeQueue(
-                            endpoint = WatchEndpoint(videoId = chosen.sourceId),
-                            preloadItem = chosen.toOpenTuneMetadata(),
-                        ),
-                    )
-
-                chosen != null &&
-                    (chosen.provider == ProviderId.LOCAL ||
-                        chosen.provider == ProviderId.OPEN_TUNE_OFFLINE) ->
-                    playerConnection.playQueue(
-                        ListQueue(
-                            title = context.getString(R.string.queue_searched_songs),
-                            items = listOf(chosen.toPlayableMediaItem()),
-                        ),
-                    )
-
-                else -> {
-                    if (chosen == null && fallbackList.isEmpty()) return@playback
-
-                    scope.launch {
-                        resolvingCatalogKey = recording.stableResultKey()
-                        try {
-                            val resolved =
-                                if (chosen != null && chosen.provider == ProviderId.SOUNDCLOUD) {
-                                    viewModel.resolveSoundCloud(chosen)
-                                        ?: CatalogPlaybackResolver.resolveToMediaItem(
-                                            chosen.toSoundCloudCatalogReference(),
-                                        )
-                                } else {
-                                    var playableItem: MediaItem? = null
-                                    val choices = listOfNotNull(chosen) + fallbackList
-                                    for (variant in choices) {
-                                        if (!variant.isCatalogOnly()) continue
-                                        playableItem =
-                                            runCatching {
-                                                CatalogPlaybackResolver.resolveToMediaItem(
-                                                    variant.toCatalogPlaybackReference(),
-                                                )
-                                            }.getOrNull()
-                                        if (playableItem != null) break
-                                    }
-                                    playableItem
-                                }
-
-                            if (resolved == null) {
-                                Toast.makeText(
-                                    context,
-                                    R.string.universal_versions_play_error,
-                                    Toast.LENGTH_SHORT,
-                                ).show()
-                            } else {
-                                playerConnection.player.setMediaItem(resolved)
-                                playerConnection.player.prepare()
-                                playerConnection.player.playWhenReady = true
-                            }
-                        } catch (_: Exception) {
-                            Toast.makeText(
-                                context,
-                                R.string.universal_versions_play_error,
-                                Toast.LENGTH_SHORT,
-                            ).show()
-                        } finally {
-                            resolvingCatalogKey = null
-                        }
+            scope.launch {
+                resolvingPlaybackKey = recording.stableResultKey()
+                try {
+                    val played =
+                        viewModel.playFirstAvailable(
+                            connection = playerConnection,
+                            variants = candidates,
+                            queueTitle = context.getString(R.string.queue_searched_songs),
+                        )
+                    if (!played) {
+                        Toast.makeText(
+                            context,
+                            R.string.universal_versions_play_error,
+                            Toast.LENGTH_SHORT,
+                        ).show()
                     }
+                } finally {
+                    resolvingPlaybackKey = null
                 }
             }
         }
@@ -372,7 +307,7 @@ fun UniversalSearchScreen(
                 onVersionsClick = { selectionDialogKey = resultKey },
                 isActive = isActive,
                 isPlaying = isPlaying,
-                isResolving = resolvingCatalogKey == resultKey,
+                isResolving = resolvingPlaybackKey == resultKey,
                 isOfflineAvailable = hasOfflineCopy,
                 isPreparingOffline =
                     preparingOfflineKey == resultKey ||
@@ -681,16 +616,6 @@ private fun UnifiedTrackRow(
     }
 }
 
-private fun SourceVariant.toCatalogPlaybackReference(): CatalogTrackReference =
-    when (provider) {
-        ProviderId.DEEZER -> toDeezerCatalogReference()
-        ProviderId.SPOTIFY -> toSpotifyCatalogReference()
-        ProviderId.TIDAL -> toTidalCatalogReference()
-        ProviderId.APPLE_MUSIC -> toAppleMusicCatalogReference()
-        ProviderId.SOUNDCLOUD -> toSoundCloudCatalogReference()
-        else -> error("Provider does not use catalog playback bridge: " + provider.value)
-    }
-
 private fun UnifiedTrackSearchResult.stableResultKey(): String =
     identity.isrc
         ?.takeIf(String::isNotBlank)
@@ -767,65 +692,4 @@ private fun qualitySummary(variant: SourceVariant?): String? {
         ?.let { bitrate -> parts += (bitrate / 1000).toString() + " kbps" }
 
     return parts.takeIf { it.isNotEmpty() }?.joinToString(" • ")
-}
-
-private fun SourceVariant.toOpenTuneMetadata(): MediaMetadata {
-    val durationSeconds =
-        durationMs
-            ?.takeIf { it >= 0L }
-            ?.div(1_000L)
-            ?.coerceAtMost(Int.MAX_VALUE.toLong())
-            ?.toInt()
-            ?: MediaMetadata.UNKNOWN_DURATION
-
-    return MediaMetadata(
-        id = sourceId,
-        title = title,
-        artists =
-            artists.map { artist ->
-                MediaMetadata.Artist(
-                    id = null,
-                    name = artist,
-                )
-            },
-        duration = durationSeconds,
-        thumbnailUrl = artworkUrl,
-        album =
-            albumId?.let { id ->
-                MediaMetadata.Album(
-                    id = id,
-                    title = albumName.orEmpty(),
-                )
-            },
-        explicit = explicit ?: false,
-    )
-}
-
-private fun SourceVariant.toPlayableMediaItem(): MediaItem {
-    val metadata = toOpenTuneMetadata()
-
-    return MediaItem
-        .Builder()
-        .setMediaId(sourceId)
-        .setUri(sourceId)
-        .setCustomCacheKey(sourceId)
-        .setTag(metadata)
-        .setMediaMetadata(
-            androidx.media3.common.MediaMetadata
-                .Builder()
-                .setTitle(title)
-                .setSubtitle(artists.joinToString())
-                .setArtist(artists.joinToString())
-                .setArtworkUri(artworkUrl?.toUri())
-                .setAlbumTitle(albumName)
-                .setMediaType(MEDIA_TYPE_MUSIC)
-                .setExtras(
-                    Bundle().apply {
-                        putBoolean(
-                            ExtraIsMusicVideo,
-                            TrackVersionTrait.MUSIC_VIDEO in version.traits,
-                        )
-                    },
-                ).build(),
-        ).build()
 }
