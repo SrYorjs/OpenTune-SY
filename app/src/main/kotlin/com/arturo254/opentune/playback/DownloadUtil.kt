@@ -21,6 +21,8 @@ import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.offline.Download
 import androidx.media3.exoplayer.offline.DownloadManager
 import androidx.media3.exoplayer.offline.DownloadNotificationHelper
+import androidx.media3.exoplayer.offline.DownloadRequest
+import androidx.media3.exoplayer.offline.DownloadService
 import com.arturo254.opentune.innertube.YouTube
 import com.arturo254.opentune.innertube.models.YouTubeClient
 import com.arturo254.opentune.constants.AudioQuality
@@ -36,6 +38,8 @@ import com.arturo254.opentune.di.DownloadCache
 import com.arturo254.opentune.di.PlayerCache
 import com.arturo254.opentune.lyrics.LyricsHelper
 import com.arturo254.opentune.models.MediaMetadata
+import com.arturo254.opentune.sources.offline.OfflineTrackAsset
+import com.arturo254.opentune.sources.offline.OfflineTrackRegistry
 import com.arturo254.opentune.utils.YTPlayerUtils
 import timber.log.Timber
 import com.arturo254.opentune.utils.StreamClientUtils
@@ -67,6 +71,7 @@ constructor(
     @PlayerCache val playerCache: Cache,
     private val lyricsHelper: LyricsHelper,
     private val offlineAssets: OfflineMediaAssetStore,
+    private val offlineTrackRegistry: OfflineTrackRegistry,
 ) {
     private val connectivityManager = context.getSystemService<ConnectivityManager>()!!
     private val audioQuality by enumPreference(context, AudioQualityKey, AudioQuality.AUTO)
@@ -239,10 +244,22 @@ constructor(
                             }
                         }
 
-                        if (download.state == Download.STATE_COMPLETED) {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                ensureOfflineBundleByLookup(download.request.id)
-                            }
+                        when (download.state) {
+                            Download.STATE_COMPLETED ->
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    offlineTrackRegistry.markAvailable(download.request.id)
+                                    ensureOfflineBundleByLookup(download.request.id)
+                                }
+
+                            Download.STATE_FAILED ->
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    offlineTrackRegistry.markFailed(download.request.id)
+                                }
+
+                            Download.STATE_REMOVING ->
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    offlineTrackRegistry.remove(download.request.id)
+                                }
                         }
                     }
                 }
@@ -254,10 +271,58 @@ constructor(
             val result = mutableMapOf<String, Download>()
             val cursor = downloadManager.downloadIndex.getDownloads()
             while (cursor.moveToNext()) {
-                result[cursor.download.request.id] = cursor.download
+                val download = cursor.download
+                result[download.request.id] = download
+
+                if (
+                    download.state == Download.STATE_COMPLETED &&
+                    offlineTrackRegistry.findByMediaId(download.request.id) == null
+                ) {
+                    val song = database.getSongByIdBlocking(download.request.id)
+                    offlineTrackRegistry.adoptLegacy(
+                        mediaId = download.request.id,
+                        title = song?.song?.title ?: download.request.id,
+                        artists = song?.artists?.map { it.name }.orEmpty(),
+                        albumId = song?.album?.id ?: song?.song?.albumId,
+                        albumName = song?.album?.title ?: song?.song?.albumName,
+                        durationMs =
+                            song?.song?.duration
+                                ?.takeIf { it >= 0 }
+                                ?.toLong()
+                                ?.times(1_000L),
+                        artworkUrl = song?.song?.thumbnailUrl,
+                    )
+                }
             }
             downloads.value = result
         }
+    }
+
+    suspend fun enqueueOfflineDownload(
+        asset: OfflineTrackAsset,
+        metadata: MediaMetadata,
+    ) {
+        database.query {
+            insert(metadata)
+        }
+
+        offlineTrackRegistry.registerPending(asset)
+
+        val request =
+            DownloadRequest
+                .Builder(
+                    asset.mediaId,
+                    asset.mediaId.toUri(),
+                ).setCustomCacheKey(asset.mediaId)
+                .setData(metadata.title.toByteArray())
+                .build()
+
+        DownloadService.sendAddDownload(
+            context,
+            ExoDownloadService::class.java,
+            request,
+            false,
+        )
     }
 
     fun getDownload(songId: String): Flow<Download?> = downloads.map { it[songId] }
