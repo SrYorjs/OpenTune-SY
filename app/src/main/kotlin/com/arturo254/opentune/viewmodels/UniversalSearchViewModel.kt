@@ -11,6 +11,9 @@ import com.arturo254.opentune.sources.offline.OfflineTrackAsset
 import com.arturo254.opentune.sources.offline.OfflineTrackRegistry
 import com.arturo254.opentune.sources.soundcloud.SoundCloudPlaybackResolver
 import com.arturo254.opentune.core.model.SourceVariant
+import com.arturo254.opentune.sources.resolution.AudioSelectionMode
+import com.arturo254.opentune.sources.resolution.SourceVariantKey
+import com.arturo254.opentune.sources.resolution.UniversalVersionQualityPolicy
 import androidx.media3.common.MediaItem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -34,6 +37,7 @@ constructor(
     private val soundCloudPlaybackResolver: SoundCloudPlaybackResolver,
     private val offlineDownloadCoordinator: OfflineDownloadCoordinator,
     private val offlineTrackRegistry: OfflineTrackRegistry,
+    private val versionQualityPolicy: UniversalVersionQualityPolicy,
 ) : ViewModel() {
     val query = MutableStateFlow("")
     val offlineAssets = offlineTrackRegistry.assets
@@ -55,6 +59,25 @@ constructor(
         }
 
     }
+
+    fun selectVariant(
+        result: UnifiedTrackSearchResult,
+        variants: List<SourceVariant>,
+        mode: AudioSelectionMode,
+        manualVariant: SourceVariantKey?,
+    ): SourceVariant? =
+        versionQualityPolicy.choose(
+            identity = result.identity,
+            variants = variants,
+            mode = mode,
+            manualVariant = manualVariant,
+        )
+
+    fun relatedVersions(result: UnifiedTrackSearchResult): List<UnifiedTrackSearchResult> =
+        versionQualityPolicy.relatedVersions(
+            selected = result,
+            results = state.value.result.tracks,
+        )
 
     suspend fun resolveSoundCloud(variant: SourceVariant): MediaItem? =
         soundCloudPlaybackResolver.resolveToMediaItem(variant)
