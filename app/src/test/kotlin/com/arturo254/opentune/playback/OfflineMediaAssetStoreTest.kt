@@ -44,7 +44,14 @@ class OfflineMediaAssetStoreTest {
                     localLyricsUri = "file:///tmp/lyrics.lrc",
                     localAnimationUri = "file:///tmp/canvas.mp4",
                     backingProvider = "youtube_music",
+                    backingSourceId = "yt-asset-1",
                     discoveryProviders = listOf("spotify", "tidal", "apple_music"),
+                    discoverySources =
+                        listOf(
+                            OfflineManifestSourceRef("spotify", "spotify-1"),
+                            OfflineManifestSourceRef("tidal", "tidal-1"),
+                            OfflineManifestSourceRef("apple_music", "apple-1"),
+                        ),
                 )
 
             val uri = store.saveManifest(manifest)
@@ -68,9 +75,18 @@ class OfflineMediaAssetStoreTest {
             assertEquals(2, restored?.quality?.channelCount)
             assertEquals(false, restored?.quality?.lossless)
             assertEquals("youtube_music", restored?.backingProvider)
+            assertEquals("yt-asset-1", restored?.backingSourceId)
             assertEquals(
                 listOf("spotify", "tidal", "apple_music"),
                 restored?.discoveryProviders,
+            )
+            assertEquals(
+                listOf(
+                    OfflineManifestSourceRef("spotify", "spotify-1"),
+                    OfflineManifestSourceRef("tidal", "tidal-1"),
+                    OfflineManifestSourceRef("apple_music", "apple-1"),
+                ),
+                restored?.discoverySources,
             )
             assertEquals("file:///tmp/cover.jpg", restored?.localArtworkUri)
             assertEquals("file:///tmp/lyrics.lrc", restored?.localLyricsUri)
