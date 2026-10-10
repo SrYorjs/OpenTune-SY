@@ -1,10 +1,17 @@
-# component
+# Base media components — 3.10
 
-Reserved for canonical reusable visual components.
+`Artwork`, `SongRow`, `AlbumCard` and `ArtistCard` are the canonical
+presentational primitives in this first batch. They use the theme's semantic
+colors, typography, spacing, sizes, and shapes, without owning playback,
+database, source resolution, navigation or download logic.
 
-Planned migration includes Artwork, SongRow, AlbumCard, ArtistCard, PlaylistCard,
-badges, buttons, chips, sliders, app bars, navigation, sheets, dialogs and common
-state components.
+- `Artwork`: Coil 3 imagery with placeholder and optional overlay slots.
+  Hosts provide size/aspect ratio. The configured Coil loader determines
+  support for animated or offline imagery.
+- `SongRow`: one compact music row, metadata, active emphasis and trailing slot.
+- `AlbumCard`: square artwork + title/artist; source-neutral and clickable.
+- `ArtistCard`: circular artist artwork + optional subtitle, clickable.
 
-Components in this package must remain feature-agnostic: no ViewModels, provider
-network clients, Room DAOs or playback service ownership.
+`UniversalSearchScreen` migrates the artwork/overlay primitive without
+replacing the provider/quality/versions UI. Full Home, Library and Player
+adoption is reserved for 3.15, then duplicate removal for 3.16.

@@ -41,17 +41,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import coil3.compose.AsyncImage
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.component.Artwork
 import com.arturo254.opentune.core.designsystem.theme.colors
 import com.arturo254.opentune.core.designsystem.theme.typography
 import com.arturo254.opentune.core.designsystem.theme.spacing
@@ -449,30 +448,13 @@ private fun UnifiedTrackRow(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(designSpacing.mediaRowPadding),
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier =
-                    Modifier
-                        .size(designSizes.searchRowArtwork)
-                        .clip(designShapes.searchArtwork)
-                        .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-            ) {
-                if (artwork != null) {
-                    AsyncImage(
-                        model = artwork,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-                } else {
-                    Icon(
-                        painter = painterResource(R.drawable.library_music),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(designSizes.searchPlaceholderIcon),
-                    )
-                }
-
+            Artwork(
+                imageUrl = artwork,
+                contentDescription = null,
+                shape = designShapes.searchArtwork,
+                placeholderSize = designSizes.searchPlaceholderIcon,
+                modifier = Modifier.size(designSizes.searchRowArtwork),
+                overlay = {
                 if (isActive) {
                     Box(
                         modifier =
@@ -502,7 +484,8 @@ private fun UnifiedTrackRow(
                         modifier = Modifier.size(designSizes.searchResolvingIndicator),
                     )
                 }
-            }
+                },
+            )
 
             Spacer(Modifier.width(designSpacing.mediaRowArtworkGap))
 
