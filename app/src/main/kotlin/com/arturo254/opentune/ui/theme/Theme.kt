@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.palette.graphics.Palette
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.AppFontStyle
+import com.arturo254.opentune.core.designsystem.theme.ProvideOpenTuneDesignSystem
 import com.arturo254.opentune.utils.withAppFont
 import com.kyant.m3color.hct.Hct
 import com.kyant.m3color.scheme.SchemeMonochrome
@@ -114,8 +115,11 @@ fun OpenTuneTheme(
         colorScheme = animatedColorScheme,
         typography = typography,
         motionScheme = motionScheme,
-        content = content
-    )
+    ) {
+        ProvideOpenTuneDesignSystem(
+            content = content,
+        )
+    }
 }
 
 @Composable
