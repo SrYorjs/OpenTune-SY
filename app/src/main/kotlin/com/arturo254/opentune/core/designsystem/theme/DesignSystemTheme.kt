@@ -1,5 +1,6 @@
 package com.arturo254.opentune.core.designsystem.theme
 
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -24,9 +25,15 @@ fun ProvideOpenTuneDesignSystem(
                 schemaVersion = OpenTuneDesignSystem.SchemaVersion,
             )
         }
+    val colorScheme = MaterialTheme.colorScheme
+    val colors =
+        remember(colorScheme) {
+            createOpenTuneColorRoles(colorScheme)
+        }
 
     CompositionLocalProvider(
         LocalDesignSystemEnvironment provides environment,
+        LocalOpenTuneColorRoles provides colors,
         content = content,
     )
 }
