@@ -71,6 +71,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.R
+import com.arturo254.opentune.core.designsystem.navigation.OpenTuneNavigationDimensions
 import com.arturo254.opentune.ui.screens.Screens
 
 @Composable
@@ -94,7 +95,7 @@ fun FloatingNavigationToolbar(
     // the hide/show animation. The custom bar itself is intentionally static:
     // fewer animated layout passes means smoother scrolling.
     val liquidGlass = LocalEnableLiquidGlass.current
-    val barShape = RoundedCornerShape(30.dp)
+    val barShape = RoundedCornerShape(OpenTuneNavigationDimensions.floatingRadius)
     val selectedIndex = items.indexOfFirst { it.route == selectedRoute }.coerceAtLeast(0)
     var previousSelectedIndex by remember { mutableIntStateOf(selectedIndex) }
     val slideFromEnd = selectedIndex >= previousSelectedIndex
@@ -107,12 +108,12 @@ fun FloatingNavigationToolbar(
         modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
-        val showSelectedLabels = maxWidth >= 320.dp
+        val showSelectedLabels = maxWidth >= OpenTuneNavigationDimensions.compactLabelThreshold
 
         Row(
             modifier = Modifier
                 .wrapContentWidth()
-                .height(58.dp)
+                .height(OpenTuneNavigationDimensions.floatingHeight)
                 .preferredFrameRate(120f)
                 .animateContentSize(
                     animationSpec = spring(
@@ -138,7 +139,10 @@ fun FloatingNavigationToolbar(
                     dispersion = 0.0015f,
                     edge = 0f,
                 )
-                .padding(horizontal = 5.dp, vertical = 4.dp),
+                .padding(
+                    horizontal = OpenTuneNavigationDimensions.floatingHorizontalPadding,
+                    vertical = OpenTuneNavigationDimensions.floatingVerticalPadding,
+                ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
