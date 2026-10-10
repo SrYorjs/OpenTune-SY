@@ -52,6 +52,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
+import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.theme.colors
 import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.constants.UniversalAudioSelectionModeKey
 import com.arturo254.opentune.core.model.SourceVariant
@@ -415,6 +417,7 @@ private fun UnifiedTrackRow(
     onVersionsClick: () -> Unit,
     onClick: (() -> Unit)?,
 ) {
+    val designColors = OpenTuneDesignSystem.colors
     val recommended = preferredDisplayVariant ?: result.recommendedVariant
     val artwork =
         recommended?.artworkUrl
@@ -523,7 +526,7 @@ private fun UnifiedTrackRow(
                         ).distinctBy { it.provider }
                             .joinToString(" • ") { variant -> providerName(variant.provider) },
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.76f),
+                    color = designColors.textMuted,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -565,7 +568,7 @@ private fun UnifiedTrackRow(
                     modifier =
                         Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.10f))
+                            .background(designColors.badgeAccent)
                             .padding(horizontal = 8.dp, vertical = 5.dp),
                 )
             }
