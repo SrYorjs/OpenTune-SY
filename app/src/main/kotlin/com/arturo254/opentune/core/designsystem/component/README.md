@@ -13,8 +13,9 @@ database, source resolution, navigation or download logic.
 - `ArtistCard`: circular artist artwork + optional subtitle, clickable.
 
 `UniversalSearchScreen` migrates the artwork/overlay primitive without
-replacing the provider/quality/versions UI. Full Home, Library and Player
-adoption is reserved for 3.15, then duplicate removal for 3.16.
+replacing the provider/quality/versions UI. Further Home and Library consumers are migrated incrementally in 3.15;
+function-owning media item wrappers and Player UI remain in their legacy
+features until their behaviors can be migrated safely.
 
 ## 3.11 — Buttons, chips, sliders, switches, icons
 
@@ -35,3 +36,17 @@ OpenTuneMenu, OpenTuneContextMenu and OpenTuneMenuItem. Legacy MenuState,
 BottomSheetState and their callbacks remain unchanged. The popup overflow
 and modal sheet adopt the new wrappers; dialog and player sheet radius
 values are now centralized with the same previous geometry.
+
+## 3.14–3.16 — Common states, gradual migration, deduplication
+
+`UiStateComponents.kt` owns shared loading/empty/error/shimmer
+presentations. The existing `ShimmerHost` remains the single animation
+implementation. Search, Home, Library Albums/Artists and Settings now
+consume the shared UI; the home global-catalog section also uses
+`Artwork`.
+
+`ui/component/EmptyPlaceholder.kt` remains a tiny compatibility adapter,
+without its own duplicate visual implementation. Complex SongListItem,
+AlbumGridItem, ArtistGridItem, Player, menus and navigation must not be
+deleted while they still own interactions and have live consumers.
+Structural tests guard contracts, but screenshot comparison needs a device.
