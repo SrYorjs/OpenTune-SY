@@ -64,12 +64,13 @@ import com.arturo254.opentune.constants.CONTENT_TYPE_ALBUM
 import com.arturo254.opentune.constants.CONTENT_TYPE_HEADER
 import com.arturo254.opentune.constants.GridItemSize
 import com.arturo254.opentune.constants.GridItemsSizeKey
-import com.arturo254.opentune.constants.GridThumbnailHeight
+import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.theme.sizes
 import com.arturo254.opentune.constants.HideExplicitKey
 import com.arturo254.opentune.constants.LibraryViewType
 import com.arturo254.opentune.constants.YtmSyncKey
 import com.arturo254.opentune.ui.component.ChipsRow
-import com.arturo254.opentune.ui.component.EmptyPlaceholder
+import com.arturo254.opentune.core.designsystem.component.OpenTuneEmptyState
 import com.arturo254.opentune.ui.component.LibraryAlbumGridItem
 import com.arturo254.opentune.ui.component.LibraryAlbumListItem
 import com.arturo254.opentune.ui.component.LocalMenuState
@@ -248,7 +249,7 @@ fun LibraryAlbumsScreen(
                     albums.let { albums ->
                         if (albums.isEmpty()) {
                             item {
-                                EmptyPlaceholder(
+                                OpenTuneEmptyState(
                                     icon = R.drawable.album,
                                     text = stringResource(R.string.library_album_empty),
                                     modifier = Modifier.animateItem()
@@ -284,7 +285,7 @@ fun LibraryAlbumsScreen(
                     state = lazyGridState,
                     columns =
                     GridCells.Adaptive(
-                        minSize = GridThumbnailHeight + if (gridItemSize == GridItemSize.BIG) 24.dp else (-24).dp,
+                        minSize = OpenTuneDesignSystem.sizes.gridThumbnailHeight + if (gridItemSize == GridItemSize.BIG) 24.dp else (-24).dp,
                     ),
                     contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
                 ) {
@@ -307,7 +308,7 @@ fun LibraryAlbumsScreen(
                     albums.let { albums ->
                         if (albums.isEmpty()) {
                             item(span = { GridItemSpan(maxLineSpan) }) {
-                                EmptyPlaceholder(
+                                OpenTuneEmptyState(
                                     icon = R.drawable.album,
                                     text = stringResource(R.string.library_album_empty),
                                     modifier = Modifier.animateItem()

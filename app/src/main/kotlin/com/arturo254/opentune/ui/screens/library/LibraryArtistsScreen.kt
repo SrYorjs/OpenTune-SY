@@ -63,11 +63,12 @@ import com.arturo254.opentune.constants.CONTENT_TYPE_ARTIST
 import com.arturo254.opentune.constants.CONTENT_TYPE_HEADER
 import com.arturo254.opentune.constants.GridItemSize
 import com.arturo254.opentune.constants.GridItemsSizeKey
-import com.arturo254.opentune.constants.GridThumbnailHeight
+import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.theme.sizes
 import com.arturo254.opentune.constants.LibraryViewType
 import com.arturo254.opentune.constants.YtmSyncKey
 import com.arturo254.opentune.ui.component.ChipsRow
-import com.arturo254.opentune.ui.component.EmptyPlaceholder
+import com.arturo254.opentune.core.designsystem.component.OpenTuneEmptyState
 import com.arturo254.opentune.ui.component.LibraryArtistGridItem
 import com.arturo254.opentune.ui.component.LibraryArtistListItem
 import com.arturo254.opentune.ui.component.LocalMenuState
@@ -242,7 +243,7 @@ fun LibraryArtistsScreen(
                     artists.let { artists ->
                         if (artists.isEmpty()) {
                             item {
-                                EmptyPlaceholder(
+                                OpenTuneEmptyState(
                                     icon = R.drawable.artist,
                                     text = stringResource(R.string.library_artist_empty),
                                     modifier = Modifier.animateItem()
@@ -271,7 +272,7 @@ fun LibraryArtistsScreen(
                     state = lazyGridState,
                     columns =
                     GridCells.Adaptive(
-                        minSize = GridThumbnailHeight + if (gridItemSize == GridItemSize.BIG) 24.dp else (-24).dp,
+                        minSize = OpenTuneDesignSystem.sizes.gridThumbnailHeight + if (gridItemSize == GridItemSize.BIG) 24.dp else (-24).dp,
                     ),
                     contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
                 ) {
@@ -294,7 +295,7 @@ fun LibraryArtistsScreen(
                     artists.let { artists ->
                         if (artists.isEmpty()) {
                             item(span = { GridItemSpan(maxLineSpan) }) {
-                                EmptyPlaceholder(
+                                OpenTuneEmptyState(
                                     icon = R.drawable.artist,
                                     text = stringResource(R.string.library_artist_empty),
                                     modifier = Modifier.animateItem()

@@ -51,6 +51,9 @@ import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.component.Artwork
+import com.arturo254.opentune.core.designsystem.component.OpenTuneEmptyPresentation
+import com.arturo254.opentune.core.designsystem.component.OpenTuneEmptyState
+import com.arturo254.opentune.core.designsystem.component.OpenTuneLoadingState
 import com.arturo254.opentune.core.designsystem.theme.colors
 import com.arturo254.opentune.core.designsystem.theme.typography
 import com.arturo254.opentune.core.designsystem.theme.spacing
@@ -212,15 +215,11 @@ fun UniversalSearchScreen(
 
         if (state.isLoading && state.result.tracks.isEmpty()) {
             item(key = "loading") {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 28.dp),
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.size(designSizes.searchLoadingIndicator))
-                }
+                OpenTuneLoadingState(
+                    modifier = Modifier.fillMaxWidth(),
+                    indicatorSize = designSizes.searchLoadingIndicator,
+                    verticalPadding = 28.dp,
+                )
             }
         }
 
@@ -230,11 +229,10 @@ fun UniversalSearchScreen(
             state.result.tracks.isEmpty()
         ) {
             item(key = "empty") {
-                Text(
+                OpenTuneEmptyState(
+                    icon = null,
                     text = stringResource(R.string.no_results_found),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 16.dp),
+                    presentation = OpenTuneEmptyPresentation.COMPACT,
                 )
             }
         }
@@ -369,15 +367,11 @@ fun UniversalSearchScreen(
 
         if (state.isLoadingMore) {
             item(key = "loading_more") {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                ) {
-                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                }
+                OpenTuneLoadingState(
+                    modifier = Modifier.fillMaxWidth(),
+                    indicatorSize = 24.dp,
+                    verticalPadding = 16.dp,
+                )
             }
         }
     }

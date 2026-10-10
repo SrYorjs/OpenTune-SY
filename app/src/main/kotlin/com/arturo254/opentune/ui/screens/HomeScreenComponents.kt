@@ -125,7 +125,8 @@ import com.arturo254.opentune.ui.component.SongGridItem
 import com.arturo254.opentune.ui.component.SongListItem
 import com.arturo254.opentune.ui.component.YouTubeGridItem
 import com.arturo254.opentune.ui.component.shimmer.GridItemPlaceHolder
-import com.arturo254.opentune.ui.component.shimmer.ShimmerHost
+import com.arturo254.opentune.core.designsystem.component.OpenTuneShimmerState
+import com.arturo254.opentune.core.designsystem.component.Artwork
 import com.arturo254.opentune.ui.component.shimmer.TextPlaceholder
 import com.arturo254.opentune.ui.menu.AlbumMenu
 import com.arturo254.opentune.ui.menu.ArtistMenu
@@ -232,39 +233,31 @@ fun GlobalCatalogHomeSection(
                             )
                             .padding(10.dp),
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier =
-                            Modifier
-                                .size(140.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                    ) {
-                        AsyncImage(
-                            model = track.artworkUrl,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize(),
-                        )
-
-                        if (active) {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .fillMaxSize()
-                                        .background(Color.Black.copy(alpha = 0.24f))
-                            )
-                            Icon(
-                                painter =
-                                    painterResource(
-                                        if (isPlaying) R.drawable.pause else R.drawable.play
-                                    ),
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(32.dp),
-                            )
-                        }
-                    }
+                    Artwork(
+                        imageUrl = track.artworkUrl,
+                        contentDescription = null,
+                        modifier = Modifier.size(140.dp),
+                        shape = RoundedCornerShape(20.dp),
+                        overlay = {
+                            if (active) {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .fillMaxSize()
+                                            .background(Color.Black.copy(alpha = 0.24f))
+                                )
+                                Icon(
+                                    painter =
+                                        painterResource(
+                                            if (isPlaying) R.drawable.pause else R.drawable.play
+                                        ),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp),
+                                )
+                            }
+                        },
+                    )
 
                     Text(
                         text = track.title,
@@ -1004,7 +997,7 @@ fun HomePageSectionContent(
  */
 @Composable
 fun HomeLoadingShimmer(modifier: Modifier = Modifier) {
-    ShimmerHost(modifier = modifier) {
+    OpenTuneShimmerState(modifier = modifier) {
         TextPlaceholder(
             height = 36.dp,
             modifier = Modifier
