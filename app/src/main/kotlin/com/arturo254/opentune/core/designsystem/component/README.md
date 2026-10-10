@@ -15,3 +15,15 @@ database, source resolution, navigation or download logic.
 `UniversalSearchScreen` migrates the artwork/overlay primitive without
 replacing the provider/quality/versions UI. Full Home, Library and Player
 adoption is reserved for 3.15, then duplicate removal for 3.16.
+
+## 3.11 — Buttons, chips, sliders, switches, icons
+
+`OpenTuneButton`, `OpenTunePillChip`, `OpenTuneSlider`,
+`OpenTuneSwitch`, `OpenTuneIcon`, `OpenTuneIconButton` are controlled,
+source-neutral presentation primitives. They do not read/write preferences.
+
+Standard forms delegate to Material 3 for accessibility and touch targets.
+Glass pill/icon options delegate to the current Liquid Glass components so
+their existing animation, fallback and hit areas remain unchanged.
+`ChipsRow` is the first real adopter; its public signature is unchanged.
+Keep the specialized player seek-bar implementation until 3.15.

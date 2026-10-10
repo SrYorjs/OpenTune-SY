@@ -62,6 +62,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.R
+import com.arturo254.opentune.core.designsystem.component.OpenTunePillChip
 import com.arturo254.opentune.ui.screens.OptionStats
 
 @Composable
@@ -86,7 +87,7 @@ fun <E> ChipsRow(
             val selected = currentValue == value
             val iconRes = icons[value]
 
-            LiquidGlassPillButton(
+            OpenTunePillChip(
                 onClick = { onValueUpdate(value) },
                 selected = selected,
                 horizontalPadding = 14.dp,
