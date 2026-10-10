@@ -180,8 +180,6 @@ import com.arturo254.opentune.constants.PauseSearchHistoryKey
 import com.arturo254.opentune.constants.PureBlackKey
 import com.arturo254.opentune.constants.RemindAfterKey
 import com.arturo254.opentune.constants.SYSTEM_DEFAULT
-import com.arturo254.opentune.constants.SearchSource
-import com.arturo254.opentune.constants.SearchSourceKey
 import com.arturo254.opentune.constants.SlimFloatingToolbarHeight
 import com.arturo254.opentune.constants.SlimNavBarKey
 import com.arturo254.opentune.constants.StopMusicOnTaskClearKey
@@ -226,7 +224,6 @@ import com.arturo254.opentune.constants.TogetherDisplayNameKey
 import com.arturo254.opentune.ui.component.BottomSheetPageState
 import com.arturo254.opentune.ui.component.MenuState
 import com.arturo254.opentune.ui.component.TopSearch
-import com.arturo254.opentune.ui.component.SearchSourceSelector
 import com.arturo254.opentune.ui.component.rememberBottomSheetState
 import com.arturo254.opentune.ui.component.shimmer.ShimmerTheme
 import com.arturo254.opentune.ui.menu.YouTubeSongMenu
@@ -236,9 +233,6 @@ import com.arturo254.opentune.ui.screens.Screens
 import com.arturo254.opentune.ui.screens.buildLoginRoute
 import com.arturo254.opentune.ui.screens.musicrecognition.MusicRecognitionRoute
 import com.arturo254.opentune.ui.screens.navigationBuilder
-import com.arturo254.opentune.ui.screens.search.DeezerSearchScreen
-import com.arturo254.opentune.ui.screens.search.LocalSearchScreen
-import com.arturo254.opentune.ui.screens.search.OnlineSearchScreen
 import com.arturo254.opentune.ui.screens.settings.DarkMode
 import com.arturo254.opentune.ui.screens.settings.DiscordPresenceManager
 import com.arturo254.opentune.ui.screens.settings.NavigationTab
