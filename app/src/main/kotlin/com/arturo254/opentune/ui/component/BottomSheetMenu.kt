@@ -20,7 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
+import com.arturo254.opentune.core.designsystem.component.OpenTuneSheet
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
@@ -66,7 +66,7 @@ fun BottomSheetMenu(
     val focusManager = LocalFocusManager.current
 
     if (state.isVisible) {
-        ModalBottomSheet(
+        OpenTuneSheet(
             onDismissRequest = {
                 focusManager.clearFocus()
                 state.isVisible = false

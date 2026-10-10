@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.constants.BottomSheetAnimationSpec
+import com.arturo254.opentune.core.designsystem.component.OpenTuneOverlayDimensions
 import com.arturo254.opentune.constants.BottomSheetSoftAnimationSpec
 import com.arturo254.opentune.utils.rememberPreference
 import kotlinx.coroutines.CoroutineScope
@@ -86,8 +87,8 @@ fun BottomSheet(
             .bottomSheetDraggable(state, onDismiss)
             .clip(
                 RoundedCornerShape(
-                    topStart = if (!state.isExpanded) 16.dp else 0.dp,
-                    topEnd = if (!state.isExpanded) 16.dp else 0.dp,
+                    topStart = if (!state.isExpanded) OpenTuneOverlayDimensions.collapsedPlayerTopRadius else 0.dp,
+                    topEnd = if (!state.isExpanded) OpenTuneOverlayDimensions.collapsedPlayerTopRadius else 0.dp,
                 ),
             ).background(
                 backgroundColor.copy(

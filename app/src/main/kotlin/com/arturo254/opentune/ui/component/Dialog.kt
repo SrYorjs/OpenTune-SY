@@ -90,6 +90,7 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.Popup
 import androidx.navigation.NavController
 import com.arturo254.opentune.R
+import com.arturo254.opentune.core.designsystem.theme.OpenTuneShapeRadii
 import com.arturo254.opentune.ui.screens.settings.AccountSettings
 import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.LocalContext
@@ -118,7 +119,7 @@ fun DefaultDialog(
             contentAlignment = Alignment.Center,
         ) {
             LiquidGlassCard(
-                cornerRadius = 30.dp,
+                cornerRadius = OpenTuneShapeRadii.sheet,
                 modifier = Modifier.heightIn(max = maxHeight),
             ) {
                 Column(
@@ -211,7 +212,7 @@ fun AccountSettingsDialog(
             contentAlignment = Alignment.TopCenter
         ) {
             LiquidGlassCard(
-                cornerRadius = 30.dp,
+                cornerRadius = OpenTuneShapeRadii.sheet,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 72.dp, start = 16.dp, end = 16.dp),
@@ -243,7 +244,7 @@ fun ActionPromptDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         LiquidGlassCard(
-            cornerRadius = 30.dp,
+            cornerRadius = OpenTuneShapeRadii.sheet,
             modifier = Modifier.padding(24.dp),
         ) {
             Column(
@@ -320,7 +321,7 @@ fun ListDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         LiquidGlassCard(
-            cornerRadius = 30.dp,
+            cornerRadius = OpenTuneShapeRadii.sheet,
             modifier = Modifier.padding(24.dp),
         ) {
             Column(

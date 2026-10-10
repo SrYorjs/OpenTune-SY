@@ -42,7 +42,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
+import com.arturo254.opentune.core.designsystem.component.OpenTuneContextMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarScrollBehavior
@@ -72,6 +72,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.navigation.OpenTuneNavigationDimensions
+import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.theme.shapes
 import com.arturo254.opentune.ui.screens.Screens
 
 @Composable
@@ -281,10 +283,10 @@ private fun FloatingToolbarAction(
         }
 
         if (isOverflow) {
-            DropdownMenu(
+            OpenTuneContextMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                shape = RoundedCornerShape(24.dp),
+                shape = OpenTuneDesignSystem.shapes.glassCard,
                 containerColor = if (pureBlack) {
                     Color.Black.copy(alpha = 0.96f)
                 } else {

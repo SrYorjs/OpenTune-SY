@@ -27,3 +27,11 @@ Glass pill/icon options delegate to the current Liquid Glass components so
 their existing animation, fallback and hit areas remain unchanged.
 `ChipsRow` is the first real adopter; its public signature is unchanged.
 Keep the specialized player seek-bar implementation until 3.15.
+
+## 3.13 — Sheets, dialogs, context menus
+
+`OverlayComponents.kt` introduces stateless OpenTuneSheet, OpenTuneDialog,
+OpenTuneMenu, OpenTuneContextMenu and OpenTuneMenuItem. Legacy MenuState,
+BottomSheetState and their callbacks remain unchanged. The popup overflow
+and modal sheet adopt the new wrappers; dialog and player sheet radius
+values are now centralized with the same previous geometry.
