@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 
 /**
@@ -29,8 +30,8 @@ data class OpenTuneMotionTokens(
     val bottomSheet: AnimationSpec<Dp>,
     val bottomSheetSoft: AnimationSpec<Dp>,
     val miniPlayerSwipeSettle: AnimationSpec<Float>,
-    val miniPlayerInfoSlide: FiniteAnimationSpec<Int>,
-    val miniPlayerArtworkSlide: FiniteAnimationSpec<Int>,
+    val miniPlayerInfoSlide: FiniteAnimationSpec<IntOffset>,
+    val miniPlayerArtworkSlide: FiniteAnimationSpec<IntOffset>,
     val glassPress: AnimationSpec<Float>,
     val durations: OpenTuneMotionDurations,
 )

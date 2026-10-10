@@ -3,6 +3,7 @@ package com.arturo254.opentune.core.designsystem.theme
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import com.arturo254.opentune.constants.BottomSheetAnimationSpec
 import com.arturo254.opentune.constants.BottomSheetSoftAnimationSpec
 import com.arturo254.opentune.constants.NavigationBarAnimationSpec
@@ -36,8 +37,8 @@ class MotionTokensTest {
             Spring.DampingRatioNoBouncy,
             Spring.StiffnessMedium,
         )
-        assertSpring(motion.miniPlayerInfoSlide as SpringSpec<Int>, 0.86f, 520f)
-        assertSpring(motion.miniPlayerArtworkSlide as SpringSpec<Int>, 0.86f, 560f)
+        assertSpring(motion.miniPlayerInfoSlide as SpringSpec<IntOffset>, 0.86f, 520f)
+        assertSpring(motion.miniPlayerArtworkSlide as SpringSpec<IntOffset>, 0.86f, 560f)
         assertSpring(motion.glassPress as SpringSpec<Float>, 0.78f, 620f)
     }
 
