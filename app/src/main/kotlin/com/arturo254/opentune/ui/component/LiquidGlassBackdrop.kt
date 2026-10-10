@@ -21,6 +21,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.theme.colors
+import com.arturo254.opentune.core.designsystem.theme.surfaces
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -59,6 +60,7 @@ fun Modifier.liquidGlassSurface(
     val darkSurface =
         pureBlack || MaterialTheme.colorScheme.background.luminance() < 0.45f
     val designColors = OpenTuneDesignSystem.colors
+    val surfaceTokens = OpenTuneDesignSystem.surfaces
     val fallbackSurface = designColors.surfaceGlass
     val borderColor = designColors.outlineGlass
 
@@ -101,7 +103,7 @@ fun Modifier.liquidGlassSurface(
                     Modifier
                 }
             )
-            .border(0.8.dp, borderColor, shape)
+            .border(surfaceTokens.borders.fallbackGlassWidth, borderColor, shape)
     }
 
     val blurDp = blurRadius.coerceIn(2, 12).dp
@@ -127,14 +129,16 @@ fun Modifier.liquidGlassSurface(
             },
             shadow = {
                 Shadow(
-                    radius = 8.dp,
+                    radius = surfaceTokens.shadows.glassOuterRadius,
                     color = designColors.shadowGlass,
                 )
             },
             innerShadow = {
                 InnerShadow(
-                    radius = 4.dp,
-                    alpha = if (darkSurface) 0.22f else 0.14f,
+                    radius = surfaceTokens.shadows.glassInnerRadius,
+                    alpha =
+                        if (darkSurface) surfaceTokens.opacity.innerGlassShadowDark
+                        else surfaceTokens.opacity.innerGlassShadowLight,
                 )
             },
             onDrawSurface = {
@@ -143,7 +147,7 @@ fun Modifier.liquidGlassSurface(
         )
         .clip(shape)
         .border(
-            width = 0.75.dp,
+            width = surfaceTokens.borders.activeGlassWidth,
             color = borderColor,
             shape = shape,
         )

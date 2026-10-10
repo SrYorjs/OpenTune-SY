@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.theme.OpenTuneShapeRadii
 import com.arturo254.opentune.core.designsystem.theme.shapes
+import com.arturo254.opentune.core.designsystem.theme.surfaces
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -141,10 +142,11 @@ fun LiquidGlassIconButton(
     val glass = LocalEnableLiquidGlass.current
     val interactionSource = remember { MutableInteractionSource() }
     val shape = OpenTuneDesignSystem.shapes.pill
+    val surfaceTokens = OpenTuneDesignSystem.surfaces
     val baseColor =
         if (glass) {
             if (selected) {
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.10f)
+                MaterialTheme.colorScheme.primary.copy(alpha = surfaceTokens.opacity.selectedGlassIcon)
             } else {
                 Color.Transparent
             }
@@ -203,9 +205,10 @@ fun LiquidGlassPillButton(
     val glass = LocalEnableLiquidGlass.current
     val interactionSource = remember { MutableInteractionSource() }
     val shape = OpenTuneDesignSystem.shapes.pill
+    val surfaceTokens = OpenTuneDesignSystem.surfaces
     val baseColor =
         when {
-            glass && selected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)
+            glass && selected -> MaterialTheme.colorScheme.primary.copy(alpha = surfaceTokens.opacity.selectedGlassPill)
             glass -> Color.Transparent
             selected -> MaterialTheme.colorScheme.primaryContainer
             else -> MaterialTheme.colorScheme.surfaceContainerHigh
@@ -259,6 +262,7 @@ fun LiquidGlassControlCluster(
 ) {
     val glass = LocalEnableLiquidGlass.current
     val shape = OpenTuneDesignSystem.shapes.glassControlCluster
+    val surfaceTokens = OpenTuneDesignSystem.surfaces
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
@@ -270,7 +274,7 @@ fun LiquidGlassControlCluster(
                 if (glass) {
                     Color.Transparent
                 } else {
-                    MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.92f)
+                    MaterialTheme.colorScheme.surfaceContainer.copy(alpha = surfaceTokens.opacity.glassClusterOpaque)
                 }
             )
             .then(
@@ -308,21 +312,22 @@ fun LiquidGlassCard(
             RoundedCornerShape(cornerRadius)
         }
 
+    val surfaceTokens = OpenTuneDesignSystem.surfaces
     val primary = MaterialTheme.colorScheme.primary
     val glassBrush =
         Brush.linearGradient(
             colors =
                 if (pureBlack) {
                     listOf(
-                        Color.White.copy(alpha = 0.075f),
-                        primary.copy(alpha = 0.045f),
-                        Color.Black.copy(alpha = 0.045f),
+                        Color.White.copy(alpha = surfaceTokens.opacity.glassCardBlackTop),
+                        primary.copy(alpha = surfaceTokens.opacity.glassCardBlackAccent),
+                        Color.Black.copy(alpha = surfaceTokens.opacity.glassCardBlackBottom),
                     )
                 } else {
                     listOf(
-                        Color.White.copy(alpha = 0.16f),
-                        primary.copy(alpha = 0.055f),
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.08f),
+                        Color.White.copy(alpha = surfaceTokens.opacity.glassCardLightTop),
+                        primary.copy(alpha = surfaceTokens.opacity.glassCardLightAccent),
+                        MaterialTheme.colorScheme.surface.copy(alpha = surfaceTokens.opacity.glassCardLightSurface),
                     )
                 }
         )
@@ -335,17 +340,18 @@ fun LiquidGlassCard(
                 else Brush.linearGradient(
                     listOf(
                         MaterialTheme.colorScheme.surfaceContainer,
-                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.82f),
+                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = surfaceTokens.opacity.glassCardOpaqueGradientEnd),
                     )
                 )
             )
             .border(
-                width = 0.8.dp,
+                width = surfaceTokens.borders.glassCardWidth,
                 color =
                     if (glass) {
-                        Color.White.copy(alpha = if (pureBlack) 0.18f else 0.22f)
+                        if (pureBlack) surfaceTokens.borders.glassCardPureBlackColor
+                        else surfaceTokens.borders.glassCardStandardColor
                     } else {
-                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f)
+                        surfaceTokens.borders.glassCardOpaqueColor
                     },
                 shape = shape,
             ),

@@ -57,6 +57,7 @@ import com.arturo254.opentune.core.designsystem.theme.typography
 import com.arturo254.opentune.core.designsystem.theme.spacing
 import com.arturo254.opentune.core.designsystem.theme.sizes
 import com.arturo254.opentune.core.designsystem.theme.shapes
+import com.arturo254.opentune.core.designsystem.theme.surfaces
 import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.constants.UniversalAudioSelectionModeKey
 import com.arturo254.opentune.core.model.SourceVariant
@@ -427,6 +428,7 @@ private fun UnifiedTrackRow(
     val designSpacing = OpenTuneDesignSystem.spacing
     val designSizes = OpenTuneDesignSystem.sizes
     val designShapes = OpenTuneDesignSystem.shapes
+    val surfaceTokens = OpenTuneDesignSystem.surfaces
     val recommended = preferredDisplayVariant ?: result.recommendedVariant
     val artwork =
         recommended?.artworkUrl
@@ -476,7 +478,7 @@ private fun UnifiedTrackRow(
                         modifier =
                             Modifier
                                 .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.28f)),
+                                .background(Color.Black.copy(alpha = surfaceTokens.opacity.activeArtworkOverlay)),
                     )
                     Icon(
                         painter =
@@ -492,7 +494,7 @@ private fun UnifiedTrackRow(
                         modifier =
                             Modifier
                                 .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.24f)),
+                                .background(designColors.overlayArtwork),
                     )
                     CircularProgressIndicator(
                         strokeWidth = 2.dp,

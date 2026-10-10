@@ -34,6 +34,7 @@ import com.arturo254.opentune.constants.ThumbnailCornerRadiusKey
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.theme.artworkShapeFor
 import com.arturo254.opentune.core.designsystem.theme.shapes
+import com.arturo254.opentune.core.designsystem.theme.surfaces
 import com.arturo254.opentune.utils.rememberPreference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -131,6 +132,7 @@ fun ThumbnailCornerRadiusModal(
     ) {
         BoxWithConstraints {
             val designShapes = OpenTuneDesignSystem.shapes
+            val surfaceTokens = OpenTuneDesignSystem.surfaces
             val previewArtworkShape = artworkShapeFor(thumbnailCornerRadius)
             val screenWidth = maxWidth
             val dialogWidth = when {
@@ -147,7 +149,7 @@ fun ThumbnailCornerRadiusModal(
                     .padding(16.dp),
                 shape = MaterialTheme.shapes.large,
                 color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 6.dp
+                tonalElevation = surfaceTokens.elevations.artworkSettingsDialog
             ) {
                 Column(
                     modifier = Modifier
@@ -164,8 +166,8 @@ fun ThumbnailCornerRadiusModal(
                             .clip(previewArtworkShape)
                             .background(MaterialTheme.colorScheme.surface)
                             .border(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                                width = surfaceTokens.borders.artworkPreviewWidth,
+                                color = surfaceTokens.borders.artworkPreviewColor,
                                 shape = previewArtworkShape
                             ),
                         contentAlignment = Alignment.Center

@@ -7,7 +7,7 @@ Roadmap ownership:
 - 3.4 typography tokens ✅
 - 3.5 spacing, dimensions and density ✅
 - 3.6 shapes ✅
-- 3.7 elevation, transparency and borders
+- 3.7 elevation, transparency and borders ✅
 - 3.8 motion
 
 3.2 only installs the provider boundary; it intentionally does not change visuals.
@@ -84,3 +84,21 @@ The first migration covers Universal Search, glass controls, and the
 thumbnail radius selector without changing their initial appearances.
 Liquid Glass optics, elevation and border styling are not modified:
 those belong to steps 3.7 and 3.9.
+
+## Elevation, transparency, shadows and borders (3.7)
+
+Use `OpenTuneDesignSystem.surfaces` for specific musical/glass elements:
+`surfaces.elevations`, `surfaces.shadows`, `surfaces.opacity`, and
+`surfaces.borders`. Standard Material components retain their Material
+surface, outline, and elevation behavior. 3.3 colors remain authoritative
+for glass backdrop fallback, outlines, and artwork overlays.
+
+Legacy measures are preserved exactly: fallback/live glass borders 0.8 / 0.75
+dp, card border 0.8 dp, release notes card 4 dp, dialog tonal elevation
+6 dp, and glass shadow radii 8 / 4 dp. Opaque outline colors follow the
+active Material ColorScheme while pure-black/standard glass retains its
+previous neutral white alpha.
+
+Initial consumers: LiquidGlassBackdrop, LiquidGlassControls, Search overlay,
+artwork radius modal, and ReleaseNotesCard. Blur, lens, refraction, animated
+glass, and motion are reserved for 3.8–3.9.

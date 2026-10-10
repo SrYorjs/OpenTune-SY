@@ -28,12 +28,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.R
+import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.theme.surfaces
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
 
 @Composable
 fun ReleaseNotesCard() {
+    val surfaceTokens = OpenTuneDesignSystem.surfaces
     var markdownContent by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
@@ -44,9 +47,9 @@ fun ReleaseNotesCard() {
         modifier = Modifier
             .padding(horizontal = 16.dp)
             .fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = surfaceTokens.elevations.releaseNotesCard),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(6.dp)
+            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(surfaceTokens.elevations.releaseNotesSurfaceTint)
         )
     ) {
         Column(

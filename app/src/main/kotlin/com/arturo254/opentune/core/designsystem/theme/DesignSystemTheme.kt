@@ -33,6 +33,10 @@ fun ProvideOpenTuneDesignSystem(
         remember(colorScheme) {
             createOpenTuneColorRoles(colorScheme)
         }
+    val surfaces =
+        remember(colorScheme) {
+            createOpenTuneSurfaceTokens(colorScheme)
+        }
     val typography =
         remember(materialTypography) {
             createOpenTuneTypographyTokens(materialTypography)
@@ -49,6 +53,7 @@ fun ProvideOpenTuneDesignSystem(
         LocalOpenTuneSpacingTokens provides DefaultOpenTuneSpacingTokens,
         LocalOpenTuneSizeTokens provides DefaultOpenTuneSizeTokens,
         LocalOpenTuneShapeTokens provides shapes,
+        LocalOpenTuneSurfaceTokens provides surfaces,
         content = content,
     )
 }
