@@ -45,7 +45,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -54,6 +53,7 @@ import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.theme.colors
+import com.arturo254.opentune.core.designsystem.theme.typography
 import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.constants.UniversalAudioSelectionModeKey
 import com.arturo254.opentune.core.model.SourceVariant
@@ -418,6 +418,7 @@ private fun UnifiedTrackRow(
     onClick: (() -> Unit)?,
 ) {
     val designColors = OpenTuneDesignSystem.colors
+    val designTypography = OpenTuneDesignSystem.typography
     val recommended = preferredDisplayVariant ?: result.recommendedVariant
     val artwork =
         recommended?.artworkUrl
@@ -501,8 +502,7 @@ private fun UnifiedTrackRow(
             ) {
                 Text(
                     text = result.identity.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    style = designTypography.songTitle,
                     color =
                         if (isActive) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurface,
@@ -512,7 +512,7 @@ private fun UnifiedTrackRow(
 
                 Text(
                     text = result.identity.artists.joinToString { it.name },
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = designTypography.songSubtitle,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -525,7 +525,7 @@ private fun UnifiedTrackRow(
                                 listOfNotNull(preferredDisplayVariant)
                         ).distinctBy { it.provider }
                             .joinToString(" • ") { variant -> providerName(variant.provider) },
-                    style = MaterialTheme.typography.labelSmall,
+                    style = designTypography.metadata,
                     color = designColors.textMuted,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -539,7 +539,7 @@ private fun UnifiedTrackRow(
                             } else {
                                 quality
                             },
-                        style = MaterialTheme.typography.labelSmall,
+                        style = designTypography.metadata,
                         color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -562,8 +562,7 @@ private fun UnifiedTrackRow(
                 Spacer(Modifier.width(8.dp))
                 Text(
                     text = providerShortName(displayProvider),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.SemiBold,
+                    style = designTypography.badge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier =
                         Modifier

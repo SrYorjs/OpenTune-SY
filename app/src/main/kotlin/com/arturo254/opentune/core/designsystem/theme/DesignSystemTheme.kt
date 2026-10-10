@@ -26,14 +26,20 @@ fun ProvideOpenTuneDesignSystem(
             )
         }
     val colorScheme = MaterialTheme.colorScheme
+    val materialTypography = MaterialTheme.typography
     val colors =
         remember(colorScheme) {
             createOpenTuneColorRoles(colorScheme)
+        }
+    val typography =
+        remember(materialTypography) {
+            createOpenTuneTypographyTokens(materialTypography)
         }
 
     CompositionLocalProvider(
         LocalDesignSystemEnvironment provides environment,
         LocalOpenTuneColorRoles provides colors,
+        LocalOpenTuneTypographyTokens provides typography,
         content = content,
     )
 }
