@@ -12,6 +12,7 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.arturo254.opentune.core.designsystem.theme.DefaultOpenTuneSizeTokens
 
 const val CONTENT_TYPE_HEADER = 0
 const val CONTENT_TYPE_LIST = 1
@@ -20,29 +21,29 @@ const val CONTENT_TYPE_ARTIST = 3
 const val CONTENT_TYPE_ALBUM = 4
 const val CONTENT_TYPE_PLAYLIST = 5
 
-val FloatingToolbarHeight = 72.dp
-val SlimFloatingToolbarHeight = 64.dp
-val FloatingToolbarHorizontalPadding = 16.dp
-val FloatingToolbarBottomPadding = 12.dp
+val FloatingToolbarHeight = DefaultOpenTuneSizeTokens.floatingToolbarHeight
+val SlimFloatingToolbarHeight = DefaultOpenTuneSizeTokens.slimFloatingToolbarHeight
+val FloatingToolbarHorizontalPadding = DefaultOpenTuneSizeTokens.floatingToolbarHorizontalPadding
+val FloatingToolbarBottomPadding = DefaultOpenTuneSizeTokens.floatingToolbarBottomPadding
 val NavigationBarHeight = FloatingToolbarHeight
 val SlimNavBarHeight = SlimFloatingToolbarHeight
-val MiniPlayerHeight = 64.dp
-val MiniPlayerBottomSpacing = 8.dp // Space between MiniPlayer and NavigationBar
-val QueuePeekHeight = 64.dp
-val AppBarHeight = 64.dp
+val MiniPlayerHeight = DefaultOpenTuneSizeTokens.miniPlayerHeight
+val MiniPlayerBottomSpacing = DefaultOpenTuneSizeTokens.miniPlayerBottomSpacing // Space between MiniPlayer and NavigationBar
+val QueuePeekHeight = DefaultOpenTuneSizeTokens.queuePeekHeight
+val AppBarHeight = DefaultOpenTuneSizeTokens.appBarHeight
 
-val ListItemHeight = 72.dp
-val SuggestionItemHeight = 60.dp
-val SearchFilterHeight = 50.dp
-val ListThumbnailSize = 54.dp
-val SmallGridThumbnailHeight = 116.dp
-val GridThumbnailHeight = 148.dp
-val AlbumThumbnailSize = 156.dp
+val ListItemHeight = DefaultOpenTuneSizeTokens.listItemHeight
+val SuggestionItemHeight = DefaultOpenTuneSizeTokens.suggestionItemHeight
+val SearchFilterHeight = DefaultOpenTuneSizeTokens.searchFilterHeight
+val ListThumbnailSize = DefaultOpenTuneSizeTokens.listThumbnailSize
+val SmallGridThumbnailHeight = DefaultOpenTuneSizeTokens.smallGridThumbnailHeight
+val GridThumbnailHeight = DefaultOpenTuneSizeTokens.gridThumbnailHeight
+val AlbumThumbnailSize = DefaultOpenTuneSizeTokens.albumThumbnailSize
 
 val ThumbnailCornerRadius = 14.dp
 val GridThumbnailCornerRadius = 18.dp
 
-val PlayerHorizontalPadding = 32.dp
+val PlayerHorizontalPadding = DefaultOpenTuneSizeTokens.playerHorizontalPadding
 
 val NavigationBarAnimationSpec = spring<Dp>(
     dampingRatio = 0.86f,

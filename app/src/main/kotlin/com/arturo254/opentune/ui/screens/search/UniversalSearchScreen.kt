@@ -54,6 +54,8 @@ import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.theme.colors
 import com.arturo254.opentune.core.designsystem.theme.typography
+import com.arturo254.opentune.core.designsystem.theme.spacing
+import com.arturo254.opentune.core.designsystem.theme.sizes
 import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.constants.UniversalAudioSelectionModeKey
 import com.arturo254.opentune.core.model.SourceVariant
@@ -76,6 +78,8 @@ fun UniversalSearchScreen(
     viewModel: UniversalSearchViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
+    val designSpacing = OpenTuneDesignSystem.spacing
+    val designSizes = OpenTuneDesignSystem.sizes
     val playerConnection = LocalPlayerConnection.current ?: return
     val state by viewModel.state.collectAsState()
     val offlineAssets by viewModel.offlineAssets.collectAsState()
@@ -149,12 +153,12 @@ fun UniversalSearchScreen(
         state = lazyListState,
         contentPadding =
             PaddingValues(
-                start = 12.dp,
-                top = 12.dp,
-                end = 12.dp,
-                bottom = 128.dp,
+                start = designSpacing.md,
+                top = designSpacing.md,
+                end = designSpacing.md,
+                bottom = designSpacing.searchBottomInset,
             ),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(designSpacing.sm),
         modifier =
             Modifier
                 .fillMaxSize()
@@ -162,7 +166,7 @@ fun UniversalSearchScreen(
     ) {
         item(key = "universal_quality_mode") {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                horizontalArrangement = Arrangement.spacedBy(designSpacing.qualityFilterGap),
                 verticalAlignment = Alignment.CenterVertically,
                 modifier =
                     Modifier
@@ -214,7 +218,7 @@ fun UniversalSearchScreen(
                             .fillMaxWidth()
                             .padding(vertical = 28.dp),
                 ) {
-                    CircularProgressIndicator(modifier = Modifier.size(28.dp))
+                    CircularProgressIndicator(modifier = Modifier.size(designSizes.searchLoadingIndicator))
                 }
             }
         }
@@ -419,6 +423,8 @@ private fun UnifiedTrackRow(
 ) {
     val designColors = OpenTuneDesignSystem.colors
     val designTypography = OpenTuneDesignSystem.typography
+    val designSpacing = OpenTuneDesignSystem.spacing
+    val designSizes = OpenTuneDesignSystem.sizes
     val recommended = preferredDisplayVariant ?: result.recommendedVariant
     val artwork =
         recommended?.artworkUrl
@@ -437,13 +443,13 @@ private fun UnifiedTrackRow(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(10.dp),
+            modifier = Modifier.padding(designSpacing.mediaRowPadding),
         ) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier =
                     Modifier
-                        .size(60.dp)
+                        .size(designSizes.searchRowArtwork)
                         .clip(RoundedCornerShape(17.dp))
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
@@ -459,7 +465,7 @@ private fun UnifiedTrackRow(
                         painter = painterResource(R.drawable.library_music),
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(26.dp),
+                        modifier = Modifier.size(designSizes.searchPlaceholderIcon),
                     )
                 }
 
@@ -477,7 +483,7 @@ private fun UnifiedTrackRow(
                             ),
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(28.dp),
+                        modifier = Modifier.size(designSizes.searchOverlayIcon),
                     )
                 } else if (isResolving) {
                     Box(
@@ -489,15 +495,15 @@ private fun UnifiedTrackRow(
                     CircularProgressIndicator(
                         strokeWidth = 2.dp,
                         color = Color.White,
-                        modifier = Modifier.size(25.dp),
+                        modifier = Modifier.size(designSizes.searchResolvingIndicator),
                     )
                 }
             }
 
-            Spacer(Modifier.width(14.dp))
+            Spacer(Modifier.width(designSpacing.mediaRowArtworkGap))
 
             Column(
-                verticalArrangement = Arrangement.spacedBy(3.dp),
+                verticalArrangement = Arrangement.spacedBy(designSpacing.mediaRowTextGap),
                 modifier = Modifier.weight(1f),
             ) {
                 Text(
@@ -568,18 +574,21 @@ private fun UnifiedTrackRow(
                         Modifier
                             .clip(RoundedCornerShape(12.dp))
                             .background(designColors.badgeAccent)
-                            .padding(horizontal = 8.dp, vertical = 5.dp),
+                            .padding(
+                                horizontal = designSpacing.badgeHorizontalPadding,
+                                vertical = designSpacing.badgeVerticalPadding,
+                            ),
                 )
             }
 
             IconButton(
                 onClick = onVersionsClick,
-                modifier = Modifier.size(36.dp),
+                modifier = Modifier.size(designSizes.searchVersionsButton),
             ) {
                 Icon(
                     painter = painterResource(R.drawable.tune),
                     contentDescription = stringResource(R.string.universal_versions_action),
-                    modifier = Modifier.size(21.dp),
+                    modifier = Modifier.size(designSizes.searchVersionsIcon),
                 )
             }
 

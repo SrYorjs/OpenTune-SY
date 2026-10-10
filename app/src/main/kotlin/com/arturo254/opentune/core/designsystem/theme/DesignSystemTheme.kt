@@ -40,6 +40,8 @@ fun ProvideOpenTuneDesignSystem(
         LocalDesignSystemEnvironment provides environment,
         LocalOpenTuneColorRoles provides colors,
         LocalOpenTuneTypographyTokens provides typography,
+        LocalOpenTuneSpacingTokens provides DefaultOpenTuneSpacingTokens,
+        LocalOpenTuneSizeTokens provides DefaultOpenTuneSizeTokens,
         content = content,
     )
 }
