@@ -31,6 +31,9 @@ import androidx.compose.ui.window.DialogProperties
 import kotlin.math.roundToInt
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.ThumbnailCornerRadiusKey
+import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.theme.artworkShapeFor
+import com.arturo254.opentune.core.designsystem.theme.shapes
 import com.arturo254.opentune.utils.rememberPreference
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -127,6 +130,8 @@ fun ThumbnailCornerRadiusModal(
         )
     ) {
         BoxWithConstraints {
+            val designShapes = OpenTuneDesignSystem.shapes
+            val previewArtworkShape = artworkShapeFor(thumbnailCornerRadius)
             val screenWidth = maxWidth
             val dialogWidth = when {
                 screenWidth > 840.dp -> 0.5f
@@ -138,7 +143,7 @@ fun ThumbnailCornerRadiusModal(
                 modifier = Modifier
                     .fillMaxWidth(dialogWidth)
                     .wrapContentHeight()
-                    .clip(RoundedCornerShape(30.dp))
+                    .clip(designShapes.sheet)
                     .padding(16.dp),
                 shape = MaterialTheme.shapes.large,
                 color = MaterialTheme.colorScheme.surface,
@@ -156,12 +161,12 @@ fun ThumbnailCornerRadiusModal(
                     Box(
                         modifier = Modifier
                             .size(160.dp)
-                            .clip(RoundedCornerShape(thumbnailCornerRadius.dp))
+                            .clip(previewArtworkShape)
                             .background(MaterialTheme.colorScheme.surface)
                             .border(
                                 width = 1.dp,
                                 color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                                shape = RoundedCornerShape(thumbnailCornerRadius.dp)
+                                shape = previewArtworkShape
                             ),
                         contentAlignment = Alignment.Center
                     ) {

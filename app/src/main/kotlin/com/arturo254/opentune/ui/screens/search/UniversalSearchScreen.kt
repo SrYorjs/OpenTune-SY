@@ -56,6 +56,7 @@ import com.arturo254.opentune.core.designsystem.theme.colors
 import com.arturo254.opentune.core.designsystem.theme.typography
 import com.arturo254.opentune.core.designsystem.theme.spacing
 import com.arturo254.opentune.core.designsystem.theme.sizes
+import com.arturo254.opentune.core.designsystem.theme.shapes
 import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.constants.UniversalAudioSelectionModeKey
 import com.arturo254.opentune.core.model.SourceVariant
@@ -425,13 +426,14 @@ private fun UnifiedTrackRow(
     val designTypography = OpenTuneDesignSystem.typography
     val designSpacing = OpenTuneDesignSystem.spacing
     val designSizes = OpenTuneDesignSystem.sizes
+    val designShapes = OpenTuneDesignSystem.shapes
     val recommended = preferredDisplayVariant ?: result.recommendedVariant
     val artwork =
         recommended?.artworkUrl
             ?: result.variants.firstNotNullOfOrNull { it.artworkUrl }
 
     Surface(
-        shape = RoundedCornerShape(22.dp),
+        shape = designShapes.mediaCard,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
         modifier =
             Modifier
@@ -450,7 +452,7 @@ private fun UnifiedTrackRow(
                 modifier =
                     Modifier
                         .size(designSizes.searchRowArtwork)
-                        .clip(RoundedCornerShape(17.dp))
+                        .clip(designShapes.searchArtwork)
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 if (artwork != null) {
@@ -572,7 +574,7 @@ private fun UnifiedTrackRow(
                     color = MaterialTheme.colorScheme.primary,
                     modifier =
                         Modifier
-                            .clip(RoundedCornerShape(12.dp))
+                            .clip(designShapes.badge)
                             .background(designColors.badgeAccent)
                             .padding(
                                 horizontal = designSpacing.badgeHorizontalPadding,

@@ -20,6 +20,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.theme.OpenTuneShapeRadii
+import com.arturo254.opentune.core.designsystem.theme.shapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -137,7 +140,7 @@ fun LiquidGlassIconButton(
 ) {
     val glass = LocalEnableLiquidGlass.current
     val interactionSource = remember { MutableInteractionSource() }
-    val shape = RoundedCornerShape(50)
+    val shape = OpenTuneDesignSystem.shapes.pill
     val baseColor =
         if (glass) {
             if (selected) {
@@ -199,7 +202,7 @@ fun LiquidGlassPillButton(
 ) {
     val glass = LocalEnableLiquidGlass.current
     val interactionSource = remember { MutableInteractionSource() }
-    val shape = RoundedCornerShape(50)
+    val shape = OpenTuneDesignSystem.shapes.pill
     val baseColor =
         when {
             glass && selected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.11f)
@@ -255,7 +258,7 @@ fun LiquidGlassControlCluster(
     content: @Composable RowScope.() -> Unit,
 ) {
     val glass = LocalEnableLiquidGlass.current
-    val shape = RoundedCornerShape(30.dp)
+    val shape = OpenTuneDesignSystem.shapes.glassControlCluster
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
@@ -294,11 +297,16 @@ fun LiquidGlassControlCluster(
 fun LiquidGlassCard(
     modifier: Modifier = Modifier,
     pureBlack: Boolean = false,
-    cornerRadius: Dp = 24.dp,
+    cornerRadius: Dp = OpenTuneShapeRadii.glassCard,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val glass = LocalEnableLiquidGlass.current
-    val shape = RoundedCornerShape(cornerRadius)
+    val shape =
+        if (cornerRadius == OpenTuneShapeRadii.glassCard) {
+            OpenTuneDesignSystem.shapes.glassCard
+        } else {
+            RoundedCornerShape(cornerRadius)
+        }
 
     val primary = MaterialTheme.colorScheme.primary
     val glassBrush =

@@ -6,7 +6,7 @@ Roadmap ownership:
 - 3.3 semantic color roles ✅
 - 3.4 typography tokens ✅
 - 3.5 spacing, dimensions and density ✅
-- 3.6 shapes
+- 3.6 shapes ✅
 - 3.7 elevation, transparency and borders
 - 3.8 motion
 
@@ -60,3 +60,27 @@ actual device density and fontScale, and updates with configuration changes.
 
 `UniversalSearchScreen` is the first controlled consumer. Remaining UI
 migration belongs to 3.15; no overall resizing happens in 3.5.
+
+## Shape roles and personalization (3.6)
+
+`OpenTuneDesignSystem.shapes` mirrors the active Material 3 shapes for
+generic elements and supplies named roles for music/glass UI:
+
+- `listArtwork`, `gridArtwork`, `searchArtwork` (unchanged legacy radii);
+- `artwork` (user's `ThumbnailCornerRadiusKey`, 0–45 dp);
+- `mediaCard`, `badge`, `pill`, `sheet`;
+- `glassControlCluster`, `glassCard`.
+
+The theme host reads the existing artwork preference and passes the
+value through `OpenTuneTheme` to the Design System provider. This
+preserves existing preference storage, settings, and previews.
+
+`OpenTuneShapeRadii` is the canonical source for fixed radii.
+Legacy constants in `constants/Dimensions.kt` remain available.
+`artworkShapeFor(radiusDp)` is pure, sanitizes invalid input, and allows
+interactive preview before users save their preference.
+
+The first migration covers Universal Search, glass controls, and the
+thumbnail radius selector without changing their initial appearances.
+Liquid Glass optics, elevation and border styling are not modified:
+those belong to steps 3.7 and 3.9.

@@ -13,6 +13,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.core.designsystem.theme.DefaultOpenTuneSizeTokens
+import com.arturo254.opentune.core.designsystem.theme.OpenTuneShapeRadii
 
 const val CONTENT_TYPE_HEADER = 0
 const val CONTENT_TYPE_LIST = 1
@@ -40,8 +41,8 @@ val SmallGridThumbnailHeight = DefaultOpenTuneSizeTokens.smallGridThumbnailHeigh
 val GridThumbnailHeight = DefaultOpenTuneSizeTokens.gridThumbnailHeight
 val AlbumThumbnailSize = DefaultOpenTuneSizeTokens.albumThumbnailSize
 
-val ThumbnailCornerRadius = 14.dp
-val GridThumbnailCornerRadius = 18.dp
+val ThumbnailCornerRadius = OpenTuneShapeRadii.listArtwork
+val GridThumbnailCornerRadius = OpenTuneShapeRadii.gridArtwork
 
 val PlayerHorizontalPadding = DefaultOpenTuneSizeTokens.playerHorizontalPadding
 

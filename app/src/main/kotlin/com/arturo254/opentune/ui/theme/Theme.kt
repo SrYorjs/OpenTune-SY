@@ -67,6 +67,7 @@ fun OpenTuneTheme(
     motionScheme: MotionScheme = MotionScheme.expressive(),
     seedPalette: ThemeSeedPalette? = null,
     appFontStyle: AppFontStyle = AppFontStyle.OPEN_TUNE,
+    artworkCornerRadiusDp: Float = 16f,
     content: @Composable () -> Unit,
 ) {
     val context = LocalContext.current
@@ -117,6 +118,7 @@ fun OpenTuneTheme(
         motionScheme = motionScheme,
     ) {
         ProvideOpenTuneDesignSystem(
+            artworkRadiusDp = artworkCornerRadiusDp,
             content = content,
         )
     }

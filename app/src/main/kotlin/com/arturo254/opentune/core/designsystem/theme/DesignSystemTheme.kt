@@ -17,6 +17,7 @@ import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
  */
 @Composable
 fun ProvideOpenTuneDesignSystem(
+    artworkRadiusDp: Float = 16f,
     content: @Composable () -> Unit,
 ) {
     val environment =
@@ -27,6 +28,7 @@ fun ProvideOpenTuneDesignSystem(
         }
     val colorScheme = MaterialTheme.colorScheme
     val materialTypography = MaterialTheme.typography
+    val materialShapes = MaterialTheme.shapes
     val colors =
         remember(colorScheme) {
             createOpenTuneColorRoles(colorScheme)
@@ -35,6 +37,10 @@ fun ProvideOpenTuneDesignSystem(
         remember(materialTypography) {
             createOpenTuneTypographyTokens(materialTypography)
         }
+    val shapes =
+        remember(materialShapes, artworkRadiusDp) {
+            createOpenTuneShapeTokens(materialShapes, artworkRadiusDp)
+        }
 
     CompositionLocalProvider(
         LocalDesignSystemEnvironment provides environment,
@@ -42,6 +48,7 @@ fun ProvideOpenTuneDesignSystem(
         LocalOpenTuneTypographyTokens provides typography,
         LocalOpenTuneSpacingTokens provides DefaultOpenTuneSpacingTokens,
         LocalOpenTuneSizeTokens provides DefaultOpenTuneSizeTokens,
+        LocalOpenTuneShapeTokens provides shapes,
         content = content,
     )
 }

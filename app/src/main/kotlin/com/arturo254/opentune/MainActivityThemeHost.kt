@@ -25,6 +25,7 @@ import com.arturo254.opentune.constants.DarkModeKey
 import com.arturo254.opentune.constants.DynamicThemeKey
 import com.arturo254.opentune.constants.LyricsSyncOffsetKey
 import com.arturo254.opentune.constants.PureBlackKey
+import com.arturo254.opentune.constants.ThumbnailCornerRadiusKey
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.ui.screens.settings.DarkMode
 import com.arturo254.opentune.ui.screens.settings.ThemePalettes
@@ -59,6 +60,7 @@ internal fun MainActivityThemeHost(
     val darkTheme by rememberEnumPreference(DarkModeKey, defaultValue = DarkMode.AUTO)
     val appFontStyle by rememberEnumPreference(AppFontKey, defaultValue = AppFontStyle.OPEN_TUNE)
     val lyricsSyncOffset by rememberPreference(LyricsSyncOffsetKey, defaultValue = 0)
+    val artworkCornerRadius by rememberPreference(ThumbnailCornerRadiusKey, defaultValue = 16f)
 
     val isSystemInDarkTheme = isSystemInDarkTheme()
     val useDarkTheme =
@@ -173,6 +175,7 @@ internal fun MainActivityThemeHost(
         themeColor = themeColor,
         seedPalette = if (!enableDynamicTheme) customThemeSeedPalette else null,
         appFontStyle = appFontStyle,
+        artworkCornerRadiusDp = artworkCornerRadius,
     ) {
         content(
             pureBlack,
