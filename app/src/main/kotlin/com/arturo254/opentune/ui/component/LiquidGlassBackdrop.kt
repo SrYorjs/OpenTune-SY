@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
+import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.theme.colors
 import com.kyant.backdrop.Backdrop
 import com.kyant.backdrop.drawBackdrop
 import com.kyant.backdrop.effects.blur
@@ -56,18 +58,9 @@ fun Modifier.liquidGlassSurface(
 
     val darkSurface =
         pureBlack || MaterialTheme.colorScheme.background.luminance() < 0.45f
-    val fallbackSurface =
-        if (darkSurface) {
-            Color.White.copy(alpha = 0.070f)
-        } else {
-            Color.White.copy(alpha = 0.24f)
-        }
-    val borderColor =
-        if (darkSurface) {
-            Color.White.copy(alpha = 0.18f)
-        } else {
-            Color.White.copy(alpha = 0.58f)
-        }
+    val designColors = OpenTuneDesignSystem.colors
+    val fallbackSurface = designColors.surfaceGlass
+    val borderColor = designColors.outlineGlass
 
     if (backdrop == null) {
         var surfaceSize by remember { mutableStateOf(Size.Zero) }
@@ -135,7 +128,7 @@ fun Modifier.liquidGlassSurface(
             shadow = {
                 Shadow(
                     radius = 8.dp,
-                    color = Color.Black.copy(alpha = if (darkSurface) 0.18f else 0.10f),
+                    color = designColors.shadowGlass,
                 )
             },
             innerShadow = {
