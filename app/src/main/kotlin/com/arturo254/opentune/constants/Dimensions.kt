@@ -8,11 +8,10 @@
 
 package com.arturo254.opentune.constants
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.core.designsystem.theme.DefaultOpenTuneSizeTokens
+import com.arturo254.opentune.core.designsystem.theme.DefaultOpenTuneMotionTokens
 import com.arturo254.opentune.core.designsystem.theme.OpenTuneShapeRadii
 
 const val CONTENT_TYPE_HEADER = 0
@@ -46,17 +45,6 @@ val GridThumbnailCornerRadius = OpenTuneShapeRadii.gridArtwork
 
 val PlayerHorizontalPadding = DefaultOpenTuneSizeTokens.playerHorizontalPadding
 
-val NavigationBarAnimationSpec = spring<Dp>(
-    dampingRatio = 0.86f,
-    stiffness = 520f,
-)
-
-val BottomSheetAnimationSpec = spring<Dp>(
-    dampingRatio = 0.88f,
-    stiffness = 430f,
-)
-
-val BottomSheetSoftAnimationSpec = spring<Dp>(
-	dampingRatio = Spring.DampingRatioNoBouncy,
-	stiffness = Spring.StiffnessLow
-)
+val NavigationBarAnimationSpec = DefaultOpenTuneMotionTokens.navigationBar
+val BottomSheetAnimationSpec = DefaultOpenTuneMotionTokens.bottomSheet
+val BottomSheetSoftAnimationSpec = DefaultOpenTuneMotionTokens.bottomSheetSoft

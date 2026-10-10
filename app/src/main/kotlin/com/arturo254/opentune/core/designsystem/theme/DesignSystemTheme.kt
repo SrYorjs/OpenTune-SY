@@ -54,6 +54,7 @@ fun ProvideOpenTuneDesignSystem(
         LocalOpenTuneSizeTokens provides DefaultOpenTuneSizeTokens,
         LocalOpenTuneShapeTokens provides shapes,
         LocalOpenTuneSurfaceTokens provides surfaces,
+        LocalOpenTuneMotionTokens provides DefaultOpenTuneMotionTokens,
         content = content,
     )
 }

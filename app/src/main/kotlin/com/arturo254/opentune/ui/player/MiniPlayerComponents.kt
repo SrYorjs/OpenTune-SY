@@ -89,6 +89,8 @@ import kotlinx.coroutines.launch
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.EnableHapticFeedbackKey
 import com.arturo254.opentune.constants.MiniPlayerHeight
+import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.theme.motion
 import com.arturo254.opentune.extensions.togglePlayPause
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
@@ -119,10 +121,7 @@ fun SwipeableMiniPlayerBox(
     var totalDragDistance by remember { mutableFloatStateOf(0f) }
     var settleJob by remember { mutableStateOf<Job?>(null) }
 
-    val animationSpec = spring<Float>(
-        dampingRatio = Spring.DampingRatioNoBouncy,
-        stiffness = Spring.StiffnessMedium
-    )
+    val animationSpec = OpenTuneDesignSystem.motion.miniPlayerSwipeSettle
 
     fun settleOffset() {
         settleJob?.cancel()
@@ -258,23 +257,21 @@ fun RowScope.MiniPlayerInfo(
     mediaMetadata: MediaMetadata,
     transitionDirection: Int,
 ) {
+    val motion = OpenTuneDesignSystem.motion
     AnimatedContent(
         targetState = mediaMetadata,
         contentKey = { it.id },
         transitionSpec = {
             (
                 slideInHorizontally(
-                    animationSpec = spring(
-                        dampingRatio = 0.86f,
-                        stiffness = 520f,
-                    ),
+                    animationSpec = motion.miniPlayerInfoSlide,
                     initialOffsetX = { width -> transitionDirection * width / 3 },
-                ) + fadeIn(tween(110))
+                ) + fadeIn(tween(motion.durations.miniInfoFadeInMs))
             ) togetherWith (
                 slideOutHorizontally(
-                    animationSpec = tween(140),
+                    animationSpec = tween(motion.durations.miniInfoSlideOutMs),
                     targetOffsetX = { width -> -transitionDirection * width / 4 },
-                ) + fadeOut(tween(100))
+                ) + fadeOut(tween(motion.durations.miniInfoFadeOutMs))
             )
         },
         label = "miniInfoSlide",
@@ -314,6 +311,7 @@ private fun MiniPlayerArtwork(
     transitionDirection: Int,
     modifier: Modifier = Modifier
 ) {
+    val motion = OpenTuneDesignSystem.motion
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier.size(44.dp)
@@ -339,17 +337,14 @@ private fun MiniPlayerArtwork(
             transitionSpec = {
                 (
                     slideInHorizontally(
-                        animationSpec = spring(
-                            dampingRatio = 0.86f,
-                            stiffness = 560f,
-                        ),
+                        animationSpec = motion.miniPlayerArtworkSlide,
                         initialOffsetX = { width -> transitionDirection * width / 2 },
-                    ) + fadeIn(tween(90))
+                    ) + fadeIn(tween(motion.durations.miniArtworkFadeInMs))
                 ) togetherWith (
                     slideOutHorizontally(
-                        animationSpec = tween(120),
+                        animationSpec = tween(motion.durations.miniArtworkSlideOutMs),
                         targetOffsetX = { width -> -transitionDirection * width / 2 },
-                    ) + fadeOut(tween(90))
+                    ) + fadeOut(tween(motion.durations.miniArtworkFadeOutMs))
                 )
             },
             label = "miniArtworkSlide",

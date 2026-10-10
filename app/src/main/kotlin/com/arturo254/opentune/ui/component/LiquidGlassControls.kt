@@ -1,8 +1,6 @@
 package com.arturo254.opentune.ui.component
 
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -24,6 +22,7 @@ import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.theme.OpenTuneShapeRadii
 import com.arturo254.opentune.core.designsystem.theme.shapes
 import com.arturo254.opentune.core.designsystem.theme.surfaces
+import com.arturo254.opentune.core.designsystem.theme.motion
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -64,12 +63,10 @@ internal fun Modifier.elasticLiquidPress(
     enabled: Boolean,
 ): Modifier {
     val pressed by interactionSource.collectIsPressedAsState()
+    val motion = OpenTuneDesignSystem.motion
     val progress by animateFloatAsState(
         targetValue = if (pressed) 1f else 0f,
-        animationSpec = spring(
-            dampingRatio = 0.78f,
-            stiffness = 620f,
-        ),
+        animationSpec = motion.glassPress,
         label = "liquidElasticPress",
     )
     var touchOffset by remember { mutableStateOf(Offset.Zero) }

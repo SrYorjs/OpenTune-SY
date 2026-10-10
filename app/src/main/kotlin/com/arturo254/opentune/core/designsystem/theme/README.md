@@ -8,7 +8,7 @@ Roadmap ownership:
 - 3.5 spacing, dimensions and density ✅
 - 3.6 shapes ✅
 - 3.7 elevation, transparency and borders ✅
-- 3.8 motion
+- 3.8 motion ✅
 
 3.2 only installs the provider boundary; it intentionally does not change visuals.
 
@@ -102,3 +102,25 @@ previous neutral white alpha.
 Initial consumers: LiquidGlassBackdrop, LiquidGlassControls, Search overlay,
 artwork radius modal, and ReleaseNotesCard. Blur, lens, refraction, animated
 glass, and motion are reserved for 3.8–3.9.
+
+## Central motion contract (3.8)
+
+`OpenTuneDesignSystem.motion` provides spring presets and animation
+durations for navigation, sheets, mini-player gesture settling and artwork/
+metadata changes, and Liquid Glass press feedback.
+
+Legacy `NavigationBarAnimationSpec`, `BottomSheetAnimationSpec` and
+`BottomSheetSoftAnimationSpec` in `constants/Dimensions.kt` delegate to
+`DefaultOpenTuneMotionTokens` to avoid changing existing callers.
+
+All numeric timings are kept from their previous implementations; Compose
+respects the platform animator-duration scale. More feature consumers migrate
+in 3.15. Actual glass optical rendering is deferred to 3.9.
+
+### Mini-player opaque corner fix
+
+The 32 dp mini-player radius is now a named shape. Its parent clips content
+before painting the fallback background, regardless of glass mode. When
+glass is disabled a 1 dp semantic outline keeps corners defined. No extra
+border is applied to the glass-on path. The mini-player's 82% pure black /
+88% standard opacities are preserved, now as surface tokens.
