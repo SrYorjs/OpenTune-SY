@@ -43,6 +43,8 @@ data class OpenTuneOpacityTokens(
     val glassCardLightAccent: Float = 0.055f,
     val glassCardLightSurface: Float = 0.08f,
     val glassCardOpaqueGradientEnd: Float = 0.82f,
+    val miniPlayerPureBlack: Float = 0.82f,
+    val miniPlayerOpaque: Float = 0.88f,
 )
 
 @Immutable
@@ -51,10 +53,12 @@ data class OpenTuneBorderTokens(
     val activeGlassWidth: Dp = 0.75.dp,
     val glassCardWidth: Dp = 0.8.dp,
     val artworkPreviewWidth: Dp = 1.dp,
+    val miniPlayerOpaqueWidth: Dp = 1.dp,
     val glassCardPureBlackColor: Color,
     val glassCardStandardColor: Color,
     val glassCardOpaqueColor: Color,
     val artworkPreviewColor: Color,
+    val miniPlayerOpaqueColor: Color,
 )
 
 @Immutable
@@ -78,6 +82,7 @@ internal fun createOpenTuneSurfaceTokens(
                 glassCardStandardColor = Color.White.copy(alpha = 0.22f),
                 glassCardOpaqueColor = scheme.outlineVariant.copy(alpha = 0.20f),
                 artworkPreviewColor = scheme.outline.copy(alpha = 0.50f),
+                miniPlayerOpaqueColor = scheme.outline.copy(alpha = 0.48f),
             ),
     )
 

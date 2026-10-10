@@ -24,6 +24,7 @@ object OpenTuneShapeRadii {
     val sheet: Dp = 30.dp
     val glassControlCluster: Dp = 30.dp
     val glassCard: Dp = 24.dp
+    val miniPlayer: Dp = 32.dp
 }
 
 /**
@@ -57,6 +58,7 @@ data class OpenTuneShapeTokens(
     val sheet: RoundedCornerShape,
     val glassControlCluster: RoundedCornerShape,
     val glassCard: RoundedCornerShape,
+    val miniPlayer: RoundedCornerShape,
 )
 
 internal fun createOpenTuneShapeTokens(
@@ -79,6 +81,7 @@ internal fun createOpenTuneShapeTokens(
         sheet = RoundedCornerShape(OpenTuneShapeRadii.sheet),
         glassControlCluster = RoundedCornerShape(OpenTuneShapeRadii.glassControlCluster),
         glassCard = RoundedCornerShape(OpenTuneShapeRadii.glassCard),
+        miniPlayer = RoundedCornerShape(OpenTuneShapeRadii.miniPlayer),
     )
 
 internal val LocalOpenTuneShapeTokens =

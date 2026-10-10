@@ -9,13 +9,18 @@
 package com.arturo254.opentune.ui.player
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
 import com.arturo254.opentune.ui.component.liquidGlassSurface
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import com.arturo254.opentune.constants.MiniPlayerHeight
+import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.theme.shapes
+import com.arturo254.opentune.core.designsystem.theme.surfaces
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -66,6 +71,9 @@ private fun NewMiniPlayer(
     val coroutineScope = rememberCoroutineScope()
     val swipeSensitivity by rememberPreference(SwipeSensitivityKey, 0.73f)
     val swipeThumbnail by rememberPreference(com.arturo254.opentune.constants.SwipeThumbnailKey, true)
+    val glassEnabled = LocalEnableLiquidGlass.current
+    val miniPlayerShape = OpenTuneDesignSystem.shapes.miniPlayer
+    val surfaceTokens = OpenTuneDesignSystem.surfaces
 
     SwipeableMiniPlayerBox(
         modifier = modifier,
@@ -80,18 +88,21 @@ private fun NewMiniPlayer(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(64.dp)
+                .height(MiniPlayerHeight)
                 .preferredFrameRate(120f)
+                // Clip independently of the glass shader: the opaque fallback
+                // must retain rounded corners when Liquid Glass is disabled.
+                .clip(miniPlayerShape)
                 .background(
-                    color = if (LocalEnableLiquidGlass.current) {
+                    color = if (glassEnabled) {
                         Color.Transparent
                     } else {
-                        if (pureBlack) Color.Black.copy(alpha = 0.82f)
-                        else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.88f)
+                        if (pureBlack) Color.Black.copy(alpha = surfaceTokens.opacity.miniPlayerPureBlack)
+                        else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = surfaceTokens.opacity.miniPlayerOpaque)
                     }
                 )
                 .liquidGlassSurface(
-                    shape = RoundedCornerShape(32.dp),
+                    shape = miniPlayerShape,
                     pureBlack = pureBlack,
                     blurRadius = 4,
                     refraction = 0.045f,
@@ -99,11 +110,22 @@ private fun NewMiniPlayer(
                     dispersion = 0.0015f,
                     edge = 0f,
                 )
+                .then(
+                    if (!glassEnabled) {
+                        Modifier.border(
+                            width = surfaceTokens.borders.miniPlayerOpaqueWidth,
+                            color = surfaceTokens.borders.miniPlayerOpaqueColor,
+                            shape = miniPlayerShape,
+                        )
+                    } else {
+                        Modifier
+                    }
+                )
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(64.dp)
+                    .height(MiniPlayerHeight)
                     .graphicsLayer {
                         translationX = offsetX
                     }
