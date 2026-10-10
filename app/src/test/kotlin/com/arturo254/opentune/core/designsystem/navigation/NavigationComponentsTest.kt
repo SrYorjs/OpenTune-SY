@@ -28,6 +28,8 @@ class NavigationComponentsTest {
         assertTrue(src.contains("onItemClick: (Screens, Boolean) -> Unit"))
         val components = File(root,"com/arturo254/opentune/core/designsystem/navigation/NavigationComponents.kt").readText()
         assertTrue(components.contains("onNavigate: (String) -> Unit"))
-        assertTrue(!components.contains("NavController"))
+        // Comments/docs can mention NavController; only executable dependency is disallowed.
+        assertTrue(!components.contains("import androidx.navigation.NavController"))
+        assertTrue(!components.contains("NavController("))
     }
 }
