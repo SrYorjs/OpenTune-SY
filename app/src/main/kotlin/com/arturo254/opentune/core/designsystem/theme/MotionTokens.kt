@@ -1,6 +1,7 @@
 package com.arturo254.opentune.core.designsystem.theme
 
 import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.runtime.Composable
@@ -28,8 +29,8 @@ data class OpenTuneMotionTokens(
     val bottomSheet: AnimationSpec<Dp>,
     val bottomSheetSoft: AnimationSpec<Dp>,
     val miniPlayerSwipeSettle: AnimationSpec<Float>,
-    val miniPlayerInfoSlide: AnimationSpec<Int>,
-    val miniPlayerArtworkSlide: AnimationSpec<Int>,
+    val miniPlayerInfoSlide: FiniteAnimationSpec<Int>,
+    val miniPlayerArtworkSlide: FiniteAnimationSpec<Int>,
     val glassPress: AnimationSpec<Float>,
     val durations: OpenTuneMotionDurations,
 )
