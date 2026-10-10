@@ -142,9 +142,10 @@ fun Modifier.openTuneGlassEffect(
     val highlightAlpha =
         (0.34f + optics.edge.coerceIn(0f, 1f) * 0.34f).coerceIn(0.34f, 0.68f)
 
+    val liveBackdrop = backdrop ?: return this
     return this
         .drawBackdrop(
-            backdrop = backdrop,
+            backdrop = liveBackdrop,
             shape = { shape },
             effects = {
                 vibrancy()
