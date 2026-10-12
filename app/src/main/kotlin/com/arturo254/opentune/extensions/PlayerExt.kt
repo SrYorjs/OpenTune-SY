@@ -11,28 +11,20 @@ package com.arturo254.opentune.extensions
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
-import androidx.media3.common.Player.REPEAT_MODE_ALL
 import androidx.media3.common.Player.REPEAT_MODE_OFF
-import androidx.media3.common.Player.REPEAT_MODE_ONE
 import androidx.media3.common.Timeline
 import com.arturo254.opentune.models.MediaMetadata
 import java.util.ArrayDeque
 
 fun Player.togglePlayPause() {
-    if (!playWhenReady && playbackState == Player.STATE_IDLE) {
+    if (PlayerTransportPolicy.shouldPrepareBeforeToggle(playWhenReady, playbackState)) {
         prepare()
     }
     playWhenReady = !playWhenReady
 }
 
 fun Player.toggleRepeatMode() {
-    repeatMode =
-        when (repeatMode) {
-            REPEAT_MODE_OFF -> REPEAT_MODE_ALL
-            REPEAT_MODE_ALL -> REPEAT_MODE_ONE
-            REPEAT_MODE_ONE -> REPEAT_MODE_OFF
-            else -> throw IllegalStateException()
-        }
+    repeatMode = PlayerTransportPolicy.nextRepeatMode(repeatMode)
 }
 
 fun Player.getQueueWindows(): List<Timeline.Window> {
