@@ -100,7 +100,6 @@ import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
 import com.arturo254.opentune.utils.rememberHaptic
 import com.arturo254.opentune.utils.rememberPreference
 import kotlin.math.absoluteValue
-import kotlin.math.roundToInt
 
 
 @Composable
@@ -140,10 +139,7 @@ fun SwipeableMiniPlayerBox(
         }
     }
 
-    fun calculateAutoSwipeThreshold(swipeSensitivity: Float): Int {
-        return (600 / (1f + kotlin.math.exp(-(-11.44748 * swipeSensitivity + 9.04945)))).roundToInt()
-    }
-    val autoSwipeThreshold = calculateAutoSwipeThreshold(swipeSensitivity)
+    val autoSwipeThreshold = MiniPlayerSwipePolicy.autoSwipeThreshold(swipeSensitivity)
 
     Box(
         modifier = modifier
@@ -174,13 +170,18 @@ fun SwipeableMiniPlayerBox(
                             },
                             onHorizontalDrag = { _, dragAmount ->
                                 val adjustedDragAmount =
-                                    if (layoutDirection == LayoutDirection.Rtl) -dragAmount else dragAmount
+                                    MiniPlayerSwipePolicy.adjustedDrag(
+                                        dragAmount,
+                                        isRtl = layoutDirection == LayoutDirection.Rtl,
+                                    )
                                 val canSkipPrevious = playerConnection.player.previousMediaItemIndex != -1
                                 val canSkipNext = playerConnection.player.nextMediaItemIndex != -1
-                                val allowLeft = adjustedDragAmount < 0 && canSkipNext
-                                val allowRight = adjustedDragAmount > 0 && canSkipPrevious
 
-                                if (allowLeft || allowRight) {
+                                if (MiniPlayerSwipePolicy.canConsumeDrag(
+                                        adjustedDragAmount,
+                                        canSkipPrevious,
+                                        canSkipNext,
+                                    )) {
                                     totalDragDistance += kotlin.math.abs(adjustedDragAmount)
                                     // Update synchronously with the pointer event. The previous
                                     // implementation launched a coroutine for every drag frame.
@@ -189,16 +190,13 @@ fun SwipeableMiniPlayerBox(
                             },
                             onDragEnd = {
                                 val dragDuration = System.currentTimeMillis() - dragStartTime
-                                val velocity = if (dragDuration > 0) totalDragDistance / dragDuration else 0f
                                 val currentOffset = offsetX
-
-                                val minDistanceThreshold = 50f
-                                val velocityThreshold = (swipeSensitivity * -8.25f) + 8.5f
-
-                                val shouldChangeSong = (
-                                    kotlin.math.abs(currentOffset) > minDistanceThreshold &&
-                                        velocity > velocityThreshold
-                                    ) || (kotlin.math.abs(currentOffset) > autoSwipeThreshold)
+                                val shouldChangeSong = MiniPlayerSwipePolicy.shouldChangeSong(
+                                    offsetX = currentOffset,
+                                    totalDragDistance = totalDragDistance,
+                                    dragDurationMs = dragDuration,
+                                    swipeSensitivity = swipeSensitivity,
+                                )
 
                                 if (shouldChangeSong) {
                                     val isRightSwipe = currentOffset > 0
