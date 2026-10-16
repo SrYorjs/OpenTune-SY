@@ -129,6 +129,7 @@ import coil3.toBitmap
 import com.arturo254.opentune.R
 import com.arturo254.opentune.LocalDownloadUtil
 import com.arturo254.opentune.LocalPlayerConnection
+import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
 import com.arturo254.opentune.constants.DarkModeKey
 import com.arturo254.opentune.constants.PlayerDesignStyle
 import com.arturo254.opentune.constants.PlayerDesignStyleKey
@@ -210,6 +211,7 @@ fun BottomSheetPlayer(
     val bottomSheetPageState = LocalBottomSheetPageState.current
 
     val playerConnection = LocalPlayerConnection.current ?: return
+    val playerActions = rememberPlayerActions(playerConnection)
 
     val playerDesignStyle by rememberEnumPreference(
         key = PlayerDesignStyleKey,
@@ -818,7 +820,7 @@ fun BottomSheetPlayer(
                         }
                         lastKeyboardTapTime = now
                         val skipAmount = 5000L * keyboardSkipMultiplier
-                        playerConnection.player.seekTo(
+                        playerActions.seekTo(
                             (playerConnection.player.currentPosition - skipAmount).coerceAtLeast(
                                 0
                             )
@@ -835,7 +837,7 @@ fun BottomSheetPlayer(
                         }
                         lastKeyboardTapTime = now
                         val skipAmount = 5000L * keyboardSkipMultiplier
-                        playerConnection.player.seekTo(
+                        playerActions.seekTo(
                             (playerConnection.player.currentPosition + skipAmount).coerceAtMost(
                                 playerConnection.player.duration
                             )
@@ -856,26 +858,26 @@ fun BottomSheetPlayer(
                     }
 
                     Key.Spacebar -> {
-                        playerConnection.player.togglePlayPause()
+                        playerActions.playPause()
                         true
                     }
 
                     Key.N -> {
                         if (keyEvent.isShiftPressed) {
-                            playerConnection.seekToNext()
+                            playerActions.next()
                             true
                         } else false
                     }
 
                     Key.P -> {
                         if (keyEvent.isShiftPressed) {
-                            playerConnection.seekToPrevious()
+                            playerActions.previous()
                             true
                         } else false
                     }
 
                     Key.L -> {
-                        playerConnection.toggleLike()
+                        playerActions.toggleFavorite()
                         true
                     }
 
@@ -936,15 +938,8 @@ fun BottomSheetPlayer(
         }
         val onSliderValueChangeFinished: () -> Unit = {
             sliderPosition?.let {
-                val isTransitioning = playerConnection.player.currentMediaItem?.mediaId != mediaMetadata?.id
-                if (isTransitioning) {
-                    // During crossfade, we want to seek in the NEXT song (the one UI is showing)
-                    // The easiest way is to skip to it and then seek
-                    playerConnection.player.seekToNext()
-                    playerConnection.player.seekTo(it)
-                } else {
-                    playerConnection.player.seekTo(it)
-                }
+                // Preserve the original crossfade seek behavior through PlayerActions.
+                playerActions.seekTo(it, displayedTrackId = mediaMetadata?.id)
                 position = it
             }
             isUserSeeking = false
@@ -1064,8 +1059,8 @@ fun BottomSheetPlayer(
                                         canSkipNext = canSkipNext,
                                         onSeekToPositionMs = updatedOnSliderValueChange,
                                         onSeekFinished = updatedOnSliderValueChangeFinished,
-                                        onSkipPrevious = playerConnection::seekToPrevious,
-                                        onSkipNext = playerConnection::seekToNext,
+                                        onSkipPrevious = playerActions::previous,
+                                        onSkipNext = playerActions::next,
                                     )
                                     .windowInsetsPadding(
                                         WindowInsets.systemBars.only(
@@ -1271,8 +1266,8 @@ fun BottomSheetPlayer(
                                         canSkipNext = canSkipNext,
                                         onSeekToPositionMs = updatedOnSliderValueChange,
                                         onSeekFinished = updatedOnSliderValueChangeFinished,
-                                        onSkipPrevious = playerConnection::seekToPrevious,
-                                        onSkipNext = playerConnection::seekToNext,
+                                        onSkipPrevious = playerActions::previous,
+                                        onSkipNext = playerActions::next,
                                     )
                                     .windowInsetsPadding(
                                         WindowInsets.systemBars.only(

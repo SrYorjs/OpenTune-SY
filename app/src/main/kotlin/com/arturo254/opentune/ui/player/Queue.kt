@@ -80,6 +80,7 @@ import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.source.ShuffleOrder.DefaultShuffleOrder
 import androidx.navigation.NavController
 import com.arturo254.opentune.LocalPlayerConnection
+import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.ListItemHeight
 import com.arturo254.opentune.constants.PlayerDesignStyle
@@ -88,7 +89,6 @@ import com.arturo254.opentune.constants.QueueEditLockKey
 import com.arturo254.opentune.constants.AutoLoadMoreKey
 import com.arturo254.opentune.extensions.metadata
 import com.arturo254.opentune.extensions.move
-import com.arturo254.opentune.extensions.togglePlayPause
 import com.arturo254.opentune.extensions.toggleRepeatMode
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.ui.component.BottomSheet
@@ -134,6 +134,7 @@ fun Queue(
     val bottomSheetPageState = LocalBottomSheetPageState.current
 
     val playerConnection = LocalPlayerConnection.current ?: return
+    val playerActions = rememberPlayerActions(playerConnection)
     val isPlaying by playerConnection.isPlaying.collectAsState()
     val repeatMode by playerConnection.repeatMode.collectAsState()
 
@@ -575,7 +576,7 @@ fun Queue(
                     backgroundColor = backgroundColor,
                     onBackgroundColor = onBackgroundColor,
                     onToggleLike = {
-                        playerConnection.service.toggleLike()
+                        playerActions.toggleFavorite()
                     },
                     onMenuClick = {
                         menuState.show {
@@ -771,7 +772,7 @@ fun Queue(
                                                             }
                                                         } else {
                                                             if (index == currentWindowIndex) {
-                                                                playerConnection.player.togglePlayPause()
+                                                                playerActions.playPause()
                                                             } else {
                                                                 val joined =
                                                                     togetherSessionState as? com.arturo254.opentune.together.TogetherSessionState.Joined

@@ -91,9 +91,9 @@ import com.arturo254.opentune.constants.EnableHapticFeedbackKey
 import com.arturo254.opentune.constants.MiniPlayerHeight
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.theme.motion
-import com.arturo254.opentune.extensions.togglePlayPause
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
+import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
 import com.arturo254.opentune.ui.player.state.PlayerStateInput
 import com.arturo254.opentune.ui.player.state.rememberPlayerState
 import com.arturo254.opentune.together.TogetherSessionState
@@ -122,6 +122,7 @@ fun SwipeableMiniPlayerBox(
     var totalDragDistance by remember { mutableFloatStateOf(0f) }
     var settleJob by remember { mutableStateOf<Job?>(null) }
 
+    val playerActions = rememberPlayerActions(playerConnection)
     val animationSpec = OpenTuneDesignSystem.motion.miniPlayerSwipeSettle
 
     fun settleOffset() {
@@ -207,15 +208,9 @@ fun SwipeableMiniPlayerBox(
                                     val canSkipNext = playerConnection.player.nextMediaItemIndex != -1
 
                                     if (isRightSwipe && canSkipPrevious) {
-                                        playerConnection.player.seekToPreviousMediaItem()
-                                        if (com.arturo254.opentune.ui.screens.settings.DiscordPresenceManager.isRunning()) {
-                                            try { com.arturo254.opentune.ui.screens.settings.DiscordPresenceManager.restart() } catch (_: Exception) {}
-                                        }
+                                        playerActions.previous()
                                     } else if (!isRightSwipe && canSkipNext) {
-                                        playerConnection.player.seekToNext()
-                                        if (com.arturo254.opentune.ui.screens.settings.DiscordPresenceManager.isRunning()) {
-                                            try { com.arturo254.opentune.ui.screens.settings.DiscordPresenceManager.restart() } catch (_: Exception) {}
-                                        }
+                                        playerActions.next()
                                     }
                                 }
 
@@ -435,6 +430,7 @@ private fun MiniPlayerTransportControls(
     playerConnection: PlayerConnection
 ) {
     val haptic = rememberHaptic()
+    val playerActions = rememberPlayerActions(playerConnection)
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -443,7 +439,7 @@ private fun MiniPlayerTransportControls(
         MiniPlayerTransportButton(
             iconResId = R.drawable.skip_previous,
             contentDescription = null,
-            onClick = playerConnection::seekToPrevious,
+            onClick = playerActions::previous,
             enabled = canSkipPrevious
         )
 
@@ -464,12 +460,7 @@ private fun MiniPlayerTransportControls(
                 },
                 onClick = {
                     haptic.click()
-                    if (playbackState == Player.STATE_ENDED) {
-                        playerConnection.player.seekTo(0, 0)
-                        playerConnection.player.playWhenReady = true
-                    } else {
-                        playerConnection.player.togglePlayPause()
-                    }
+                    playerActions.playPause()
                 },
                 isPrimary = true
             )
@@ -478,7 +469,7 @@ private fun MiniPlayerTransportControls(
         MiniPlayerTransportButton(
             iconResId = R.drawable.skip_next,
             contentDescription = null,
-            onClick = playerConnection::seekToNext,
+            onClick = playerActions::next,
             enabled = canSkipNext
         )
     }
@@ -504,6 +495,7 @@ fun NewMiniPlayerContent(
     val repeatMode by playerConnection.repeatMode.collectAsState()
     val currentSong by playerConnection.currentSong.collectAsState(initial = null)
 
+    val playerActions = rememberPlayerActions(playerConnection)
     val playerState = rememberPlayerState(
         PlayerStateInput(
             mediaMetadata = connectionMetadata,
@@ -591,7 +583,7 @@ fun NewMiniPlayerContent(
 
         // ── Ícono de Corazón (guardar en favoritos) ────────────────
         IconButton(
-            onClick = { playerConnection.toggleLike() },
+            onClick = playerActions::toggleFavorite,
             modifier = Modifier.size(40.dp)
         ) {
             val heartScale by animateFloatAsState(
@@ -642,6 +634,7 @@ private fun MiniPlayerPlayPauseButton(
 ) {
     val (enableHaptic) = rememberPreference(EnableHapticFeedbackKey, true)
     val haptic = rememberHaptic(enabled = enableHaptic)
+    val playerActions = rememberPlayerActions(playerConnection)
 
     val interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
@@ -688,7 +681,7 @@ private fun MiniPlayerPlayPauseButton(
                 indication = LocalIndication.current,
             ) {
                 haptic.click()
-                playerConnection.player.togglePlayPause()
+                playerActions.playPause()
             },
     ) {
         if (isLoading) {

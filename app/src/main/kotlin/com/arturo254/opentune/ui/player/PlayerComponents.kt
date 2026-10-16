@@ -109,10 +109,10 @@ import com.arturo254.opentune.constants.PlayerDesignStyle
 import com.arturo254.opentune.constants.PlayerHorizontalPadding
 import com.arturo254.opentune.constants.SliderStyle
 import com.arturo254.opentune.db.entities.FormatEntity
-import com.arturo254.opentune.extensions.togglePlayPause
 import com.arturo254.opentune.extensions.toggleRepeatMode
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
+import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
 import com.arturo254.opentune.ui.component.BottomSheetPageState
 import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.ui.component.MenuState
@@ -258,6 +258,7 @@ fun PlayerTopActions(
     context: Context,
     currentSongLiked: Boolean
 ) {
+    val playerActions = rememberPlayerActions(playerConnection)
     when (playerDesignStyle) {
         PlayerDesignStyle.V2 -> {
             val shareShape = RoundedCornerShape(
@@ -307,7 +308,7 @@ fun PlayerTopActions(
                         .clip(favShape)
                         .background(textButtonColor)
                         .clickable {
-                            playerConnection.toggleLike()
+                            playerActions.toggleFavorite()
                         }
                 ) {
                     Image(
@@ -359,7 +360,7 @@ fun PlayerTopActions(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .clickable { playerConnection.toggleLike() },
+                        .clickable { playerActions.toggleFavorite() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -411,7 +412,7 @@ fun PlayerTopActions(
                 }
 
                 Surface(
-                    onClick = { playerConnection.toggleLike() },
+                    onClick = { playerActions.toggleFavorite() },
                     shape = RoundedCornerShape(14.dp),
                     color = if (currentSongLiked)
                         MaterialTheme.colorScheme.error.copy(alpha = 0.25f)
@@ -575,7 +576,7 @@ fun PlayerTopActions(
                 }
 
                 Surface(
-                    onClick = { playerConnection.toggleLike() },
+                    onClick = { playerActions.toggleFavorite() },
                     shape = RoundedCornerShape(50),
                     color = if (currentSongLiked)
                         MaterialTheme.colorScheme.error.copy(alpha = 0.18f)
@@ -651,7 +652,7 @@ fun PlayerTopActions(
                             if (currentSongLiked) textBackgroundColor.copy(alpha = 0.2f)
                             else Color.Transparent
                         )
-                        .clickable { playerConnection.toggleLike() },
+                        .clickable { playerActions.toggleFavorite() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -708,7 +709,7 @@ fun PlayerTopActions(
                             if (currentSongLiked) textBackgroundColor.copy(alpha = 0.2f)
                             else Color.Transparent
                         )
-                        .clickable { playerConnection.toggleLike() },
+                        .clickable { playerActions.toggleFavorite() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -945,6 +946,7 @@ fun PlayerPlaybackControls(
     playerConnection: PlayerConnection,
     currentSongLiked: Boolean
 ) {
+    val playerActions = rememberPlayerActions(playerConnection)
     val shuffleModeEnabled by playerConnection.shuffleModeEnabled.collectAsState()
 
     when (playerDesignStyle) {
@@ -990,7 +992,7 @@ fun PlayerPlaybackControls(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     FilledTonalIconButton(
-                        onClick = playerConnection::seekToPrevious,
+                        onClick = playerActions::previous,
                         enabled = canSkipPrevious,
                         interactionSource = backInteraction,
                         colors = IconButtonDefaults.filledTonalIconButtonColors(
@@ -1013,12 +1015,7 @@ fun PlayerPlaybackControls(
 
                     FilledIconButton(
                         onClick = {
-                            if (playbackState == STATE_ENDED) {
-                                playerConnection.player.seekTo(0, 0)
-                                playerConnection.player.playWhenReady = true
-                            } else {
-                                playerConnection.player.togglePlayPause()
-                            }
+                            playerActions.playPause()
                         },
                         interactionSource = playInteraction,
                         colors = IconButtonDefaults.filledIconButtonColors(
@@ -1053,7 +1050,7 @@ fun PlayerPlaybackControls(
                     Spacer(modifier = Modifier.width(16.dp))
 
                     FilledTonalIconButton(
-                        onClick = playerConnection::seekToNext,
+                        onClick = playerActions::next,
                         enabled = canSkipNext,
                         interactionSource = nextInteraction,
                         colors = IconButtonDefaults.filledTonalIconButtonColors(
@@ -1159,7 +1156,7 @@ fun PlayerPlaybackControls(
                                 interactionSource = backInteraction,
                                 indication = null
                             ) {
-                                playerConnection.seekToPrevious()
+                                playerActions.previous()
                             }
                             .graphicsLayer(scaleX = sideScale, scaleY = sideScale),
                         contentAlignment = Alignment.Center
@@ -1181,12 +1178,7 @@ fun PlayerPlaybackControls(
                                 interactionSource = playInteraction,
                                 indication = null
                             ) {
-                                if (playbackState == STATE_ENDED) {
-                                    playerConnection.player.seekTo(0, 0)
-                                    playerConnection.player.playWhenReady = true
-                                } else {
-                                    playerConnection.player.togglePlayPause()
-                                }
+                                playerActions.playPause()
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -1221,7 +1213,7 @@ fun PlayerPlaybackControls(
                                 interactionSource = nextInteraction,
                                 indication = null
                             ) {
-                                playerConnection.seekToNext()
+                                playerActions.next()
                             }
                             .graphicsLayer(scaleX = sideScale, scaleY = sideScale),
                         contentAlignment = Alignment.Center
@@ -1371,7 +1363,7 @@ fun PlayerPlaybackControls(
                         Spacer(modifier = Modifier.width(gap))
 
                         Surface(
-                            onClick = { playerConnection.seekToPrevious() },
+                            onClick = { playerActions.previous() },
                             enabled = canSkipPrevious,
                             interactionSource = backInteraction,
                             shape = RoundedCornerShape(largeRadius),
@@ -1398,12 +1390,7 @@ fun PlayerPlaybackControls(
 
                     Surface(
                         onClick = {
-                            if (playbackState == STATE_ENDED) {
-                                playerConnection.player.seekTo(0, 0)
-                                playerConnection.player.playWhenReady = true
-                            } else {
-                                playerConnection.player.togglePlayPause()
-                            }
+                            playerActions.playPause()
                         },
                         interactionSource = playInteraction,
                         shape = RoundedCornerShape(28.dp),
@@ -1444,7 +1431,7 @@ fun PlayerPlaybackControls(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
-                            onClick = { playerConnection.seekToNext() },
+                            onClick = { playerActions.next() },
                             enabled = canSkipNext,
                             interactionSource = nextInteraction,
                             shape = RoundedCornerShape(largeRadius),
@@ -1592,7 +1579,7 @@ fun PlayerPlaybackControls(
                                 .size(32.dp)
                                 .align(Alignment.Center)
                                 .graphicsLayer(scaleX = sideScale, scaleY = sideScale),
-                        onClick = playerConnection::seekToPrevious,
+                        onClick = playerActions::previous,
                         interactionSource = backInteraction
                     )
                 }
@@ -1610,12 +1597,7 @@ fun PlayerPlaybackControls(
                                 interactionSource = playInteraction,
                                 indication = null
                             ) {
-                                if (playbackState == STATE_ENDED) {
-                                    playerConnection.player.seekTo(0, 0)
-                                    playerConnection.player.playWhenReady = true
-                                } else {
-                                    playerConnection.player.togglePlayPause()
-                                }
+                                playerActions.playPause()
                             },
                 ) {
                     if (isLoading) {
@@ -1661,7 +1643,7 @@ fun PlayerPlaybackControls(
                                 .size(32.dp)
                                 .align(Alignment.Center)
                                 .graphicsLayer(scaleX = sideScale, scaleY = sideScale),
-                        onClick = playerConnection::seekToNext,
+                        onClick = playerActions::next,
                         interactionSource = nextInteraction
                     )
                 }
@@ -1751,7 +1733,7 @@ fun PlayerPlaybackControls(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
-                            onClick = { playerConnection.seekToPrevious() },
+                            onClick = { playerActions.previous() },
                             enabled = canSkipPrevious,
                             interactionSource = backInteraction,
                             shape = RoundedCornerShape(
@@ -1783,12 +1765,7 @@ fun PlayerPlaybackControls(
 
                         Surface(
                             onClick = {
-                                if (playbackState == STATE_ENDED) {
-                                    playerConnection.player.seekTo(0, 0)
-                                    playerConnection.player.playWhenReady = true
-                                } else {
-                                    playerConnection.player.togglePlayPause()
-                                }
+                                playerActions.playPause()
                             },
                             interactionSource = playInteraction,
                             shape = RoundedCornerShape(28.dp),
@@ -1829,7 +1806,7 @@ fun PlayerPlaybackControls(
                         Spacer(modifier = Modifier.width(6.dp))
 
                         Surface(
-                            onClick = { playerConnection.seekToNext() },
+                            onClick = { playerActions.next() },
                             enabled = canSkipNext,
                             interactionSource = nextInteraction,
                             shape = RoundedCornerShape(
@@ -1940,7 +1917,7 @@ fun PlayerPlaybackControls(
                     .padding(horizontal = PlayerHorizontalPadding)
             ) {
                 Surface(
-                    onClick = playerConnection::seekToPrevious,
+                    onClick = playerActions::previous,
                     enabled = canSkipPrevious,
                     shape = CircleShape,
                     color = Color.Transparent,
@@ -1963,12 +1940,7 @@ fun PlayerPlaybackControls(
 
                 Surface(
                     onClick = {
-                        if (playbackState == STATE_ENDED) {
-                            playerConnection.player.seekTo(0, 0)
-                            playerConnection.player.playWhenReady = true
-                        } else {
-                            playerConnection.player.togglePlayPause()
-                        }
+                        playerActions.playPause()
                     },
                     shape = CircleShape,
                     color = Color.Transparent,
@@ -2001,7 +1973,7 @@ fun PlayerPlaybackControls(
                 }
 
                 Surface(
-                    onClick = { playerConnection.seekToNext() },
+                    onClick = { playerActions.next() },
                     enabled = canSkipNext,
                     shape = CircleShape,
                     color = Color.Transparent,
@@ -2035,7 +2007,7 @@ fun PlayerPlaybackControls(
             ) {
                 // Skip Previous
                 Surface(
-                    onClick = { playerConnection.seekToPrevious() },
+                    onClick = { playerActions.previous() },
                     enabled = canSkipPrevious,
                     shape = CircleShape,
                     color = Color.Transparent,
@@ -2059,12 +2031,7 @@ fun PlayerPlaybackControls(
                 // Play/Pause
                 Surface(
                     onClick = {
-                        if (playbackState == STATE_ENDED) {
-                            playerConnection.player.seekTo(0, 0)
-                            playerConnection.player.playWhenReady = true
-                        } else {
-                            playerConnection.player.togglePlayPause()
-                        }
+                        playerActions.playPause()
                     },
                     shape = CircleShape,
                     color = textBackgroundColor,
@@ -2098,7 +2065,7 @@ fun PlayerPlaybackControls(
 
                 // Skip Next
                 Surface(
-                    onClick = { playerConnection.seekToNext() },
+                    onClick = { playerActions.next() },
                     enabled = canSkipNext,
                     shape = CircleShape,
                     color = Color.Transparent,
@@ -2862,6 +2829,7 @@ fun V8PlayerControlsContent(
     playerVolume: Float,
     onVolumeChange: (Float) -> Unit,
 ) {
+    val playerActions = rememberPlayerActions(playerConnection)
     val currentSong by playerConnection.currentSong.collectAsState(initial = null)
     val currentSongLiked = currentSong?.song?.liked == true
     val shuffleModeEnabled by playerConnection.shuffleModeEnabled.collectAsState()
@@ -2956,7 +2924,7 @@ fun V8PlayerControlsContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 LiquidGlassIconButton(
-                    onClick = { playerConnection.toggleLike() },
+                    onClick = { playerActions.toggleFavorite() },
                     size = 44.dp,
                     selected = currentSongLiked,
                 ) {
@@ -3197,6 +3165,7 @@ fun V8PlaybackControls(
     playerConnection: PlayerConnection,
     shuffleModeEnabled: Boolean,
 ) {
+    val playerActions = rememberPlayerActions(playerConnection)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -3207,7 +3176,7 @@ fun V8PlaybackControls(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             LiquidGlassIconButton(
-                onClick = playerConnection::seekToPrevious,
+                onClick = playerActions::previous,
                 enabled = canSkipPrevious,
                 size = 58.dp,
             ) {
@@ -3221,12 +3190,7 @@ fun V8PlaybackControls(
 
             LiquidGlassIconButton(
                 onClick = {
-                    if (playbackState == Player.STATE_ENDED) {
-                        playerConnection.player.seekTo(0, 0)
-                        playerConnection.player.playWhenReady = true
-                    } else {
-                        playerConnection.player.togglePlayPause()
-                    }
+                    playerActions.playPause()
                 },
                 enabled = !isLoading,
                 selected = isPlaying,
@@ -3263,7 +3227,7 @@ fun V8PlaybackControls(
             }
 
             LiquidGlassIconButton(
-                onClick = playerConnection::seekToNext,
+                onClick = playerActions::next,
                 enabled = canSkipNext,
                 size = 58.dp,
             ) {
