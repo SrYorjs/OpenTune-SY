@@ -111,6 +111,7 @@ import com.arturo254.opentune.db.entities.FormatEntity
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
+import com.arturo254.opentune.ui.player.panels.playerFormatBadgeLabel
 import com.arturo254.opentune.ui.player.progress.calculatePlayerProgress
 import com.arturo254.opentune.ui.player.controls.PlayerSharedPlaybackContent
 import com.arturo254.opentune.ui.player.controls.PlayerSharedSkipIcon
@@ -2036,15 +2037,7 @@ fun PlayerControlsContent(
         showRemainingTime = playerDesignStyle == PlayerDesignStyle.V7,
         centerContent = if (playerDesignStyle == PlayerDesignStyle.V7 && currentFormat != null) {
             {
-                val codec = currentFormat.mimeType.substringAfter("/").uppercase()
-                val label = when {
-                    codec.contains("FLAC") || codec.contains("ALAC") -> "Lossless"
-                    codec.contains("OPUS") -> codec
-                    codec.contains("AAC") -> codec
-                    codec.contains("MP4A") -> "AAC"
-                    codec.contains("VORBIS") -> "Vorbis"
-                    else -> codec
-                }
+                val label = playerFormatBadgeLabel(currentFormat.mimeType)
                 Surface(
                     shape = RoundedCornerShape(4.dp),
                     color = textBackgroundColor.copy(alpha = 0.12f),
@@ -2839,15 +2832,7 @@ fun V8PlayerControlsContent(
             showRemainingTime = true,
             centerContent = currentFormat?.let { format ->
                 {
-                    val codec = format.mimeType.substringAfter("/").uppercase()
-                    val label = when {
-                        codec.contains("FLAC") || codec.contains("ALAC") -> "Lossless"
-                        codec.contains("OPUS") -> codec
-                        codec.contains("AAC") -> codec
-                        codec.contains("MP4A") -> "AAC"
-                        codec.contains("VORBIS") -> "Vorbis"
-                        else -> codec
-                    }
+                    val label = playerFormatBadgeLabel(format.mimeType)
                     Surface(
                         shape = RoundedCornerShape(4.dp),
                         color = textBackgroundColor.copy(alpha = 0.12f),
