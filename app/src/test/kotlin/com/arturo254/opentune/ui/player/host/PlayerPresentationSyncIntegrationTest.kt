@@ -27,6 +27,9 @@ class PlayerPresentationSyncIntegrationTest {
         assertTrue(mini.contains("NewMiniPlayerContent("))
         assertTrue(controls.contains("playerState: PlayerState"))
         assertTrue(controls.contains("progressFraction = playerState.progressFraction"))
+        assertTrue(controls.contains("artworkUrl = playerState.artworkUrl"))
+        assertTrue(controls.contains("MiniPlayerArtworkFrame(mediaMetadata, artworkUrl)"))
+        assertTrue(controls.contains("frame.artworkUrl ?: frame.metadata?.thumbnailUrl"))
         assertTrue(controls.contains("isLoading = playerState.isBuffering"))
         assertFalse(controls.contains("PlayerStateInput("))
         assertFalse(controls.contains("rememberPlayerState("))
@@ -60,13 +63,12 @@ class PlayerPresentationSyncIntegrationTest {
         assertTrue(host.contains("setSavedMiniPlayerAnchor(settledAnchor)"))
         assertTrue(host.contains("shouldPersistHostAnchor("))
         assertTrue(host.contains("queueRestoreCompleted.first { it }"))
-        assertTrue(host.contains("isYearInMusicScreen,\n    ) {\n        val player =") ||
-            host.contains("isYearInMusicScreen,\n    ) {\n        val player ="))
+        assertTrue(host.contains(") ?: savedMiniPlayerAnchor"))
         assertTrue(host.contains("            windowsInsets,"))
         assertTrue(host.contains("player.addListener(listener)"))
         assertTrue(host.contains("player.removeListener(listener)"))
         assertTrue(host.contains("latestSystemBarsVisibility("))
-        assertTrue(policy.contains("return") || policy.contains("when"))
+        assertTrue(policy.contains("else -> null"))
         assertTrue(player.contains("PlayerHostBackHandler("))
     }
 }
