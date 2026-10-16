@@ -97,7 +97,7 @@ import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.ui.component.LocalBottomSheetPageState
 import com.arturo254.opentune.ui.component.LocalMenuState
 import com.arturo254.opentune.ui.component.MediaMetadataListItem
-import com.arturo254.opentune.ui.menu.PlayerMenu
+import com.arturo254.opentune.ui.player.panels.showPlayerPanelMenu
 import com.arturo254.opentune.ui.menu.SelectionMediaMetadataMenu
 import com.arturo254.opentune.ui.utils.ShowMediaInfo
 import com.arturo254.opentune.utils.rememberEnumPreference
@@ -227,21 +227,12 @@ fun Queue(
                         onShowLyrics = onShowLyrics,
                         onRepeatModeClick = queueActions::toggleRepeat,
                         onMenuClick = {
-                            menuState.show {
-                                PlayerMenu(
-                                    mediaMetadata = mediaMetadata,
-                                    navController = navController,
-                                    playerBottomSheetState = playerBottomSheetState,
-                                    onShowDetailsDialog = {
-                                        mediaMetadata?.id?.let {
-                                            bottomSheetPageState.show {
-                                                ShowMediaInfo(it)
-                                            }
-                                        }
-                                    },
-                                    onDismiss = menuState::dismiss
-                                )
-                            }
+                            menuState.showPlayerPanelMenu(
+                                metadata = mediaMetadata,
+                                navController = navController,
+                                playerBottomSheetState = playerBottomSheetState,
+                                bottomSheetPageState = bottomSheetPageState,
+                            )
                         }
                     )
                 }
@@ -263,21 +254,12 @@ fun Queue(
                         },
                         onShowLyrics = onShowLyrics,
                         onMenuClick = {
-                            menuState.show {
-                                PlayerMenu(
-                                    mediaMetadata = mediaMetadata,
-                                    navController = navController,
-                                    playerBottomSheetState = playerBottomSheetState,
-                                    onShowDetailsDialog = {
-                                        mediaMetadata?.id?.let {
-                                            bottomSheetPageState.show {
-                                                ShowMediaInfo(it)
-                                            }
-                                        }
-                                    },
-                                    onDismiss = menuState::dismiss
-                                )
-                            }
+                            menuState.showPlayerPanelMenu(
+                                metadata = mediaMetadata,
+                                navController = navController,
+                                playerBottomSheetState = playerBottomSheetState,
+                                bottomSheetPageState = bottomSheetPageState,
+                            )
                         }
                     )
                 }
@@ -299,21 +281,12 @@ fun Queue(
                         },
                         onShowLyrics = onShowLyrics,
                         onMenuClick = {
-                            menuState.show {
-                                PlayerMenu(
-                                    mediaMetadata = mediaMetadata,
-                                    navController = navController,
-                                    playerBottomSheetState = playerBottomSheetState,
-                                    onShowDetailsDialog = {
-                                        mediaMetadata?.id?.let {
-                                            bottomSheetPageState.show {
-                                                ShowMediaInfo(it)
-                                            }
-                                        }
-                                    },
-                                    onDismiss = menuState::dismiss
-                                )
-                            }
+                            menuState.showPlayerPanelMenu(
+                                metadata = mediaMetadata,
+                                navController = navController,
+                                playerBottomSheetState = playerBottomSheetState,
+                                bottomSheetPageState = bottomSheetPageState,
+                            )
                         }
                     )
                 }
@@ -580,21 +553,12 @@ fun Queue(
                         playerActions.toggleFavorite()
                     },
                     onMenuClick = {
-                        menuState.show {
-                            PlayerMenu(
-                                mediaMetadata = mediaMetadata,
-                                navController = navController,
-                                playerBottomSheetState = playerBottomSheetState,
-                                onShowDetailsDialog = {
-                                    mediaMetadata?.id?.let {
-                                        bottomSheetPageState.show {
-                                            ShowMediaInfo(it)
-                                        }
-                                    }
-                                },
-                                onDismiss = menuState::dismiss
-                            )
-                        }
+                        menuState.showPlayerPanelMenu(
+                            metadata = mediaMetadata,
+                            navController = navController,
+                            playerBottomSheetState = playerBottomSheetState,
+                            bottomSheetPageState = bottomSheetPageState,
+                        )
                     },
                     onRepeatClick = queueActions::toggleRepeat,
                     onShuffleClick = queueActions::toggleShuffle,
@@ -709,22 +673,14 @@ fun Queue(
                                         trailingContent = {
                                             IconButton(
                                                 onClick = {
-                                                    menuState.show {
-                                                        PlayerMenu(
-                                                            mediaMetadata = trackMetadata,
-                                                            navController = navController,
-                                                            playerBottomSheetState = playerBottomSheetState,
-                                                            isQueueTrigger = true,
-                                                            onShowDetailsDialog = {
-                                                                window.mediaItem.mediaId.let {
-                                                                    bottomSheetPageState.show {
-                                                                        ShowMediaInfo(it)
-                                                                    }
-                                                                }
-                                                            },
-                                                            onDismiss = menuState::dismiss,
-                                                        )
-                                                    }
+                                                    menuState.showPlayerPanelMenu(
+                                                        metadata = trackMetadata,
+                                                        navController = navController,
+                                                        playerBottomSheetState = playerBottomSheetState,
+                                                        bottomSheetPageState = bottomSheetPageState,
+                                                        isQueueTrigger = true,
+                                                        detailsMediaId = window.mediaItem.mediaId,
+                                                    )
                                                 },
                                             ) {
                                                 Icon(
