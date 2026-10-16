@@ -16,6 +16,25 @@ class PlayerHostPolicyTest {
         assertEquals(EXPANDED_ANCHOR, hostPlayerAnchor(isExpanded = true, isDismissed = true))
     }
 
+    @Test fun onlySettledAnchorsCanBePersistedDuringFullscreenTransitions() {
+        assertEquals(
+            EXPANDED_ANCHOR,
+            settledHostPlayerAnchor(isExpanded = true, isCollapsed = false, isDismissed = false),
+        )
+        assertEquals(
+            COLLAPSED_ANCHOR,
+            settledHostPlayerAnchor(isExpanded = false, isCollapsed = true, isDismissed = false),
+        )
+        assertEquals(
+            DISMISSED_ANCHOR,
+            settledHostPlayerAnchor(isExpanded = false, isCollapsed = false, isDismissed = true),
+        )
+        assertEquals(
+            null,
+            settledHostPlayerAnchor(isExpanded = false, isCollapsed = false, isDismissed = false),
+        )
+    }
+
     @Test fun specialScreensNeverOverwritePersistedMiniPlayerAnchor() {
         assertTrue(shouldPersistHostAnchor(false, false, true))
         assertFalse(shouldPersistHostAnchor(true, false, true))
