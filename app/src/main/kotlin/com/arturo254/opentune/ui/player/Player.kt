@@ -124,6 +124,8 @@ import com.arturo254.opentune.ui.player.progress.calculatePlayerProgress
 import com.arturo254.opentune.ui.player.progress.rememberPlayerSeekSession
 import com.arturo254.opentune.ui.player.host.PlayerHostBackHandler
 import com.arturo254.opentune.ui.player.v7.V7PlayerScene
+import com.arturo254.opentune.ui.player.v8.V8PlayerScene
+import com.arturo254.opentune.ui.player.v8.V8PlayerControlsContent
 import com.arturo254.opentune.ui.player.v5.V5PlayerContent
 import com.arturo254.opentune.ui.player.v5.V5LandscapeLikeBox
 import com.arturo254.opentune.ui.player.v5.v5OverlayGestures
@@ -769,6 +771,48 @@ fun BottomSheetPlayer(
 
         // Player 2.0: one layout dispatcher; all existing compositions remain
         // intact behind typed orientation/family slots (4.13–4.16 migrate them).
+        // One controls slot across both V8 orientations: Liquid Glass, Canvas,
+        // volume, progress, Up Next and panel actions keep their original owners.
+        val v8ControlsContent: @Composable ColumnScope.(MediaMetadata) -> Unit = { metadata ->
+            V8PlayerControlsContent(
+
+                                    mediaMetadata = metadata,
+                                    playerDesignStyle = playerDesignStyle,
+                                    sliderStyle = SliderStyle.Thick,
+                                    playbackState = playbackState,
+                                    isPlaying = isPlaying,
+                                    isLoading = isLoading,
+                                    repeatMode = repeatMode,
+                                    canSkipPrevious = canSkipPrevious,
+                                    canSkipNext = canSkipNext,
+                                    textButtonColor = Color.White,
+                                    iconButtonColor = Color.Black,
+                                    textBackgroundColor = Color.White,
+                                    icBackgroundColor = Color.Black,
+                                    sliderPosition = sliderPosition,
+                                    position = position,
+                                    duration = duration,
+                                    playerConnection = playerConnection,
+                                    navController = navController,
+                                    state = state,
+                                    menuState = menuState,
+                                    bottomSheetPageState = bottomSheetPageState,
+                                    clipboardManager = clipboardManager,
+                                    context = context,
+                                    onSliderValueChange = onSliderValueChange,
+                                    onSliderValueChangeFinished = onSliderValueChangeFinished,
+                                    currentFormat = currentFormat,
+                                    onResetTimer = { visualLifecycle.onInteraction() },
+                                    nextUpMetadata = nextUpMetadata,
+                                    onExpandQueue = { queueSheetState.expandSoft() },
+                                    playerVolume = playerVolume.value,
+                                    onVolumeChange = { newVolume ->
+                                        playerConnection.service.playerVolume.value = newVolume
+                                    }
+                                
+            )
+        }
+
         PlayerLayout(
             style = playerDesignStyle,
             isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
@@ -852,67 +896,17 @@ fun BottomSheetPlayer(
             },
 
             immersiveLandscape = {
-                    Box(
-                        modifier = Modifier.fillMaxSize()
+                    V8PlayerScene(
+                        isLandscape = true,
+                        artworkUrl = playerVisuals.artworkUrl,
+                        canvasArtwork = canvasArtwork,
+                        isPlaying = isPlaying,
+                        disableBlur = disableBlur,
+                        queuePeekHeight = queueSheetState.collapsedBound,
+                        nestedScrollConnection = state.preUpPostDownNestedScrollConnection,
                     ) {
-                        V8PlayerBackdrop(
-                            thumbnailUrl = playerVisuals.artworkUrl,
-                            canvasArtwork = canvasArtwork,
-                            isPlaying = isPlaying,
-                            disableBlur = disableBlur,
-                            label = "v8BackdropPortrait"
-                        )
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = queueSheetState.collapsedBound)
-                                .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
-                                .nestedScroll(state.preUpPostDownNestedScrollConnection),
-                        ) {
-                            enrichedMetadata?.let {
-                                V8PlayerControlsContent(
-                                    mediaMetadata = it,
-                                    playerDesignStyle = playerDesignStyle,
-                                    sliderStyle = SliderStyle.Thick,
-                                    playbackState = playbackState,
-                                    isPlaying = isPlaying,
-                                    isLoading = isLoading,
-                                    repeatMode = repeatMode,
-                                    canSkipPrevious = canSkipPrevious,
-                                    canSkipNext = canSkipNext,
-                                    textButtonColor = Color.White,
-                                    iconButtonColor = Color.Black,
-                                    textBackgroundColor = Color.White,
-                                    icBackgroundColor = Color.Black,
-                                    sliderPosition = sliderPosition,
-                                    position = position,
-                                    duration = duration,
-                                    playerConnection = playerConnection,
-                                    navController = navController,
-                                    state = state,
-                                    menuState = menuState,
-                                    bottomSheetPageState = bottomSheetPageState,
-                                    clipboardManager = clipboardManager,
-                                    context = context,
-                                    onSliderValueChange = onSliderValueChange,
-                                    onSliderValueChangeFinished = onSliderValueChangeFinished,
-                                    currentFormat = currentFormat,
-                                    onResetTimer = { visualLifecycle.onInteraction() },
-                                    nextUpMetadata = nextUpMetadata,
-                                    onExpandQueue = { queueSheetState.expandSoft() },
-                                    playerVolume = playerVolume.value,
-                                    onVolumeChange = { newVolume ->
-                                        playerConnection.service.playerVolume.value = newVolume
-                                    }
-                                )
-                            }
-
-                            Spacer(Modifier.height(16.dp))
-                        }
+                        enrichedMetadata?.let { v8ControlsContent(it) }
                     }
-                
             },
             classicLandscape = {
                     Row(
@@ -1038,68 +1032,17 @@ fun BottomSheetPlayer(
             },
 
             immersivePortrait = {
-                    // V8 - Apple Music Style (Portrait)
-                    Box(
-                        modifier = Modifier.fillMaxSize()
+                    V8PlayerScene(
+                        isLandscape = false,
+                        artworkUrl = playerVisuals.artworkUrl,
+                        canvasArtwork = canvasArtwork,
+                        isPlaying = isPlaying,
+                        disableBlur = disableBlur,
+                        queuePeekHeight = queueSheetState.collapsedBound,
+                        nestedScrollConnection = state.preUpPostDownNestedScrollConnection,
                     ) {
-                        V8PlayerBackdrop(
-                            thumbnailUrl = playerVisuals.artworkUrl,
-                            canvasArtwork = canvasArtwork,
-                            isPlaying = isPlaying,
-                            disableBlur = disableBlur,
-                            label = "v8BackdropPortrait"
-                        )
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = queueSheetState.collapsedBound)
-                                .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
-                                .nestedScroll(state.preUpPostDownNestedScrollConnection),
-                        ) {
-                            enrichedMetadata?.let {
-                                V8PlayerControlsContent(
-                                    mediaMetadata = it,
-                                    playerDesignStyle = playerDesignStyle,
-                                    sliderStyle = SliderStyle.Thick,
-                                    playbackState = playbackState,
-                                    isPlaying = isPlaying,
-                                    isLoading = isLoading,
-                                    repeatMode = repeatMode,
-                                    canSkipPrevious = canSkipPrevious,
-                                    canSkipNext = canSkipNext,
-                                    textButtonColor = Color.White,
-                                    iconButtonColor = Color.Black,
-                                    textBackgroundColor = Color.White,
-                                    icBackgroundColor = Color.Black,
-                                    sliderPosition = sliderPosition,
-                                    position = position,
-                                    duration = duration,
-                                    playerConnection = playerConnection,
-                                    navController = navController,
-                                    state = state,
-                                    menuState = menuState,
-                                    bottomSheetPageState = bottomSheetPageState,
-                                    clipboardManager = clipboardManager,
-                                    context = context,
-                                    onSliderValueChange = onSliderValueChange,
-                                    onSliderValueChangeFinished = onSliderValueChangeFinished,
-                                    currentFormat = currentFormat,
-                                    onResetTimer = { visualLifecycle.onInteraction() },
-                                    nextUpMetadata = nextUpMetadata,
-                                    onExpandQueue = { queueSheetState.expandSoft() },
-                                    playerVolume = playerVolume.value,
-                                    onVolumeChange = { newVolume ->
-                                        playerConnection.service.playerVolume.value = newVolume
-                                    }
-                                )
-                            }
-
-                            Spacer(Modifier.height(24.dp))
-                        }
+                        enrichedMetadata?.let { v8ControlsContent(it) }
                     }
-                
             },
             classicPortrait = {
                     Column(
