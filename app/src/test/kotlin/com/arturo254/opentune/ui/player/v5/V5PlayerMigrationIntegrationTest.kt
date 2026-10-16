@@ -42,6 +42,7 @@ class V5PlayerMigrationIntegrationTest {
         assertTrue(p.contains("playerActions.seekTo(targetPosition, displayedTrackId = mediaMetadata?.id)"))
         assertTrue(p.contains("onSkipPrevious = playerActions::previous"))
         assertTrue(p.contains("onSkipNext = playerActions::next"))
+        assertEquals(2, Regex("""onToggleLike = playerActions::toggleFavorite""").findAll(p).count())
         assertFalse(v5.contains("PlayerConnection("))
         assertFalse(v5.contains("ExoPlayer("))
     }
