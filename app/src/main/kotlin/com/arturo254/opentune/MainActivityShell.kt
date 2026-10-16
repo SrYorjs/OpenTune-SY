@@ -227,7 +227,6 @@ import com.arturo254.opentune.ui.component.TopSearch
 import com.arturo254.opentune.ui.component.rememberBottomSheetState
 import com.arturo254.opentune.ui.component.shimmer.ShimmerTheme
 import com.arturo254.opentune.ui.menu.YouTubeSongMenu
-import com.arturo254.opentune.ui.player.BottomSheetPlayer
 import com.arturo254.opentune.ui.screens.LOGIN_URL_ARGUMENT
 import com.arturo254.opentune.ui.screens.Screens
 import com.arturo254.opentune.ui.screens.buildLoginRoute

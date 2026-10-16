@@ -14,7 +14,6 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.res.Configuration
 import android.os.SystemClock
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -112,11 +111,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.window.DialogWindowProvider
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.common.C
 import androidx.media3.common.Player.STATE_BUFFERING
 import androidx.media3.common.Player.STATE_READY
@@ -130,6 +124,8 @@ import com.arturo254.opentune.R
 import com.arturo254.opentune.LocalDownloadUtil
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
+import com.arturo254.opentune.ui.player.host.PlayerHostBackHandler
+import com.arturo254.opentune.ui.player.host.rememberPlayerContentLifecycle
 import com.arturo254.opentune.constants.DarkModeKey
 import com.arturo254.opentune.constants.PlayerDesignStyle
 import com.arturo254.opentune.constants.PlayerDesignStyleKey
@@ -200,13 +196,6 @@ fun BottomSheetPlayer(
     val context = LocalContext.current
     val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val menuState = LocalMenuState.current
-
-    val view = LocalView.current
-    val activity = context as? android.app.Activity
-    val activityWindow = activity?.window
-    val dialogWindow = (view.parent as? DialogWindowProvider)?.window
-    val window = dialogWindow ?: activityWindow
-
 
     val bottomSheetPageState = LocalBottomSheetPageState.current
 
@@ -294,52 +283,18 @@ fun BottomSheetPlayer(
         }
     }
 
-    val (playerFullscreen) = rememberPreference(
-        booleanPreferencesKey("player_fullscreen"),
-        defaultValue = false
-    )
-
-// Activar fullscreen al expandir
-    LaunchedEffect(state.isExpanded, playerFullscreen) {
-        if (state.isExpanded && playerFullscreen && window != null) {
-            WindowCompat.setDecorFitsSystemWindows(window, false)
-            val insetsController = WindowCompat.getInsetsController(window, window.decorView)
-            insetsController.systemBarsBehavior =
-                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            insetsController.hide(WindowInsetsCompat.Type.systemBars())
-        }
-    }
-
-
-
-
+    // System bars / fullscreen are already owned by the single PlayerHost
+    // inside MainActivity, where they can also be restored on collapse.
     val (aodAutoTimeoutSeconds) = rememberPreference(AodAutoActivationKey, 0)
-
-    var lastInteractionTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var isAodActive by remember { mutableStateOf(false) }
-
-    fun resetAodTimer() {
-        lastInteractionTime = System.currentTimeMillis()
-        if (isAodActive) {
-            isAodActive = false
-        }
-    }
-    LaunchedEffect(aodAutoTimeoutSeconds, state.isExpanded, lastInteractionTime, isAodActive) {
-        if (aodAutoTimeoutSeconds > 0 && state.isExpanded && !isAodActive) {
-            delay(100L)
-            while (isActive) {
-                delay(100L)  // ← Cambiado de 500ms a 100ms (más suave)
-                val elapsedSeconds = (System.currentTimeMillis() - lastInteractionTime) / 1000f  // ← Usar Float
-                if (elapsedSeconds >= aodAutoTimeoutSeconds) {
-                    isAodActive = true
-                    navController.navigate("always_on_display") {
-                        launchSingleTop = true
-                    }
-                    break
-                }
+    val visualLifecycle = rememberPlayerContentLifecycle(
+        isExpanded = state.isExpanded,
+        aodAutoTimeoutSeconds = aodAutoTimeoutSeconds,
+        onAodTimeout = {
+            navController.navigate("always_on_display") {
+                launchSingleTop = true
             }
-        }
-    }
+        },
+    )
 
     val playerButtonsStyle by rememberEnumPreference(
         key = PlayerButtonsStyleKey,
@@ -775,27 +730,13 @@ fun BottomSheetPlayer(
         initialAnchor = 1
     )
 
-    BackHandler(
-        enabled =
-            (!lyricsSheetState.isCollapsed && !lyricsSheetState.isDismissed) ||
-                    (!queueSheetState.isCollapsed && !queueSheetState.isDismissed) ||
-                    (!state.isCollapsed && !state.isDismissed)
-    ) {
-        when {
-            !lyricsSheetState.isCollapsed && !lyricsSheetState.isDismissed -> lyricsSheetState.collapseSoft()
-            !queueSheetState.isCollapsed && !queueSheetState.isDismissed -> queueSheetState.collapseSoft()
-            !state.isCollapsed && !state.isDismissed -> state.collapseSoft()
-        }
-    }
+    PlayerHostBackHandler(
+        playerSheet = state,
+        queueSheet = queueSheetState,
+        lyricsSheet = lyricsSheetState,
+    )
 
     val focusRequester = remember { FocusRequester() }
-
-    LaunchedEffect(state.isExpanded) {
-        if (state.isExpanded) {
-            lastInteractionTime = System.currentTimeMillis()
-            isAodActive = false
-        }
-    }
 
     BottomSheet(
 
@@ -805,7 +746,7 @@ fun BottomSheetPlayer(
             .focusable()
             .onKeyEvent { keyEvent ->
                 if (keyEvent.type == KeyEventType.KeyDown) {
-                    resetAodTimer()
+                    visualLifecycle.onInteraction()
                 }
 
                 if (keyEvent.type != KeyEventType.KeyDown || state.isCollapsed) return@onKeyEvent false
@@ -1000,7 +941,7 @@ fun BottomSheetPlayer(
                 onSliderValueChange = onSliderValueChange,
                 onSliderValueChangeFinished = onSliderValueChangeFinished,
                 currentFormat = if (playerDesignStyle == PlayerDesignStyle.V7) currentFormat else null,
-                onResetTimer = { resetAodTimer() },
+                onResetTimer = { visualLifecycle.onInteraction() },
             )
         }
 
@@ -1172,7 +1113,7 @@ fun BottomSheetPlayer(
                                     onSliderValueChange = onSliderValueChange,
                                     onSliderValueChangeFinished = onSliderValueChangeFinished,
                                     currentFormat = currentFormat,
-                                    onResetTimer = { resetAodTimer() },
+                                    onResetTimer = { visualLifecycle.onInteraction() },
                                     nextUpMetadata = nextUpMetadata,
                                     onExpandQueue = { queueSheetState.expandSoft() },
                                     playerVolume = playerVolume.value,
@@ -1382,7 +1323,7 @@ fun BottomSheetPlayer(
                                     onSliderValueChange = onSliderValueChange,
                                     onSliderValueChangeFinished = onSliderValueChangeFinished,
                                     currentFormat = currentFormat,
-                                    onResetTimer = { resetAodTimer() },
+                                    onResetTimer = { visualLifecycle.onInteraction() },
                                     nextUpMetadata = nextUpMetadata,
                                     onExpandQueue = { queueSheetState.expandSoft() },
                                     playerVolume = playerVolume.value,
