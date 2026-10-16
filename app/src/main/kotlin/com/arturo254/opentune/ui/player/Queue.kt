@@ -906,8 +906,6 @@ fun Queue(
                 }
             }
 
-            val shuffleModeEnabled by playerConnection.shuffleModeEnabled.collectAsState()
-
             // Bottom bar hidden - controls now in sticky header
             Box(modifier = Modifier.fillMaxSize()) {
                 Box(
@@ -922,11 +920,10 @@ fun Queue(
                             coroutineScope
                                 .launch {
                                     lazyListState.animateScrollToItem(
-                                        if (playerConnection.player.shuffleModeEnabled) playerConnection.player.currentMediaItemIndex else 0,
+                                        if (queuePlaybackState.shuffleModeEnabled) playerConnection.player.currentMediaItemIndex else 0,
                                     )
                                 }.invokeOnCompletion {
-                                    playerConnection.player.shuffleModeEnabled =
-                                        !playerConnection.player.shuffleModeEnabled
+                                    queueActions.toggleShuffle()
                                 }
                         },
                     ) {
@@ -945,7 +942,7 @@ fun Queue(
 
                     IconButton(
                         modifier = Modifier.align(Alignment.CenterEnd),
-                        onClick = playerConnection.player::toggleRepeatMode,
+                        onClick = queueActions::toggleRepeat,
                     ) {
                         Icon(
                             painter =
