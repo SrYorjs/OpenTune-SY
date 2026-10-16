@@ -156,6 +156,7 @@ import com.arturo254.opentune.ui.component.LocalBottomSheetPageState
 import com.arturo254.opentune.ui.component.LocalMenuState
 import com.arturo254.opentune.ui.component.rememberBottomSheetState
 import com.arturo254.opentune.ui.player.panels.showPlayerPanelMenu
+import com.arturo254.opentune.ui.player.panels.PlayerLyricsPanel
 import com.arturo254.opentune.ui.screens.settings.DarkMode
 import com.arturo254.opentune.ui.utils.ShowMediaInfo
 import com.arturo254.opentune.utils.makeTimeString
@@ -1183,35 +1184,14 @@ fun BottomSheetPlayer(
             pureBlack = pureBlack,
         )
 
-        // Lyrics BottomSheet - separate from Queue
-        mediaMetadata?.let { metadata ->
-            BottomSheet(
-                state = lyricsSheetState,
-                backgroundColor = Color.Unspecified,
-                onDismiss = { /* Optional dismiss action */ },
-                collapsedContent = {
-                    // Empty collapsed content - fully hidden when collapsed
-                }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            MaterialTheme.colorScheme.surface.copy(
-                                alpha = lyricsSheetState.progress.coerceIn(0f, 1f)
-                            )
-                        )
-                ) {
-                    LyricsScreen(
-                        mediaMetadata = metadata,
-                        onBackClick = { lyricsSheetState.collapseSoft() },
-                        navController = navController,
-                        lyricsSyncOffset = lyricsSyncOffset,
-                        modifier = modifier,
-                    )
-                }
-            }
-        }
+        // Player 2.0: one sheet integration; existing LyricsScreen stays the owner.
+        PlayerLyricsPanel(
+            mediaMetadata = mediaMetadata,
+            sheetState = lyricsSheetState,
+            navController = navController,
+            lyricsSyncOffset = lyricsSyncOffset,
+            modifier = modifier,
+        )
     }
 }
 
