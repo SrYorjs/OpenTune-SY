@@ -36,12 +36,16 @@ import androidx.navigation.NavController
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.constants.SwipeSensitivityKey
 import com.arturo254.opentune.ui.component.BottomSheetState
+import com.arturo254.opentune.ui.player.state.PlayerState
 import com.arturo254.opentune.utils.rememberPreference
 
 @Composable
 fun MiniPlayer(
     position: Long,
     duration: Long,
+    playerState: PlayerState,
+    playbackIndex: Int,
+    queueSize: Int,
     modifier: Modifier = Modifier,
     pureBlack: Boolean,
     navController: NavController,
@@ -50,6 +54,9 @@ fun MiniPlayer(
     NewMiniPlayer(
         position = position,
         duration = duration,
+        playerState = playerState,
+        playbackIndex = playbackIndex,
+        queueSize = queueSize,
         modifier = modifier,
         pureBlack = pureBlack,
         navController = navController,
@@ -61,6 +68,9 @@ fun MiniPlayer(
 private fun NewMiniPlayer(
     position: Long,
     duration: Long,
+    playerState: PlayerState,
+    playbackIndex: Int,
+    queueSize: Int,
     modifier: Modifier = Modifier,
     pureBlack: Boolean,
     navController: NavController,
@@ -82,6 +92,10 @@ private fun NewMiniPlayer(
         playerConnection = playerConnection,
         layoutDirection = layoutDirection,
         coroutineScope = coroutineScope,
+        trackId = playerState.trackId,
+        playbackIndex = playbackIndex,
+        queueSize = queueSize,
+        isPlayerExpanded = state.isExpanded,
         pureBlack = pureBlack,
         useLegacyBackground = false
     ) { offsetX, transitionDirection ->
@@ -127,9 +141,8 @@ private fun NewMiniPlayer(
             ) {
                 NewMiniPlayerContent(
                     pureBlack = pureBlack,
-                position = position,
-                duration = duration,
-                playerConnection = playerConnection,
+                    playerState = playerState,
+                    playerConnection = playerConnection,
                 navController = navController,
                     state = state,
                     transitionDirection = transitionDirection,
