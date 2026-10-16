@@ -56,7 +56,7 @@ class PlayerHostArchitectureTest {
         val visual = source("ui/player/visual/PlayerVisualState.kt")
         assertTrue(visual.contains("CanvasArtwork("))
         assertTrue(player.contains("val canvasArtwork = playerVisuals.canvasArtwork"))
-        assertTrue(player.contains("LyricsScreen("))
+        assertTrue(player.contains("PlayerLyricsPanel("))
         assertTrue(player.contains("PlayerDesignStyle.V8"))
     }
 }
