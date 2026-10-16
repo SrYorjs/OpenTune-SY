@@ -32,11 +32,11 @@ class MiniPlayerSurfaceRegressionTest {
 
         val clip = content.indexOf(".clip(miniPlayerShape)")
         val background = content.indexOf(".background(", clip)
-        val glass = content.indexOf(".liquidGlassSurface(", background)
+        val glass = content.indexOf(".playerVisualGlassEffect(", background)
         val outline = content.indexOf("if (!glassEnabled)", glass)
 
         assertTrue("Mini player must clip before its background", clip >= 0 && background > clip)
-        assertTrue("Glass effect must not control the base clip", glass > background)
+        assertTrue("Canonical Glass effect must not control the base clip", glass > background)
         assertTrue("Opaque fallback must have a border", outline > glass)
     }
 }
