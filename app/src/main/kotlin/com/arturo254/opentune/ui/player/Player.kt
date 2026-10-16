@@ -823,7 +823,7 @@ fun BottomSheetPlayer(
                                     textColor = littleTextColor,
                                     liked = currentSongLiked,
                                     onCollapse = state::collapseSoft,
-                                    onToggleLike = playerConnection::toggleLike,
+                                    onToggleLike = playerActions::toggleFavorite,
                                     onExpandQueue = queueSheetState::expandSoft,
                                     onMenuClick = {
                                         menuState.showPlayerPanelMenu(
@@ -1008,7 +1008,7 @@ fun BottomSheetPlayer(
                                         textColor = littleTextColor,
                                         liked = currentSongLiked,
                                         onCollapse = state::collapseSoft,
-                                        onToggleLike = playerConnection::toggleLike,
+                                        onToggleLike = playerActions::toggleFavorite,
                                         onExpandQueue = queueSheetState::expandSoft,
                                         onMenuClick = {
                                             menuState.showPlayerPanelMenu(
