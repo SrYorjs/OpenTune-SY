@@ -27,8 +27,12 @@ class PlayerStateIntegrationTest {
     fun existingTickerCrossfadeAndSeekCommandsRemainOwnedByPlayer() {
         val player = source("ui/player/Player.kt")
         assertTrue(player.contains("delay(100)"))
-        assertTrue(player.contains("playerConnection.player.currentMediaItem?.mediaId != mediaMetadata?.id"))
-        assertTrue(player.contains("playerConnection.player.seekTo(it)"))
+        // 4.3 moved the command to PlayerActions, preserving crossfade first.
+        val actions = source("ui/player/actions/PlayerActions.kt")
+        assertTrue(player.contains("playerActions.seekTo(it, displayedTrackId = mediaMetadata?.id)"))
+        assertTrue(actions.contains("backend.activeMediaId != displayedTrackId"))
+        assertTrue(actions.contains("backend.advanceCrossfadeTarget()"))
+        assertTrue(actions.contains("backend.seekTo(positionMs)"))
         assertTrue(player.contains("isUserSeeking"))
         val state = source("ui/player/state/PlayerState.kt")
         assertTrue(!state.contains("seekTo("))
