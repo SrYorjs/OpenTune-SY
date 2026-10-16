@@ -217,6 +217,7 @@ internal fun rememberPlayerHostState(
     DisposableEffect(
         playerConnection,
         playerBottomSheetState,
+        isYearInMusicScreen,
     ) {
         val player =
             playerConnection?.player
@@ -250,6 +251,7 @@ internal fun rememberPlayerHostState(
             useRail,
             bottomInset,
             bottomNavPadding,
+            windowsInsets,
             playerBottomSheetState.isDismissed,
         ) {
             var bottom = bottomInset
