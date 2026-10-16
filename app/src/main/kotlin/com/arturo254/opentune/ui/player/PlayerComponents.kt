@@ -126,7 +126,7 @@ import com.arturo254.opentune.ui.component.LiquidGlassControlCluster
 import com.arturo254.opentune.ui.component.LiquidGlassIconButton
 import com.arturo254.opentune.ui.component.PlayerSliderTrack
 import com.arturo254.opentune.ui.component.ResizableIconButton
-import com.arturo254.opentune.ui.menu.PlayerMenu
+import com.arturo254.opentune.ui.player.panels.showPlayerPanelMenu
 import com.arturo254.opentune.ui.theme.PlayerBackgroundColorUtils
 import com.arturo254.opentune.ui.component.PlayerSliderColors
 import com.arturo254.opentune.ui.component.V8DeviceSelector
@@ -417,21 +417,12 @@ fun PlayerTopActions(
                 // More menu button - cinematic glass card
                 Surface(
                     onClick = {
-                        menuState.show {
-                            PlayerMenu(
-                                mediaMetadata = mediaMetadata,
-                                navController = navController,
-                                playerBottomSheetState = state,
-                                onShowDetailsDialog = {
-                                    mediaMetadata.id.let {
-                                        bottomSheetPageState.show {
-                                            ShowMediaInfo(it)
-                                        }
-                                    }
-                                },
-                                onDismiss = menuState::dismiss,
-                            )
-                        }
+                        menuState.showPlayerPanelMenu(
+                            metadata = mediaMetadata,
+                            navController = navController,
+                            playerBottomSheetState = state,
+                            bottomSheetPageState = bottomSheetPageState,
+                        )
                     },
                     shape = RoundedCornerShape(14.dp),
                     color = textBackgroundColor.copy(alpha = 0.12f),
@@ -483,21 +474,12 @@ fun PlayerTopActions(
                         .clip(RoundedCornerShape(24.dp))
                         .background(textButtonColor)
                         .clickable {
-                            menuState.show {
-                                PlayerMenu(
-                                    mediaMetadata = mediaMetadata,
-                                    navController = navController,
-                                    playerBottomSheetState = state,
-                                    onShowDetailsDialog = {
-                                        mediaMetadata.id.let {
-                                            bottomSheetPageState.show {
-                                                ShowMediaInfo(it)
-                                            }
-                                        }
-                                    },
-                                    onDismiss = menuState::dismiss,
-                                )
-                            }
+                            menuState.showPlayerPanelMenu(
+                                metadata = mediaMetadata,
+                                navController = navController,
+                                playerBottomSheetState = state,
+                                bottomSheetPageState = bottomSheetPageState,
+                            )
                         },
             ) {
                 Image(
@@ -562,21 +544,12 @@ fun PlayerTopActions(
 
                 Surface(
                     onClick = {
-                        menuState.show {
-                            PlayerMenu(
-                                mediaMetadata = mediaMetadata,
-                                navController = navController,
-                                playerBottomSheetState = state,
-                                onShowDetailsDialog = {
-                                    mediaMetadata.id.let {
-                                        bottomSheetPageState.show {
-                                            ShowMediaInfo(it)
-                                        }
-                                    }
-                                },
-                                onDismiss = menuState::dismiss,
-                            )
-                        }
+                        menuState.showPlayerPanelMenu(
+                            metadata = mediaMetadata,
+                            navController = navController,
+                            playerBottomSheetState = state,
+                            bottomSheetPageState = bottomSheetPageState,
+                        )
                     },
                     shape = RoundedCornerShape(
                         topStart = 6.dp, bottomStart = 6.dp,
@@ -630,19 +603,12 @@ fun PlayerTopActions(
                         .size(42.dp)
                         .clip(CircleShape)
                         .clickable {
-                            menuState.show {
-                                PlayerMenu(
-                                    mediaMetadata = mediaMetadata,
-                                    navController = navController,
-                                    playerBottomSheetState = state,
-                                    onShowDetailsDialog = {
-                                        bottomSheetPageState.show {
-                                            ShowMediaInfo(mediaMetadata.id)
-                                        }
-                                    },
-                                    onDismiss = menuState::dismiss
-                                )
-                            }
+                            menuState.showPlayerPanelMenu(
+                                metadata = mediaMetadata,
+                                navController = navController,
+                                playerBottomSheetState = state,
+                                bottomSheetPageState = bottomSheetPageState,
+                            )
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -687,19 +653,12 @@ fun PlayerTopActions(
                         .size(42.dp)
                         .clip(CircleShape)
                         .clickable {
-                            menuState.show {
-                                PlayerMenu(
-                                    mediaMetadata = mediaMetadata,
-                                    navController = navController,
-                                    playerBottomSheetState = state,
-                                    onShowDetailsDialog = {
-                                        bottomSheetPageState.show {
-                                            ShowMediaInfo(mediaMetadata.id)
-                                        }
-                                    },
-                                    onDismiss = menuState::dismiss
-                                )
-                            }
+                            menuState.showPlayerPanelMenu(
+                                metadata = mediaMetadata,
+                                navController = navController,
+                                playerBottomSheetState = state,
+                                bottomSheetPageState = bottomSheetPageState,
+                            )
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -2824,19 +2783,12 @@ fun V8PlayerControlsContent(
 
                 LiquidGlassIconButton(
                     onClick = {
-                        menuState.show {
-                            PlayerMenu(
-                                mediaMetadata = mediaMetadata,
-                                navController = navController,
-                                playerBottomSheetState = state,
-                                onShowDetailsDialog = {
-                                    bottomSheetPageState.show {
-                                        ShowMediaInfo(mediaMetadata.id)
-                                    }
-                                },
-                                onDismiss = menuState::dismiss
-                            )
-                        }
+                        menuState.showPlayerPanelMenu(
+                            metadata = mediaMetadata,
+                            navController = navController,
+                            playerBottomSheetState = state,
+                            bottomSheetPageState = bottomSheetPageState,
+                        )
                     },
                     size = 44.dp,
                 ) {
