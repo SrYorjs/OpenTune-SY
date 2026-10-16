@@ -125,6 +125,8 @@ import com.arturo254.opentune.LocalDownloadUtil
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
 import com.arturo254.opentune.ui.player.host.PlayerHostBackHandler
+import com.arturo254.opentune.ui.player.layout.PlayerLayout
+import com.arturo254.opentune.ui.player.layout.resolvePlayerLayout
 import com.arturo254.opentune.ui.player.host.rememberPlayerContentLifecycle
 import com.arturo254.opentune.constants.DarkModeKey
 import com.arturo254.opentune.constants.PlayerDesignStyle
@@ -945,7 +947,7 @@ fun BottomSheetPlayer(
             )
         }
 
-        if (!state.isCollapsed && playerDesignStyle != PlayerDesignStyle.V5 && playerDesignStyle != PlayerDesignStyle.V7) {
+        if (!state.isCollapsed && resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop) {
             PlayerBackground(
                 playerBackground = playerBackground,
                 mediaMetadata = mediaMetadata,
@@ -961,9 +963,12 @@ fun BottomSheetPlayer(
 
 // distance
 
-        when (LocalConfiguration.current.orientation) {
-            Configuration.ORIENTATION_LANDSCAPE -> {
-                if (playerDesignStyle == PlayerDesignStyle.V5) {
+        // Player 2.0: one layout dispatcher; all existing compositions remain
+        // intact behind typed orientation/family slots (4.13–4.16 migrate them).
+        PlayerLayout(
+            style = playerDesignStyle,
+            isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
+            compactLandscape = {
                     val littleBackground = MaterialTheme.colorScheme.primaryContainer
                     val littleTextColor = MaterialTheme.colorScheme.onPrimaryContainer
                     val displayPositionMs = sliderPosition ?: position
@@ -1039,7 +1044,9 @@ fun BottomSheetPlayer(
                             }
                         }
                     }
-                } else if (playerDesignStyle == PlayerDesignStyle.V7) {
+                
+            },
+            cinematicLandscape = {
                     Box(
                         modifier = Modifier
                             .fillMaxSize(),
@@ -1065,7 +1072,9 @@ fun BottomSheetPlayer(
                             Spacer(Modifier.height(16.dp))
                         }
                     }
-                } else if (playerDesignStyle == PlayerDesignStyle.V8) {
+                
+            },
+            immersiveLandscape = {
                     Box(
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -1126,7 +1135,9 @@ fun BottomSheetPlayer(
                             Spacer(Modifier.height(16.dp))
                         }
                     }
-                } else {
+                
+            },
+            classicLandscape = {
                     Row(
                         modifier =
                             Modifier
@@ -1165,11 +1176,9 @@ fun BottomSheetPlayer(
                             Spacer(Modifier.weight(1f))
                         }
                     }
-                }
-            }
-
-            else -> {
-                if (playerDesignStyle == PlayerDesignStyle.V5) {
+                
+            },
+            compactPortrait = {
                     val littleBackground = MaterialTheme.colorScheme.primaryContainer
                     val littleTextColor = MaterialTheme.colorScheme.onPrimaryContainer
                     val displayPositionMs = sliderPosition ?: position
@@ -1248,7 +1257,9 @@ fun BottomSheetPlayer(
                             }
                         }
                     }
-                } else if (playerDesignStyle == PlayerDesignStyle.V7) {
+                
+            },
+            cinematicPortrait = {
                     Box(
                         modifier = Modifier
                             .fillMaxSize(),
@@ -1274,7 +1285,9 @@ fun BottomSheetPlayer(
                             Spacer(Modifier.height(24.dp))
                         }
                     }
-                } else if (playerDesignStyle == PlayerDesignStyle.V8) {
+                
+            },
+            immersivePortrait = {
                     // V8 - Apple Music Style (Portrait)
                     Box(
                         modifier = Modifier.fillMaxSize()
@@ -1336,7 +1349,9 @@ fun BottomSheetPlayer(
                             Spacer(Modifier.height(24.dp))
                         }
                     }
-                } else {
+                
+            },
+            classicPortrait = {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier =
@@ -1365,9 +1380,9 @@ fun BottomSheetPlayer(
 
                         Spacer(Modifier.height(30.dp))
                     }
-                }
-            }
-        }
+                
+            },
+        )
 
         val queueOnBackgroundColor = if (useBlackBackground) Color.White else MaterialTheme.colorScheme.onSurface
         val queueSurfaceColor = if (useBlackBackground) Color.Black else MaterialTheme.colorScheme.surface
