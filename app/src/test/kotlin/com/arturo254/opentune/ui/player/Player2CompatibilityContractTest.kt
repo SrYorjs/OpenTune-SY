@@ -42,7 +42,8 @@ class Player2CompatibilityContractTest {
             "booleanPreferencesKey(\"swipeThumbnail\")",
             "floatPreferencesKey(\"swipeSensitivity\")",
         ).forEach { assertTrue("Preference contract missing: $it", keys.contains(it)) }
-        assertTrue(host.contains("defaultValue = PlayerDesignStyle.V8"))
+        assertTrue(host.contains("rememberPlayerPresentationPreferences()"))
+        assertTrue(source("ui/player/preferences/PlayerPresentationPreferences.kt").contains("PlayerDesignStyle.V8"))
         assertTrue(queue.contains("defaultValue = PlayerDesignStyle.V8"))
         assertTrue(queue.contains("rememberPreference(QueueEditLockKey, defaultValue = true)"))
         assertTrue(queue.contains("rememberPreference(AutoLoadMoreKey, defaultValue = true)"))
@@ -95,14 +96,15 @@ class Player2CompatibilityContractTest {
         assertTrue(host.contains("fun BottomSheetPlayer("))
         assertTrue(host.contains("V7PlayerScene("))
         assertTrue(source("ui/player/v7/V7PlayerScene.kt").contains("V7PlayerBackdrop("))
-        assertTrue(host.contains("V8PlayerBackdrop("))
+        assertTrue(host.contains("V8PlayerScene("))
+        assertTrue(source("ui/player/v8/V8PlayerComponents.kt").contains("fun V8PlayerBackdrop("))
         // Phase 4.7: the Canvas model is now owned by the visual engine,
         // while Player keeps consuming its current Canvas snapshot.
         val visual = source("ui/player/visual/PlayerVisualState.kt")
         assertTrue(visual.contains("CanvasArtwork("))
         assertTrue(host.contains("val canvasArtwork = playerVisuals.canvasArtwork"))
         assertTrue(host.contains("PlayerLyricsPanel("))
-        assertTrue(controls.contains("fun V8PlayerControlsContent("))
+        assertTrue(source("ui/player/v8/V8PlayerComponents.kt").contains("fun V8PlayerControlsContent("))
         assertTrue(controls.contains("fun PlayerPlaybackControls("))
     }
 }
