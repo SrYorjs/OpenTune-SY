@@ -155,7 +155,7 @@ import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.ui.component.LocalBottomSheetPageState
 import com.arturo254.opentune.ui.component.LocalMenuState
 import com.arturo254.opentune.ui.component.rememberBottomSheetState
-import com.arturo254.opentune.ui.menu.PlayerMenu
+import com.arturo254.opentune.ui.player.panels.showPlayerPanelMenu
 import com.arturo254.opentune.ui.screens.settings.DarkMode
 import com.arturo254.opentune.ui.utils.ShowMediaInfo
 import com.arturo254.opentune.utils.makeTimeString
@@ -820,19 +820,12 @@ fun BottomSheetPlayer(
                                     onToggleLike = playerConnection::toggleLike,
                                     onExpandQueue = queueSheetState::expandSoft,
                                     onMenuClick = {
-                                        menuState.show {
-                                            PlayerMenu(
-                                                mediaMetadata = metadata,
-                                                navController = navController,
-                                                playerBottomSheetState = state,
-                                                onShowDetailsDialog = {
-                                                    bottomSheetPageState.show {
-                                                        ShowMediaInfo(metadata.id)
-                                                    }
-                                                },
-                                                onDismiss = menuState::dismiss
-                                            )
-                                        }
+                                        menuState.showPlayerPanelMenu(
+                                            metadata = metadata,
+                                            navController = navController,
+                                            playerBottomSheetState = state,
+                                            bottomSheetPageState = bottomSheetPageState,
+                                        )
                                     },
                                 )
                             }
@@ -1028,19 +1021,12 @@ fun BottomSheetPlayer(
                                         onToggleLike = playerConnection::toggleLike,
                                         onExpandQueue = queueSheetState::expandSoft,
                                         onMenuClick = {
-                                            menuState.show {
-                                                PlayerMenu(
-                                                    mediaMetadata = metadata,
-                                                    navController = navController,
-                                                    playerBottomSheetState = state,
-                                                    onShowDetailsDialog = {
-                                                        bottomSheetPageState.show {
-                                                            ShowMediaInfo(metadata.id)
-                                                        }
-                                                    },
-                                                    onDismiss = menuState::dismiss
-                                                )
-                                            }
+                                            menuState.showPlayerPanelMenu(
+                                                metadata = metadata,
+                                                navController = navController,
+                                                playerBottomSheetState = state,
+                                                bottomSheetPageState = bottomSheetPageState,
+                                            )
                                         },
                                     )
                                 }
