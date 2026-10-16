@@ -21,7 +21,8 @@ class PlayerPanelsIntegrationTest {
         val menu = source("ui/menu/PlayerMenu.kt")
 
         assertEquals(2, Regex("menuState\\.showPlayerPanelMenu\\(").findAll(player).count())
-        assertEquals(6, Regex("menuState\\.showPlayerPanelMenu\\(").findAll(controls).count())
+        assertEquals(5, Regex("menuState\\.showPlayerPanelMenu\\(").findAll(controls).count())
+        assertEquals(1, Regex("menuState\\.showPlayerPanelMenu\\(").findAll(source("ui/player/v8/V8PlayerComponents.kt")).count())
         assertEquals(5, Regex("menuState\\.showPlayerPanelMenu\\(").findAll(queue).count())
         for (file in listOf(player, controls, queue)) {
             assertFalse(Regex("""menuState\.show\s*\{\s*PlayerMenu\(""").containsMatchIn(file))
@@ -63,7 +64,7 @@ class PlayerPanelsIntegrationTest {
         val format = source("ui/player/panels/PlayerQualityFormat.kt")
         val player = source("ui/player/Player.kt")
         assertTrue(controls.contains("playerFormatBadgeLabel(currentFormat.mimeType)"))
-        assertTrue(controls.contains("playerFormatBadgeLabel(format.mimeType)"))
+        assertTrue(source("ui/player/v8/V8PlayerComponents.kt").contains("playerFormatBadgeLabel(format.mimeType)"))
         assertTrue(queueControls.contains("playerCodecContainer(currentFormat.mimeType)"))
         assertTrue(player.contains("playerConnection.currentFormat.collectAsState("))
         assertTrue(format.contains("not a source-quality selector"))
