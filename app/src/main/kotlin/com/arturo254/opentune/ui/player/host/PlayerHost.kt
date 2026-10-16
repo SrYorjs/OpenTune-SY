@@ -90,8 +90,9 @@ internal fun rememberPlayerHostState(
 
     val miniPlayerAnchor by remember {
         derivedStateOf {
-            hostPlayerAnchor(
+            settledHostPlayerAnchor(
                 isExpanded = playerBottomSheetState.isExpanded,
+                isCollapsed = playerBottomSheetState.isCollapsed,
                 isDismissed = playerBottomSheetState.isDismissed,
             )
         }
@@ -111,14 +112,16 @@ internal fun rememberPlayerHostState(
         isAlwaysOnDisplayScreen,
         miniPlayerAnchorPersistenceEnabled,
     ) {
+        val settledAnchor = miniPlayerAnchor
         if (
+            settledAnchor != null &&
             shouldPersistHostAnchor(
                 isYearInMusicScreen = isYearInMusicScreen,
                 isAlwaysOnDisplayScreen = isAlwaysOnDisplayScreen,
                 persistenceEnabled = miniPlayerAnchorPersistenceEnabled,
             )
         ) {
-            setSavedMiniPlayerAnchor(miniPlayerAnchor)
+            setSavedMiniPlayerAnchor(settledAnchor)
         }
     }
 
