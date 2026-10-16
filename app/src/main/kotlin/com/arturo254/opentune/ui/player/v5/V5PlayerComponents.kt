@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+
 package com.arturo254.opentune.ui.player.v5
 
 import androidx.compose.animation.core.Spring
