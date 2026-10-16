@@ -50,7 +50,7 @@ class VisualSkinIntegrationTest {
         assertTrue(p.contains("V8PlayerBackdrop("))
         assertTrue(p.contains("playerActions.seekTo("))
         assertTrue(p.contains("displayedTrackId = mediaMetadata?.id"))
-        assertTrue(p.contains("LyricsScreen("))
+        assertTrue(p.contains("PlayerLyricsPanel("))
         assertTrue(p.contains("Queue("))
         assertTrue(layout.contains("classicPortrait: @Composable () -> Unit"))
     }
