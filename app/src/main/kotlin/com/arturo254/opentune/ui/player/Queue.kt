@@ -8,6 +8,8 @@
 
 package com.arturo254.opentune.ui.player
 
+import com.arturo254.opentune.ui.player.v8.QueueCollapsedContentV8
+
 import androidx.activity.compose.BackHandler
 import android.annotation.SuppressLint
 import android.content.Context
