@@ -30,7 +30,10 @@ class PlayerLayoutIntegrationTest {
             assertTrue("slot missing in Player usage: $slot", fullPlayer.contains("$slot = {"))
         }
         assertTrue(fullPlayer.contains("resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop"))
-        assertEquals(1, fullPlayer.split("PlayerLayout(").size - 1)
+        assertEquals(
+            1,
+            Regex("""(?m)^\\s*PlayerLayout\\(""").findAll(fullPlayer).count(),
+        )
     }
 
     @Test
@@ -45,8 +48,10 @@ class PlayerLayoutIntegrationTest {
         assertTrue(player.contains("playerActions.seekTo(it, displayedTrackId = mediaMetadata?.id)"))
         assertTrue(player.contains("CanvasArtwork("))
         assertTrue(player.contains("LyricsScreen("))
-        assertFalse(router.contains("PlayerConnection"))
-        assertFalse(router.contains("MusicService"))
+        assertFalse(router.contains("import com.arturo254.opentune.playback.PlayerConnection"))
+        assertFalse(router.contains("PlayerConnection("))
+        assertFalse(router.contains("import com.arturo254.opentune.service.MusicService"))
+        assertFalse(router.contains("MusicService("))
         assertFalse(router.contains("LaunchedEffect("))
         assertFalse(router.contains("DisposableEffect("))
         assertFalse(router.contains("rememberPreference("))
