@@ -156,6 +156,7 @@ import com.arturo254.opentune.extensions.metadata
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.ui.player.state.PlayerStateInput
 import com.arturo254.opentune.ui.player.state.rememberPlayerState
+import com.arturo254.opentune.ui.player.preferences.rememberPlayerPresentationPreferences
 import com.arturo254.opentune.ui.component.BottomSheet
 import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.ui.component.LocalBottomSheetPageState
@@ -206,15 +207,13 @@ fun BottomSheetPlayer(
     val playerConnection = LocalPlayerConnection.current ?: return
     val playerActions = rememberPlayerActions(playerConnection)
 
-    val playerDesignStyle by rememberEnumPreference(
-        key = PlayerDesignStyleKey,
-        defaultValue = PlayerDesignStyle.V8
-    )
-
-    val playerBackground by rememberEnumPreference(
-        key = PlayerBackgroundStyleKey,
-        defaultValue = PlayerBackgroundStyle.DEFAULT
-    )
+    // A single snapshot consumes the exact same persisted DataStore keys
+    // as the Appearance settings (including legacy V1/V3 values).
+    val presentation = rememberPlayerPresentationPreferences()
+    val playerDesignStyle = presentation.designStyle
+    val playerBackground = presentation.backgroundStyle
+    val playerButtonsStyle = presentation.buttonStyle
+    val sliderStyle = presentation.sliderStyle
 
     // Custom background preferences (image + effects)
     val (playerCustomImageUri) = rememberPreference(PlayerCustomImageUriKey, "")
@@ -249,11 +248,6 @@ fun BottomSheetPlayer(
                 launchSingleTop = true
             }
         },
-    )
-
-    val playerButtonsStyle by rememberEnumPreference(
-        key = PlayerButtonsStyleKey,
-        defaultValue = PlayerButtonsStyle.DEFAULT
     )
 
     val isSystemInDarkTheme = isSystemInDarkTheme()
@@ -293,7 +287,6 @@ fun BottomSheetPlayer(
     val canSkipPrevious by playerConnection.canSkipPrevious.collectAsState()
     val canSkipNext by playerConnection.canSkipNext.collectAsState()
 
-    val sliderStyle by rememberEnumPreference(SliderStyleKey, SliderStyle.Standard)
 
     var position by rememberSaveable(mediaMetadata?.id) {
         mutableLongStateOf(playerConnection.player.currentPosition)
