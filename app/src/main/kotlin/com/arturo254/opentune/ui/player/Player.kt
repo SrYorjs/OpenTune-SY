@@ -123,6 +123,7 @@ import com.arturo254.opentune.ui.player.queue.calculateQueuePlaybackState
 import com.arturo254.opentune.ui.player.progress.calculatePlayerProgress
 import com.arturo254.opentune.ui.player.progress.rememberPlayerSeekSession
 import com.arturo254.opentune.ui.player.host.PlayerHostBackHandler
+import com.arturo254.opentune.ui.player.v7.V7PlayerScene
 import com.arturo254.opentune.ui.player.v5.V5PlayerContent
 import com.arturo254.opentune.ui.player.v5.V5LandscapeLikeBox
 import com.arturo254.opentune.ui.player.v5.v5OverlayGestures
@@ -839,33 +840,17 @@ fun BottomSheetPlayer(
                 
             },
             cinematicLandscape = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
+                    V7PlayerScene(
+                        isLandscape = true,
+                        thumbnailUrl = mediaMetadata?.thumbnailUrl,
+                        disableBlur = disableBlur,
+                        queuePeekHeight = queueSheetState.collapsedBound,
+                        nestedScrollConnection = state.preUpPostDownNestedScrollConnection,
                     ) {
-                        V7PlayerBackdrop(
-                            thumbnailUrl = mediaMetadata?.thumbnailUrl,
-                            disableBlur = disableBlur,
-                            label = "v7BackdropLandscape",
-                        )
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = queueSheetState.collapsedBound)
-                                .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
-                                .nestedScroll(state.preUpPostDownNestedScrollConnection),
-                        ) {
-                            enrichedMetadata?.let {
-                                controlsContent(it)
-                            }
-
-                            Spacer(Modifier.height(16.dp))
-                        }
+                        enrichedMetadata?.let { controlsContent(it) }
                     }
-                
             },
+
             immersiveLandscape = {
                     Box(
                         modifier = Modifier.fillMaxSize()
@@ -1041,33 +1026,17 @@ fun BottomSheetPlayer(
                 
             },
             cinematicPortrait = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
+                    V7PlayerScene(
+                        isLandscape = false,
+                        thumbnailUrl = mediaMetadata?.thumbnailUrl,
+                        disableBlur = disableBlur,
+                        queuePeekHeight = queueSheetState.collapsedBound,
+                        nestedScrollConnection = state.preUpPostDownNestedScrollConnection,
                     ) {
-                        V7PlayerBackdrop(
-                            thumbnailUrl = mediaMetadata?.thumbnailUrl,
-                            disableBlur = disableBlur,
-                            label = "v7BackdropPortrait",
-                        )
-
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = queueSheetState.collapsedBound)
-                                .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
-                                .nestedScroll(state.preUpPostDownNestedScrollConnection),
-                        ) {
-                            enrichedMetadata?.let {
-                                controlsContent(it)
-                            }
-
-                            Spacer(Modifier.height(24.dp))
-                        }
+                        enrichedMetadata?.let { controlsContent(it) }
                     }
-                
             },
+
             immersivePortrait = {
                     // V8 - Apple Music Style (Portrait)
                     Box(
