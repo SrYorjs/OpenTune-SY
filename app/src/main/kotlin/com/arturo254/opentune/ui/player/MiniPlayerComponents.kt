@@ -59,6 +59,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -98,9 +99,8 @@ import com.arturo254.opentune.ui.player.controls.PlayerSkipDirection
 import com.arturo254.opentune.ui.player.controls.playerPlaybackIconRes
 import com.arturo254.opentune.ui.player.controls.playerFavoriteIconRes
 import com.arturo254.opentune.ui.player.controls.playerSkipIconRes
-import com.arturo254.opentune.ui.player.state.PlayerStateInput
 import com.arturo254.opentune.ui.player.progress.calculatePlayerProgress
-import com.arturo254.opentune.ui.player.state.rememberPlayerState
+import com.arturo254.opentune.ui.player.state.PlayerState
 import com.arturo254.opentune.together.TogetherSessionState
 import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
@@ -117,12 +117,19 @@ fun SwipeableMiniPlayerBox(
     playerConnection: PlayerConnection,
     layoutDirection: LayoutDirection,
     coroutineScope: CoroutineScope,
+    trackId: String?,
+    playbackIndex: Int,
+    queueSize: Int,
+    isPlayerExpanded: Boolean,
     pureBlack: Boolean = false,
     useLegacyBackground: Boolean = false,
     content: @Composable (Float, Int) -> Unit
 ) {
     var offsetX by remember { mutableFloatStateOf(0f) }
     var transitionDirection by remember { mutableIntStateOf(1) }
+    var pendingSwipeDirection by remember { mutableIntStateOf(0) }
+    var previousTrackId by remember(playerConnection) { mutableStateOf(trackId) }
+    var previousPlaybackIndex by remember(playerConnection) { mutableIntStateOf(playbackIndex) }
     var dragStartTime by remember { mutableStateOf(0L) }
     var totalDragDistance by remember { mutableFloatStateOf(0f) }
     var settleJob by remember { mutableStateOf<Job?>(null) }
@@ -148,6 +155,34 @@ fun SwipeableMiniPlayerBox(
     }
 
     val autoSwipeThreshold = MiniPlayerSwipePolicy.autoSwipeThreshold(swipeSensitivity)
+
+    // Mini and full Player observe the same track snapshot. On any Media3
+    // transition (including remote, notification, crossfade or radio) cancel a
+    // stale swipe translation rather than carrying it into the next artwork.
+    LaunchedEffect(trackId, playbackIndex, isPlayerExpanded, playerConnection) {
+        if (trackId != previousTrackId) {
+            transitionDirection = miniPlayerTrackTransitionDirection(
+                previousIndex = previousPlaybackIndex,
+                currentIndex = playbackIndex,
+                itemCount = queueSize,
+                requestedSwipeDirection = pendingSwipeDirection,
+            )
+            settleJob?.cancel()
+            settleJob = null
+            offsetX = 0f
+            totalDragDistance = 0f
+            pendingSwipeDirection = 0
+            previousTrackId = trackId
+        }
+        previousPlaybackIndex = playbackIndex
+        if (isPlayerExpanded) {
+            settleJob?.cancel()
+            settleJob = null
+            offsetX = 0f
+            totalDragDistance = 0f
+            pendingSwipeDirection = 0
+        }
+    }
 
     Box(
         modifier = modifier
@@ -209,6 +244,7 @@ fun SwipeableMiniPlayerBox(
                                 if (shouldChangeSong) {
                                     val isRightSwipe = currentOffset > 0
                                     transitionDirection = if (isRightSwipe) -1 else 1
+                                    pendingSwipeDirection = transitionDirection
                                     val canSkipPrevious = playerConnection.player.previousMediaItemIndex != -1
                                     val canSkipNext = playerConnection.player.nextMediaItemIndex != -1
 
@@ -479,38 +515,20 @@ private fun MiniPlayerTransportControls(
 @Composable
 fun NewMiniPlayerContent(
     pureBlack: Boolean,
-    position: Long,
-    duration: Long,
+    playerState: PlayerState,
     playerConnection: PlayerConnection,
     navController: NavController,
     state: BottomSheetState,
     transitionDirection: Int,
 ) {
-    val connectionIsPlaying by playerConnection.isPlaying.collectAsState()
-    val playbackState by playerConnection.playbackState.collectAsState()
-    val connectionMetadata by playerConnection.mediaMetadata.collectAsState()
     val togetherSessionState by playerConnection.service.togetherSessionState.collectAsState()
-    val canSkipPrevious by playerConnection.canSkipPrevious.collectAsState()
-    val canSkipNext by playerConnection.canSkipNext.collectAsState()
-    val shuffleModeEnabled by playerConnection.shuffleModeEnabled.collectAsState()
-    val repeatMode by playerConnection.repeatMode.collectAsState()
-    val currentSong by playerConnection.currentSong.collectAsState(initial = null)
 
+    // The enclosing full Player already maps all connection flows into this
+    // immutable PlayerState. Do not subscribe again and risk a one-frame mismatch.
     val playerActions = rememberPlayerActions(playerConnection)
-    val playerState = rememberPlayerState(
-        PlayerStateInput(
-            mediaMetadata = connectionMetadata,
-            playbackState = playbackState,
-            isPlaying = connectionIsPlaying,
-            positionMs = position,
-            durationMs = duration,
-            canSkipPrevious = canSkipPrevious,
-            canSkipNext = canSkipNext,
-            isLiked = currentSong?.song?.liked == true,
-            shuffleModeEnabled = shuffleModeEnabled,
-            repeatMode = repeatMode,
-        )
-    )
+    val playbackState = playerState.playbackState
+    val canSkipPrevious = playerState.canSkipPrevious
+    val canSkipNext = playerState.canSkipNext
     val mediaMetadata = playerState.mediaMetadata
     val isPlaying = playerState.isPlaying
     val isLiked = playerState.isLiked
@@ -525,8 +543,8 @@ fun NewMiniPlayerContent(
     ) {
         MiniPlayerArtwork(
             mediaMetadata = mediaMetadata,
-            position = position,
-            duration = duration,
+            position = playerState.positionMs,
+            duration = playerState.durationMs,
             isLoading = isLoading,
             transitionDirection = transitionDirection,
         )
