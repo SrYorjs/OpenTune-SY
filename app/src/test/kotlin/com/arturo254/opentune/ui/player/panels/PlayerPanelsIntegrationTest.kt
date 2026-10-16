@@ -24,7 +24,7 @@ class PlayerPanelsIntegrationTest {
         assertEquals(6, Regex("menuState\\.showPlayerPanelMenu\\(").findAll(controls).count())
         assertEquals(5, Regex("menuState\\.showPlayerPanelMenu\\(").findAll(queue).count())
         for (file in listOf(player, controls, queue)) {
-            assertFalse(file.contains("menuState.show {\n"))
+            assertFalse(Regex("""menuState\.show\s*\{\s*PlayerMenu\(""").containsMatchIn(file))
             assertFalse(file.contains("PlayerMenu("))
         }
         assertTrue(panel.contains("PlayerMenu("))
