@@ -51,7 +51,11 @@ class PlayerHostArchitectureTest {
         assertTrue(!host.contains("service.playQueue("))
         assertTrue(!lifecycle.contains("seekToNext("))
         val player = source("ui/player/Player.kt")
-        assertTrue(player.contains("CanvasArtwork("))
+        // Phase 4.7: the Canvas model is now owned by the visual engine,
+        // while Player keeps consuming its current Canvas snapshot.
+        val visual = source("ui/player/visual/PlayerVisualState.kt")
+        assertTrue(visual.contains("CanvasArtwork("))
+        assertTrue(player.contains("val canvasArtwork = playerVisuals.canvasArtwork"))
         assertTrue(player.contains("LyricsScreen("))
         assertTrue(player.contains("PlayerDesignStyle.V8"))
     }

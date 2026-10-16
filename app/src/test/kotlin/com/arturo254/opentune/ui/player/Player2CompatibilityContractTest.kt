@@ -88,7 +88,11 @@ class Player2CompatibilityContractTest {
         assertTrue(host.contains("fun BottomSheetPlayer("))
         assertTrue(host.contains("V7PlayerBackdrop("))
         assertTrue(host.contains("V8PlayerBackdrop("))
-        assertTrue(host.contains("CanvasArtwork("))
+        // Phase 4.7: the Canvas model is now owned by the visual engine,
+        // while Player keeps consuming its current Canvas snapshot.
+        val visual = source("ui/player/visual/PlayerVisualState.kt")
+        assertTrue(visual.contains("CanvasArtwork("))
+        assertTrue(host.contains("val canvasArtwork = playerVisuals.canvasArtwork"))
         assertTrue(host.contains("LyricsScreen("))
         assertTrue(controls.contains("fun V8PlayerControlsContent("))
         assertTrue(controls.contains("fun PlayerPlaybackControls("))

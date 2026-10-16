@@ -46,7 +46,11 @@ class PlayerLayoutIntegrationTest {
         assertTrue(player.contains("LittlePlayerContent("))
         assertTrue(player.contains("LandscapeLikeBox("))
         assertTrue(player.contains("playerActions.seekTo(it, displayedTrackId = mediaMetadata?.id)"))
-        assertTrue(player.contains("CanvasArtwork("))
+        // Phase 4.7: the Canvas model is now owned by the visual engine,
+        // while Player keeps consuming its current Canvas snapshot.
+        val visual = source("ui/player/visual/PlayerVisualState.kt")
+        assertTrue(visual.contains("CanvasArtwork("))
+        assertTrue(player.contains("val canvasArtwork = playerVisuals.canvasArtwork"))
         assertTrue(player.contains("LyricsScreen("))
         assertFalse(router.contains("import com.arturo254.opentune.playback.PlayerConnection"))
         assertFalse(router.contains("PlayerConnection("))

@@ -11,7 +11,7 @@ package com.arturo254.opentune.ui.player
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
-import com.arturo254.opentune.ui.component.liquidGlassSurface
+import com.arturo254.opentune.ui.player.visual.playerVisualGlassEffect
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -101,14 +101,9 @@ private fun NewMiniPlayer(
                         else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = surfaceTokens.opacity.miniPlayerOpaque)
                     }
                 )
-                .liquidGlassSurface(
+                .playerVisualGlassEffect(
                     shape = miniPlayerShape,
                     pureBlack = pureBlack,
-                    blurRadius = 4,
-                    refraction = 0.045f,
-                    curve = 0.10f,
-                    dispersion = 0.0015f,
-                    edge = 0f,
                 )
                 .then(
                     if (!glassEnabled) {

@@ -114,12 +114,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.media3.common.C
 import androidx.media3.common.Player.STATE_BUFFERING
 import androidx.media3.common.Player.STATE_READY
-import androidx.palette.graphics.Palette
 import androidx.navigation.NavController
-import coil3.imageLoader
-import coil3.request.ImageRequest
-import coil3.request.allowHardware
-import coil3.toBitmap
 import com.arturo254.opentune.R
 import com.arturo254.opentune.LocalDownloadUtil
 import com.arturo254.opentune.LocalPlayerConnection
@@ -128,6 +123,8 @@ import com.arturo254.opentune.ui.player.host.PlayerHostBackHandler
 import com.arturo254.opentune.ui.player.layout.PlayerLayout
 import com.arturo254.opentune.ui.player.layout.resolvePlayerLayout
 import com.arturo254.opentune.ui.player.skin.rememberVisualSkin
+import com.arturo254.opentune.ui.player.visual.rememberPlayerVisualState
+import com.arturo254.opentune.ui.player.visual.V7PlayerBackdrop
 import com.arturo254.opentune.ui.player.host.rememberPlayerContentLifecycle
 import com.arturo254.opentune.constants.DarkModeKey
 import com.arturo254.opentune.constants.PlayerDesignStyle
@@ -142,7 +139,6 @@ import com.arturo254.opentune.constants.PlayerCustomBrightnessKey
 import com.arturo254.opentune.constants.DisableBlurKey
 import com.arturo254.opentune.constants.PlayerButtonsStyle
 import com.arturo254.opentune.constants.PlayerButtonsStyleKey
-import com.arturo254.opentune.ui.theme.PlayerColorExtractor
 import com.arturo254.opentune.constants.QueuePeekHeight
 import com.arturo254.opentune.constants.SliderStyle
 import com.arturo254.opentune.constants.SliderStyleKey
@@ -164,11 +160,9 @@ import com.arturo254.opentune.utils.rememberEnumPreference
 import com.arturo254.opentune.utils.rememberPreference
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import coil3.compose.AsyncImage
-import com.arturo254.opentune.canvas.models.CanvasArtwork
 import com.arturo254.opentune.constants.AodAutoActivationKey
 import com.arturo254.opentune.constants.AodFullscreenKey
 import com.arturo254.opentune.constants.BlurRadiusKey
-import com.arturo254.opentune.constants.CanvasSource
 import com.arturo254.opentune.constants.SeekExtraSeconds
 import com.arturo254.opentune.ui.component.COLLAPSED_ANCHOR
 import com.my.kizzy.gateway.entities.presence.Activity
@@ -185,7 +179,6 @@ import kotlin.math.roundToLong
 
 
 private const val SeekbarSettleToleranceMs = 1_500L
-private const val V7BackdropBlurHeightFraction = 0.54f // The height of the blur layout in PlayerDesignStyle V7
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -236,55 +229,6 @@ fun BottomSheetPlayer(
         remember(mediaMetadata?.id, download?.state) {
             mediaMetadata?.id?.let(downloadUtil::getOfflineCoverUri)
         }
-
-    // ============================================================
-// 🎯 CANVAS ARTWORK - Colocar DESPUÉS de mediaMetadata
-// ============================================================
-    var canvasArtwork by remember { mutableStateOf<CanvasArtwork?>(null) }
-    var canvasFetchInFlight by remember { mutableStateOf(false) }
-
-    LaunchedEffect(mediaMetadata?.id, download?.state) {
-        val metadata = mediaMetadata ?: return@LaunchedEffect
-
-        downloadUtil.getOfflineAnimationUri(metadata.id)?.let { localAnimation ->
-            canvasArtwork =
-                CanvasArtwork(
-                    name = metadata.title,
-                    artist = metadata.artists.joinToString { it.name },
-                    albumName = metadata.album?.title,
-                    animated = localAnimation,
-                    videoUrl = localAnimation,
-                )
-            return@LaunchedEffect
-        }
-
-        val songTitle = metadata.title.takeIf { it.isNotBlank() } ?: return@LaunchedEffect
-        val artistName = metadata.artists.joinToString { it.name }.takeIf { it.isNotBlank() }
-            ?: return@LaunchedEffect
-        val albumName = metadata.album?.title
-
-        if (canvasFetchInFlight) return@LaunchedEffect
-        canvasFetchInFlight = true
-
-        try {
-            val fetched = withContext(Dispatchers.IO) {
-                fetchCanvasArtworkForPlayback(
-                    songTitleRaw = songTitle,
-                    artistNameRaw = artistName,
-                    albumName = albumName,
-                    source = CanvasSource.AUTO
-                )
-            }
-            // ✅ LOG PARA VERIFICAR
-            Timber.d("🎵 Player - Canvas cargado: ${fetched?.preferredAnimationUrl}")
-            canvasArtwork = fetched
-        } catch (e: Exception) {
-            Timber.e("🎵 Player - Error cargando canvas: ${e.message}")
-            canvasArtwork = null
-        } finally {
-            canvasFetchInFlight = false
-        }
-    }
 
     // System bars / fullscreen are already owned by the single PlayerHost
     // inside MainActivity, where they can also be restored on collapse.
@@ -377,84 +321,17 @@ fun BottomSheetPlayer(
     // Loading still means buffering or a pending seek, just as before 4.2.
     val isLoading = playerState.isLoading
 
-    var gradientColors by remember {
-        mutableStateOf<List<Color>>(emptyList())
-    }
-
-    // Previous background states for smooth transitions
-    var previousThumbnailUrl by remember { mutableStateOf<String?>(null) }
-    var previousGradientColors by remember { mutableStateOf<List<Color>>(emptyList()) }
-
-    // Cache for gradient colors to prevent re-extraction for same songs
-    val gradientColorsCache = remember { mutableMapOf<String, List<Color>>() }
-
-
-
-    // Default gradient colors for fallback
-    val defaultGradientColors = listOf(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceVariant)
-    val fallbackColor = MaterialTheme.colorScheme.surface.toArgb()
-
-    // Update previous states when media changes
-    LaunchedEffect(mediaMetadata?.id) {
-        val currentThumbnail = mediaMetadata?.thumbnailUrl
-        if (currentThumbnail != previousThumbnailUrl) {
-            previousThumbnailUrl = currentThumbnail
-            previousGradientColors = gradientColors
-        }
-    }
-
-    LaunchedEffect(mediaMetadata?.id, playerBackground) {
-        if (visualSkin.usesArtworkPalette) {
-            val currentMetadata = mediaMetadata
-            if (currentMetadata != null && currentMetadata.thumbnailUrl != null) {
-                // Check cache first
-                val cachedColors = gradientColorsCache[currentMetadata.id]
-                if (cachedColors != null) {
-                    gradientColors = cachedColors
-                } else {
-                    val request = ImageRequest.Builder(context)
-                        .data(currentMetadata.thumbnailUrl)
-                        .size(PlayerColorExtractor.Config.IMAGE_SIZE, PlayerColorExtractor.Config.IMAGE_SIZE)
-                        .allowHardware(false)
-                        .build()
-
-                    val result = runCatching {
-                        withContext(Dispatchers.IO) {
-                            context.imageLoader.execute(request)
-                        }
-                    }.getOrNull()
-
-                    if (result != null) {
-                        val bitmap = result.image?.toBitmap()
-                        if (bitmap != null) {
-                            val palette = withContext(Dispatchers.Default) {
-                                Palette.from(bitmap)
-                                    .maximumColorCount(PlayerColorExtractor.Config.MAX_COLOR_COUNT)
-                                    .resizeBitmapArea(PlayerColorExtractor.Config.BITMAP_AREA)
-                                    .generate()
-                            }
-
-                            val extractedColors = PlayerColorExtractor.extractGradientColors(
-                                palette = palette,
-                                fallbackColor = fallbackColor
-                            )
-
-                            gradientColorsCache[currentMetadata.id] = extractedColors
-                            gradientColors = extractedColors
-                        } else {
-                            gradientColors = defaultGradientColors
-                        }
-                    } else {
-                        gradientColors = defaultGradientColors
-                    }
-                }
-            } else {
-                gradientColors = emptyList()
-            }
-        } else {
-            gradientColors = emptyList()
-        }
-    }
+    // Visual engine owns Canvas lookup and palette extraction per song.
+    // It is presentation-only; MusicService and PlayerConnection are unchanged.
+    val playerVisuals = rememberPlayerVisualState(
+        metadata = mediaMetadata,
+        downloadRevision = download?.state,
+        offlineArtworkUrl = offlineCoverUri,
+        offlineAnimationLookup = downloadUtil::getOfflineAnimationUri,
+        usesArtworkPalette = visualSkin.usesArtworkPalette,
+    )
+    val canvasArtwork = playerVisuals.canvasArtwork
+    val gradientColors = playerVisuals.gradientColors
 
     val changeBound = state.expandedBound / 3
 
@@ -1011,7 +888,7 @@ fun BottomSheetPlayer(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         V8PlayerBackdrop(
-                            thumbnailUrl = playerState.artworkUrl,
+                            thumbnailUrl = playerVisuals.artworkUrl,
                             canvasArtwork = canvasArtwork,
                             isPlaying = isPlaying,
                             disableBlur = disableBlur,
@@ -1225,7 +1102,7 @@ fun BottomSheetPlayer(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         V8PlayerBackdrop(
-                            thumbnailUrl = playerState.artworkUrl,
+                            thumbnailUrl = playerVisuals.artworkUrl,
                             canvasArtwork = canvasArtwork,
                             isPlaying = isPlaying,
                             disableBlur = disableBlur,
@@ -1368,126 +1245,6 @@ fun BottomSheetPlayer(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun V7PlayerBackdrop(
-    thumbnailUrl: String?,
-    disableBlur: Boolean,
-    label: String,
-    modifier: Modifier = Modifier,
-) {
-    val cloudyRadius = 100
-    val blurMaskStart = (1f - V7BackdropBlurHeightFraction).coerceIn(0f, 0.85f)
-    val blurMaskMid = (blurMaskStart + 0.12f).coerceIn(blurMaskStart, 0.95f)
-    val blurMaskSolid = (blurMaskStart + 0.22f).coerceIn(blurMaskMid, 1f)
-    val baseArtworkScale = if (disableBlur) 1.03f else 1.06f
-    val baseArtworkAlpha = if (disableBlur) 0.72f else 0.82f
-    val surfaceTint = MaterialTheme.colorScheme.surface
-
-    Box(
-        modifier = modifier.fillMaxSize(),
-    ) {
-        AnimatedContent(
-            targetState = thumbnailUrl,
-            transitionSpec = {
-                fadeIn(tween(900)) togetherWith fadeOut(tween(900))
-            },
-            label = label,
-        ) { artworkUrl ->
-            if (artworkUrl != null) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    AsyncImage(
-                        model = artworkUrl,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .graphicsLayer {
-                                scaleX = baseArtworkScale
-                                scaleY = baseArtworkScale
-                                alpha = baseArtworkAlpha
-                            }
-                    )
-
-                    if (!disableBlur) {
-                        AsyncImage(
-                            model = artworkUrl,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .cloudy(radius = cloudyRadius)
-                                .graphicsLayer {
-                                    compositingStrategy = CompositingStrategy.Offscreen
-                                }
-                                .drawWithCache {
-                                    val blurMask = Brush.verticalGradient(
-                                        colorStops = arrayOf(
-                                            0f to Color.Transparent,
-                                            blurMaskStart to Color.Transparent,
-                                            blurMaskMid to Color.Black.copy(alpha = 0.6f),
-                                            blurMaskSolid to Color.Black,
-                                            1f to Color.Black,
-                                        )
-                                    )
-
-                                    onDrawWithContent {
-                                        drawContent()
-                                        drawRect(
-                                            brush = blurMask,
-                                            blendMode = BlendMode.DstIn,
-                                        )
-                                    }
-                                }
-                        )
-                    }
-                }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black)
-                )
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.08f))
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colorStops = arrayOf(
-                            0f to Color.Black.copy(alpha = 0.18f),
-                            0.34f to Color.Transparent,
-                            0.64f to Color.Black.copy(alpha = 0.22f),
-                            1f to Color.Black.copy(alpha = 0.82f),
-                        )
-                    )
-                )
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colorStops = arrayOf(
-                            0f to Color.Transparent,
-                            0.56f to Color.Transparent,
-                            0.8f to surfaceTint.copy(alpha = 0.16f),
-                            1f to surfaceTint.copy(alpha = 0.3f),
-                        )
-                    )
-                )
-        )
     }
 }
 
