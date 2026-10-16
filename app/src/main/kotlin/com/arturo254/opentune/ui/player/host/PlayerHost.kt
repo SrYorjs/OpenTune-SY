@@ -88,7 +88,7 @@ internal fun rememberPlayerHostState(
             expandedBound = maxHeight,
         )
 
-    val miniPlayerAnchor by remember {
+    val miniPlayerAnchor by remember(playerBottomSheetState) {
         derivedStateOf {
             settledHostPlayerAnchor(
                 isExpanded = playerBottomSheetState.isExpanded,
@@ -102,7 +102,7 @@ internal fun rememberPlayerHostState(
         mutableStateOf(false)
     }
 
-    val isPlayerExpanded by remember {
+    val isPlayerExpanded by remember(playerBottomSheetState) {
         derivedStateOf { playerBottomSheetState.isExpanded }
     }
 
