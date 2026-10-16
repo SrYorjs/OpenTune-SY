@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.media3.common.Player
 import com.arturo254.opentune.extensions.togglePlayPause
+import com.arturo254.opentune.extensions.toggleRepeatMode
 import com.arturo254.opentune.playback.PlayerConnection
 
 /**
@@ -34,6 +35,10 @@ class PlayerActions internal constructor(private val backend: PlayerActionBacken
 
     /** Likes are still owned by MusicService via PlayerConnection. */
     fun toggleFavorite() = backend.toggleFavorite()
+
+    /** Shared secondary controls; use the same Media3 commands as legacy UI. */
+    fun toggleShuffle() = backend.toggleShuffle()
+    fun toggleRepeat() = backend.toggleRepeat()
 }
 
 internal interface PlayerActionBackend {
@@ -46,6 +51,8 @@ internal interface PlayerActionBackend {
     fun next()
     fun previous()
     fun toggleFavorite()
+    fun toggleShuffle()
+    fun toggleRepeat()
 }
 
 private class PlayerConnectionActionBackend(private val connection: PlayerConnection) : PlayerActionBackend {
@@ -66,6 +73,8 @@ private class PlayerConnectionActionBackend(private val connection: PlayerConnec
     override fun next() { connection.seekToNext() }
     override fun previous() { connection.seekToPrevious() }
     override fun toggleFavorite() { connection.toggleLike() }
+    override fun toggleShuffle() { player.shuffleModeEnabled = !player.shuffleModeEnabled }
+    override fun toggleRepeat() { player.toggleRepeatMode() }
 }
 
 @Composable

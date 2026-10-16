@@ -10,7 +10,6 @@ package com.arturo254.opentune.ui.player
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
@@ -109,10 +108,16 @@ import com.arturo254.opentune.constants.PlayerDesignStyle
 import com.arturo254.opentune.constants.PlayerHorizontalPadding
 import com.arturo254.opentune.constants.SliderStyle
 import com.arturo254.opentune.db.entities.FormatEntity
-import com.arturo254.opentune.extensions.toggleRepeatMode
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
+import com.arturo254.opentune.ui.player.controls.PlayerSharedPlaybackContent
+import com.arturo254.opentune.ui.player.controls.PlayerSharedSkipIcon
+import com.arturo254.opentune.ui.player.controls.PlayerSkipDirection
+import com.arturo254.opentune.ui.player.controls.playerPlaybackIconRes
+import com.arturo254.opentune.ui.player.controls.playerFavoriteIconRes
+import com.arturo254.opentune.ui.player.controls.playerRepeatIconRes
+import com.arturo254.opentune.ui.player.controls.sharePlayerTrack
 import com.arturo254.opentune.ui.component.BottomSheetPageState
 import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.ui.component.MenuState
@@ -281,15 +286,7 @@ fun PlayerTopActions(
                         .clip(shareShape)
                         .background(textButtonColor)
                         .clickable {
-                            val intent = Intent().apply {
-                                action = Intent.ACTION_SEND
-                                type = "text/plain"
-                                putExtra(
-                                    Intent.EXTRA_TEXT,
-                                    "https://music.youtube.com/watch?v=${mediaMetadata.id}"
-                                )
-                            }
-                            context.startActivity(Intent.createChooser(intent, null))
+                            sharePlayerTrack(context, mediaMetadata.id)
                         }
                 ) {
                     Image(
@@ -313,9 +310,7 @@ fun PlayerTopActions(
                 ) {
                     Image(
                         painter = painterResource(
-                            if (currentSongLiked)
-                                R.drawable.favorite
-                            else R.drawable.favorite_border
+                            playerFavoriteIconRes(currentSongLiked)
                         ),
                         contentDescription = null,
                         colorFilter = ColorFilter.tint(iconButtonColor),
@@ -337,15 +332,7 @@ fun PlayerTopActions(
                         .size(36.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .clickable {
-                            val intent = Intent().apply {
-                                action = Intent.ACTION_SEND
-                                type = "text/plain"
-                                putExtra(
-                                    Intent.EXTRA_TEXT,
-                                    "https://music.youtube.com/watch?v=${mediaMetadata.id}"
-                                )
-                            }
-                            context.startActivity(Intent.createChooser(intent, null))
+                            sharePlayerTrack(context, mediaMetadata.id)
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -365,8 +352,7 @@ fun PlayerTopActions(
                 ) {
                     Icon(
                         painter = painterResource(
-                            if (currentSongLiked) R.drawable.favorite
-                            else R.drawable.favorite_border
+                            playerFavoriteIconRes(currentSongLiked)
                         ),
                         contentDescription = null,
                         tint = if (currentSongLiked)
@@ -385,15 +371,7 @@ fun PlayerTopActions(
             ) {
                 Surface(
                     onClick = {
-                        val intent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            type = "text/plain"
-                            putExtra(
-                                Intent.EXTRA_TEXT,
-                                "https://music.youtube.com/watch?v=${mediaMetadata.id}"
-                            )
-                        }
-                        context.startActivity(Intent.createChooser(intent, null))
+                        sharePlayerTrack(context, mediaMetadata.id)
                     },
                     shape = RoundedCornerShape(14.dp),
                     color = textBackgroundColor.copy(alpha = 0.12f),
@@ -424,8 +402,7 @@ fun PlayerTopActions(
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                         Icon(
                             painter = painterResource(
-                                if (currentSongLiked) R.drawable.favorite
-                                else R.drawable.favorite_border
+                                playerFavoriteIconRes(currentSongLiked)
                             ),
                             contentDescription = null,
                             tint = if (currentSongLiked)
@@ -481,16 +458,7 @@ fun PlayerTopActions(
                         .clip(RoundedCornerShape(24.dp))
                         .background(textButtonColor)
                         .clickable {
-                            val intent =
-                                Intent().apply {
-                                    action = Intent.ACTION_SEND
-                                    type = "text/plain"
-                                    putExtra(
-                                        Intent.EXTRA_TEXT,
-                                        "https://music.youtube.com/watch?v=${mediaMetadata.id}"
-                                    )
-                                }
-                            context.startActivity(Intent.createChooser(intent, null))
+                            sharePlayerTrack(context, mediaMetadata.id)
                         },
             ) {
                 Image(
@@ -546,15 +514,7 @@ fun PlayerTopActions(
             ) {
                 Surface(
                     onClick = {
-                        val intent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            type = "text/plain"
-                            putExtra(
-                                Intent.EXTRA_TEXT,
-                                "https://music.youtube.com/watch?v=${mediaMetadata.id}"
-                            )
-                        }
-                        context.startActivity(Intent.createChooser(intent, null))
+                        sharePlayerTrack(context, mediaMetadata.id)
                     },
                     shape = RoundedCornerShape(
                         topStart = 50.dp, bottomStart = 50.dp,
@@ -588,8 +548,7 @@ fun PlayerTopActions(
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                         Icon(
                             painter = painterResource(
-                                if (currentSongLiked) R.drawable.favorite
-                                else R.drawable.favorite_border
+                                playerFavoriteIconRes(currentSongLiked)
                             ),
                             contentDescription = null,
                             tint = if (currentSongLiked)
@@ -657,8 +616,7 @@ fun PlayerTopActions(
                 ) {
                     Icon(
                         painter = painterResource(
-                            if (currentSongLiked) R.drawable.favorite
-                            else R.drawable.favorite_border
+                            playerFavoriteIconRes(currentSongLiked)
                         ),
                         contentDescription = null,
                         tint = textBackgroundColor.copy(alpha = if (currentSongLiked) 1f else 0.7f),
@@ -714,8 +672,7 @@ fun PlayerTopActions(
                 ) {
                     Icon(
                         painter = painterResource(
-                            if (currentSongLiked) R.drawable.favorite_filled
-                            else R.drawable.favorite_outline
+                            playerFavoriteIconRes(currentSongLiked, v8 = true)
                         ),
                         contentDescription = null,
                         tint = textBackgroundColor.copy(alpha = if (currentSongLiked) 1f else 0.7f),
@@ -1004,8 +961,7 @@ fun PlayerPlaybackControls(
                             .size(width = sideButtonWidth, height = sideButtonHeight)
                             .clip(RoundedCornerShape(32.dp))
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.skip_previous),
+                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.PREVIOUS,
                             contentDescription = null,
                             modifier = Modifier.size(32.dp)
                         )
@@ -1027,24 +983,14 @@ fun PlayerPlaybackControls(
                             .size(width = playButtonWidth, height = playButtonHeight)
                             .clip(RoundedCornerShape(32.dp))
                     ) {
-                        if (isLoading) {
-                            CircularWavyProgressIndicator(
-                                modifier = Modifier.size(42.dp),
-                                color = iconButtonColor,
-                            )
-                        } else {
-                            Icon(
-                                painter = painterResource(
-                                    when {
-                                        playbackState == STATE_ENDED -> R.drawable.replay
-                                        isPlaying -> R.drawable.pause
-                                        else -> R.drawable.play
-                                    }
-                                ),
-                                contentDescription = null,
-                                modifier = Modifier.size(42.dp)
-                            )
-                        }
+                        PlayerSharedPlaybackContent(
+                            playbackState = playbackState,
+                            isPlaying = isPlaying,
+                            isLoading = isLoading,
+                            iconSize = 42.dp,
+                            loadingSize = 42.dp,
+                            loadingTint = iconButtonColor,
+                        )
                     }
 
                     Spacer(modifier = Modifier.width(16.dp))
@@ -1062,8 +1008,7 @@ fun PlayerPlaybackControls(
                             .size(width = sideButtonWidth, height = sideButtonHeight)
                             .clip(RoundedCornerShape(32.dp))
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.skip_next),
+                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.NEXT,
                             contentDescription = null,
                             modifier = Modifier.size(32.dp)
                         )
@@ -1131,7 +1076,7 @@ fun PlayerPlaybackControls(
                                 interactionSource = shuffleInteraction,
                                 indication = null
                             ) {
-                                playerConnection.player.shuffleModeEnabled = !shuffleModeEnabled
+                                playerActions.toggleShuffle()
                             }
                             .graphicsLayer(scaleX = extraScale, scaleY = extraScale),
                         contentAlignment = Alignment.Center
@@ -1161,8 +1106,7 @@ fun PlayerPlaybackControls(
                             .graphicsLayer(scaleX = sideScale, scaleY = sideScale),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.skip_previous),
+                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.PREVIOUS,
                             contentDescription = null,
                             tint = textBackgroundColor.copy(alpha = if (canSkipPrevious) 0.9f else 0.4f),
                             modifier = Modifier.size(26.dp)
@@ -1182,25 +1126,15 @@ fun PlayerPlaybackControls(
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        if (isLoading) {
-                            CircularWavyProgressIndicator(
-                                modifier = Modifier.size(32.dp),
-                                color = icBackgroundColor,
-                            )
-                        } else {
-                            Icon(
-                                painter = painterResource(
-                                    when {
-                                        playbackState == STATE_ENDED -> R.drawable.replay
-                                        isPlaying -> R.drawable.pause
-                                        else -> R.drawable.play
-                                    }
-                                ),
-                                contentDescription = null,
-                                tint = icBackgroundColor,
-                                modifier = Modifier.size(34.dp)
-                            )
-                        }
+                        PlayerSharedPlaybackContent(
+                            playbackState = playbackState,
+                            isPlaying = isPlaying,
+                            isLoading = isLoading,
+                            iconSize = 34.dp,
+                            loadingSize = 32.dp,
+                            loadingTint = icBackgroundColor,
+                            iconTint = icBackgroundColor,
+                        )
                     }
 
                     Box(
@@ -1218,8 +1152,7 @@ fun PlayerPlaybackControls(
                             .graphicsLayer(scaleX = sideScale, scaleY = sideScale),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.skip_next),
+                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.NEXT,
                             contentDescription = null,
                             tint = textBackgroundColor.copy(alpha = if (canSkipNext) 0.9f else 0.4f),
                             modifier = Modifier.size(26.dp)
@@ -1234,7 +1167,7 @@ fun PlayerPlaybackControls(
                                 interactionSource = repeatInteraction,
                                 indication = null
                             ) {
-                                playerConnection.player.toggleRepeatMode()
+                                playerActions.toggleRepeat()
                             }
                             .graphicsLayer(scaleX = extraScale, scaleY = extraScale),
                         contentAlignment = Alignment.Center
@@ -1334,7 +1267,7 @@ fun PlayerPlaybackControls(
                     ) {
                         Surface(
                             onClick = {
-                                playerConnection.player.shuffleModeEnabled = !shuffleModeEnabled
+                                playerActions.toggleShuffle()
                             },
                             interactionSource = shuffleInteraction,
                             shape = RoundedCornerShape(smallRadius),
@@ -1376,8 +1309,7 @@ fun PlayerPlaybackControls(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.skip_previous),
+                                PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.PREVIOUS,
                                     contentDescription = null,
                                     tint = textBackgroundColor.copy(
                                         alpha = if (canSkipPrevious) 1f else 0.4f
@@ -1404,25 +1336,15 @@ fun PlayerPlaybackControls(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            if (isLoading) {
-                                CircularWavyProgressIndicator(
-                                    modifier = Modifier.size(40.dp),
-                                    color = icBackgroundColor,
-                                )
-                            } else {
-                                Icon(
-                                    painter = painterResource(
-                                        when {
-                                            playbackState == STATE_ENDED -> R.drawable.replay
-                                            isPlaying -> R.drawable.pause
-                                            else -> R.drawable.play
-                                        }
-                                    ),
-                                    contentDescription = null,
-                                    tint = icBackgroundColor,
-                                    modifier = Modifier.size(44.dp)
-                                )
-                            }
+                            PlayerSharedPlaybackContent(
+                                playbackState = playbackState,
+                                isPlaying = isPlaying,
+                                isLoading = isLoading,
+                                iconSize = 44.dp,
+                                loadingSize = 40.dp,
+                                loadingTint = icBackgroundColor,
+                                iconTint = icBackgroundColor,
+                            )
                         }
                     }
                     Row(
@@ -1444,8 +1366,7 @@ fun PlayerPlaybackControls(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.skip_next),
+                                PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.NEXT,
                                     contentDescription = null,
                                     tint = textBackgroundColor.copy(
                                         alpha = if (canSkipNext) 1f else 0.4f
@@ -1458,7 +1379,7 @@ fun PlayerPlaybackControls(
                         Spacer(modifier = Modifier.width(gap))
 
                         Surface(
-                            onClick = { playerConnection.player.toggleRepeatMode() },
+                            onClick = { playerActions.toggleRepeat() },
                             interactionSource = repeatInteraction,
                             shape = RoundedCornerShape(smallRadius),
                             color = textBackgroundColor.copy(
@@ -1474,10 +1395,7 @@ fun PlayerPlaybackControls(
                             ) {
                                 Icon(
                                     painter = painterResource(
-                                        when (repeatMode) {
-                                            Player.REPEAT_MODE_ONE -> R.drawable.repeat_one
-                                            else -> R.drawable.repeat
-                                        }
+                                        playerRepeatIconRes(repeatMode)
                                     ),
                                     contentDescription = null,
                                     tint = textBackgroundColor.copy(
@@ -1563,7 +1481,7 @@ fun PlayerPlaybackControls(
                             .alpha(if (repeatMode == Player.REPEAT_MODE_OFF) 0.5f else 1f)
                             .graphicsLayer(scaleX = extraScale, scaleY = extraScale),
                         onClick = {
-                            playerConnection.player.toggleRepeatMode()
+                            playerActions.toggleRepeat()
                         },
                         interactionSource = repeatInteraction
                     )
@@ -1611,15 +1529,7 @@ fun PlayerPlaybackControls(
                         Image(
                             painter =
                                 painterResource(
-                                    if (playbackState ==
-                                        STATE_ENDED
-                                    ) {
-                                        R.drawable.replay
-                                    } else if (isPlaying) {
-                                        R.drawable.pause
-                                    } else {
-                                        R.drawable.play
-                                    },
+                                    playerPlaybackIconRes(playbackState, isPlaying),
                                 ),
                             contentDescription = null,
                             colorFilter = ColorFilter.tint(iconButtonColor),
@@ -1650,7 +1560,7 @@ fun PlayerPlaybackControls(
 
                 Box(modifier = Modifier.weight(1f)) {
                     ResizableIconButton(
-                        icon = if (currentSongLiked) R.drawable.favorite else R.drawable.favorite_border,
+                        icon = playerFavoriteIconRes(currentSongLiked),
                         color = if (currentSongLiked) MaterialTheme.colorScheme.error else textBackgroundColor,
                         modifier =
                             Modifier
@@ -1750,8 +1660,7 @@ fun PlayerPlaybackControls(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.skip_previous),
+                                PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.PREVIOUS,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(
                                         alpha = if (canSkipPrevious) 1f else 0.4f
@@ -1781,25 +1690,15 @@ fun PlayerPlaybackControls(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (isLoading) {
-                                    CircularWavyProgressIndicator(
-                                        modifier = Modifier.size(40.dp),
-                                        color = iconButtonColor,
-                                    )
-                                } else {
-                                    Icon(
-                                        painter = painterResource(
-                                            when {
-                                                playbackState == STATE_ENDED -> R.drawable.replay
-                                                isPlaying -> R.drawable.pause
-                                                else -> R.drawable.play
-                                            }
-                                        ),
-                                        contentDescription = null,
-                                        tint = iconButtonColor,
-                                        modifier = Modifier.size(44.dp)
-                                    )
-                                }
+                                PlayerSharedPlaybackContent(
+                                    playbackState = playbackState,
+                                    isPlaying = isPlaying,
+                                    isLoading = isLoading,
+                                    iconSize = 44.dp,
+                                    loadingSize = 40.dp,
+                                    loadingTint = iconButtonColor,
+                                    iconTint = iconButtonColor,
+                                )
                             }
                         }
 
@@ -1823,8 +1722,7 @@ fun PlayerPlaybackControls(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.skip_next),
+                                PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.NEXT,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(
                                         alpha = if (canSkipNext) 1f else 0.4f
@@ -1845,7 +1743,7 @@ fun PlayerPlaybackControls(
                 ) {
                     Surface(
                         onClick = {
-                            playerConnection.player.shuffleModeEnabled = !shuffleModeEnabled
+                            playerActions.toggleShuffle()
                         },
                         interactionSource = shuffleInteraction,
                         shape = RoundedCornerShape(50),
@@ -1874,7 +1772,7 @@ fun PlayerPlaybackControls(
                     Spacer(modifier = Modifier.width(16.dp))
 
                     Surface(
-                        onClick = { playerConnection.player.toggleRepeatMode() },
+                        onClick = { playerActions.toggleRepeat() },
                         interactionSource = repeatInteraction,
                         shape = RoundedCornerShape(50),
                         color = if (repeatMode != Player.REPEAT_MODE_OFF)
@@ -1890,10 +1788,7 @@ fun PlayerPlaybackControls(
                         ) {
                             Icon(
                                 painter = painterResource(
-                                    when (repeatMode) {
-                                        Player.REPEAT_MODE_ONE -> R.drawable.repeat_one
-                                        else -> R.drawable.repeat
-                                    }
+                                    playerRepeatIconRes(repeatMode)
                                 ),
                                 contentDescription = null,
                                 tint = if (repeatMode != Player.REPEAT_MODE_OFF)
@@ -1927,8 +1822,7 @@ fun PlayerPlaybackControls(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.skip_previous),
+                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.PREVIOUS,
                             contentDescription = null,
                             tint = textBackgroundColor.copy(
                                 alpha = if (canSkipPrevious) 1f else 0.4f
@@ -1950,25 +1844,15 @@ fun PlayerPlaybackControls(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (isLoading) {
-                            CircularWavyProgressIndicator(
-                                modifier = Modifier.size(44.dp),
-                                color = textBackgroundColor,
-                            )
-                        } else {
-                            Icon(
-                                painter = painterResource(
-                                    when {
-                                        playbackState == STATE_ENDED -> R.drawable.replay
-                                        isPlaying -> R.drawable.pause
-                                        else -> R.drawable.play
-                                    }
-                                ),
-                                contentDescription = null,
-                                tint = textBackgroundColor,
-                                modifier = Modifier.size(52.dp)
-                            )
-                        }
+                        PlayerSharedPlaybackContent(
+                            playbackState = playbackState,
+                            isPlaying = isPlaying,
+                            isLoading = isLoading,
+                            iconSize = 52.dp,
+                            loadingSize = 44.dp,
+                            loadingTint = textBackgroundColor,
+                            iconTint = textBackgroundColor,
+                        )
                     }
                 }
 
@@ -1983,8 +1867,7 @@ fun PlayerPlaybackControls(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.skip_next),
+                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.NEXT,
                             contentDescription = null,
                             tint = textBackgroundColor.copy(
                                 alpha = if (canSkipNext) 1f else 0.4f
@@ -2017,8 +1900,7 @@ fun PlayerPlaybackControls(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.skip_previous),
+                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.PREVIOUS,
                             contentDescription = null,
                             tint = textBackgroundColor.copy(
                                 alpha = if (canSkipPrevious) 1f else 0.4f
@@ -2041,25 +1923,15 @@ fun PlayerPlaybackControls(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (isLoading) {
-                            CircularWavyProgressIndicator(
-                                modifier = Modifier.size(36.dp),
-                                color = Color.Black,
-                            )
-                        } else {
-                            Icon(
-                                painter = painterResource(
-                                    when {
-                                        playbackState == STATE_ENDED -> R.drawable.replay
-                                        isPlaying -> R.drawable.pause
-                                        else -> R.drawable.play
-                                    }
-                                ),
-                                contentDescription = null,
-                                tint = Color.Black,
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
+                        PlayerSharedPlaybackContent(
+                            playbackState = playbackState,
+                            isPlaying = isPlaying,
+                            isLoading = isLoading,
+                            iconSize = 32.dp,
+                            loadingSize = 36.dp,
+                            loadingTint = Color.Black,
+                            iconTint = Color.Black,
+                        )
                     }
                 }
 
@@ -2075,8 +1947,7 @@ fun PlayerPlaybackControls(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            painter = painterResource(R.drawable.skip_next),
+                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.NEXT,
                             contentDescription = null,
                             tint = textBackgroundColor.copy(
                                 alpha = if (canSkipNext) 1f else 0.4f
@@ -2930,8 +2801,7 @@ fun V8PlayerControlsContent(
                 ) {
                     Icon(
                         painter = painterResource(
-                            if (currentSongLiked) R.drawable.favorite_filled
-                            else R.drawable.favorite_outline
+                            playerFavoriteIconRes(currentSongLiked, v8 = true)
                         ),
                         contentDescription = null,
                         tint = textBackgroundColor.copy(alpha = if (currentSongLiked) 1f else 0.78f),
@@ -3180,8 +3050,7 @@ fun V8PlaybackControls(
                 enabled = canSkipPrevious,
                 size = 58.dp,
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.skip_previous),
+                PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.PREVIOUS,
                     contentDescription = null,
                     tint = textBackgroundColor.copy(alpha = if (canSkipPrevious) 0.96f else 0.34f),
                     modifier = Modifier.size(30.dp),
@@ -3212,11 +3081,7 @@ fun V8PlaybackControls(
                         Icon(
                             painter =
                                 painterResource(
-                                    when {
-                                        playbackState == Player.STATE_ENDED -> R.drawable.replay
-                                        playing -> R.drawable.pause
-                                        else -> R.drawable.play
-                                    }
+                                    playerPlaybackIconRes(playbackState, playing)
                                 ),
                             contentDescription = null,
                             tint = textBackgroundColor,
@@ -3231,8 +3096,7 @@ fun V8PlaybackControls(
                 enabled = canSkipNext,
                 size = 58.dp,
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.skip_next),
+                PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.NEXT,
                     contentDescription = null,
                     tint = textBackgroundColor.copy(alpha = if (canSkipNext) 0.96f else 0.34f),
                     modifier = Modifier.size(30.dp),
@@ -3246,7 +3110,7 @@ fun V8PlaybackControls(
         ) {
             LiquidGlassIconButton(
                 onClick = {
-                    playerConnection.player.shuffleModeEnabled = !shuffleModeEnabled
+                    playerActions.toggleShuffle()
                 },
                 selected = shuffleModeEnabled,
                 size = 42.dp,
@@ -3260,18 +3124,14 @@ fun V8PlaybackControls(
             }
 
             LiquidGlassIconButton(
-                onClick = { playerConnection.player.toggleRepeatMode() },
+                onClick = { playerActions.toggleRepeat() },
                 selected = repeatMode != Player.REPEAT_MODE_OFF,
                 size = 42.dp,
             ) {
                 Icon(
                     painter =
                         painterResource(
-                            if (repeatMode == Player.REPEAT_MODE_ONE) {
-                                R.drawable.repeat_one
-                            } else {
-                                R.drawable.repeat
-                            }
+                            playerRepeatIconRes(repeatMode)
                         ),
                     contentDescription = null,
                     tint =

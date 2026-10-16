@@ -94,6 +94,10 @@ import com.arturo254.opentune.core.designsystem.theme.motion
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
+import com.arturo254.opentune.ui.player.controls.PlayerSkipDirection
+import com.arturo254.opentune.ui.player.controls.playerPlaybackIconRes
+import com.arturo254.opentune.ui.player.controls.playerFavoriteIconRes
+import com.arturo254.opentune.ui.player.controls.playerSkipIconRes
 import com.arturo254.opentune.ui.player.state.PlayerStateInput
 import com.arturo254.opentune.ui.player.state.rememberPlayerState
 import com.arturo254.opentune.together.TogetherSessionState
@@ -437,7 +441,7 @@ private fun MiniPlayerTransportControls(
         verticalAlignment = Alignment.CenterVertically
     ) {
         MiniPlayerTransportButton(
-            iconResId = R.drawable.skip_previous,
+            iconResId = playerSkipIconRes(PlayerSkipDirection.PREVIOUS),
             contentDescription = null,
             onClick = playerActions::previous,
             enabled = canSkipPrevious
@@ -448,11 +452,7 @@ private fun MiniPlayerTransportControls(
             modifier = Modifier.size(40.dp)
         ) {
             MiniPlayerTransportButton(
-                iconResId = when {
-                    playbackState == Player.STATE_ENDED -> R.drawable.replay
-                    isPlaying -> R.drawable.pause
-                    else -> R.drawable.play
-                },
+                iconResId = playerPlaybackIconRes(playbackState, isPlaying),
                 contentDescription = stringResource(
                     if (playbackState == Player.STATE_ENDED || !isPlaying) R.string.play else R.string.play
                 ).let {
@@ -467,7 +467,7 @@ private fun MiniPlayerTransportControls(
         }
 
         MiniPlayerTransportButton(
-            iconResId = R.drawable.skip_next,
+            iconResId = playerSkipIconRes(PlayerSkipDirection.NEXT),
             contentDescription = null,
             onClick = playerActions::next,
             enabled = canSkipNext
@@ -596,7 +596,7 @@ fun NewMiniPlayerContent(
             )
             Icon(
                 painter = painterResource(
-                    if (isLiked) R.drawable.favorite else R.drawable.favorite_border
+                    playerFavoriteIconRes(isLiked)
                 ),
                 contentDescription = null,
                 tint = if (isLiked)
@@ -717,7 +717,7 @@ private fun MiniPlayerPlayPauseButton(
             ) { playing ->
                 Icon(
                     painter = painterResource(
-                        if (playing) R.drawable.pause else R.drawable.play
+                        playerPlaybackIconRes(Player.STATE_READY, playing)
                     ),
                     contentDescription = null,
                     tint = iconColor,

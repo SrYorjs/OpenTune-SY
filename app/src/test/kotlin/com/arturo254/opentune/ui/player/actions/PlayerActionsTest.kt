@@ -18,6 +18,8 @@ class PlayerActionsTest {
         override fun next() { commands += "next" }
         override fun previous() { commands += "previous" }
         override fun toggleFavorite() { commands += "favorite" }
+        override fun toggleShuffle() { commands += "shuffle" }
+        override fun toggleRepeat() { commands += "repeat" }
     }
 
     @Test fun normalPlayPauseDelegatesToTheOriginalTransport() {
@@ -56,6 +58,14 @@ class PlayerActionsTest {
         actions.next()
         actions.toggleFavorite()
         assertEquals(listOf("previous", "next", "favorite"), fake.commands)
+    }
+
+    @Test fun secondaryCommandsAreForwardedExactlyOnce() {
+        val fake = FakeBackend()
+        val actions = PlayerActions(fake)
+        actions.toggleShuffle()
+        actions.toggleRepeat()
+        assertEquals(listOf("shuffle", "repeat"), fake.commands)
     }
 
     @Test fun replayAndCrossfadeRemainSeparateActions() {
