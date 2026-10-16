@@ -51,7 +51,8 @@ class PlayerProgressIntegrationTest {
         assertTrue(c.contains("SliderStyle.Thick"))
         assertTrue(c.contains("SliderStyle.Simple"))
         assertTrue(c.contains("GlassTrack("))
-        assertTrue(p.contains("littlePlayerOverlayGestures("))
+        assertTrue(p.contains("v5OverlayGestures("))
+        assertTrue(source("ui/player/v5/V5PlayerContent.kt").contains("fun Modifier.v5OverlayGestures("))
         assertTrue(p.contains("onSeekToPositionMs = updatedOnSliderValueChange"))
     }
 }
