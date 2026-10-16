@@ -20,9 +20,14 @@ class PlayerStateIntegrationTest {
         assertTrue(player.contains("rememberPlayerVisualState("))
         assertTrue(player.contains("thumbnailUrl = playerVisuals.artworkUrl"))
         assertTrue(player.contains("offlineArtworkUrl = offlineCoverUri"))
-        assertTrue(mini.contains("rememberPlayerState("))
-        assertTrue(mini.contains("PlayerStateInput("))
+        val bridge = source("ui/player/MiniPlayer.kt")
+        assertTrue(player.contains("playerState = playerState"))
+        assertTrue(bridge.contains("playerState = playerState"))
+        assertTrue(mini.contains("playerState: PlayerState"))
+        assertTrue(!mini.contains("rememberPlayerState("))
+        assertTrue(!mini.contains("PlayerStateInput("))
         assertTrue(mini.contains("playerState.isBuffering"))
+        assertTrue(mini.contains("progressFraction = playerState.progressFraction"))
     }
 
     @Test
