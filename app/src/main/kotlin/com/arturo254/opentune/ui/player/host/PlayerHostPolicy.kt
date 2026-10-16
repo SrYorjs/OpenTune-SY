@@ -12,6 +12,22 @@ internal fun hostPlayerAnchor(isExpanded: Boolean, isDismissed: Boolean): Int =
         else -> COLLAPSED_ANCHOR
     }
 
+/**
+ * A sheet in motion is neither settled-expanded, settled-collapsed nor
+ * settled-dismissed. Do not persist its transient midpoint as COLLAPSED:
+ * that loses fullscreen/restored state during gestures and animations.
+ */
+internal fun settledHostPlayerAnchor(
+    isExpanded: Boolean,
+    isCollapsed: Boolean,
+    isDismissed: Boolean,
+): Int? = when {
+    isExpanded -> EXPANDED_ANCHOR
+    isDismissed -> DISMISSED_ANCHOR
+    isCollapsed -> COLLAPSED_ANCHOR
+    else -> null
+}
+
 /** Never overwrite the saved anchor while special full-screen routes own it. */
 internal fun shouldPersistHostAnchor(
     isYearInMusicScreen: Boolean,
