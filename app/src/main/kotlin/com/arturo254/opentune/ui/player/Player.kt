@@ -525,7 +525,7 @@ fun BottomSheetPlayer(
                 duration = if (metaDuration > 0) metaDuration else 0L
             }
             val currentPlayerPosition = playerConnection.player.currentPosition
-            if (sliderPosition == null && currentPlayerPosition > 0L) {
+            if (seekSession.pendingSeekMs == null && currentPlayerPosition > 0L) {
                 position = currentPlayerPosition
             }
         }
@@ -936,7 +936,7 @@ fun BottomSheetPlayer(
                             val screenWidth = LocalConfiguration.current.screenWidthDp
                             val thumbnailSize = (screenWidth * 0.4).dp
                             Thumbnail(
-                                sliderPositionProvider = { sliderPosition },
+                                sliderPositionProvider = { seekSession.pendingSeekMs },
                                 modifier = Modifier.size(thumbnailSize),
                                 isPlayerExpanded = state.isExpanded
                             )
@@ -1149,7 +1149,7 @@ fun BottomSheetPlayer(
                             modifier = Modifier.weight(1f),
                         ) {
                             Thumbnail(
-                                sliderPositionProvider = { sliderPosition },
+                                sliderPositionProvider = { seekSession.pendingSeekMs },
                                 modifier = Modifier.nestedScroll(state.preUpPostDownNestedScrollConnection),
                                 isPlayerExpanded = state.isExpanded
                             )
