@@ -59,9 +59,13 @@ class Player2CompatibilityContractTest {
         assertTrue(playback.contains("TogetherRole.Guest"))
         assertTrue(playback.contains("player.seekToNext()"))
         assertTrue(playback.contains("player.seekToPrevious()"))
-        assertTrue(playerControls.contains("togglePlayPause()"))
-        assertTrue(playerControls.contains("playerConnection::seekToNext"))
-        assertTrue(playerControls.contains("playerConnection::seekToPrevious"))
+        // Phase 4.3 routes all visual controls through PlayerActions.
+        assertTrue(playerControls.contains("playerActions.playPause()"))
+        assertTrue(playerControls.contains("playerActions::next"))
+        assertTrue(playerControls.contains("playerActions::previous"))
+        val actions = source("ui/player/actions/PlayerActions.kt")
+        assertTrue(actions.contains("connection.seekToNext()"))
+        assertTrue(actions.contains("connection.seekToPrevious()"))
         assertTrue(miniControls.contains("MiniPlayerSwipePolicy.shouldChangeSong("))
         assertTrue(miniControls.contains("MiniPlayerSwipePolicy.canConsumeDrag("))
     }
