@@ -514,8 +514,12 @@ fun V8PlayerControlsContent(
             canSkipPrevious = canSkipPrevious,
             canSkipNext = canSkipNext,
             textBackgroundColor = textBackgroundColor,
-            playerConnection = playerConnection,
-            shuffleModeEnabled = shuffleModeEnabled
+            shuffleModeEnabled = shuffleModeEnabled,
+            onPrevious = playerActions::previous,
+            onPlayPause = playerActions::playPause,
+            onNext = playerActions::next,
+            onToggleShuffle = playerActions::toggleShuffle,
+            onToggleRepeat = playerActions::toggleRepeat,
         )
 
         Spacer(Modifier.height(14.dp))
@@ -589,10 +593,13 @@ fun V8PlaybackControls(
     canSkipPrevious: Boolean,
     canSkipNext: Boolean,
     textBackgroundColor: Color,
-    playerConnection: PlayerConnection,
     shuffleModeEnabled: Boolean,
+    onPrevious: () -> Unit,
+    onPlayPause: () -> Unit,
+    onNext: () -> Unit,
+    onToggleShuffle: () -> Unit,
+    onToggleRepeat: () -> Unit,
 ) {
-    val playerActions = rememberPlayerActions(playerConnection)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -603,7 +610,7 @@ fun V8PlaybackControls(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             LiquidGlassIconButton(
-                onClick = playerActions::previous,
+                onClick = onPrevious,
                 enabled = canSkipPrevious,
                 size = 58.dp,
             ) {
@@ -617,7 +624,7 @@ fun V8PlaybackControls(
 
             LiquidGlassIconButton(
                 onClick = {
-                    playerActions.playPause()
+                    onPlayPause()
                 },
                 enabled = !isLoading,
                 selected = isPlaying,
@@ -650,7 +657,7 @@ fun V8PlaybackControls(
             }
 
             LiquidGlassIconButton(
-                onClick = playerActions::next,
+                onClick = onNext,
                 enabled = canSkipNext,
                 size = 58.dp,
             ) {
@@ -669,7 +676,7 @@ fun V8PlaybackControls(
         ) {
             LiquidGlassIconButton(
                 onClick = {
-                    playerActions.toggleShuffle()
+                    onToggleShuffle()
                 },
                 selected = shuffleModeEnabled,
                 size = 42.dp,
@@ -683,7 +690,7 @@ fun V8PlaybackControls(
             }
 
             LiquidGlassIconButton(
-                onClick = { playerActions.toggleRepeat() },
+                onClick = { onToggleRepeat() },
                 selected = repeatMode != Player.REPEAT_MODE_OFF,
                 size = 42.dp,
             ) {
