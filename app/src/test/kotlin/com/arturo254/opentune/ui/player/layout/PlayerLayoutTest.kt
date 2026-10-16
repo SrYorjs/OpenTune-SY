@@ -11,7 +11,7 @@ class PlayerLayoutTest {
     fun allEightPersistedVersionsHaveExactlyOneLayoutFamily() {
         val expected = mapOf(
             PlayerDesignStyle.V1 to PlayerLayoutFamily.CLASSIC,
-            PlayerDesignStyle.V2 to PlayerLayoutFamily.CLASSIC,
+            PlayerDesignStyle.V2 to PlayerLayoutFamily.V2,
             PlayerDesignStyle.V3 to PlayerLayoutFamily.CLASSIC,
             PlayerDesignStyle.V4 to PlayerLayoutFamily.CLASSIC,
             PlayerDesignStyle.V5 to PlayerLayoutFamily.COMPACT,
@@ -27,6 +27,17 @@ class PlayerLayoutTest {
                 assertEquals(family, route.family)
             }
         }
+    }
+
+    @Test
+    fun v2GetsDedicatedFamilyWithoutChangingClassicBackgroundPolicy() {
+        for (isLandscape in listOf(false, true)) {
+            val route = resolvePlayerLayout(PlayerDesignStyle.V2, isLandscape)
+            assertEquals(PlayerLayoutFamily.V2, route.family)
+            assertTrue(route.hasSharedBackdrop)
+        }
+        assertEquals(PlayerLayoutFamily.CLASSIC, resolvePlayerLayout(PlayerDesignStyle.V1, false).family)
+        assertEquals(PlayerLayoutFamily.CLASSIC, resolvePlayerLayout(PlayerDesignStyle.V3, true).family)
     }
 
     @Test
