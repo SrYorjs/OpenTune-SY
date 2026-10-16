@@ -18,14 +18,17 @@ class PlayerSharedControlsIntegrationTest {
 
     @Test fun allPlayerVersionsUseSharedPlayAndSkipGlyphs() {
         val controls = source("ui/player/PlayerComponents.kt")
-        assertEquals(6, Regex("""PlayerSharedPlaybackContent\(""").findAll(controls).count())
-        assertEquals(14, Regex("""PlayerSharedSkipIcon\(""").findAll(controls).count())
+        val v2 = source("ui/player/v2/V2PlayerComponents.kt")
+        val allVersions = controls + v2
+        assertEquals(6, Regex("""PlayerSharedPlaybackContent\(""").findAll(allVersions).count())
+        assertEquals(14, Regex("""PlayerSharedSkipIcon\(""").findAll(allVersions).count())
         assertTrue(controls.contains("playerPlaybackIconRes(playbackState, playing)"))
         assertTrue(controls.contains("playerPlaybackIconRes(playbackState, isPlaying)"))
         assertTrue(controls.contains("playerFavoriteIconRes(currentSongLiked"))
         assertTrue(controls.contains("playerRepeatIconRes(repeatMode)"))
         assertTrue(controls.contains("LiquidGlassIconButton("))
-        assertTrue(controls.contains("FilledTonalIconButton("))
+        assertTrue(controls.contains("V2PlayerTransport("))
+        assertTrue(v2.contains("FilledTonalIconButton("))
         assertTrue(controls.contains("ResizableIconButton("))
     }
 
