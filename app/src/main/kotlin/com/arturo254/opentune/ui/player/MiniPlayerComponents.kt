@@ -94,6 +94,8 @@ import com.arturo254.opentune.core.designsystem.theme.motion
 import com.arturo254.opentune.extensions.togglePlayPause
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
+import com.arturo254.opentune.ui.player.state.PlayerStateInput
+import com.arturo254.opentune.ui.player.state.rememberPlayerState
 import com.arturo254.opentune.together.TogetherSessionState
 import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
@@ -492,16 +494,35 @@ fun NewMiniPlayerContent(
     state: BottomSheetState,
     transitionDirection: Int,
 ) {
-    val isPlaying by playerConnection.isPlaying.collectAsState()
+    val connectionIsPlaying by playerConnection.isPlaying.collectAsState()
     val playbackState by playerConnection.playbackState.collectAsState()
-    val mediaMetadata by playerConnection.mediaMetadata.collectAsState()
+    val connectionMetadata by playerConnection.mediaMetadata.collectAsState()
     val togetherSessionState by playerConnection.service.togetherSessionState.collectAsState()
     val canSkipPrevious by playerConnection.canSkipPrevious.collectAsState()
     val canSkipNext by playerConnection.canSkipNext.collectAsState()
+    val shuffleModeEnabled by playerConnection.shuffleModeEnabled.collectAsState()
+    val repeatMode by playerConnection.repeatMode.collectAsState()
     val currentSong by playerConnection.currentSong.collectAsState(initial = null)
-    val isLiked = currentSong?.song?.liked == true
 
-    val isLoading = playbackState == Player.STATE_BUFFERING
+    val playerState = rememberPlayerState(
+        PlayerStateInput(
+            mediaMetadata = connectionMetadata,
+            playbackState = playbackState,
+            isPlaying = connectionIsPlaying,
+            positionMs = position,
+            durationMs = duration,
+            canSkipPrevious = canSkipPrevious,
+            canSkipNext = canSkipNext,
+            isLiked = currentSong?.song?.liked == true,
+            shuffleModeEnabled = shuffleModeEnabled,
+            repeatMode = repeatMode,
+        )
+    )
+    val mediaMetadata = playerState.mediaMetadata
+    val isPlaying = playerState.isPlaying
+    val isLiked = playerState.isLiked
+    // MiniPlayer has no seek preview: keep buffering-only loading semantics.
+    val isLoading = playerState.isBuffering
 
     Row(
         verticalAlignment = Alignment.CenterVertically,

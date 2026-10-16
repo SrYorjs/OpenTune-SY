@@ -149,6 +149,8 @@ import com.arturo254.opentune.constants.SliderStyleKey
 import com.arturo254.opentune.extensions.togglePlayPause
 import com.arturo254.opentune.extensions.metadata
 import com.arturo254.opentune.models.MediaMetadata
+import com.arturo254.opentune.ui.player.state.PlayerStateInput
+import com.arturo254.opentune.ui.player.state.rememberPlayerState
 import com.arturo254.opentune.ui.component.BottomSheet
 import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.ui.component.LocalBottomSheetPageState
@@ -381,6 +383,7 @@ fun BottomSheetPlayer(
     val playerVolume = playerConnection.service.playerVolume.collectAsState()
 
     val repeatMode by playerConnection.repeatMode.collectAsState()
+    val shuffleModeEnabled by playerConnection.shuffleModeEnabled.collectAsState()
 
     val canSkipPrevious by playerConnection.canSkipPrevious.collectAsState()
     val canSkipNext by playerConnection.canSkipNext.collectAsState()
@@ -400,8 +403,26 @@ fun BottomSheetPlayer(
         mutableStateOf(false)
     }
 
-    // Track loading state: when buffering or when user is seeking
-    val isLoading = playbackState == STATE_BUFFERING || sliderPosition != null
+    // One normalized presentation snapshot for full Player and MiniPlayer.
+    // Reuses the existing position ticker; no second playback/timing engine.
+    val playerState = rememberPlayerState(
+        PlayerStateInput(
+            mediaMetadata = mediaMetadata,
+            playbackState = playbackState,
+            isPlaying = isPlaying,
+            positionMs = position,
+            durationMs = duration,
+            pendingSeekMs = sliderPosition,
+            offlineArtworkUrl = offlineCoverUri,
+            canSkipPrevious = canSkipPrevious,
+            canSkipNext = canSkipNext,
+            isLiked = currentSongLiked,
+            shuffleModeEnabled = shuffleModeEnabled,
+            repeatMode = repeatMode,
+        )
+    )
+    // Loading still means buffering or a pending seek, just as before 4.2.
+    val isLoading = playerState.isLoading
 
     var gradientColors by remember {
         mutableStateOf<List<Color>>(emptyList())
@@ -928,7 +949,7 @@ fun BottomSheetPlayer(
             }
             isUserSeeking = false
         }
-        val seekEnabled = duration > 0L && duration != C.TIME_UNSET
+        val seekEnabled = playerState.canSeek
         val updatedOnSliderValueChange by rememberUpdatedState(onSliderValueChange)
         val updatedOnSliderValueChangeFinished by rememberUpdatedState(onSliderValueChangeFinished)
 
@@ -1113,7 +1134,7 @@ fun BottomSheetPlayer(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         V8PlayerBackdrop(
-                            thumbnailUrl = offlineCoverUri ?: mediaMetadata?.thumbnailUrl,
+                            thumbnailUrl = playerState.artworkUrl,
                             canvasArtwork = canvasArtwork,
                             isPlaying = isPlaying,
                             disableBlur = disableBlur,
@@ -1323,7 +1344,7 @@ fun BottomSheetPlayer(
                         modifier = Modifier.fillMaxSize()
                     ) {
                         V8PlayerBackdrop(
-                            thumbnailUrl = offlineCoverUri ?: mediaMetadata?.thumbnailUrl,
+                            thumbnailUrl = playerState.artworkUrl,
                             canvasArtwork = canvasArtwork,
                             isPlaying = isPlaying,
                             disableBlur = disableBlur,
