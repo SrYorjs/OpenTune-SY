@@ -93,7 +93,8 @@ class Player2CompatibilityContractTest {
         val host = source("ui/player/Player.kt")
         val controls = source("ui/player/PlayerComponents.kt")
         assertTrue(host.contains("fun BottomSheetPlayer("))
-        assertTrue(host.contains("V7PlayerBackdrop("))
+        assertTrue(host.contains("V7PlayerScene("))
+        assertTrue(source("ui/player/v7/V7PlayerScene.kt").contains("V7PlayerBackdrop("))
         assertTrue(host.contains("V8PlayerBackdrop("))
         // Phase 4.7: the Canvas model is now owned by the visual engine,
         // while Player keeps consuming its current Canvas snapshot.
