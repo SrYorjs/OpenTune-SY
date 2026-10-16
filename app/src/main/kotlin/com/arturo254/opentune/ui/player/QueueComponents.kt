@@ -82,6 +82,7 @@ import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.ui.component.MenuState
 import com.arturo254.opentune.ui.component.bottomSheetDraggable
 import com.arturo254.opentune.ui.menu.PlayerMenu
+import com.arturo254.opentune.ui.player.panels.playerCodecContainer
 import com.arturo254.opentune.ui.utils.ShowMediaInfo
 import com.arturo254.opentune.utils.makeTimeString
 import kotlin.math.roundToInt
@@ -540,10 +541,10 @@ fun QueueCollapsedContentV2(
             val codec =
                 currentFormat.codecs
                     .takeIf { it.isNotBlank() }
-                    ?: currentFormat.mimeType.substringAfter("/", missingDelimiterValue = currentFormat.mimeType).uppercase()
+                    ?: playerCodecContainer(currentFormat.mimeType)
 
             val container =
-                currentFormat.mimeType.substringAfter("/", missingDelimiterValue = currentFormat.mimeType).uppercase()
+                playerCodecContainer(currentFormat.mimeType)
 
             val codecLabel =
                 if (container.isNotBlank() && !codec.equals(container, ignoreCase = true)) {
@@ -767,7 +768,7 @@ fun QueueCollapsedContentV3(
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         if (showCodecOnPlayer && currentFormat != null) {
-            val codec = currentFormat.mimeType.substringAfter("/").uppercase()
+            val codec = playerCodecContainer(currentFormat.mimeType)
             val bitrate = "${currentFormat.bitrate / 1000} kbps"
 
             CodecInfoRow(
@@ -910,7 +911,7 @@ fun QueueCollapsedContentV1(
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         if (showCodecOnPlayer && currentFormat != null) {
-            val codec = currentFormat.mimeType.substringAfter("/").uppercase()
+            val codec = playerCodecContainer(currentFormat.mimeType)
             val bitrate = "${currentFormat.bitrate / 1000} kbps"
             val fileSize = if (currentFormat.contentLength > 0) {
                 "${(currentFormat.contentLength / 1024.0 / 1024.0).roundToInt()} MB"
@@ -1058,7 +1059,7 @@ fun QueueCollapsedContentV4(
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         if (showCodecOnPlayer && currentFormat != null) {
-            val codec = currentFormat.mimeType.substringAfter("/").uppercase()
+            val codec = playerCodecContainer(currentFormat.mimeType)
             val bitrate = "${currentFormat.bitrate / 1000} kbps"
             val fileSize = if (currentFormat.contentLength > 0) {
                 "${(currentFormat.contentLength / 1024.0 / 1024.0).roundToInt()} MB"
@@ -1208,7 +1209,7 @@ fun QueueCollapsedContentV7(
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         if (showCodecOnPlayer && currentFormat != null) {
-            val codec = currentFormat.mimeType.substringAfter("/").uppercase()
+            val codec = playerCodecContainer(currentFormat.mimeType)
             val bitrate = "${currentFormat.bitrate / 1000} kbps"
             val fileSize = if (currentFormat.contentLength > 0) {
                 "${(currentFormat.contentLength / 1024.0 / 1024.0).roundToInt()} MB"
