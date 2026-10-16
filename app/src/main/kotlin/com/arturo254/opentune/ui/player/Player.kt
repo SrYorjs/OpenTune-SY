@@ -664,6 +664,9 @@ fun BottomSheetPlayer(
             MiniPlayer(
                 position = position,
                 duration = duration,
+                playerState = playerState,
+                playbackIndex = currentWindowIndex,
+                queueSize = queueWindows.size,
                 pureBlack = pureBlack,
                 navController = navController,
                 state = state
