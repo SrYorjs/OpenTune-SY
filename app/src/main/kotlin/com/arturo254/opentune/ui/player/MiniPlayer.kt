@@ -41,8 +41,6 @@ import com.arturo254.opentune.utils.rememberPreference
 
 @Composable
 fun MiniPlayer(
-    position: Long,
-    duration: Long,
     playerState: PlayerState,
     playbackIndex: Int,
     queueSize: Int,
@@ -52,8 +50,6 @@ fun MiniPlayer(
     state: BottomSheetState
 ) {
     NewMiniPlayer(
-        position = position,
-        duration = duration,
         playerState = playerState,
         playbackIndex = playbackIndex,
         queueSize = queueSize,
@@ -66,8 +62,6 @@ fun MiniPlayer(
 
 @Composable
 private fun NewMiniPlayer(
-    position: Long,
-    duration: Long,
     playerState: PlayerState,
     playbackIndex: Int,
     queueSize: Int,
