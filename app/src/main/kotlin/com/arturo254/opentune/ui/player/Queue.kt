@@ -77,10 +77,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
-import androidx.media3.exoplayer.source.ShuffleOrder.DefaultShuffleOrder
 import androidx.navigation.NavController
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
+import com.arturo254.opentune.ui.player.queue.QueueSelectionResult
+import com.arturo254.opentune.ui.player.queue.calculateQueuePlaybackState
+import com.arturo254.opentune.ui.player.queue.rememberQueueActions
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.ListItemHeight
 import com.arturo254.opentune.constants.PlayerDesignStyle
@@ -89,7 +91,6 @@ import com.arturo254.opentune.constants.QueueEditLockKey
 import com.arturo254.opentune.constants.AutoLoadMoreKey
 import com.arturo254.opentune.extensions.metadata
 import com.arturo254.opentune.extensions.move
-import com.arturo254.opentune.extensions.toggleRepeatMode
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.ui.component.BottomSheet
 import com.arturo254.opentune.ui.component.BottomSheetState
@@ -101,7 +102,6 @@ import com.arturo254.opentune.ui.menu.SelectionMediaMetadataMenu
 import com.arturo254.opentune.ui.utils.ShowMediaInfo
 import com.arturo254.opentune.utils.rememberEnumPreference
 import com.arturo254.opentune.utils.rememberPreference
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -135,8 +135,10 @@ fun Queue(
 
     val playerConnection = LocalPlayerConnection.current ?: return
     val playerActions = rememberPlayerActions(playerConnection)
+    val queueActions = rememberQueueActions(playerConnection, playerActions)
     val isPlaying by playerConnection.isPlaying.collectAsState()
     val repeatMode by playerConnection.repeatMode.collectAsState()
+    val shuffleModeEnabled by playerConnection.shuffleModeEnabled.collectAsState()
 
     val currentWindowIndex by playerConnection.currentWindowIndex.collectAsState()
     val mediaMetadata by playerConnection.mediaMetadata.collectAsState()
@@ -223,7 +225,7 @@ fun Queue(
                             }
                         },
                         onShowLyrics = onShowLyrics,
-                        onRepeatModeClick = { playerConnection.player.toggleRepeatMode() },
+                        onRepeatModeClick = queueActions::toggleRepeat,
                         onMenuClick = {
                             menuState.show {
                                 PlayerMenu(
@@ -433,6 +435,14 @@ fun Queue(
     ) {
         val queueTitle by playerConnection.queueTitle.collectAsState()
         val queueWindows by playerConnection.queueWindows.collectAsState()
+        val queuePlaybackState = remember(queueWindows, currentWindowIndex, shuffleModeEnabled, repeatMode) {
+            calculateQueuePlaybackState(
+                itemCount = queueWindows.size,
+                currentIndex = currentWindowIndex,
+                shuffleModeEnabled = shuffleModeEnabled,
+                repeatMode = repeatMode,
+            )
+        }
         val mutableQueueWindows = remember { mutableStateListOf<Timeline.Window>() }
         val queueLength by remember {
             derivedStateOf {
@@ -451,10 +461,8 @@ fun Queue(
         var shouldScrollToCurrent by remember { mutableStateOf(false) }
         var lastScrolledUid by remember { mutableStateOf<Long?>(null) }
 
-        val currentPlayingUid = remember(currentWindowIndex, queueWindows) {
-            if (currentWindowIndex in queueWindows.indices) {
-                queueWindows[currentWindowIndex].uid
-            } else null
+        val currentPlayingUid = remember(queuePlaybackState.currentIndex, queueWindows) {
+            queueWindows.getOrNull(queuePlaybackState.currentIndex)?.uid
         }
 
         val reorderableState = rememberReorderableLazyListState(
@@ -519,19 +527,12 @@ fun Queue(
                     val safeFrom = (from - headerItems).coerceIn(0, queueWindows.lastIndex)
                     val safeTo = (to - headerItems).coerceIn(0, queueWindows.lastIndex)
 
-                    if (!playerConnection.player.shuffleModeEnabled) {
-                        playerConnection.player.moveMediaItem(safeFrom, safeTo)
-                    } else {
-                        playerConnection.player.setShuffleOrder(
-                            DefaultShuffleOrder(
-                                queueWindows.map { it.firstPeriodIndex }
-                                    .toMutableList()
-                                    .move(safeFrom, safeTo)
-                                    .toIntArray(),
-                                System.currentTimeMillis()
-                            )
-                        )
-                    }
+                    queueActions.reorder(
+                        from = safeFrom,
+                        to = safeTo,
+                        displayedPhysicalIndices = queueWindows.map { it.firstPeriodIndex },
+                        shuffled = queuePlaybackState.shuffleModeEnabled,
+                    )
                     dragInfo = null
                 }
             }
@@ -568,9 +569,9 @@ fun Queue(
                     mediaMetadata = mediaMetadata,
                     isPlaying = isPlaying,
                     repeatMode = repeatMode,
-                    shuffleModeEnabled = playerConnection.player.shuffleModeEnabled,
+                    shuffleModeEnabled = queuePlaybackState.shuffleModeEnabled,
                     locked = effectiveLocked,
-                    songCount = queueWindows.size,
+                    songCount = queuePlaybackState.itemCount,
                     queueDuration = queueLength,
                     infiniteQueueEnabled = infiniteQueueEnabled,
                     backgroundColor = backgroundColor,
@@ -595,12 +596,8 @@ fun Queue(
                             )
                         }
                     },
-                    onRepeatClick = { playerConnection.player.toggleRepeatMode() },
-                    onShuffleClick = {
-                        coroutineScope.launch(Dispatchers.Main) {
-                            playerConnection.player.shuffleModeEnabled = !playerConnection.player.shuffleModeEnabled
-                        }
-                    },
+                    onRepeatClick = queueActions::toggleRepeat,
+                    onShuffleClick = queueActions::toggleShuffle,
                     onLockClick = {
                         if (togetherForcesLock) {
                             Toast.makeText(context, R.string.not_allowed, Toast.LENGTH_SHORT).show()
@@ -667,7 +664,7 @@ fun Queue(
                                             )
                                 ) {
                                     processedDismiss = true
-                                    playerConnection.player.removeMediaItem(currentItem.firstPeriodIndex)
+                                    queueActions.removeAt(currentItem.firstPeriodIndex)
                                     dismissJob?.cancel()
                                     dismissJob = coroutineScope.launch {
                                         val snackbarResult = snackbarHostState.showSnackbar(
@@ -679,11 +676,7 @@ fun Queue(
                                             duration = SnackbarDuration.Short,
                                         )
                                         if (snackbarResult == SnackbarResult.ActionPerformed) {
-                                            playerConnection.player.addMediaItem(currentItem.mediaItem)
-                                            playerConnection.player.moveMediaItem(
-                                                mutableQueueWindows.size,
-                                                currentItem.firstPeriodIndex,
-                                            )
+                                            queueActions.restore(currentItem.mediaItem, currentItem.firstPeriodIndex)
                                         }
                                     }
                                 }
@@ -771,48 +764,24 @@ fun Queue(
                                                                 selectedItems.add(currentItem)
                                                             }
                                                         } else {
-                                                            if (index == currentWindowIndex) {
-                                                                playerActions.playPause()
-                                                            } else {
-                                                                val joined =
-                                                                    togetherSessionState as? com.arturo254.opentune.together.TogetherSessionState.Joined
-                                                                val isGuest =
-                                                                    joined?.role is com.arturo254.opentune.together.TogetherRole.Guest
-                                                                if (isGuest) {
-                                                                    if (joined?.roomState?.settings?.allowGuestsToControlPlayback != true) {
-                                                                        Toast.makeText(
-                                                                            context,
-                                                                            R.string.not_allowed,
-                                                                            Toast.LENGTH_SHORT
-                                                                        ).show()
-                                                                        return@combinedClickable
-                                                                    }
-                                                                    val trackId =
-                                                                        window.mediaItem.metadata?.id?.trim()
-                                                                            .orEmpty().ifBlank {
-                                                                            window.mediaItem.mediaId.trim()
-                                                                        }
-                                                                    if (trackId.isBlank()) return@combinedClickable
-                                                                    Toast.makeText(
-                                                                        context,
-                                                                        R.string.together_requesting_song_change,
-                                                                        Toast.LENGTH_SHORT
-                                                                    ).show()
-                                                                    playerConnection.service.requestTogetherControl(
-                                                                        com.arturo254.opentune.together.ControlAction.SeekToTrack(
-                                                                            trackId = trackId,
-                                                                            positionMs = 0L,
-                                                                        ),
-                                                                    )
-                                                                    shouldScrollToCurrent = false
-                                                                } else {
-                                                                    playerConnection.player.seekToDefaultPosition(
-                                                                        window.firstPeriodIndex,
-                                                                    )
-                                                                    playerConnection.player.playWhenReady =
-                                                                        true
+                                                            when (
+                                                                queueActions.select(
+                                                                    isCurrent = index == queuePlaybackState.currentIndex,
+                                                                    physicalIndex = window.firstPeriodIndex,
+                                                                    trackId = window.mediaItem.metadata?.id
+                                                                        ?.takeIf { it.isNotBlank() }
+                                                                        ?: window.mediaItem.mediaId,
+                                                                )
+                                                            ) {
+                                                                QueueSelectionResult.DENIED ->
+                                                                    Toast.makeText(context, R.string.not_allowed, Toast.LENGTH_SHORT).show()
+                                                                QueueSelectionResult.REQUESTED -> {
+                                                                    Toast.makeText(context, R.string.together_requesting_song_change, Toast.LENGTH_SHORT).show()
                                                                     shouldScrollToCurrent = false
                                                                 }
+                                                                QueueSelectionResult.PLAYED -> shouldScrollToCurrent = false
+                                                                QueueSelectionResult.TOGGLED_CURRENT,
+                                                                QueueSelectionResult.INVALID -> Unit
                                                             }
                                                         }
                                                     },
