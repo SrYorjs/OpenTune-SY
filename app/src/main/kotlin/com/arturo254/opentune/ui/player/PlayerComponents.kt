@@ -961,7 +961,8 @@ fun PlayerPlaybackControls(
                             .size(width = sideButtonWidth, height = sideButtonHeight)
                             .clip(RoundedCornerShape(32.dp))
                     ) {
-                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.PREVIOUS,
+                        PlayerSharedSkipIcon(
+                    direction = PlayerSkipDirection.PREVIOUS,
                             contentDescription = null,
                             modifier = Modifier.size(32.dp)
                         )
@@ -1008,7 +1009,8 @@ fun PlayerPlaybackControls(
                             .size(width = sideButtonWidth, height = sideButtonHeight)
                             .clip(RoundedCornerShape(32.dp))
                     ) {
-                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.NEXT,
+                        PlayerSharedSkipIcon(
+                    direction = PlayerSkipDirection.NEXT,
                             contentDescription = null,
                             modifier = Modifier.size(32.dp)
                         )
@@ -1106,7 +1108,8 @@ fun PlayerPlaybackControls(
                             .graphicsLayer(scaleX = sideScale, scaleY = sideScale),
                         contentAlignment = Alignment.Center
                     ) {
-                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.PREVIOUS,
+                        PlayerSharedSkipIcon(
+                    direction = PlayerSkipDirection.PREVIOUS,
                             contentDescription = null,
                             tint = textBackgroundColor.copy(alpha = if (canSkipPrevious) 0.9f else 0.4f),
                             modifier = Modifier.size(26.dp)
@@ -1152,7 +1155,8 @@ fun PlayerPlaybackControls(
                             .graphicsLayer(scaleX = sideScale, scaleY = sideScale),
                         contentAlignment = Alignment.Center
                     ) {
-                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.NEXT,
+                        PlayerSharedSkipIcon(
+                    direction = PlayerSkipDirection.NEXT,
                             contentDescription = null,
                             tint = textBackgroundColor.copy(alpha = if (canSkipNext) 0.9f else 0.4f),
                             modifier = Modifier.size(26.dp)
@@ -1309,7 +1313,8 @@ fun PlayerPlaybackControls(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.PREVIOUS,
+                                PlayerSharedSkipIcon(
+                    direction = PlayerSkipDirection.PREVIOUS,
                                     contentDescription = null,
                                     tint = textBackgroundColor.copy(
                                         alpha = if (canSkipPrevious) 1f else 0.4f
@@ -1366,7 +1371,8 @@ fun PlayerPlaybackControls(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.NEXT,
+                                PlayerSharedSkipIcon(
+                    direction = PlayerSkipDirection.NEXT,
                                     contentDescription = null,
                                     tint = textBackgroundColor.copy(
                                         alpha = if (canSkipNext) 1f else 0.4f
@@ -1660,7 +1666,8 @@ fun PlayerPlaybackControls(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.PREVIOUS,
+                                PlayerSharedSkipIcon(
+                    direction = PlayerSkipDirection.PREVIOUS,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(
                                         alpha = if (canSkipPrevious) 1f else 0.4f
@@ -1722,7 +1729,8 @@ fun PlayerPlaybackControls(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center
                             ) {
-                                PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.NEXT,
+                                PlayerSharedSkipIcon(
+                    direction = PlayerSkipDirection.NEXT,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSecondaryContainer.copy(
                                         alpha = if (canSkipNext) 1f else 0.4f
@@ -1822,7 +1830,8 @@ fun PlayerPlaybackControls(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.PREVIOUS,
+                        PlayerSharedSkipIcon(
+                    direction = PlayerSkipDirection.PREVIOUS,
                             contentDescription = null,
                             tint = textBackgroundColor.copy(
                                 alpha = if (canSkipPrevious) 1f else 0.4f
@@ -1867,7 +1876,8 @@ fun PlayerPlaybackControls(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.NEXT,
+                        PlayerSharedSkipIcon(
+                    direction = PlayerSkipDirection.NEXT,
                             contentDescription = null,
                             tint = textBackgroundColor.copy(
                                 alpha = if (canSkipNext) 1f else 0.4f
@@ -1900,7 +1910,8 @@ fun PlayerPlaybackControls(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.PREVIOUS,
+                        PlayerSharedSkipIcon(
+                    direction = PlayerSkipDirection.PREVIOUS,
                             contentDescription = null,
                             tint = textBackgroundColor.copy(
                                 alpha = if (canSkipPrevious) 1f else 0.4f
@@ -1947,7 +1958,8 @@ fun PlayerPlaybackControls(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.NEXT,
+                        PlayerSharedSkipIcon(
+                    direction = PlayerSkipDirection.NEXT,
                             contentDescription = null,
                             tint = textBackgroundColor.copy(
                                 alpha = if (canSkipNext) 1f else 0.4f
@@ -3050,7 +3062,8 @@ fun V8PlaybackControls(
                 enabled = canSkipPrevious,
                 size = 58.dp,
             ) {
-                PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.PREVIOUS,
+                PlayerSharedSkipIcon(
+                    direction = PlayerSkipDirection.PREVIOUS,
                     contentDescription = null,
                     tint = textBackgroundColor.copy(alpha = if (canSkipPrevious) 0.96f else 0.34f),
                     modifier = Modifier.size(30.dp),
@@ -3096,7 +3109,8 @@ fun V8PlaybackControls(
                 enabled = canSkipNext,
                 size = 58.dp,
             ) {
-                PlayerSharedSkipIcon(\n                    direction = PlayerSkipDirection.NEXT,
+                PlayerSharedSkipIcon(
+                    direction = PlayerSkipDirection.NEXT,
                     contentDescription = null,
                     tint = textBackgroundColor.copy(alpha = if (canSkipNext) 0.96f else 0.34f),
                     modifier = Modifier.size(30.dp),
