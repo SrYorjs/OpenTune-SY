@@ -127,6 +127,7 @@ import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
 import com.arturo254.opentune.ui.player.host.PlayerHostBackHandler
 import com.arturo254.opentune.ui.player.layout.PlayerLayout
 import com.arturo254.opentune.ui.player.layout.resolvePlayerLayout
+import com.arturo254.opentune.ui.player.skin.rememberVisualSkin
 import com.arturo254.opentune.ui.player.host.rememberPlayerContentLifecycle
 import com.arturo254.opentune.constants.DarkModeKey
 import com.arturo254.opentune.constants.PlayerDesignStyle
@@ -308,29 +309,22 @@ fun BottomSheetPlayer(
     val useDarkTheme = remember(darkTheme, isSystemInDarkTheme) {
         if (darkTheme == DarkMode.AUTO) isSystemInDarkTheme else darkTheme == DarkMode.ON
     }
-    val onBackgroundColor = when (playerBackground) {
-        PlayerBackgroundStyle.DEFAULT -> MaterialTheme.colorScheme.secondary
-        else ->
-            if (useDarkTheme)
-                MaterialTheme.colorScheme.onSurface
-            else
-                MaterialTheme.colorScheme.onPrimary
-    }
-    val useBlackBackground =
-        remember(isSystemInDarkTheme, darkTheme, pureBlack) {
-            val useDarkTheme =
-                if (darkTheme == DarkMode.AUTO) isSystemInDarkTheme else darkTheme == DarkMode.ON
-            useDarkTheme && pureBlack
-        }
-    val backgroundColor = if (useBlackBackground && state.value > state.collapsedBound) {
-        val progress = ((state.value - state.collapsedBound) / (state.expandedBound - state.collapsedBound))
-            .coerceIn(0f, 1f)
-        Color.Black.copy(alpha = progress)
-    } else {
-        val progress = ((state.value - state.collapsedBound) / (state.expandedBound - state.collapsedBound))
-            .coerceIn(0f, 1f)
-        MaterialTheme.colorScheme.surfaceContainer.copy(alpha = progress)
-    }
+    // VisualSkin is the single presentation palette; existing preferences and
+    // MaterialTheme still own dark mode, dynamic colors and pure black.
+    val visualSkin = rememberVisualSkin(
+        designStyle = playerDesignStyle,
+        backgroundStyle = playerBackground,
+        buttonStyle = playerButtonsStyle,
+        useDarkTheme = useDarkTheme,
+        pureBlack = pureBlack,
+    )
+    val onBackgroundColor = visualSkin.onBackgroundColor
+    val useBlackBackground = visualSkin.useBlackBackground
+    val backgroundColor = visualSkin.playerBackgroundColor(
+        progress = ((state.value - state.collapsedBound) /
+            (state.expandedBound - state.collapsedBound)).coerceIn(0f, 1f),
+        aboveCollapsed = state.value > state.collapsedBound,
+    )
 
     val playbackState by playerConnection.playbackState.collectAsState()
     val isPlaying by playerConnection.isPlaying.collectAsState()
@@ -410,7 +404,7 @@ fun BottomSheetPlayer(
     }
 
     LaunchedEffect(mediaMetadata?.id, playerBackground) {
-        if (playerBackground == PlayerBackgroundStyle.GRADIENT || playerBackground == PlayerBackgroundStyle.COLORING || playerBackground == PlayerBackgroundStyle.BLUR_GRADIENT || playerBackground == PlayerBackgroundStyle.GLOW || playerBackground == PlayerBackgroundStyle.GLOW_ANIMATED) {
+        if (visualSkin.usesArtworkPalette) {
             val currentMetadata = mediaMetadata
             if (currentMetadata != null && currentMetadata.thumbnailUrl != null) {
                 // Check cache first
@@ -464,41 +458,10 @@ fun BottomSheetPlayer(
 
     val changeBound = state.expandedBound / 3
 
-    val TextBackgroundColor =
-        if (playerDesignStyle == PlayerDesignStyle.V7) Color.White
-        else when (playerBackground) {
-            PlayerBackgroundStyle.DEFAULT -> MaterialTheme.colorScheme.onBackground
-            PlayerBackgroundStyle.BLUR -> Color.White
-            PlayerBackgroundStyle.GRADIENT -> Color.White
-            PlayerBackgroundStyle.COLORING -> Color.White
-            PlayerBackgroundStyle.BLUR_GRADIENT -> Color.White
-            PlayerBackgroundStyle.GLOW -> Color.White
-            PlayerBackgroundStyle.GLOW_ANIMATED -> Color.White
-            PlayerBackgroundStyle.CUSTOM -> Color.White
-        }
-
-    val icBackgroundColor =
-        if (playerDesignStyle == PlayerDesignStyle.V7) Color.Black
-        else when (playerBackground) {
-            PlayerBackgroundStyle.DEFAULT -> MaterialTheme.colorScheme.surface
-            PlayerBackgroundStyle.BLUR -> Color.Black
-            PlayerBackgroundStyle.GRADIENT -> Color.Black
-            PlayerBackgroundStyle.COLORING -> Color.Black
-            PlayerBackgroundStyle.BLUR_GRADIENT -> Color.Black
-            PlayerBackgroundStyle.GLOW -> Color.Black
-            PlayerBackgroundStyle.GLOW_ANIMATED -> Color.Black
-            PlayerBackgroundStyle.CUSTOM -> Color.Black
-        }
-
-    val (textButtonColor, iconButtonColor) = when (playerButtonsStyle) {
-        PlayerButtonsStyle.DEFAULT -> Pair(TextBackgroundColor, icBackgroundColor)
-        PlayerButtonsStyle.SECONDARY -> Pair(
-            MaterialTheme.colorScheme.secondary,
-            MaterialTheme.colorScheme.onSecondary
-        )
-    }.let { (tb, ib) ->
-        if (playerDesignStyle == PlayerDesignStyle.V7) Pair(Color.White, Color.Black) else Pair(tb, ib)
-    }
+    val TextBackgroundColor = visualSkin.textBackgroundColor
+    val icBackgroundColor = visualSkin.iconBackgroundColor
+    val textButtonColor = visualSkin.textButtonColor
+    val iconButtonColor = visualSkin.iconButtonColor
 
     val sleepTimerEnabled =
         remember(
@@ -827,41 +790,10 @@ fun BottomSheetPlayer(
                     else -> false
                 }
             },
-        backgroundColor = if (playerDesignStyle == PlayerDesignStyle.V7) {
-            val progress = ((state.value - state.collapsedBound) / (state.expandedBound - state.collapsedBound))
-                .coerceIn(0f, 1f)
-            val fadeProgress = if (progress < 0.2f) {
-                ((0.2f - progress) / 0.2f).coerceIn(0f, 1f)
-            } else {
-                0f
-            }
-            Color.Black.copy(alpha = 1f - fadeProgress)
-        } else when (playerBackground) {
-            PlayerBackgroundStyle.BLUR, PlayerBackgroundStyle.GRADIENT -> {
-                val progress = ((state.value - state.collapsedBound) / (state.expandedBound - state.collapsedBound))
-                    .coerceIn(0f, 1f)
-                val fadeProgress = if (progress < 0.2f) {
-                    ((0.2f - progress) / 0.2f).coerceIn(0f, 1f)
-                } else {
-                    0f
-                }
-                MaterialTheme.colorScheme.surface.copy(alpha = 1f - fadeProgress)
-            }
-            else -> {
-                val progress = ((state.value - state.collapsedBound) / (state.expandedBound - state.collapsedBound))
-                    .coerceIn(0f, 1f)
-                val fadeProgress = if (progress < 0.2f) {
-                    ((0.2f - progress) / 0.2f).coerceIn(0f, 1f)
-                } else {
-                    0f
-                }
-                if (useBlackBackground) {
-                    Color.Black.copy(alpha = 1f - fadeProgress)
-                } else {
-                    MaterialTheme.colorScheme.surface.copy(alpha = 1f - fadeProgress)
-                }
-            }
-        },
+        backgroundColor = visualSkin.sheetBackgroundColor(
+            progress = ((state.value - state.collapsedBound) /
+                (state.expandedBound - state.collapsedBound)).coerceIn(0f, 1f),
+        ),
         onDismiss = {
             playerConnection.service.stopAndClearPlayback()
         },
@@ -1384,16 +1316,10 @@ fun BottomSheetPlayer(
             },
         )
 
-        val queueOnBackgroundColor = if (useBlackBackground) Color.White else MaterialTheme.colorScheme.onSurface
-        val queueSurfaceColor = if (useBlackBackground) Color.Black else MaterialTheme.colorScheme.surface
-
-        val (queueTextButtonColor, queueIconButtonColor) = when (playerButtonsStyle) {
-            PlayerButtonsStyle.DEFAULT -> Pair(queueOnBackgroundColor, queueSurfaceColor)
-            PlayerButtonsStyle.SECONDARY -> Pair(
-                MaterialTheme.colorScheme.secondary,
-                MaterialTheme.colorScheme.onSecondary
-            )
-        }
+        val queueOnBackgroundColor = visualSkin.queueOnBackgroundColor
+        val queueSurfaceColor = visualSkin.queueSurfaceColor
+        val queueTextButtonColor = visualSkin.queueTextButtonColor
+        val queueIconButtonColor = visualSkin.queueIconButtonColor
 
         Queue(
             state = queueSheetState,
