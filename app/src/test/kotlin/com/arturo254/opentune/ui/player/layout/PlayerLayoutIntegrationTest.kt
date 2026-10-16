@@ -40,11 +40,14 @@ class PlayerLayoutIntegrationTest {
     fun allSpecialVisualsAndActionsRemainInsideOriginalConsumer() {
         val player = source("ui/player/Player.kt")
         val router = source("ui/player/layout/PlayerLayout.kt")
-        assertTrue(player.contains("V7PlayerBackdrop("))
+        assertTrue(player.contains("V7PlayerScene("))
+        assertTrue(source("ui/player/v7/V7PlayerScene.kt").contains("V7PlayerBackdrop("))
         assertTrue(player.contains("V8PlayerBackdrop("))
         assertTrue(player.contains("V8PlayerControlsContent("))
-        assertTrue(player.contains("LittlePlayerContent("))
-        assertTrue(player.contains("LandscapeLikeBox("))
+        assertTrue(player.contains("V5PlayerContent("))
+        assertTrue(source("ui/player/v5/V5PlayerContent.kt").contains("fun V5PlayerContent("))
+        assertTrue(player.contains("V5LandscapeLikeBox("))
+        assertTrue(source("ui/player/v5/V5PlayerContent.kt").contains("fun V5LandscapeLikeBox("))
         assertTrue(player.contains("playerActions.seekTo(targetPosition, displayedTrackId = mediaMetadata?.id)"))
         // Phase 4.7: the Canvas model is now owned by the visual engine,
         // while Player keeps consuming its current Canvas snapshot.
