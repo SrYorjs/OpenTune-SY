@@ -662,8 +662,6 @@ fun BottomSheetPlayer(
         },
         collapsedContent = {
             MiniPlayer(
-                position = position,
-                duration = duration,
                 playerState = playerState,
                 playbackIndex = currentWindowIndex,
                 queueSize = queueWindows.size,
