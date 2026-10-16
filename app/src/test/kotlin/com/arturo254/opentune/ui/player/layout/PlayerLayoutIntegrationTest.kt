@@ -32,7 +32,7 @@ class PlayerLayoutIntegrationTest {
         assertTrue(fullPlayer.contains("resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop"))
         assertEquals(
             1,
-            Regex("""(?m)^\\s*PlayerLayout\\(""").findAll(fullPlayer).count(),
+            Regex("""(?m)^\s*PlayerLayout\(""").findAll(fullPlayer).count(),
         )
     }
 
