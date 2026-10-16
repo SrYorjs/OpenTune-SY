@@ -12,7 +12,8 @@ import com.arturo254.opentune.constants.PlayerDesignStyle
  * No PlayerConnection, ViewModel, playback action or state subscriptions here.
  */
 enum class PlayerLayoutFamily {
-    CLASSIC,    // V1, V2, V3, V4, V6
+    CLASSIC,    // V1, V3, V4, V6
+    V2,         // V2: routed to its extracted visual components (4.13)
     COMPACT,    // V5
     CINEMATIC,  // V7
     IMMERSIVE,  // V8
@@ -34,10 +35,10 @@ data class PlayerLayoutRoute(
 fun resolvePlayerLayout(style: PlayerDesignStyle, isLandscape: Boolean): PlayerLayoutRoute {
     val family = when (style) {
         PlayerDesignStyle.V1,
-        PlayerDesignStyle.V2,
         PlayerDesignStyle.V3,
         PlayerDesignStyle.V4,
         PlayerDesignStyle.V6 -> PlayerLayoutFamily.CLASSIC
+        PlayerDesignStyle.V2 -> PlayerLayoutFamily.V2
         PlayerDesignStyle.V5 -> PlayerLayoutFamily.COMPACT
         PlayerDesignStyle.V7 -> PlayerLayoutFamily.CINEMATIC
         PlayerDesignStyle.V8 -> PlayerLayoutFamily.IMMERSIVE
@@ -70,12 +71,17 @@ fun PlayerLayout(
     cinematicLandscape: @Composable () -> Unit,
     immersivePortrait: @Composable () -> Unit,
     immersiveLandscape: @Composable () -> Unit,
+    // V2 shares the classic outer structure pixel-for-pixel; its controls and
+    // top actions now have dedicated visual components. No extra wrapper.
+    v2Portrait: @Composable () -> Unit = classicPortrait,
+    v2Landscape: @Composable () -> Unit = classicLandscape,
 ) {
     val route = remember(style, isLandscape) { resolvePlayerLayout(style, isLandscape) }
     when (route.orientation) {
         PlayerLayoutOrientation.PORTRAIT ->
             when (route.family) {
                 PlayerLayoutFamily.CLASSIC -> classicPortrait()
+                PlayerLayoutFamily.V2 -> v2Portrait()
                 PlayerLayoutFamily.COMPACT -> compactPortrait()
                 PlayerLayoutFamily.CINEMATIC -> cinematicPortrait()
                 PlayerLayoutFamily.IMMERSIVE -> immersivePortrait()
@@ -83,6 +89,7 @@ fun PlayerLayout(
         PlayerLayoutOrientation.LANDSCAPE ->
             when (route.family) {
                 PlayerLayoutFamily.CLASSIC -> classicLandscape()
+                PlayerLayoutFamily.V2 -> v2Landscape()
                 PlayerLayoutFamily.COMPACT -> compactLandscape()
                 PlayerLayoutFamily.CINEMATIC -> cinematicLandscape()
                 PlayerLayoutFamily.IMMERSIVE -> immersiveLandscape()
