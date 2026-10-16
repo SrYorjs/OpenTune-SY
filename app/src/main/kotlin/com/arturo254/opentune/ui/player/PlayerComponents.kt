@@ -113,6 +113,8 @@ import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
 import com.arturo254.opentune.ui.player.v2.V2PlayerTopActions
 import com.arturo254.opentune.ui.player.v2.V2PlayerTransport
+import com.arturo254.opentune.ui.player.v5.V5PlayerTopActions
+import com.arturo254.opentune.ui.player.v5.V5PlayerTransport
 import com.arturo254.opentune.ui.player.panels.playerFormatBadgeLabel
 import com.arturo254.opentune.ui.player.progress.calculatePlayerProgress
 import com.arturo254.opentune.ui.player.controls.PlayerSharedPlaybackContent
@@ -279,7 +281,7 @@ fun PlayerTopActions(
             )
         }
 
-        PlayerDesignStyle.V3, PlayerDesignStyle.V5 -> {
+        PlayerDesignStyle.V3 -> {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -319,6 +321,15 @@ fun PlayerTopActions(
                     )
                 }
             }
+        }
+
+        PlayerDesignStyle.V5 -> {
+            V5PlayerTopActions(
+                liked = currentSongLiked,
+                textBackgroundColor = textBackgroundColor,
+                onShare = { sharePlayerTrack(context, mediaMetadata.id) },
+                onToggleFavorite = playerActions::toggleFavorite,
+            )
         }
 
         PlayerDesignStyle.V4 -> {
@@ -1235,7 +1246,7 @@ fun PlayerPlaybackControls(
             }
         }
 
-        PlayerDesignStyle.V1, PlayerDesignStyle.V5 -> {
+        PlayerDesignStyle.V1 -> {
             val repeatInteraction = remember { MutableInteractionSource() }
             val backInteraction = remember { MutableInteractionSource() }
             val playInteraction = remember { MutableInteractionSource() }
@@ -1398,6 +1409,27 @@ fun PlayerPlaybackControls(
                     )
                 }
             }
+        }
+
+        PlayerDesignStyle.V5 -> {
+            V5PlayerTransport(
+                playbackState = playbackState,
+                isPlaying = isPlaying,
+                isLoading = isLoading,
+                repeatMode = repeatMode,
+                canSkipPrevious = canSkipPrevious,
+                canSkipNext = canSkipNext,
+                textButtonColor = textButtonColor,
+                iconButtonColor = iconButtonColor,
+                textBackgroundColor = textBackgroundColor,
+                playPauseRoundness = playPauseRoundness,
+                liked = currentSongLiked,
+                onPrevious = playerActions::previous,
+                onPlayPause = playerActions::playPause,
+                onNext = playerActions::next,
+                onToggleRepeat = playerActions::toggleRepeat,
+                onToggleFavorite = playerActions::toggleFavorite,
+            )
         }
 
         PlayerDesignStyle.V6 -> {
