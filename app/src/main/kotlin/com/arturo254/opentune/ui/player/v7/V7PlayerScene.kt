@@ -2,6 +2,7 @@ package com.arturo254.opentune.ui.player.v7
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -32,7 +33,7 @@ fun V7PlayerScene(
     disableBlur: Boolean,
     queuePeekHeight: Dp,
     nestedScrollConnection: NestedScrollConnection,
-    controls: @Composable () -> Unit,
+    controls: @Composable ColumnScope.() -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         V7PlayerBackdrop(
