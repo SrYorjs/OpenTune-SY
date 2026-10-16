@@ -337,9 +337,15 @@ fun RowScope.MiniPlayerInfo(
     }
 }
 
+private data class MiniPlayerArtworkFrame(
+    val metadata: MediaMetadata?,
+    val artworkUrl: String?,
+)
+
 @Composable
 private fun MiniPlayerArtwork(
     mediaMetadata: MediaMetadata?,
+    artworkUrl: String?,
     progressFraction: Float,
     isLoading: Boolean,
     transitionDirection: Int,
@@ -366,8 +372,8 @@ private fun MiniPlayerArtwork(
         }
 
         AnimatedContent(
-            targetState = mediaMetadata,
-            contentKey = { it?.id },
+            targetState = MiniPlayerArtworkFrame(mediaMetadata, artworkUrl),
+            contentKey = { it.metadata?.id },
             transitionSpec = {
                 (
                     slideInHorizontally(
@@ -382,7 +388,7 @@ private fun MiniPlayerArtwork(
                 )
             },
             label = "miniArtworkSlide",
-        ) { metadata ->
+        ) { frame ->
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
@@ -395,7 +401,9 @@ private fun MiniPlayerArtwork(
                         shape = CircleShape
                     )
             ) {
-                val thumbnailUrl = metadata?.thumbnailUrl
+                // Preserve the outgoing track's own offline/remote artwork
+                // while the next cover animates in; never swap it mid-transition.
+                val thumbnailUrl = frame.artworkUrl ?: frame.metadata?.thumbnailUrl
                 if (thumbnailUrl != null) {
                     AsyncImage(
                         model = thumbnailUrl,
@@ -541,6 +549,7 @@ fun NewMiniPlayerContent(
     ) {
         MiniPlayerArtwork(
             mediaMetadata = mediaMetadata,
+            artworkUrl = playerState.artworkUrl,
             progressFraction = playerState.progressFraction,
             isLoading = isLoading,
             transitionDirection = transitionDirection,
