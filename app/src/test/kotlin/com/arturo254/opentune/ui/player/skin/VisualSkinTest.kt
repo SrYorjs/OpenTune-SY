@@ -101,7 +101,8 @@ class VisualSkinTest {
     fun sheetFadeIsPreservedAcrossV7BlurGradientAndPureBlack() {
         val v7 = skin(style = PlayerDesignStyle.V7)
         assertEquals(0f, v7.sheetBackgroundColor(0f).alpha, 0.00001f)
-        assertEquals(0.5f, v7.sheetBackgroundColor(0.1f).alpha, 0.00001f)
+        // ARGB Color quantizes sRGB alpha to 8-bit; tolerate < 1/255.
+        assertEquals(0.5f, v7.sheetBackgroundColor(0.1f).alpha, 0.004f)
         assertEquals(1f, v7.sheetBackgroundColor(0.2f).alpha, 0.00001f)
         val blur = skin(background = PlayerBackgroundStyle.BLUR, dark = true, pureBlack = true)
         assertEquals(colors.surface, blur.sheetBackgroundColor(1f))
