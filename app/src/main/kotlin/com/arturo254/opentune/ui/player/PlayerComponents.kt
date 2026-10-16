@@ -111,6 +111,8 @@ import com.arturo254.opentune.db.entities.FormatEntity
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
+import com.arturo254.opentune.ui.player.v2.V2PlayerTopActions
+import com.arturo254.opentune.ui.player.v2.V2PlayerTransport
 import com.arturo254.opentune.ui.player.panels.playerFormatBadgeLabel
 import com.arturo254.opentune.ui.player.progress.calculatePlayerProgress
 import com.arturo254.opentune.ui.player.controls.PlayerSharedPlaybackContent
@@ -268,60 +270,13 @@ fun PlayerTopActions(
     val playerActions = rememberPlayerActions(playerConnection)
     when (playerDesignStyle) {
         PlayerDesignStyle.V2 -> {
-            val shareShape = RoundedCornerShape(
-                topStart = 50.dp, bottomStart = 50.dp,
-                topEnd = 10.dp, bottomEnd = 10.dp
+            V2PlayerTopActions(
+                liked = currentSongLiked,
+                textButtonColor = textButtonColor,
+                iconButtonColor = iconButtonColor,
+                onShare = { sharePlayerTrack(context, mediaMetadata.id) },
+                onToggleFavorite = playerActions::toggleFavorite,
             )
-
-            val favShape = RoundedCornerShape(
-                topStart = 10.dp, bottomStart = 10.dp,
-                topEnd = 50.dp, bottomEnd = 50.dp
-            )
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(shareShape)
-                        .background(textButtonColor)
-                        .clickable {
-                            sharePlayerTrack(context, mediaMetadata.id)
-                        }
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.share),
-                        contentDescription = null,
-                        colorFilter = ColorFilter.tint(iconButtonColor),
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(24.dp)
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(favShape)
-                        .background(textButtonColor)
-                        .clickable {
-                            playerActions.toggleFavorite()
-                        }
-                ) {
-                    Image(
-                        painter = painterResource(
-                            playerFavoriteIconRes(currentSongLiked)
-                        ),
-                        contentDescription = null,
-                        colorFilter = ColorFilter.tint(iconButtonColor),
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(24.dp)
-                    )
-                }
-            }
         }
 
         PlayerDesignStyle.V3, PlayerDesignStyle.V5 -> {
@@ -869,115 +824,18 @@ fun PlayerPlaybackControls(
 
     when (playerDesignStyle) {
         PlayerDesignStyle.V2 -> {
-            BoxWithConstraints(
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                val maxW = maxWidth
-                val playButtonHeight = maxW / 6f
-                val playButtonWidth = playButtonHeight * 1.6f
-                val sideButtonHeight = playButtonHeight * 0.8f
-                val sideButtonWidth = sideButtonHeight * 1.3f
-
-                val backInteraction = remember { MutableInteractionSource() }
-                val playInteraction = remember { MutableInteractionSource() }
-                val nextInteraction = remember { MutableInteractionSource() }
-
-                val isBackPressed by backInteraction.collectIsPressedAsState()
-                val isPlayPressed by playInteraction.collectIsPressedAsState()
-                val isNextPressed by nextInteraction.collectIsPressedAsState()
-
-                val playWeight by animateFloatAsState(
-                    targetValue = if (isPlayPressed) 1.6f else 1.2f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioLowBouncy,
-                        stiffness = Spring.StiffnessLow
-                    ),
-                    label = "playWeightV2"
-                )
-
-                val sideWeight by animateFloatAsState(
-                    targetValue = if (isBackPressed || isNextPressed) 0.9f else 0.7f,
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioLowBouncy,
-                        stiffness = Spring.StiffnessLow
-                    ),
-                    label = "sideWeightV2"
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    FilledTonalIconButton(
-                        onClick = playerActions::previous,
-                        enabled = canSkipPrevious,
-                        interactionSource = backInteraction,
-                        colors = IconButtonDefaults.filledTonalIconButtonColors(
-                            containerColor = textButtonColor,
-                            contentColor = iconButtonColor
-                        ),
-                        modifier = Modifier
-                            .weight(sideWeight)
-                            .size(width = sideButtonWidth, height = sideButtonHeight)
-                            .clip(RoundedCornerShape(32.dp))
-                    ) {
-                        PlayerSharedSkipIcon(
-                    direction = PlayerSkipDirection.PREVIOUS,
-                            contentDescription = null,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    FilledIconButton(
-                        onClick = {
-                            playerActions.playPause()
-                        },
-                        interactionSource = playInteraction,
-                        colors = IconButtonDefaults.filledIconButtonColors(
-                            containerColor = textButtonColor,
-                            contentColor = iconButtonColor
-                        ),
-                        modifier = Modifier
-                            .weight(playWeight)
-                            .size(width = playButtonWidth, height = playButtonHeight)
-                            .clip(RoundedCornerShape(32.dp))
-                    ) {
-                        PlayerSharedPlaybackContent(
-                            playbackState = playbackState,
-                            isPlaying = isPlaying,
-                            isLoading = isLoading,
-                            iconSize = 42.dp,
-                            loadingSize = 42.dp,
-                            loadingTint = iconButtonColor,
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    FilledTonalIconButton(
-                        onClick = playerActions::next,
-                        enabled = canSkipNext,
-                        interactionSource = nextInteraction,
-                        colors = IconButtonDefaults.filledTonalIconButtonColors(
-                            containerColor = textButtonColor,
-                            contentColor = iconButtonColor
-                        ),
-                        modifier = Modifier
-                            .weight(sideWeight)
-                            .size(width = sideButtonWidth, height = sideButtonHeight)
-                            .clip(RoundedCornerShape(32.dp))
-                    ) {
-                        PlayerSharedSkipIcon(
-                    direction = PlayerSkipDirection.NEXT,
-                            contentDescription = null,
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                }
-            }
+            V2PlayerTransport(
+                playbackState = playbackState,
+                isPlaying = isPlaying,
+                isLoading = isLoading,
+                canSkipPrevious = canSkipPrevious,
+                canSkipNext = canSkipNext,
+                textButtonColor = textButtonColor,
+                iconButtonColor = iconButtonColor,
+                onPrevious = playerActions::previous,
+                onPlayPause = playerActions::playPause,
+                onNext = playerActions::next,
+            )
         }
 
         PlayerDesignStyle.V3 -> {
