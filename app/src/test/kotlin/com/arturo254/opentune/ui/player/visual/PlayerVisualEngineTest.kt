@@ -17,6 +17,7 @@ class PlayerVisualEngineTest {
         title = title,
         artists = listOf(MediaMetadata.Artist("singer", artist)),
         thumbnailUrl = "https://example.org/image",
+        duration = 180,
     )
 
     @Test fun offlineArtworkIsPrioritizedAndBlankLocalUrlsIgnored() {
