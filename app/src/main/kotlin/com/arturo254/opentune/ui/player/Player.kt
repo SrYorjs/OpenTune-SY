@@ -119,6 +119,7 @@ import com.arturo254.opentune.R
 import com.arturo254.opentune.LocalDownloadUtil
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
+import com.arturo254.opentune.ui.player.queue.calculateQueuePlaybackState
 import com.arturo254.opentune.ui.player.progress.calculatePlayerProgress
 import com.arturo254.opentune.ui.player.progress.rememberPlayerSeekSession
 import com.arturo254.opentune.ui.player.host.PlayerHostBackHandler
@@ -681,8 +682,16 @@ fun BottomSheetPlayer(
         val updatedOnSliderValueChangeFinished by rememberUpdatedState(onSliderValueChangeFinished)
 
         val nextUpMetadata =
-            remember(queueWindows, currentWindowIndex) {
-                queueWindows.getOrNull(currentWindowIndex + 1)?.mediaItem?.metadata
+            remember(queueWindows, currentWindowIndex, shuffleModeEnabled, repeatMode) {
+                val playbackOrder = calculateQueuePlaybackState(
+                    itemCount = queueWindows.size,
+                    currentIndex = currentWindowIndex,
+                    shuffleModeEnabled = shuffleModeEnabled,
+                    repeatMode = repeatMode,
+                )
+                // One source of Up Next order; no repeated rows for repeat-all/one.
+                playbackOrder.upNextIndices.firstOrNull()
+                    ?.let { queueWindows.getOrNull(it)?.mediaItem?.metadata }
             }
 
         val enrichedMetadata = remember(mediaMetadata, currentSong) {
