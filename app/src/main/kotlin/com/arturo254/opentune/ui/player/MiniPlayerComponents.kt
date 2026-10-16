@@ -99,7 +99,6 @@ import com.arturo254.opentune.ui.player.controls.PlayerSkipDirection
 import com.arturo254.opentune.ui.player.controls.playerPlaybackIconRes
 import com.arturo254.opentune.ui.player.controls.playerFavoriteIconRes
 import com.arturo254.opentune.ui.player.controls.playerSkipIconRes
-import com.arturo254.opentune.ui.player.progress.calculatePlayerProgress
 import com.arturo254.opentune.ui.player.state.PlayerState
 import com.arturo254.opentune.together.TogetherSessionState
 import com.arturo254.opentune.ui.component.BottomSheetState
@@ -341,8 +340,7 @@ fun RowScope.MiniPlayerInfo(
 @Composable
 private fun MiniPlayerArtwork(
     mediaMetadata: MediaMetadata?,
-    position: Long,
-    duration: Long,
+    progressFraction: Float,
     isLoading: Boolean,
     transitionDirection: Int,
     modifier: Modifier = Modifier
@@ -360,7 +358,7 @@ private fun MiniPlayerArtwork(
             )
         } else {
             CircularWavyProgressIndicator(
-                progress = { calculatePlayerProgress(position, duration).fraction },
+                progress = { progressFraction },
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
@@ -543,8 +541,7 @@ fun NewMiniPlayerContent(
     ) {
         MiniPlayerArtwork(
             mediaMetadata = mediaMetadata,
-            position = playerState.positionMs,
-            duration = playerState.durationMs,
+            progressFraction = playerState.progressFraction,
             isLoading = isLoading,
             transitionDirection = transitionDirection,
         )
