@@ -100,7 +100,7 @@ class Player2CompatibilityContractTest {
         val visual = source("ui/player/visual/PlayerVisualState.kt")
         assertTrue(visual.contains("CanvasArtwork("))
         assertTrue(host.contains("val canvasArtwork = playerVisuals.canvasArtwork"))
-        assertTrue(host.contains("LyricsScreen("))
+        assertTrue(host.contains("PlayerLyricsPanel("))
         assertTrue(controls.contains("fun V8PlayerControlsContent("))
         assertTrue(controls.contains("fun PlayerPlaybackControls("))
     }
