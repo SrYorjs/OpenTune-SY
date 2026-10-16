@@ -115,6 +115,8 @@ import com.arturo254.opentune.ui.player.v2.V2PlayerTopActions
 import com.arturo254.opentune.ui.player.v2.V2PlayerTransport
 import com.arturo254.opentune.ui.player.v5.V5PlayerTopActions
 import com.arturo254.opentune.ui.player.v5.V5PlayerTransport
+import com.arturo254.opentune.ui.player.v7.V7PlayerTopActions
+import com.arturo254.opentune.ui.player.v7.V7PlayerTransport
 import com.arturo254.opentune.ui.player.panels.playerFormatBadgeLabel
 import com.arturo254.opentune.ui.player.progress.calculatePlayerProgress
 import com.arturo254.opentune.ui.player.controls.PlayerSharedPlaybackContent
@@ -540,53 +542,19 @@ fun PlayerTopActions(
         }
 
         PlayerDesignStyle.V7 -> {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (currentSongLiked) textBackgroundColor.copy(alpha = 0.2f)
-                            else Color.Transparent
-                        )
-                        .clickable { playerActions.toggleFavorite() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(
-                            playerFavoriteIconRes(currentSongLiked)
-                        ),
-                        contentDescription = null,
-                        tint = textBackgroundColor.copy(alpha = if (currentSongLiked) 1f else 0.7f),
-                        modifier = Modifier.size(22.dp)
+            V7PlayerTopActions(
+                liked = currentSongLiked,
+                textBackgroundColor = textBackgroundColor,
+                onToggleFavorite = playerActions::toggleFavorite,
+                onOpenMenu = {
+                    menuState.showPlayerPanelMenu(
+                        metadata = mediaMetadata,
+                        navController = navController,
+                        playerBottomSheetState = state,
+                        bottomSheetPageState = bottomSheetPageState,
                     )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .clip(CircleShape)
-                        .clickable {
-                            menuState.showPlayerPanelMenu(
-                                metadata = mediaMetadata,
-                                navController = navController,
-                                playerBottomSheetState = state,
-                                bottomSheetPageState = bottomSheetPageState,
-                            )
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.more_horiz),
-                        contentDescription = null,
-                        tint = textBackgroundColor.copy(alpha = 0.7f),
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
+                },
+            )
         }
         PlayerDesignStyle.V8 -> {
             Row(
@@ -1662,82 +1630,17 @@ fun PlayerPlaybackControls(
         }
 
         PlayerDesignStyle.V7 -> {
-            // NO SPRING ANIMATIONS - Mantener como está
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = PlayerHorizontalPadding)
-            ) {
-                Surface(
-                    onClick = playerActions::previous,
-                    enabled = canSkipPrevious,
-                    shape = CircleShape,
-                    color = Color.Transparent,
-                    modifier = Modifier.size(64.dp)
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        PlayerSharedSkipIcon(
-                    direction = PlayerSkipDirection.PREVIOUS,
-                            contentDescription = null,
-                            tint = textBackgroundColor.copy(
-                                alpha = if (canSkipPrevious) 1f else 0.4f
-                            ),
-                            modifier = Modifier.size(44.dp)
-                        )
-                    }
-                }
-
-                Surface(
-                    onClick = {
-                        playerActions.playPause()
-                    },
-                    shape = CircleShape,
-                    color = Color.Transparent,
-                    modifier = Modifier.size(72.dp)
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        PlayerSharedPlaybackContent(
-                            playbackState = playbackState,
-                            isPlaying = isPlaying,
-                            isLoading = isLoading,
-                            iconSize = 52.dp,
-                            loadingSize = 44.dp,
-                            loadingTint = textBackgroundColor,
-                            iconTint = textBackgroundColor,
-                        )
-                    }
-                }
-
-                Surface(
-                    onClick = { playerActions.next() },
-                    enabled = canSkipNext,
-                    shape = CircleShape,
-                    color = Color.Transparent,
-                    modifier = Modifier.size(64.dp)
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        PlayerSharedSkipIcon(
-                    direction = PlayerSkipDirection.NEXT,
-                            contentDescription = null,
-                            tint = textBackgroundColor.copy(
-                                alpha = if (canSkipNext) 1f else 0.4f
-                            ),
-                            modifier = Modifier.size(44.dp)
-                        )
-                    }
-                }
-            }
+            V7PlayerTransport(
+                playbackState = playbackState,
+                isPlaying = isPlaying,
+                isLoading = isLoading,
+                canSkipPrevious = canSkipPrevious,
+                canSkipNext = canSkipNext,
+                textBackgroundColor = textBackgroundColor,
+                onPrevious = playerActions::previous,
+                onPlayPause = playerActions::playPause,
+                onNext = playerActions::next,
+            )
         }
 
         else -> {
