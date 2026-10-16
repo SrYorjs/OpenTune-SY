@@ -24,7 +24,8 @@ class PlayerProgressIntegrationTest {
         assertTrue(components.contains("value = progress.sliderValue"))
         assertTrue(components.contains("valueRange = progress.sliderRange"))
         assertTrue(components.contains("val remaining = progress.remainingMs"))
-        assertTrue(mini.contains("calculatePlayerProgress(position, duration).fraction"))
+        assertTrue(mini.contains("progressFraction = playerState.progressFraction"))
+        assertTrue(mini.contains("progress = { progressFraction }"))
         assertTrue(state.contains("calculatePlayerProgress(positionMs, durationMs, pendingSeekMs)"))
     }
 
