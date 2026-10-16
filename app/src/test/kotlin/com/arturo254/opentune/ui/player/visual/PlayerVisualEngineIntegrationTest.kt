@@ -35,7 +35,8 @@ class PlayerVisualEngineIntegrationTest {
     @Test fun v7BackdropMovedButItsLayeredRenderingStillExists() {
         val p = source("ui/player/Player.kt")
         val v7 = source("ui/player/visual/V7PlayerBackdrop.kt")
-        assertTrue(p.contains("V7PlayerBackdrop("))
+        assertTrue(p.contains("V7PlayerScene("))
+        assertTrue(source("ui/player/v7/V7PlayerScene.kt").contains("V7PlayerBackdrop("))
         assertTrue(v7.contains("internal fun V7PlayerBackdrop("))
         assertTrue(v7.contains(".cloudy(radius = cloudyRadius)"))
         assertTrue(v7.contains("CompositingStrategy.Offscreen"))
