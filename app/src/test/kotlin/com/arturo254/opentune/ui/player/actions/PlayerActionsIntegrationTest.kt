@@ -17,7 +17,7 @@ class PlayerActionsIntegrationTest {
         val player = source("ui/player/Player.kt")
         val controls = source("ui/player/PlayerComponents.kt")
         assertTrue(player.contains("rememberPlayerActions("))
-        assertTrue(player.contains("playerActions.seekTo(it, displayedTrackId = mediaMetadata?.id)"))
+        assertTrue(player.contains("playerActions.seekTo(targetPosition, displayedTrackId = mediaMetadata?.id)"))
         assertTrue(player.contains("playerActions::next"))
         assertTrue(player.contains("playerActions::previous"))
         assertTrue(controls.contains("playerActions.playPause()"))

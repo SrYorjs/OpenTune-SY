@@ -119,6 +119,8 @@ import com.arturo254.opentune.R
 import com.arturo254.opentune.LocalDownloadUtil
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
+import com.arturo254.opentune.ui.player.progress.calculatePlayerProgress
+import com.arturo254.opentune.ui.player.progress.rememberPlayerSeekSession
 import com.arturo254.opentune.ui.player.host.PlayerHostBackHandler
 import com.arturo254.opentune.ui.player.layout.PlayerLayout
 import com.arturo254.opentune.ui.player.layout.resolvePlayerLayout
@@ -177,8 +179,6 @@ import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 
-
-private const val SeekbarSettleToleranceMs = 1_500L
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -293,12 +293,8 @@ fun BottomSheetPlayer(
     var duration by rememberSaveable(mediaMetadata?.id) {
         mutableLongStateOf(playerConnection.player.duration)
     }
-    var sliderPosition by remember(mediaMetadata?.id) {
-        mutableStateOf<Long?>(null)
-    }
-    var isUserSeeking by remember(mediaMetadata?.id) {
-        mutableStateOf(false)
-    }
+    val seekSession = rememberPlayerSeekSession(mediaMetadata?.id)
+    val sliderPosition = seekSession.pendingSeekMs
 
     // One normalized presentation snapshot for full Player and MiniPlayer.
     // Reuses the existing position ticker; no second playback/timing engine.
@@ -520,19 +516,7 @@ fun BottomSheetPlayer(
                 } else {
                     position = currentPlayerPosition
                     duration = currentPlayerDuration
-                    if (!isUserSeeking) {
-                        sliderPosition?.let { targetPosition ->
-                            val clampedTargetPosition = when {
-                                currentPlayerDuration > 0L && currentPlayerDuration != C.TIME_UNSET -> {
-                                    targetPosition.coerceIn(0L, currentPlayerDuration)
-                                }
-                                else -> targetPosition.coerceAtLeast(0L)
-                            }
-                            if (abs(currentPlayerPosition - clampedTargetPosition) <= SeekbarSettleToleranceMs) {
-                                sliderPosition = null
-                            }
-                        }
-                    }
+                    seekSession.settle(currentPlayerPosition, currentPlayerDuration)
                 }
             }
         } else {
@@ -684,17 +668,13 @@ fun BottomSheetPlayer(
             )
         },
     ) {
-        val onSliderValueChange: (Long) -> Unit = {
-            isUserSeeking = true
-            sliderPosition = it
-        }
+        val onSliderValueChange: (Long) -> Unit = seekSession::onSeekPreview
         val onSliderValueChangeFinished: () -> Unit = {
-            sliderPosition?.let {
-                // Preserve the original crossfade seek behavior through PlayerActions.
-                playerActions.seekTo(it, displayedTrackId = mediaMetadata?.id)
-                position = it
+            seekSession.finish { targetPosition ->
+                // Crossfade adjustment remains owned by PlayerActions.
+                playerActions.seekTo(targetPosition, displayedTrackId = mediaMetadata?.id)
+                position = targetPosition
             }
-            isUserSeeking = false
         }
         val seekEnabled = playerState.canSeek
         val updatedOnSliderValueChange by rememberUpdatedState(onSliderValueChange)
@@ -780,12 +760,8 @@ fun BottomSheetPlayer(
             compactLandscape = {
                     val littleBackground = MaterialTheme.colorScheme.primaryContainer
                     val littleTextColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    val displayPositionMs = sliderPosition ?: position
-                    val progressFraction =
-                        remember(displayPositionMs, duration) {
-                            if (duration <= 0L || duration == C.TIME_UNSET) 0f
-                            else (displayPositionMs.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
-                        }
+                    val progress = calculatePlayerProgress(position, duration, sliderPosition)
+                    val progressFraction = progress.fraction
                     val progressOverlayColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
 
                     Box(
@@ -990,14 +966,10 @@ fun BottomSheetPlayer(
             compactPortrait = {
                     val littleBackground = MaterialTheme.colorScheme.primaryContainer
                     val littleTextColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    val displayPositionMs = sliderPosition ?: position
-                    val progressFraction =
-                        remember(displayPositionMs, duration) {
-                            if (duration <= 0L || duration == C.TIME_UNSET) 0f
-                            else (displayPositionMs.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
-                        }
+                    val progress = calculatePlayerProgress(position, duration, sliderPosition)
+                    val progressFraction = progress.fraction
                     val progressOverlayColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
-                    val seekEnabled = duration > 0L && duration != C.TIME_UNSET
+                    val seekEnabled = progress.canSeek
 
                     Box(
                         modifier =
@@ -1278,7 +1250,8 @@ private fun LittlePlayerContent(
         val horizontalPadding = (18f * scale).dp
         val verticalPadding = (10f * scale).dp
 
-        val displayPositionMs = sliderPosition ?: positionMs
+        val progress = calculatePlayerProgress(positionMs, durationMs, sliderPosition)
+        val displayPositionMs = progress.displayPositionMs
 
         val timeText = remember(displayPositionMs, durationMs) {
             val positionText = makeTimeString(displayPositionMs)

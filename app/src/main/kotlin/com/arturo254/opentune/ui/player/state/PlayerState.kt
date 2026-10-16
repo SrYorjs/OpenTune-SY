@@ -3,9 +3,9 @@ package com.arturo254.opentune.ui.player.state
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
-import androidx.media3.common.C
 import androidx.media3.common.Player
 import com.arturo254.opentune.models.MediaMetadata
+import com.arturo254.opentune.ui.player.progress.calculatePlayerProgress
 
 /**
  * One immutable VIEW of the currently playing track.
@@ -60,31 +60,22 @@ data class PlayerStateInput(
  * Media3 listener, preference write, playback action or additional tick.
  */
 fun PlayerStateInput.toPlayerState(): PlayerState {
-    val canSeek = durationMs > 0L && durationMs != C.TIME_UNSET
-    val safeDuration = if (canSeek) durationMs else 0L
-    val safePosition =
-        positionMs.coerceAtLeast(0L).let { if (canSeek) it.coerceAtMost(safeDuration) else it }
-    val displayPosition =
-        (pendingSeekMs ?: positionMs).coerceAtLeast(0L)
-            .let { if (canSeek) it.coerceAtMost(safeDuration) else it }
-    val progress =
-        if (canSeek) (displayPosition.toDouble() / safeDuration.toDouble()).toFloat().coerceIn(0f, 1f)
-        else 0f
+    val progress = calculatePlayerProgress(positionMs, durationMs, pendingSeekMs)
     val offline = offlineArtworkUrl?.takeIf { it.isNotBlank() }
     val remote = mediaMetadata?.thumbnailUrl?.takeIf { it.isNotBlank() }
     val buffering = playbackState == Player.STATE_BUFFERING
     return PlayerState(
         mediaMetadata = mediaMetadata,
         artworkUrl = offline ?: remote,
-        positionMs = safePosition,
-        durationMs = safeDuration,
-        displayPositionMs = displayPosition,
-        progressFraction = progress,
+        positionMs = progress.positionMs,
+        durationMs = progress.durationMs,
+        displayPositionMs = progress.displayPositionMs,
+        progressFraction = progress.fraction,
         playbackState = playbackState,
         isPlaying = isPlaying,
         isBuffering = buffering,
         isLoading = buffering || pendingSeekMs != null,
-        canSeek = canSeek,
+        canSeek = progress.canSeek,
         canSkipPrevious = canSkipPrevious,
         canSkipNext = canSkipNext,
         isLiked = isLiked,

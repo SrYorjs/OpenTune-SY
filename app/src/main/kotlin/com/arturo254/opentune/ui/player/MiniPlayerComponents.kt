@@ -99,6 +99,7 @@ import com.arturo254.opentune.ui.player.controls.playerPlaybackIconRes
 import com.arturo254.opentune.ui.player.controls.playerFavoriteIconRes
 import com.arturo254.opentune.ui.player.controls.playerSkipIconRes
 import com.arturo254.opentune.ui.player.state.PlayerStateInput
+import com.arturo254.opentune.ui.player.progress.calculatePlayerProgress
 import com.arturo254.opentune.ui.player.state.rememberPlayerState
 import com.arturo254.opentune.together.TogetherSessionState
 import com.arturo254.opentune.ui.component.BottomSheetState
@@ -323,7 +324,7 @@ private fun MiniPlayerArtwork(
             )
         } else {
             CircularWavyProgressIndicator(
-                progress = { if (duration > 0) (position.toFloat() / duration).coerceIn(0f, 1f) else 0f },
+                progress = { calculatePlayerProgress(position, duration).fraction },
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)

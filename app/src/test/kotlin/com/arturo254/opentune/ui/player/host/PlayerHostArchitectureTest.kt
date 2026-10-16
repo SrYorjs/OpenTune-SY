@@ -41,7 +41,7 @@ class PlayerHostArchitectureTest {
         assertTrue(lifecycle.contains("delay(100L)"))
         assertTrue(lifecycle.contains("latestOnTimeout()"))
         assertTrue(lifecycle.contains("playerHostBackDestination("))
-        assertTrue(player.contains("playerActions.seekTo(it, displayedTrackId = mediaMetadata?.id)"))
+        assertTrue(player.contains("playerActions.seekTo(targetPosition, displayedTrackId = mediaMetadata?.id)"))
     }
 
     @Test fun media3QueueAndArtworkOwnershipStayInTheirExistingLayers() {

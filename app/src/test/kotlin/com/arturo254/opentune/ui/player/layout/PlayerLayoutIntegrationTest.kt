@@ -45,7 +45,7 @@ class PlayerLayoutIntegrationTest {
         assertTrue(player.contains("V8PlayerControlsContent("))
         assertTrue(player.contains("LittlePlayerContent("))
         assertTrue(player.contains("LandscapeLikeBox("))
-        assertTrue(player.contains("playerActions.seekTo(it, displayedTrackId = mediaMetadata?.id)"))
+        assertTrue(player.contains("playerActions.seekTo(targetPosition, displayedTrackId = mediaMetadata?.id)"))
         // Phase 4.7: the Canvas model is now owned by the visual engine,
         // while Player keeps consuming its current Canvas snapshot.
         val visual = source("ui/player/visual/PlayerVisualState.kt")

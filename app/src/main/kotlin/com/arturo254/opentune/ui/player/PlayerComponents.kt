@@ -111,6 +111,7 @@ import com.arturo254.opentune.db.entities.FormatEntity
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
+import com.arturo254.opentune.ui.player.progress.calculatePlayerProgress
 import com.arturo254.opentune.ui.player.controls.PlayerSharedPlaybackContent
 import com.arturo254.opentune.ui.player.controls.PlayerSharedSkipIcon
 import com.arturo254.opentune.ui.player.controls.PlayerSkipDirection
@@ -726,13 +727,12 @@ fun PlayerSlider(
     onValueChange: (Long) -> Unit,
     onValueChangeFinished: () -> Unit
 ) {
-    val safeDuration = if (duration <= 0L) 0f else duration.toFloat()
-    val safeValue = (sliderPosition ?: position).toFloat().coerceIn(0f, maxOf(0f, safeDuration))
+    val progress = calculatePlayerProgress(position, duration, sliderPosition)
 
     StyledPlaybackSlider(
         sliderStyle = sliderStyle,
-        value = safeValue,
-        valueRange = 0f..maxOf(1f, safeDuration),
+        value = progress.sliderValue,
+        valueRange = progress.sliderRange,
         onValueChange = { onValueChange(it.toLong()) },
         onValueChangeFinished = onValueChangeFinished,
         activeColor = textButtonColor,
@@ -844,6 +844,7 @@ fun PlayerTimeLabel(
     showRemainingTime: Boolean = false,
     centerContent: @Composable (() -> Unit)? = null,
 ) {
+    val progress = calculatePlayerProgress(position, duration, sliderPosition)
     Box(
         modifier =
             Modifier
@@ -851,7 +852,7 @@ fun PlayerTimeLabel(
                 .padding(horizontal = PlayerHorizontalPadding + 4.dp),
     ) {
         Text(
-            text = makeTimeString(sliderPosition ?: position),
+            text = makeTimeString(progress.displayPositionMs),
             style = MaterialTheme.typography.labelMedium,
             color = textBackgroundColor,
             maxLines = 1,
@@ -871,7 +872,7 @@ fun PlayerTimeLabel(
         Text(
             text = if (duration != C.TIME_UNSET) {
                 if (showRemainingTime) {
-                    val remaining = duration - (sliderPosition ?: position)
+                    val remaining = progress.remainingMs
                     "-${makeTimeString(remaining.coerceAtLeast(0))}"
                 } else {
                     makeTimeString(duration)
@@ -2851,11 +2852,10 @@ fun V8PlayerControlsContent(
 
         Spacer(Modifier.height(10.dp))
 
-        val safeDuration = if (duration <= 0L) 0f else duration.toFloat()
-        val safeValue = (sliderPosition ?: position).toFloat().coerceIn(0f, maxOf(0f, safeDuration))
+        val progress = calculatePlayerProgress(position, duration, sliderPosition)
         Slider(
-            value = safeValue,
-            valueRange = 0f..maxOf(1f, safeDuration),
+            value = progress.sliderValue,
+            valueRange = progress.sliderRange,
             onValueChange = { onSliderValueChange(it.toLong()) },
             onValueChangeFinished = onSliderValueChangeFinished,
             colors = PlayerSliderColors.thickSliderColors(textBackgroundColor),
