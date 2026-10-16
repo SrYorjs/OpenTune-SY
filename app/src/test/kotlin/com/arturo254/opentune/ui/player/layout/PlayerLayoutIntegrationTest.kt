@@ -51,7 +51,7 @@ class PlayerLayoutIntegrationTest {
         val visual = source("ui/player/visual/PlayerVisualState.kt")
         assertTrue(visual.contains("CanvasArtwork("))
         assertTrue(player.contains("val canvasArtwork = playerVisuals.canvasArtwork"))
-        assertTrue(player.contains("LyricsScreen("))
+        assertTrue(player.contains("PlayerLyricsPanel("))
         assertFalse(router.contains("import com.arturo254.opentune.playback.PlayerConnection"))
         assertFalse(router.contains("PlayerConnection("))
         assertFalse(router.contains("import com.arturo254.opentune.service.MusicService"))
