@@ -105,6 +105,9 @@ import com.arturo254.opentune.ui.component.PreferenceGroupTitle
 import com.arturo254.opentune.ui.component.SwitchPreference
 import com.arturo254.opentune.ui.component.ThumbnailCornerRadiusSelectorButton
 import com.arturo254.opentune.ui.player.StyledPlaybackSlider
+import com.arturo254.opentune.ui.player.preferences.PlayerLayoutSelector
+import com.arturo254.opentune.ui.player.preferences.PlayerBackgroundSkinSelector
+import com.arturo254.opentune.ui.player.preferences.PlayerButtonsSkinSelector
 import com.arturo254.opentune.ui.utils.backToMain
 import com.arturo254.opentune.utils.rememberEnumPreference
 import com.arturo254.opentune.utils.rememberPreference
@@ -422,23 +425,9 @@ fun AppearanceSettings(
             title = stringResource(R.string.player),
         )
 
-        EnumListPreference(
-            title = { Text(stringResource(R.string.player_design_style)) },
-            icon = { Icon(painterResource(R.drawable.palette), null) },
-            selectedValue = playerDesignStyle,
-            onValueSelected = onPlayerDesignStyleChange,
-            valueText = {
-                when (it) {
-                    PlayerDesignStyle.V1 -> stringResource(R.string.player_design_v1)
-                    PlayerDesignStyle.V2 -> stringResource(R.string.player_design_v2)
-                    PlayerDesignStyle.V3 -> stringResource(R.string.player_design_v3)
-                    PlayerDesignStyle.V4 -> stringResource(R.string.player_design_v4)
-                    PlayerDesignStyle.V5 -> stringResource(R.string.player_design_v5)
-                    PlayerDesignStyle.V6 -> stringResource(R.string.player_design_v6)
-                    PlayerDesignStyle.V7 -> stringResource(R.string.player_design_v7)
-                    PlayerDesignStyle.V8 -> stringResource(R.string.Apple_Music)
-                }
-            },
+        PlayerLayoutSelector(
+            selected = playerDesignStyle,
+            onSelected = onPlayerDesignStyleChange,
         )
 
         SwitchPreference(
@@ -456,23 +445,9 @@ fun AppearanceSettings(
             onCheckedChange = onUseNewLibraryDesignChange,
         )
 
-        EnumListPreference(
-            title = { Text(stringResource(R.string.player_background_style)) },
-            icon = { Icon(painterResource(R.drawable.gradient), null) },
-            selectedValue = playerBackground,
-            onValueSelected = onPlayerBackgroundChange,
-            valueText = {
-                when (it) {
-                    PlayerBackgroundStyle.DEFAULT -> stringResource(R.string.follow_theme)
-                    PlayerBackgroundStyle.GRADIENT -> stringResource(R.string.gradient)
-                    PlayerBackgroundStyle.CUSTOM -> stringResource(R.string.custom)
-                    PlayerBackgroundStyle.BLUR -> stringResource(R.string.player_background_blur)
-                    PlayerBackgroundStyle.COLORING -> stringResource(R.string.coloring)
-                    PlayerBackgroundStyle.BLUR_GRADIENT -> stringResource(R.string.blur_gradient)
-                    PlayerBackgroundStyle.GLOW -> stringResource(R.string.glow)
-                    PlayerBackgroundStyle.GLOW_ANIMATED -> "Glow Animated"
-                }
-            },
+        PlayerBackgroundSkinSelector(
+            selected = playerBackground,
+            onSelected = onPlayerBackgroundChange,
         )
 
         // When custom background is selected, show a direct link to customize it
@@ -525,17 +500,9 @@ fun AppearanceSettings(
         )
 
 
-        EnumListPreference(
-            title = { Text(stringResource(R.string.player_buttons_style)) },
-            icon = { Icon(painterResource(R.drawable.palette), null) },
-            selectedValue = playerButtonsStyle,
-            onValueSelected = onPlayerButtonsStyleChange,
-            valueText = {
-                when (it) {
-                    PlayerButtonsStyle.DEFAULT -> stringResource(R.string.default_style)
-                    PlayerButtonsStyle.SECONDARY -> stringResource(R.string.secondary_color_style)
-                }
-            },
+        PlayerButtonsSkinSelector(
+            selected = playerButtonsStyle,
+            onSelected = onPlayerButtonsStyleChange,
         )
 
         PreferenceEntry(
