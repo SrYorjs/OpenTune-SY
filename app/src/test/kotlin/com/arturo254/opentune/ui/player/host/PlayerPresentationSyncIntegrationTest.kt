@@ -59,6 +59,7 @@ class PlayerPresentationSyncIntegrationTest {
         val policy = source("ui/player/host/PlayerHostPolicy.kt")
         val player = source("ui/player/Player.kt")
         assertTrue(host.contains("settledHostPlayerAnchor("))
+        assertTrue(host.contains("remember(playerBottomSheetState)"))
         assertTrue(host.contains("settledAnchor != null"))
         assertTrue(host.contains("setSavedMiniPlayerAnchor(settledAnchor)"))
         assertTrue(host.contains("shouldPersistHostAnchor("))
