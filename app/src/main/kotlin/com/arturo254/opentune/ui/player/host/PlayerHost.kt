@@ -155,11 +155,15 @@ internal fun rememberPlayerHostState(
 
         if (isYearInMusicScreen) {
             if (yearInMusicSavedPlayerAnchor == -1) {
+                // A special fullscreen route can arrive during sheet drag.
+                // Preserve the last settled anchor instead of converting an
+                // intermediate animation frame into COLLAPSED.
                 yearInMusicSavedPlayerAnchor =
-                    hostPlayerAnchor(
+                    settledHostPlayerAnchor(
                         isExpanded = playerBottomSheetState.isExpanded,
+                        isCollapsed = playerBottomSheetState.isCollapsed,
                         isDismissed = playerBottomSheetState.isDismissed,
-                    )
+                    ) ?: savedMiniPlayerAnchor
             }
 
             if (!playerBottomSheetState.isDismissed) {
