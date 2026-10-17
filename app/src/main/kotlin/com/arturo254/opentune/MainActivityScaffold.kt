@@ -179,6 +179,8 @@ import com.arturo254.opentune.core.designsystem.glass.LocalGalaxGlassMode
 import com.arturo254.opentune.core.designsystem.glass.LocalLiquidBackdrop
 import com.arturo254.opentune.core.designsystem.glass.parseGalaxGlassMode
 import com.arturo254.opentune.core.designsystem.glass.isGalaxGlassEnabled
+import com.arturo254.opentune.core.designsystem.glass.GlassMode
+import com.arturo254.opentune.core.designsystem.glass.rememberGalaxGlassCapabilities
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.skydoves.cloudy.rememberSky
@@ -310,11 +312,18 @@ internal fun MainActivityScaffold(
     val selectedGlassMode = parseGalaxGlassMode(storedGalaxGlassMode)
     val enableGalaxGlass = isGalaxGlassEnabled(liquidGlassNavBar, selectedGlassMode)
     val liquidGlassSky = rememberSky()
-    // The live Kyant backdrop only captures route content (below navigation /
-    // MiniPlayer overlays), never the whole Scaffold: avoids recursive glass.
-    val liveGlassBackdrop = if (
-        enableGalaxGlass && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
-    ) {
+    // CLASSIC (and un-migrated legacy settings) stay on their original
+    // Sky/Cloudy optical path. New materials alone activate the live Kyant
+    // capture, avoiding accidental Classic visual regressions.
+    val newMaterialSelected = selectedGlassMode == GlassMode.FROSTED ||
+        selectedGlassMode == GlassMode.CLEAR || selectedGlassMode == GlassMode.BLUR
+    val glassBudget = rememberGalaxGlassCapabilities(hasLiveBackdrop = false)
+    val canCaptureBackdrop = enableGalaxGlass && newMaterialSelected &&
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        !glassBudget.isPowerSaveMode && !glassBudget.isLowRamDevice
+    // Capture route content behind the overlays, never the whole Scaffold:
+    // no feedback loop and no GPU capture cost for CLASSIC/DISABLED/low tier.
+    val liveGlassBackdrop = if (canCaptureBackdrop) {
         val backingSurface = MaterialTheme.colorScheme.surface
         rememberLayerBackdrop {
             drawRect(backingSurface)
