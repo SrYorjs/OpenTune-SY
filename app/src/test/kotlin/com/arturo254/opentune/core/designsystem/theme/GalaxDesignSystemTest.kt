@@ -70,6 +70,17 @@ class GalaxDesignSystemTest {
         assertEquals(material.displayMedium.fontFamily, a.typography.hero.fontFamily)
     }
 
+    @Test fun legacyGlassRolesBecomeSubtlyBlueOnlyForGalaxBrand() {
+        val brand = createOpenTuneColorRoles(galaxColorScheme(dark = true))
+        assertEquals(GalaxPalette.Ice.copy(alpha = 0.070f), brand.surfaceGlass)
+        assertEquals(GalaxPalette.Halo.copy(alpha = 0.18f), brand.outlineGlass)
+        assertEquals(galaxColorScheme(true).onSurfaceVariant, brand.textMuted)
+        val custom = createOpenTuneColorRoles(
+            androidx.compose.material3.darkColorScheme(primary = Color(0xFFAA44AA)),
+        )
+        assertEquals(Color.White.copy(alpha = 0.070f), custom.surfaceGlass)
+    }
+
     @Test fun dynamicOrCustomSchemesDeriveGalaxRolesWithoutHardcodedBlue() {
         val custom = androidx.compose.material3.darkColorScheme(
             primary = Color(0xFFDBA6EB),
