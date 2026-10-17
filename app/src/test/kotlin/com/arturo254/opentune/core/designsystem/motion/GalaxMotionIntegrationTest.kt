@@ -49,6 +49,9 @@ class GalaxMotionIntegrationTest {
         assertTrue(interaction.contains("GalaxHapticCue.SELECTION"))
         assertTrue(controls.contains("galaxPressFeedback(interactionSource, enabled)"))
         assertTrue(controls.contains("rememberGalaxHapticFeedback()"))
+        val toolbar = source("ui/component/FloatingNavigationToolbar.kt")
+        assertTrue(toolbar.contains("haptic(GalaxHapticCue.SELECTION)"))
+        assertTrue(toolbar.contains("onItemClick(screen, selected)"))
         assertFalse(interaction.contains("Vibrator("))
     }
 }
