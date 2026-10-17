@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 import com.arturo254.opentune.core.designsystem.theme.shapes
@@ -32,12 +33,16 @@ fun Modifier.galaxGlassEffect(
         resolveGalaxGlassPlan(enabled, resolvedSpec, caps, motion.reducedMotion)
     }
     if (plan.renderer == GlassRenderMode.OPAQUE) return this
+    val dark = pureBlack || MaterialTheme.colorScheme.background.luminance() < 0.45f
+    val material = galaxGlassMaterial(plan.mode, dark)
     return this.openTuneGlassEffect(
         shape = shape,
         pureBlack = pureBlack,
         optics = plan.optics,
         renderModeOverride = plan.renderer,
         allowStaticShader = plan.fallback == GlassFallbackStrategy.STATIC_SHADER,
+        surfaceTintOverride = material.surfaceTint,
+        borderTintOverride = material.borderTint,
     )
 }
 
@@ -63,6 +68,8 @@ fun GalaxGlassSurface(
     val plan = remember(enabled, caps, resolvedSpec, motion.reducedMotion) {
         resolveGalaxGlassPlan(enabled, resolvedSpec, caps, motion.reducedMotion)
     }
+    val dark = pureBlack || MaterialTheme.colorScheme.background.luminance() < 0.45f
+    val material = galaxGlassMaterial(plan.mode, dark)
     GlassSurface(
         modifier = modifier,
         shape = shape,
@@ -70,6 +77,8 @@ fun GalaxGlassSurface(
         optics = plan.optics,
         renderModeOverride = plan.renderer,
         allowStaticShader = plan.fallback == GlassFallbackStrategy.STATIC_SHADER,
+        surfaceTintOverride = material.surfaceTint,
+        borderTintOverride = material.borderTint,
         opaqueColor = opaqueColor,
         content = content,
     )
