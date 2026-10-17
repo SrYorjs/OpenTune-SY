@@ -78,6 +78,7 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLayoutResult
@@ -358,6 +359,7 @@ fun V8PlayerControlsContent(
             ) {
                 LiquidGlassIconButton(
                     onClick = { playerActions.toggleFavorite() },
+                    accessibilityLabel = stringResource(if (liked) R.string.player_a11y_unlike else R.string.player_a11y_like),
                     size = 44.dp,
                     selected = liked,
                 ) {
@@ -372,6 +374,7 @@ fun V8PlayerControlsContent(
                 }
 
                 LiquidGlassIconButton(
+                    accessibilityLabel = stringResource(R.string.more),
                     onClick = {
                         menuState.showPlayerPanelMenu(
                             metadata = mediaMetadata,
@@ -600,6 +603,7 @@ fun V8PlaybackControls(
         ) {
             LiquidGlassIconButton(
                 onClick = onPrevious,
+                accessibilityLabel = stringResource(R.string.player_a11y_previous),
                 enabled = canSkipPrevious,
                 size = 58.dp,
             ) {
@@ -615,6 +619,7 @@ fun V8PlaybackControls(
                 onClick = {
                     onPlayPause()
                 },
+                accessibilityLabel = stringResource(if (isPlaying) R.string.player_a11y_pause else R.string.play),
                 enabled = !isLoading,
                 selected = isPlaying,
                 size = 72.dp,
@@ -647,6 +652,7 @@ fun V8PlaybackControls(
 
             LiquidGlassIconButton(
                 onClick = onNext,
+                accessibilityLabel = stringResource(R.string.next),
                 enabled = canSkipNext,
                 size = 58.dp,
             ) {
@@ -667,6 +673,7 @@ fun V8PlaybackControls(
                 onClick = {
                     onToggleShuffle()
                 },
+                accessibilityLabel = stringResource(R.string.shuffle),
                 selected = shuffleModeEnabled,
                 size = 42.dp,
             ) {
@@ -680,6 +687,7 @@ fun V8PlaybackControls(
 
             LiquidGlassIconButton(
                 onClick = { onToggleRepeat() },
+                accessibilityLabel = stringResource(R.string.player_a11y_repeat),
                 selected = repeatMode != Player.REPEAT_MODE_OFF,
                 size = 42.dp,
             ) {
@@ -718,6 +726,7 @@ fun QueueCollapsedContentV8(
     ) {
         LiquidGlassIconButton(
             onClick = onShowLyrics,
+            accessibilityLabel = stringResource(R.string.lyrics),
             size = 44.dp,
         ) {
             Icon(
@@ -735,6 +744,7 @@ fun QueueCollapsedContentV8(
 
         LiquidGlassIconButton(
             onClick = onExpandQueue,
+            accessibilityLabel = stringResource(R.string.queue),
             size = 44.dp,
         ) {
             Icon(
