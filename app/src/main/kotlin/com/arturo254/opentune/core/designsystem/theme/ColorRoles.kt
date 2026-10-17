@@ -52,17 +52,19 @@ internal fun createOpenTuneColorRoles(
     colorScheme: ColorScheme,
 ): OpenTuneColorRoles {
     val darkSurface = colorScheme.background.luminance() < 0.45f
+    val galactic = colorScheme.primary == GalaxPalette.Halo ||
+        (colorScheme.primary == Color(0xFF155AAA) && !darkSurface)
 
     return OpenTuneColorRoles(
         surfaceGlass =
             if (darkSurface) {
-                Color.White.copy(alpha = 0.070f)
+                (if (galactic) GalaxPalette.Ice else Color.White).copy(alpha = 0.070f)
             } else {
                 Color.White.copy(alpha = 0.24f)
             },
         surfaceGlassStrong =
             if (darkSurface) {
-                Color.White.copy(alpha = 0.11f)
+                (if (galactic) GalaxPalette.Ice else Color.White).copy(alpha = 0.11f)
             } else {
                 Color.White.copy(alpha = 0.34f)
             },
@@ -71,13 +73,13 @@ internal fun createOpenTuneColorRoles(
         surfacePlayer = colorScheme.surfaceContainerLowest,
         outlineGlass =
             if (darkSurface) {
-                Color.White.copy(alpha = 0.18f)
+                (if (galactic) GalaxPalette.Halo else Color.White).copy(alpha = 0.18f)
             } else {
                 Color.White.copy(alpha = 0.58f)
             },
         outlineGlassStrong =
             if (darkSurface) {
-                Color.White.copy(alpha = 0.28f)
+                (if (galactic) GalaxPalette.Halo else Color.White).copy(alpha = 0.28f)
             } else {
                 Color.White.copy(alpha = 0.72f)
             },
@@ -87,8 +89,8 @@ internal fun createOpenTuneColorRoles(
             ),
         overlayScrim = colorScheme.scrim.copy(alpha = 0.52f),
         overlayArtwork = Color.Black.copy(alpha = 0.24f),
-        textMuted = colorScheme.onSurfaceVariant.copy(alpha = 0.76f),
-        textSubtle = colorScheme.onSurfaceVariant.copy(alpha = 0.60f),
+        textMuted = if (galactic) colorScheme.onSurfaceVariant else colorScheme.onSurfaceVariant.copy(alpha = 0.76f),
+        textSubtle = if (galactic) colorScheme.onSurfaceVariant else colorScheme.onSurfaceVariant.copy(alpha = 0.60f),
         badgeAccent = colorScheme.primary.copy(alpha = 0.10f),
         badgeAccentStrong = colorScheme.primaryContainer,
         accentPositive = colorScheme.tertiary,
