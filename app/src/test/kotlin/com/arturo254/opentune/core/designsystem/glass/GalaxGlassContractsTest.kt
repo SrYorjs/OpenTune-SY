@@ -11,11 +11,13 @@ class GalaxGlassContractsTest {
         backdrop: Boolean = true,
         powerSave: Boolean = false,
         lowRam: Boolean = false,
+        safeCanvas: Boolean = false,
     ) = GlassCapabilities(
         sdkInt = sdk,
         hasLiveBackdrop = backdrop,
         isPowerSaveMode = powerSave,
         isLowRamDevice = lowRam,
+        hasSafeCanvasBackdrop = safeCanvas,
     )
 
     @Test fun fiveModesMatchTheGalaxRoadmapWithoutChangingClassicPreset() {
@@ -125,6 +127,24 @@ class GalaxGlassContractsTest {
             caps(sdk = 37, backdrop = true),
         )
         assertEquals(GlassRenderMode.LIVE_BACKDROP, classic.renderer)
+    }
+
+    @Test fun android17EnablesNativeKyantOnlyForVerifiedCanvasSource() {
+        for (mode in listOf(GlassMode.FROSTED, GlassMode.CLEAR, GlassMode.BLUR)) {
+            val nativePlan = resolveGalaxGlassPlan(
+                enabled = true,
+                spec = GlassSurfaceSpec(mode = mode),
+                capabilities = caps(sdk = 37, backdrop = true, safeCanvas = true),
+            )
+            assertEquals(GlassRenderMode.LIVE_BACKDROP, nativePlan.renderer)
+            assertEquals(GlassFallbackStrategy.NONE, nativePlan.fallback)
+            val powerSavePlan = resolveGalaxGlassPlan(
+                true, GlassSurfaceSpec(mode = mode),
+                caps(sdk = 37, backdrop = true, safeCanvas = true, powerSave = true),
+            )
+            assertEquals(GlassRenderMode.STATIC_FALLBACK, powerSavePlan.renderer)
+            assertEquals(GlassFallbackStrategy.TINT_AND_OUTLINE, powerSavePlan.fallback)
+        }
     }
 
     @Test fun android17NewMaterialsNeverRequestUnvalidatedSkyShader() {
