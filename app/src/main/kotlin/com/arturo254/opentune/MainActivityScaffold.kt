@@ -179,6 +179,10 @@ import com.arturo254.opentune.core.designsystem.glass.LocalGalaxGlassMode
 import com.arturo254.opentune.core.designsystem.glass.LocalLiquidBackdrop
 import com.arturo254.opentune.core.designsystem.glass.parseGalaxGlassMode
 import com.arturo254.opentune.core.designsystem.glass.isGalaxGlassEnabled
+import com.arturo254.opentune.core.designsystem.glass.GlassMode
+import com.arturo254.opentune.core.designsystem.glass.rememberGalaxGlassCapabilities
+import com.arturo254.opentune.core.designsystem.glass.rememberGalaxCanvasBackdrop
+import com.arturo254.opentune.core.designsystem.glass.LocalGalaxSafeCanvasBackdrop
 import com.skydoves.cloudy.rememberSky
 import com.arturo254.opentune.constants.LyricsSyncOffsetKey
 import com.arturo254.opentune.constants.MiniPlayerBottomSpacing
@@ -308,11 +312,17 @@ internal fun MainActivityScaffold(
     val selectedGlassMode = parseGalaxGlassMode(storedGalaxGlassMode)
     val enableGalaxGlass = isGalaxGlassEnabled(liquidGlassNavBar, selectedGlassMode)
     val liquidGlassSky = rememberSky()
-    // CRASH GUARD (4.5.7 / Android 17): Never capture the NavHost with
-    // Kyant layerBackdrop. RenderThread enters a recursive RenderNode graph
-    // (native SIGSEGV/stack overflow) when a live material is selected.
-    // The planner must use its non-capturing, contrast-safe material fallback
-    // until a separate, isolated capture surface passes device validation.
+    // Kyant's official CanvasBackdrop is a pure draw source; unlike the old
+    // NavHost LayerBackdrop it cannot re-record its own RenderNode children.
+    // Its ambient palette follows GalaxOT's Material 3 colors. Actual route
+    // content is NOT captured, avoiding the Samsung Android 17 SIGSEGV.
+    val glassBudget = rememberGalaxGlassCapabilities(hasLiveBackdrop = false)
+    val ambientBackdrop = rememberGalaxCanvasBackdrop(pureBlack)
+    val isNewMaterial = selectedGlassMode == GlassMode.FROSTED ||
+        selectedGlassMode == GlassMode.CLEAR || selectedGlassMode == GlassMode.BLUR
+    val enableAmbientBackdrop = enableGalaxGlass && isNewMaterial &&
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+        !glassBudget.isPowerSaveMode && !glassBudget.isLowRamDevice
     val menuState = remember { MenuState() }
 
     val haptic = LocalHapticFeedback.current
@@ -378,7 +388,8 @@ internal fun MainActivityScaffold(
                         LocalShimmerTheme provides ShimmerTheme,
                         LocalSyncUtils provides syncUtils,
                         LocalSky provides liquidGlassSky,
-                        LocalLiquidBackdrop provides null,
+                        LocalLiquidBackdrop provides if (enableAmbientBackdrop) ambientBackdrop else null,
+                        LocalGalaxSafeCanvasBackdrop provides enableAmbientBackdrop,
                         LocalGalaxGlassMode provides selectedGlassMode,
                         LocalEnableLiquidGlass provides enableGalaxGlass,
                         LocalBottomSheetPageState provides bottomSheetPageState,
