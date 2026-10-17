@@ -32,6 +32,7 @@ data class GlassCapabilities(
     val hasLiveBackdrop: Boolean,
     val isPowerSaveMode: Boolean = false,
     val isLowRamDevice: Boolean = false,
+    val hasSafeCanvasBackdrop: Boolean = false,
 ) {
     val hasRuntimeShader: Boolean get() = sdkInt >= 33
     val hasRenderEffect: Boolean get() = sdkInt >= 31
@@ -112,11 +113,11 @@ fun resolveGalaxGlassPlan(
         return GlassRenderPlan(spec.mode, GlassRenderMode.STATIC_FALLBACK,
             tier, GlassFallbackStrategy.TINT_AND_OUTLINE, optics)
     }
-    // Defensive planner guard: Android 17 RenderThread's RenderNode recursion
-    // was observed when selecting newly captured materials. Even if another
-    // caller accidentally supplies a live Backdrop, do not execute it on API37+.
+    // Android 17 only accepts native optics from the Kyant CanvasBackdrop
+    // source, which records NO RenderNodes. Never whitelist arbitrary capture.
     val liveAllowed = capabilities.hasLiveBackdrop &&
-        (spec.mode == GlassMode.CLASSIC || capabilities.sdkInt < 37)
+        (spec.mode == GlassMode.CLASSIC || capabilities.sdkInt < 37 ||
+            capabilities.hasSafeCanvasBackdrop)
     if (liveAllowed) {
         val safeOptics = if (tier == GlassPerformanceTier.BALANCED) {
             optics.copy(blurRadius = optics.blurRadius.coerceAtMost(6), dispersion = 0f)
@@ -172,13 +173,17 @@ fun displayGalaxGlassMode(saved: String?, legacyEnabled: Boolean): GlassMode =
 val LocalGalaxGlassMode = staticCompositionLocalOf<GlassMode?> { null }
 
 @Composable
-fun rememberGalaxGlassCapabilities(hasLiveBackdrop: Boolean): GlassCapabilities {
+fun rememberGalaxGlassCapabilities(
+    hasLiveBackdrop: Boolean,
+    hasSafeCanvasBackdrop: Boolean = false,
+): GlassCapabilities {
     val context = LocalContext.current
     val powerManager = context.getSystemService(Context.POWER_SERVICE) as? PowerManager
     val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
     return GlassCapabilities(
         sdkInt = Build.VERSION.SDK_INT,
         hasLiveBackdrop = hasLiveBackdrop,
+        hasSafeCanvasBackdrop = hasSafeCanvasBackdrop,
         isPowerSaveMode = powerManager?.isPowerSaveMode == true,
         isLowRamDevice = activityManager?.isLowRamDevice == true,
     )
