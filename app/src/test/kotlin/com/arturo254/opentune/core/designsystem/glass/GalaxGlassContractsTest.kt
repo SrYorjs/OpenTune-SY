@@ -28,6 +28,34 @@ class GalaxGlassContractsTest {
             galaxGlassOptics(GlassMode.CLEAR).blurRadius)
     }
 
+    @Test fun selectedMaterialOverridesLegacyPresetsWithoutBreakingClassic() {
+        val legacyNav = GlassSurfaceSpec(
+            mode = GlassMode.CLASSIC,
+            surface = GlassSurfaceType.NAVIGATION,
+            optics = GlassPreset.SOFT.optics,
+        )
+        assertEquals(legacyNav, resolveGalaxGlassSpec(legacyNav, null))
+        assertEquals(legacyNav, resolveGalaxGlassSpec(legacyNav, GlassMode.CLASSIC))
+        for (mode in listOf(GlassMode.FROSTED, GlassMode.CLEAR, GlassMode.BLUR)) {
+            val resolved = resolveGalaxGlassSpec(legacyNav, mode)
+            assertEquals(mode, resolved.mode)
+            assertEquals(null, resolved.optics)
+            assertEquals(
+                galaxGlassOptics(mode),
+                resolveGalaxGlassPlan(true, resolved, caps()).optics,
+            )
+        }
+        assertEquals(GlassPreset.SOFT.optics, resolveGalaxGlassPlan(true, legacyNav, caps()).optics)
+    }
+
+    @Test fun explicitSelectionHasPriorityOverLegacySwitch() {
+        assertFalse(isGalaxGlassEnabled(false, null))
+        assertTrue(isGalaxGlassEnabled(true, null))
+        assertFalse(isGalaxGlassEnabled(true, GlassMode.DISABLED))
+        assertTrue(isGalaxGlassEnabled(false, GlassMode.CLEAR))
+        assertTrue(isGalaxGlassEnabled(false, GlassMode.CLASSIC))
+    }
+
     @Test fun disabledAndLegacyOffAreAlwaysOpaqueRegardlessOfCapabilities() {
         val d = resolveGalaxGlassPlan(true, GlassSurfaceSpec(mode = GlassMode.DISABLED), caps())
         assertEquals(GlassRenderMode.OPAQUE, d.renderer)
@@ -64,6 +92,20 @@ class GalaxGlassContractsTest {
             assertEquals(GlassFallbackStrategy.TINT_AND_OUTLINE, plan.fallback)
             assertFalse(plan.hasExpensiveBackdrop)
         }
+    }
+
+    @Test fun frostedAndBlurFallBackWithoutFakeStaticRefraction() {
+        for (mode in listOf(GlassMode.FROSTED, GlassMode.BLUR)) {
+            val plan = resolveGalaxGlassPlan(
+                true, GlassSurfaceSpec(mode = mode), caps(backdrop = false),
+            )
+            assertEquals(GlassRenderMode.STATIC_FALLBACK, plan.renderer)
+            assertEquals(GlassFallbackStrategy.TINT_AND_OUTLINE, plan.fallback)
+        }
+        val clear = resolveGalaxGlassPlan(
+            true, GlassSurfaceSpec(mode = GlassMode.CLEAR), caps(backdrop = false),
+        )
+        assertEquals(GlassFallbackStrategy.STATIC_SHADER, clear.fallback)
     }
 
     @Test fun androidOldApiFallbackDoesNotPromiseUnsupportedShaders() {
