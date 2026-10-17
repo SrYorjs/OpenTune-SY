@@ -52,8 +52,9 @@ class GalaxGlassSelectionTest {
         val appearance = source("ui/screens/settings/AppearanceSettings.kt")
         assertTrue(preferences.contains("GalaxGlassModeKey = stringPreferencesKey(\"galax_glass_mode\")"))
         assertTrue(appearance.contains("selectedValue = selectedGalaxGlassMode"))
-        assertTrue(appearance.contains("onStoredGalaxGlassModeChange(mode.name)"))
-        assertTrue(appearance.contains("onLiquidGlassNavBarChange(mode != GlassMode.DISABLED)"))
+        assertTrue(appearance.contains("preferencesContext.dataStore.edit { settings ->"))
+        assertTrue(appearance.contains("settings[GalaxGlassModeKey] = mode.name"))
+        assertTrue(appearance.contains("settings[LiquidGlassNavBarKey] = mode != GlassMode.DISABLED"))
         assertTrue(appearance.contains("GlassMode.entries") ||
             appearance.contains("EnumListPreference("))
         assertFalse(appearance.contains("checked = liquidGlassNavBar,"))
