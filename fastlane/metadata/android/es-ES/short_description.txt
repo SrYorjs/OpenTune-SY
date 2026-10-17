@@ -1,1 +1,1 @@
-Un cliente de YouTube Music con Material Design 3, para Android
+GalaxOT: música multiproveedor, sin conexión y con diseño inmersivo.
