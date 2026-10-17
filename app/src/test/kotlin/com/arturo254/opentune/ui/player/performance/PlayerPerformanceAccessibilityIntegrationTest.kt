@@ -51,5 +51,11 @@ class PlayerPerformanceAccessibilityIntegrationTest {
         assertTrue(v8.contains("size = 72.dp"))
         assertTrue(v8.contains("size = 58.dp"))
         assertTrue(v8.contains("size = 44.dp"))
+        for (style in listOf("v2/V2PlayerComponents.kt",
+            "v5/V5PlayerComponents.kt", "v7/V7PlayerComponents.kt")) {
+            val file = source("ui/player/$style")
+            assertTrue(file.contains("stringResource(if (liked) R.string.player_a11y_unlike else R.string.player_a11y_like)"))
+            assertTrue(file.contains("contentDescription = stringResource("))
+        }
     }
 }
