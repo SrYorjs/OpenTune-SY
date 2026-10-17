@@ -49,7 +49,7 @@ fun Modifier.galaxGlassEffect(
     val material = if (plan.mode == GlassMode.CLASSIC) null else galaxGlassMaterial(
         plan.mode, dark, MaterialTheme.colorScheme.primary,
         if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainerHigh,
-    )
+    ).forPerformanceTier(plan.performanceTier)
     return this.openTuneGlassEffect(
         shape = shape,
         pureBlack = pureBlack,
@@ -86,7 +86,7 @@ fun GalaxGlassSurface(
     val material = if (plan.mode == GlassMode.CLASSIC || plan.mode == GlassMode.DISABLED) null else galaxGlassMaterial(
         plan.mode, dark, MaterialTheme.colorScheme.primary,
         if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainerHigh,
-    )
+    ).forPerformanceTier(plan.performanceTier)
     GlassSurface(
         modifier = modifier,
         shape = shape,
