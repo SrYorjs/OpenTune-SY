@@ -4,7 +4,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalMotionDurationScale
+import androidx.compose.ui.MotionDurationScale
+import androidx.compose.runtime.rememberCoroutineScope
 import com.arturo254.opentune.core.designsystem.motion.GalaxMotionPolicy
 import com.arturo254.opentune.core.designsystem.motion.LocalGalaxMotionPolicy
 import com.arturo254.opentune.core.designsystem.DesignSystemEnvironment
@@ -32,7 +33,8 @@ fun ProvideOpenTuneDesignSystem(
         }
     // Compose's platform duration scale is the authoritative accessibility
     // source. The app-level override may also disable decorative transitions.
-    val platformMotionScale = LocalMotionDurationScale.current.scaleFactor
+    val platformMotionScale =
+        rememberCoroutineScope().coroutineContext[MotionDurationScale]?.scaleFactor ?: 1f
     val reducedMotion = reduceMotion || platformMotionScale <= 0f
     val galaxMotion = remember(reducedMotion) { GalaxMotionPolicy(reducedMotion) }
     val colorScheme = MaterialTheme.colorScheme
