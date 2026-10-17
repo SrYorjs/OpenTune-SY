@@ -36,6 +36,8 @@ data class PlayerVisualState(
     val gradientColors: List<Color>,
 )
 
+internal const val PLAYER_PALETTE_CACHE_CAPACITY = 64
+
 internal data class PlayerPaletteCacheKey(
     val mediaId: String,
     val artworkUrl: String,
@@ -112,7 +114,15 @@ fun rememberPlayerVisualState(
 
     val fallbackColors = listOf(colors.surface, colors.surfaceVariant)
     val fallbackArgb = colors.surface.toArgb()
-    val paletteCache = remember { mutableMapOf<PlayerPaletteCacheKey, List<Color>>() }
+    // Access-ordered and bounded. The old "clear at 64" discarded every hot
+    // palette at once, causing repeat decodes on long radio/shuffle sessions.
+    val paletteCache = remember {
+        object : LinkedHashMap<PlayerPaletteCacheKey, List<Color>>(64, 0.75f, true) {
+            override fun removeEldestEntry(
+                eldest: MutableMap.MutableEntry<PlayerPaletteCacheKey, List<Color>>?,
+            ): Boolean = size > PLAYER_PALETTE_CACHE_CAPACITY
+        }
+    }
     var gradientColors by remember(trackId, artworkUrl, usesArtworkPalette, colors.surface, colors.surfaceVariant) {
         mutableStateOf<List<Color>>(emptyList())
     }
@@ -159,7 +169,6 @@ fun rememberPlayerVisualState(
         } else {
             fallbackColors
         }
-        if (paletteCache.size >= 64) paletteCache.clear()
         paletteCache[key] = extracted
         gradientColors = extracted
     }
