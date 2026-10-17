@@ -55,7 +55,7 @@ internal fun MainActivityThemeHost(
         lyricsSyncOffset: Int,
     ) -> Unit,
 ) {
-    val enableDynamicTheme by rememberPreference(DynamicThemeKey, defaultValue = true)
+    val enableDynamicTheme by rememberPreference(DynamicThemeKey, defaultValue = false)
     val customThemeColorValue by rememberPreference(CustomThemeColorKey, defaultValue = "default")
     val darkTheme by rememberEnumPreference(DarkModeKey, defaultValue = DarkMode.AUTO)
     val appFontStyle by rememberEnumPreference(AppFontKey, defaultValue = AppFontStyle.OPEN_TUNE)
@@ -174,6 +174,7 @@ internal fun MainActivityThemeHost(
         motionScheme = MotionScheme.expressive(),
         themeColor = themeColor,
         seedPalette = if (!enableDynamicTheme) customThemeSeedPalette else null,
+        useGalaxBrandPalette = !enableDynamicTheme && customThemeColorValue == "default",
         appFontStyle = appFontStyle,
         artworkCornerRadiusDp = artworkCornerRadius,
     ) {
