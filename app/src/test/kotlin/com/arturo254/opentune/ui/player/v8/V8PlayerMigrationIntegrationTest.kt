@@ -66,7 +66,9 @@ class V8PlayerMigrationIntegrationTest {
         assertTrue(v8.contains("onNext = playerActions::next"))
         assertTrue(queue.contains("import com.arturo254.opentune.ui.player.v8.QueueCollapsedContentV8"))
         assertTrue(player.contains("rememberPlayerSeekSession("))
-        assertEquals(1, Regex("""rememberPlayerActions\(""").findAll(v8).count())
+        assertEquals(0, Regex("""rememberPlayerActions\(""").findAll(v8).count())
+        assertTrue(v8.contains("playerActions: PlayerActions"))
+        assertFalse(v8.contains("playerConnection.currentSong.collectAsState("))
         assertFalse(v8.contains("ExoPlayer.Builder("))
     }
 }
