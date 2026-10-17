@@ -11,7 +11,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import com.arturo254.opentune.ui.component.BottomSheetState
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 
 /**
  * The visual AOD timeout belongs to PlayerHost, not to the audio service.
@@ -40,18 +39,18 @@ fun rememberPlayerContentLifecycle(
         }
     }
 
+    // One cancellable deadline instead of waking Compose every 100 ms.
+    // Any touch, collapse or timeout-setting change restarts this effect.
     LaunchedEffect(aodAutoTimeoutSeconds, isExpanded, lastInteractionTime, isAodActive) {
         if (aodAutoTimeoutSeconds > 0 && isExpanded && !isAodActive) {
-            delay(100L)
-            while (isActive) {
-                delay(100L)
-                val elapsedSeconds =
-                    (System.currentTimeMillis() - lastInteractionTime) / 1000f
-                if (elapsedSeconds >= aodAutoTimeoutSeconds) {
-                    isAodActive = true
-                    latestOnTimeout()
-                    break
-                }
+            val remaining = playerAodRemainingDelayMs(
+                aodAutoTimeoutSeconds = aodAutoTimeoutSeconds,
+                elapsedMs = System.currentTimeMillis() - lastInteractionTime,
+            )
+            delay(remaining)
+            if (isExpanded && !isAodActive) {
+                isAodActive = true
+                latestOnTimeout()
             }
         }
     }
@@ -63,6 +62,11 @@ fun rememberPlayerContentLifecycle(
         }
     }
 }
+
+/** Saturating milliseconds calculation: no busy timer or negative delay. */
+internal fun playerAodRemainingDelayMs(aodAutoTimeoutSeconds: Int, elapsedMs: Long): Long =
+    (aodAutoTimeoutSeconds.toLong().coerceAtLeast(0L) * 1_000L -
+        elapsedMs.coerceAtLeast(0L)).coerceAtLeast(0L)
 
 /** One Back priority for lyrics, queue, and player. Each sheet keeps its own animation. */
 @Composable
