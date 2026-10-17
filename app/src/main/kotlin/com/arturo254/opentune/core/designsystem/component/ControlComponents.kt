@@ -1,6 +1,8 @@
 package com.arturo254.opentune.core.designsystem.component
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +21,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.motion.GalaxHapticCue
+import com.arturo254.opentune.core.designsystem.motion.rememberGalaxHapticFeedback
+import com.arturo254.opentune.core.designsystem.motion.galaxPressFeedback
 import com.arturo254.opentune.core.designsystem.theme.spacing
 import com.arturo254.opentune.ui.component.LiquidGlassIconButton
 import com.arturo254.opentune.ui.component.LiquidGlassPillButton
@@ -34,8 +39,15 @@ fun OpenTuneButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     leadingIcon: (@Composable () -> Unit)? = null,
-) {
-    Button(onClick = onClick, enabled = enabled, modifier = modifier) {
+ ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val haptic = rememberGalaxHapticFeedback()
+    Button(
+        onClick = { haptic(GalaxHapticCue.SELECTION); onClick() },
+        enabled = enabled,
+        modifier = modifier.galaxPressFeedback(interactionSource, enabled),
+        interactionSource = interactionSource,
+    ) {
         if (leadingIcon != null) {
             leadingIcon()
             Spacer(Modifier.width(OpenTuneDesignSystem.spacing.sm))
@@ -125,8 +137,9 @@ fun OpenTuneIconButton(
     pureBlack: Boolean = false,
     size: Dp = 46.dp,
 ) {
+    val haptic = rememberGalaxHapticFeedback()
     LiquidGlassIconButton(
-        onClick = onClick,
+        onClick = { haptic(GalaxHapticCue.SELECTION); onClick() },
         modifier = modifier,
         enabled = enabled,
         pureBlack = pureBlack,
