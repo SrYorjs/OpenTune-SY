@@ -174,6 +174,13 @@ import com.arturo254.opentune.constants.FloatingToolbarHorizontalPadding
 import com.arturo254.opentune.constants.HasPressedStarKey
 import com.arturo254.opentune.constants.LaunchCountKey
 import com.arturo254.opentune.constants.LiquidGlassNavBarKey
+import com.arturo254.opentune.constants.GalaxGlassModeKey
+import com.arturo254.opentune.core.designsystem.glass.LocalGalaxGlassMode
+import com.arturo254.opentune.core.designsystem.glass.LocalLiquidBackdrop
+import com.arturo254.opentune.core.designsystem.glass.parseGalaxGlassMode
+import com.arturo254.opentune.core.designsystem.glass.isGalaxGlassEnabled
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.skydoves.cloudy.rememberSky
 import com.arturo254.opentune.constants.LyricsSyncOffsetKey
 import com.arturo254.opentune.constants.MiniPlayerBottomSpacing
@@ -299,7 +306,21 @@ internal fun MainActivityScaffold(
     searchBarAlignmentModifier: Modifier,
 ) {
     val (liquidGlassNavBar) = rememberPreference(LiquidGlassNavBarKey, defaultValue = false)
+    val (storedGalaxGlassMode) = rememberPreference(GalaxGlassModeKey, defaultValue = "")
+    val selectedGlassMode = parseGalaxGlassMode(storedGalaxGlassMode)
+    val enableGalaxGlass = isGalaxGlassEnabled(liquidGlassNavBar, selectedGlassMode)
     val liquidGlassSky = rememberSky()
+    // The live Kyant backdrop only captures route content (below navigation /
+    // MiniPlayer overlays), never the whole Scaffold: avoids recursive glass.
+    val liveGlassBackdrop = if (
+        enableGalaxGlass && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+    ) {
+        val backingSurface = MaterialTheme.colorScheme.surface
+        rememberLayerBackdrop {
+            drawRect(backingSurface)
+            drawContent()
+        }
+    } else null
     val menuState = remember { MenuState() }
 
     val haptic = LocalHapticFeedback.current
@@ -365,7 +386,9 @@ internal fun MainActivityScaffold(
                         LocalShimmerTheme provides ShimmerTheme,
                         LocalSyncUtils provides syncUtils,
                         LocalSky provides liquidGlassSky,
-                        LocalEnableLiquidGlass provides liquidGlassNavBar,
+                        LocalLiquidBackdrop provides liveGlassBackdrop,
+                        LocalGalaxGlassMode provides selectedGlassMode,
+                        LocalEnableLiquidGlass provides enableGalaxGlass,
                         LocalBottomSheetPageState provides bottomSheetPageState,
                         LocalMenuState provides menuState,
                     ) {
@@ -494,6 +517,11 @@ internal fun MainActivityScaffold(
                                             )
                                         },
                                         modifier = Modifier
+                                            .then(
+                                                if (liveGlassBackdrop != null) {
+                                                    Modifier.layerBackdrop(liveGlassBackdrop)
+                                                } else Modifier
+                                            )
                                             .nestedScroll(
                                                 if (
                                                     navigationItems.fastAny {
