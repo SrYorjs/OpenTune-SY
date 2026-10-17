@@ -60,21 +60,18 @@ class GalaxGlassSelectionTest {
         assertFalse(appearance.contains("checked = liquidGlassNavBar,"))
     }
 
-    @Test fun scaffoldFeedsAllGlassConsumersAndDoesNotCaptureWholeScaffold() {
+    @Test fun android17RenderThreadCrashGuardDisablesRecursiveCapture() {
         val scaffold = source("MainActivityScaffold.kt")
         assertTrue(scaffold.contains("parseGalaxGlassMode(storedGalaxGlassMode)"))
         assertTrue(scaffold.contains("LocalGalaxGlassMode provides selectedGlassMode"))
         assertTrue(scaffold.contains("LocalEnableLiquidGlass provides enableGalaxGlass"))
-        assertTrue(scaffold.contains("LocalLiquidBackdrop provides liveGlassBackdrop"))
-        assertTrue(scaffold.contains("rememberLayerBackdrop {"))
-        assertTrue(scaffold.contains("Modifier.layerBackdrop(liveGlassBackdrop)"))
-        assertTrue(scaffold.contains("Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU"))
-        assertTrue(scaffold.contains("selectedGlassMode == GlassMode.FROSTED"))
-        assertTrue(scaffold.contains("selectedGlassMode == GlassMode.CLEAR"))
-        assertTrue(scaffold.contains("selectedGlassMode == GlassMode.BLUR"))
-        assertTrue(scaffold.contains("!glassBudget.isPowerSaveMode"))
-        assertTrue(scaffold.contains("!glassBudget.isLowRamDevice"))
-        assertFalse(scaffold.contains("modifier = Modifier.layerBackdrop(liveGlassBackdrop).fillMaxSize()"))
+        assertTrue(scaffold.contains("LocalLiquidBackdrop provides null"))
+        // Never recreate the native cyclic RenderNode capture path before a
+        // dedicated physical-device validation of a redesigned backend.
+        assertFalse(scaffold.contains("rememberLayerBackdrop("))
+        assertFalse(scaffold.contains("Modifier.layerBackdrop("))
+        assertFalse(scaffold.contains("canCaptureBackdrop"))
+        assertFalse(scaffold.contains("LocalLiquidBackdrop provides liveGlassBackdrop"))
     }
 
     @Test fun englishAndSpanishOptionsAreAllPresent() {
