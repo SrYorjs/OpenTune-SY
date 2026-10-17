@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -69,7 +70,7 @@ fun V5PlayerTopActions(
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.share),
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.share),
                         tint = textBackgroundColor.copy(alpha = 0.7f),
                         modifier = Modifier.size(20.dp)
                     )
@@ -85,7 +86,7 @@ fun V5PlayerTopActions(
                         painter = painterResource(
                             playerFavoriteIconRes(liked)
                         ),
-                        contentDescription = null,
+                        contentDescription = stringResource(if (liked) R.string.player_a11y_unlike else R.string.player_a11y_like),
                         tint = if (liked)
                             MaterialTheme.colorScheme.error.copy(alpha = 0.9f)
                         else textBackgroundColor.copy(alpha = 0.7f),
