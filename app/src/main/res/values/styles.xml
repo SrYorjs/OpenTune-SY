@@ -11,4 +11,8 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
+    <!-- Brand entry theme; retain Theme.OpenTune as a compatibility parent. -->
+    <style name="Theme.GalaxOT" parent="Theme.OpenTune">
+        <item name="android:windowBackground">@drawable/galaxot_launch_background</item>
+    </style>
 </resources>
