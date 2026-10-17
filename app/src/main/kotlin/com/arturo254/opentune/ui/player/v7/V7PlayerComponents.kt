@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.R
@@ -51,7 +52,7 @@ fun V7PlayerTopActions(
         ) {
             Icon(
                 painter = painterResource(playerFavoriteIconRes(liked)),
-                contentDescription = null,
+                contentDescription = stringResource(if (liked) R.string.player_a11y_unlike else R.string.player_a11y_like),
                 tint = textBackgroundColor.copy(alpha = if (liked) 1f else 0.7f),
                 modifier = Modifier.size(22.dp)
             )
@@ -66,7 +67,7 @@ fun V7PlayerTopActions(
         ) {
             Icon(
                 painter = painterResource(R.drawable.more_horiz),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.more),
                 tint = textBackgroundColor.copy(alpha = 0.7f),
                 modifier = Modifier.size(24.dp)
             )
