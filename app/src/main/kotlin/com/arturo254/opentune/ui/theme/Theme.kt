@@ -69,6 +69,7 @@ fun OpenTuneTheme(
     motionScheme: MotionScheme = MotionScheme.expressive(),
     seedPalette: ThemeSeedPalette? = null,
     useGalaxBrandPalette: Boolean = false,
+    reduceMotion: Boolean = false,
     appFontStyle: AppFontStyle = AppFontStyle.OPEN_TUNE,
     artworkCornerRadiusDp: Float = 16f,
     content: @Composable () -> Unit,
@@ -123,6 +124,7 @@ fun OpenTuneTheme(
     ) {
         ProvideOpenTuneDesignSystem(
             artworkRadiusDp = artworkCornerRadiusDp,
+            reduceMotion = reduceMotion,
             content = content,
         )
     }
