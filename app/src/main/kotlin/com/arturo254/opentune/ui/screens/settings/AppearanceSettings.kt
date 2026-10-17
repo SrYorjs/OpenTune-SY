@@ -37,15 +37,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.datastore.preferences.core.edit
+import kotlinx.coroutines.launch
 import com.arturo254.opentune.LocalPlayerAwareWindowInsets
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.CanvasSource
@@ -115,6 +119,7 @@ import com.arturo254.opentune.ui.player.preferences.PlayerButtonsSkinSelector
 import com.arturo254.opentune.ui.utils.backToMain
 import com.arturo254.opentune.utils.rememberEnumPreference
 import com.arturo254.opentune.utils.rememberPreference
+import com.arturo254.opentune.utils.dataStore
 import kotlin.math.roundToInt
 import timber.log.Timber
 
@@ -219,23 +224,27 @@ fun AppearanceSettings(
         defaultValue = false
     )
 
-    val (liquidGlassNavBar, onLiquidGlassNavBarChange) = rememberPreference(
+    val (liquidGlassNavBar) = rememberPreference(
         LiquidGlassNavBarKey,
         defaultValue = false
     )
-    val (storedGalaxGlassMode, onStoredGalaxGlassModeChange) = rememberPreference(
+    val (storedGalaxGlassMode) = rememberPreference(
         GalaxGlassModeKey,
         defaultValue = "",
     )
     val selectedGalaxGlassMode = displayGalaxGlassMode(
         storedGalaxGlassMode, liquidGlassNavBar,
     )
+    val preferencesContext = LocalContext.current
+    val glassPreferenceScope = rememberCoroutineScope()
     val onGalaxGlassModeChange: (GlassMode) -> Unit = { mode ->
-        // Do not overwrite existing data on first launch. A user-initiated
-        // selection explicitly persists the new key, and keeps old builds
-        // consistent with the equivalent legacy on/off state.
-        onStoredGalaxGlassModeChange(mode.name)
-        onLiquidGlassNavBarChange(mode != GlassMode.DISABLED)
+        // Persist both keys atomically and never migrate without user action.
+        glassPreferenceScope.launch {
+            preferencesContext.dataStore.edit { settings ->
+                settings[GalaxGlassModeKey] = mode.name
+                settings[LiquidGlassNavBarKey] = mode != GlassMode.DISABLED
+            }
+        }
     }
 
     val (swipeToSong, onSwipeToSongChange) = rememberPreference(
