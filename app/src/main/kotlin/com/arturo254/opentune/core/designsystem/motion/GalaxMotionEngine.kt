@@ -19,6 +19,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.theme.DefaultOpenTuneMotionTokens
 
 /** Presentation-only motion language. Media3, seek sessions and playback clocks
  * must never depend on these decorative animation preferences. */
@@ -33,10 +34,10 @@ data class GalaxMotionPolicy(
     val swipeMinVelocityPxPerSecond: Float = 850f,
 ) {
     val navigationBarSpec: AnimationSpec<Dp>
-        get() = if (reducedMotion) snap() else spring(dampingRatio = 0.86f, stiffness = 520f)
+        get() = if (reducedMotion) snap() else DefaultOpenTuneMotionTokens.navigationBar
 
     val pressSpec: AnimationSpec<Float>
-        get() = if (reducedMotion) snap() else spring(dampingRatio = 0.78f, stiffness = 620f)
+        get() = if (reducedMotion) snap() else DefaultOpenTuneMotionTokens.glassPress
 
     val pressScale: Float get() = if (reducedMotion) 1f else 0.97f
 }
