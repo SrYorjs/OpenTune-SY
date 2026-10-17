@@ -82,6 +82,8 @@ fun Modifier.openTuneGlassEffect(
     optics: GlassOptics = GlassPreset.STANDARD.optics,
     renderModeOverride: GlassRenderMode? = null,
     allowStaticShader: Boolean = true,
+    surfaceTintOverride: Color? = null,
+    borderTintOverride: Color? = null,
 ): Modifier {
     val enabled = LocalEnableLiquidGlass.current
     val backdrop = LocalLiquidBackdrop.current
@@ -92,8 +94,8 @@ fun Modifier.openTuneGlassEffect(
         pureBlack || MaterialTheme.colorScheme.background.luminance() < 0.45f
     val designColors = OpenTuneDesignSystem.colors
     val surfaceTokens = OpenTuneDesignSystem.surfaces
-    val fallbackSurface = designColors.surfaceGlass
-    val borderColor = designColors.outlineGlass
+    val fallbackSurface = surfaceTintOverride ?: designColors.surfaceGlass
+    val borderColor = borderTintOverride ?: designColors.outlineGlass
 
     if (mode == GlassRenderMode.STATIC_FALLBACK) {
         val density = LocalDensity.current
@@ -200,6 +202,8 @@ fun GlassSurface(
     optics: GlassOptics = preset.optics,
     renderModeOverride: GlassRenderMode? = null,
     allowStaticShader: Boolean = true,
+    surfaceTintOverride: Color? = null,
+    borderTintOverride: Color? = null,
     opaqueColor: Color = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
     content: @Composable BoxScope.() -> Unit,
 ) {
@@ -211,7 +215,7 @@ fun GlassSurface(
             .background(if (enabled) Color.Transparent else opaqueColor)
             .then(
                 if (enabled) {
-                    Modifier.openTuneGlassEffect(shape, pureBlack, optics, renderModeOverride, allowStaticShader)
+                    Modifier.openTuneGlassEffect(shape, pureBlack, optics, renderModeOverride, allowStaticShader, surfaceTintOverride, borderTintOverride)
                 } else {
                     Modifier.border(
                         width = borders.glassCardWidth,
