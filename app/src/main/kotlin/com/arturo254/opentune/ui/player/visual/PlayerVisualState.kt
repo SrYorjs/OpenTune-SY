@@ -112,17 +112,13 @@ fun rememberPlayerVisualState(
         }
     }
 
-    val fallbackColors = listOf(colors.surface, colors.surfaceVariant)
+    val fallbackColors = remember(colors.surface, colors.surfaceVariant) {
+        listOf(colors.surface, colors.surfaceVariant)
+    }
     val fallbackArgb = colors.surface.toArgb()
     // Access-ordered and bounded. The old "clear at 64" discarded every hot
     // palette at once, causing repeat decodes on long radio/shuffle sessions.
-    val paletteCache = remember {
-        object : LinkedHashMap<PlayerPaletteCacheKey, List<Color>>(64, 0.75f, true) {
-            override fun removeEldestEntry(
-                eldest: MutableMap.MutableEntry<PlayerPaletteCacheKey, List<Color>>?,
-            ): Boolean = size > PLAYER_PALETTE_CACHE_CAPACITY
-        }
-    }
+    val paletteCache = remember { PlayerPaletteCache<PlayerPaletteCacheKey, List<Color>>() }
     var gradientColors by remember(trackId, artworkUrl, usesArtworkPalette, colors.surface, colors.surfaceVariant) {
         mutableStateOf<List<Color>>(emptyList())
     }
@@ -173,9 +169,12 @@ fun rememberPlayerVisualState(
         gradientColors = extracted
     }
 
-    return PlayerVisualState(
-        artworkUrl = artworkUrl,
-        canvasArtwork = canvasArtwork,
-        gradientColors = gradientColors,
-    )
+    // Do not rebuild the presentation snapshot for unrelated 100ms seek ticks.
+    return remember(artworkUrl, canvasArtwork, gradientColors) {
+        PlayerVisualState(
+            artworkUrl = artworkUrl,
+            canvasArtwork = canvasArtwork,
+            gradientColors = gradientColors,
+        )
+    }
 }
