@@ -1,9 +1,13 @@
-# OpenTune
+# GalaxOT
+
+> **Rebranding 4.5.1:** GalaxOT conserva el identificador de paquete y los datos de instalación de OpenTune. Este proyecto se basa en OpenTune y mantiene sus licencias, atribuciones y enlaces técnicos originales.
 
 <div align="center">
-  <img src="https://github.com/Arturo254/OpenTune/blob/master/fastlane/metadata/android/en-US/images/featureGraphic.png" alt="Banner de OpenTune" width="100%"/>
+  <img src="app/src/main/res/drawable-nodpi/galaxot_logo.webp" alt="GalaxOT — logotipo galáctico" width="260"/>
+
+  **Una nueva identidad para tu universo musical.**
   
-  ### Cliente Avanzado de YouTube Music con Material Design 3 para Android
+  ### Cliente musical multiproveedor para Android — base OpenTune
   
   [![Última Versión](https://img.shields.io/github/v/release/Arturo254/OpenTune?style=flat-square&logo=github&color=0D1117&labelColor=161B22)](https://github.com/Arturo254/OpenTune/releases)
   [![Licencia](https://img.shields.io/github/license/Arturo254/OpenTune?style=flat-square&logo=gnu&color=2B3137&labelColor=161B22)](https://github.com/Arturo254/OpenTune/blob/main/LICENSE)
