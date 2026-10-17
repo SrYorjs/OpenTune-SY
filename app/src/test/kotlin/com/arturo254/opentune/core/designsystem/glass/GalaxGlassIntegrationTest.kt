@@ -62,6 +62,21 @@ class GalaxGlassIntegrationTest {
         assertFalse(facade.contains("spec.copy(mode = selectedMode)"))
     }
 
+    @Test fun officialKyantCanvasBackdropUsesIndependentDrawSource() {
+        val canvas = source("core/designsystem/glass/GalaxCanvasBackdrop.kt")
+        val scaffold = source("MainActivityScaffold.kt")
+        val facade = source("core/designsystem/glass/GalaxGlassSurface.kt")
+        assertTrue(canvas.contains("import com.kyant.backdrop.backdrops.rememberCanvasBackdrop"))
+        assertTrue(canvas.contains("rememberCanvasBackdrop(onDraw = drawAmbient)"))
+        assertTrue(scaffold.contains("LocalGalaxSafeCanvasBackdrop provides enableAmbientBackdrop"))
+        assertTrue(scaffold.contains("LocalLiquidBackdrop provides if (enableAmbientBackdrop)"))
+        assertTrue(facade.contains("hasSafeCanvasBackdrop = LocalGalaxSafeCanvasBackdrop.current"))
+        assertFalse(scaffold.contains("rememberLayerBackdrop("))
+        assertFalse(scaffold.contains("Modifier.layerBackdrop("))
+        assertFalse(canvas.contains("rememberLayerBackdrop("))
+        assertFalse(canvas.contains("Modifier.layerBackdrop("))
+    }
+
     @Test fun globalModesAreNotSilentlyWrittenToDataStoreBeforeFourFiveSeven() {
         val plan = source("core/designsystem/glass/GalaxGlassContracts.kt")
         assertTrue(plan.contains("staticCompositionLocalOf<GlassMode?> { null }"))
