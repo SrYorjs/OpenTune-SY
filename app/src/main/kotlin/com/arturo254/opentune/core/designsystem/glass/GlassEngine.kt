@@ -84,6 +84,7 @@ fun Modifier.openTuneGlassEffect(
     allowStaticShader: Boolean = true,
     surfaceTintOverride: Color? = null,
     borderTintOverride: Color? = null,
+    enableLens: Boolean = true,
 ): Modifier {
     val enabled = LocalEnableLiquidGlass.current
     val backdrop = LocalLiquidBackdrop.current
@@ -154,11 +155,13 @@ fun Modifier.openTuneGlassEffect(
             effects = {
                 vibrancy()
                 blur(blurDp.toPx())
-                lens(
-                    lensRadius.toPx(),
-                    lensDepth.toPx(),
-                    chromaticAberration = optics.dispersion >= 0.0015f,
-                )
+                if (enableLens) {
+                    lens(
+                        lensRadius.toPx(),
+                        lensDepth.toPx(),
+                        chromaticAberration = optics.dispersion >= 0.0015f,
+                    )
+                }
             },
             highlight = {
                 Highlight.Ambient.copy(alpha = highlightAlpha)
@@ -204,6 +207,7 @@ fun GlassSurface(
     allowStaticShader: Boolean = true,
     surfaceTintOverride: Color? = null,
     borderTintOverride: Color? = null,
+    enableLens: Boolean = true,
     opaqueColor: Color = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
     content: @Composable BoxScope.() -> Unit,
 ) {
@@ -215,7 +219,7 @@ fun GlassSurface(
             .background(if (enabled) Color.Transparent else opaqueColor)
             .then(
                 if (enabled) {
-                    Modifier.openTuneGlassEffect(shape, pureBlack, optics, renderModeOverride, allowStaticShader, surfaceTintOverride, borderTintOverride)
+                    Modifier.openTuneGlassEffect(shape, pureBlack, optics, renderModeOverride, allowStaticShader, surfaceTintOverride, borderTintOverride, enableLens)
                 } else {
                     Modifier.border(
                         width = borders.glassCardWidth,
