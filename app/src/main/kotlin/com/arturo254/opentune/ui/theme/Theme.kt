@@ -22,9 +22,8 @@ import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.MotionDurationScale
-import androidx.compose.ui.platform.LocalMotionDurationScale
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.SaverScope
@@ -118,33 +117,26 @@ fun OpenTuneTheme(
         if (darkTheme && pureBlack) premiumScheme.pureBlack(true) else premiumScheme
     }
 
-    val platformMotionScale = LocalMotionDurationScale.current
-    val effectiveReducedMotion = reduceMotion || platformMotionScale.scaleFactor <= 0f
-    val zeroMotionScale = remember {
-        object : MotionDurationScale {
-            override val scaleFactor: Float = 0f
-        }
-    }
+    // Android's composition coroutine context contains the platform motion scale.
+    // This is supported on our Compose version (no LocalMotionDurationScale local).
+    val platformMotionScale =
+        rememberCoroutineScope().coroutineContext[MotionDurationScale]?.scaleFactor ?: 1f
+    val effectiveReducedMotion = reduceMotion || platformMotionScale <= 0f
     val animatedColorScheme =
         if (effectiveReducedMotion) colorScheme else updateTransition(colorScheme)
 
-    // App override and Android's zero animator duration scale both bypass
-    // decorative springs, while Media3 audio timers remain untouched.
-    CompositionLocalProvider(
-        LocalMotionDurationScale provides
-            if (effectiveReducedMotion) zeroMotionScale else platformMotionScale,
+    // Decorative Galax animations honor the app override. The platform's
+    // animator scale continues to govern built-in Compose Material animations.
+    MaterialExpressiveTheme(
+        colorScheme = animatedColorScheme,
+        typography = typography,
+        motionScheme = motionScheme,
     ) {
-        MaterialExpressiveTheme(
-            colorScheme = animatedColorScheme,
-            typography = typography,
-            motionScheme = motionScheme,
-        ) {
-            ProvideOpenTuneDesignSystem(
-                artworkRadiusDp = artworkCornerRadiusDp,
-                reduceMotion = effectiveReducedMotion,
-                content = content,
-            )
-        }
+        ProvideOpenTuneDesignSystem(
+            artworkRadiusDp = artworkCornerRadiusDp,
+            reduceMotion = effectiveReducedMotion,
+            content = content,
+        )
     }
 }
 
