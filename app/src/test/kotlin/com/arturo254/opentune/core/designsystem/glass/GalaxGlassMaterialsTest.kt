@@ -16,12 +16,24 @@ class GalaxGlassMaterialsTest {
         }
     }
 
-    @Test fun classicBlurAndDisabledKeepTheirExistingMaterialPolicy() {
-        for (mode in listOf(GlassMode.CLASSIC, GlassMode.BLUR, GlassMode.DISABLED)) {
+    @Test fun classicAndDisabledKeepTheirExistingMaterialPolicy() {
+        for (mode in listOf(GlassMode.CLASSIC, GlassMode.DISABLED)) {
             val material = galaxGlassMaterial(mode, true)
             assertNull(material.surfaceTint)
             assertNull(material.borderTint)
         }
+    }
+
+    @Test fun blurHasSoftDiffusionAndLessEmphasizedEdgesThanClear() {
+        for (dark in listOf(true, false)) {
+            val blur = galaxGlassMaterial(GlassMode.BLUR, dark)
+            val clear = galaxGlassMaterial(GlassMode.CLEAR, dark)
+            assertTrue(blur.surfaceTint!!.alpha > clear.surfaceTint!!.alpha)
+            assertTrue(blur.borderTint!!.alpha < clear.borderTint!!.alpha)
+        }
+        assertTrue(galaxGlassOptics(GlassMode.BLUR).blurRadius >
+            galaxGlassOptics(GlassMode.FROSTED).blurRadius)
+        assertEquals(0f, galaxGlassOptics(GlassMode.BLUR).dispersion, 0f)
     }
 
     @Test fun clearRetainsAVisibleOutlineWhileFrostedRetainsDiffusion() {
