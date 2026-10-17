@@ -36,11 +36,38 @@ class GalaxGlassMaterialsTest {
         assertEquals(0f, galaxGlassOptics(GlassMode.BLUR).dispersion, 0f)
     }
 
+    @Test fun threeNewMaterialsHaveDistinctGpuEffects() {
+        val frosted = galaxGlassMaterial(GlassMode.FROSTED, true)
+        val clear = galaxGlassMaterial(GlassMode.CLEAR, true)
+        val blur = galaxGlassMaterial(GlassMode.BLUR, true)
+        assertTrue(!frosted.enableLens && !frosted.enableVibrancy && !frosted.enableStaticLens)
+        assertTrue(clear.enableLens && clear.enableVibrancy && clear.enableStaticLens)
+        assertTrue(!blur.enableLens && !blur.enableVibrancy && !blur.enableStaticLens)
+        assertTrue(blur.highlightScale < frosted.highlightScale)
+        assertTrue(frosted.highlightScale < clear.highlightScale)
+        assertTrue(blur.sheenTop.alpha < frosted.sheenTop.alpha)
+    }
+
+    @Test fun fallbacksAreLegibleAndRespectThemeInputs() {
+        val accent = androidx.compose.ui.graphics.Color(0xFF267BC6)
+        val darkBase = androidx.compose.ui.graphics.Color(0xFF14192A)
+        val lightBase = androidx.compose.ui.graphics.Color(0xFFEFF4FF)
+        for (mode in listOf(GlassMode.FROSTED, GlassMode.CLEAR, GlassMode.BLUR)) {
+            val dark = galaxGlassMaterial(mode, true, accent, darkBase)
+            val light = galaxGlassMaterial(mode, false, accent, lightBase)
+            assertTrue(dark.fallbackTint!!.alpha >= 0.90f)
+            assertTrue(light.fallbackTint!!.alpha >= 0.90f)
+            assertEquals(darkBase.red, dark.fallbackTint!!.red, 0.0001f)
+            assertEquals(lightBase.blue, light.fallbackTint!!.blue, 0.0001f)
+            assertEquals(accent.blue, dark.sheenBottom.blue, 0.0001f)
+        }
+    }
+
     @Test fun clearRetainsAVisibleOutlineWhileFrostedRetainsDiffusion() {
         val clear = galaxGlassMaterial(GlassMode.CLEAR, true)
         val frosted = galaxGlassMaterial(GlassMode.FROSTED, true)
         assertTrue(clear.borderTint!!.alpha > clear.surfaceTint!!.alpha)
-        assertEquals(0.20f, frosted.surfaceTint!!.alpha, 0.0001f)
+        assertEquals(0.22f, frosted.surfaceTint!!.alpha, 0.0001f)
         assertTrue(galaxGlassOptics(GlassMode.FROSTED).blurRadius >
             galaxGlassOptics(GlassMode.CLEAR).blurRadius)
         assertTrue(galaxGlassOptics(GlassMode.CLEAR).refraction >
