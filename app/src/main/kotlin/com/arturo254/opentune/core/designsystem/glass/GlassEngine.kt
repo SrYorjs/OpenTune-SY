@@ -80,10 +80,11 @@ fun Modifier.openTuneGlassEffect(
     shape: RoundedCornerShape,
     pureBlack: Boolean,
     optics: GlassOptics = GlassPreset.STANDARD.optics,
+    renderModeOverride: GlassRenderMode? = null,
 ): Modifier {
     val enabled = LocalEnableLiquidGlass.current
     val backdrop = LocalLiquidBackdrop.current
-    val mode = chooseGlassRenderMode(enabled, backdrop != null)
+    val mode = renderModeOverride ?: chooseGlassRenderMode(enabled, backdrop != null)
     if (mode == GlassRenderMode.OPAQUE) return this
 
     val darkSurface =
@@ -195,10 +196,12 @@ fun GlassSurface(
     shape: RoundedCornerShape = OpenTuneDesignSystem.shapes.glassCard,
     pureBlack: Boolean = false,
     preset: GlassPreset = GlassPreset.STANDARD,
+    optics: GlassOptics = preset.optics,
+    renderModeOverride: GlassRenderMode? = null,
     opaqueColor: Color = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val enabled = LocalEnableLiquidGlass.current
+    val enabled = LocalEnableLiquidGlass.current && renderModeOverride != GlassRenderMode.OPAQUE
     val borders = OpenTuneDesignSystem.surfaces.borders
     Box(
         modifier = modifier
@@ -206,7 +209,7 @@ fun GlassSurface(
             .background(if (enabled) Color.Transparent else opaqueColor)
             .then(
                 if (enabled) {
-                    Modifier.openTuneGlassEffect(shape, pureBlack, preset.optics)
+                    Modifier.openTuneGlassEffect(shape, pureBlack, optics, renderModeOverride)
                 } else {
                     Modifier.border(
                         width = borders.glassCardWidth,
