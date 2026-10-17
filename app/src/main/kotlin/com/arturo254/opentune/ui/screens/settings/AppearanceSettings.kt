@@ -414,7 +414,7 @@ fun AppearanceSettings(
             onValueSelected = onAppFontStyleChange,
             valueText = {
                 when (it) {
-                    AppFontStyle.OPEN_TUNE -> "OpenTune"
+                    AppFontStyle.OPEN_TUNE -> "GalaxOT"
                     AppFontStyle.SYSTEM -> "System"
                     AppFontStyle.MONOCRAFT -> "Monocraft"
                 }
