@@ -900,4 +900,10 @@ OpenTune will only extract your token, and everything else is stored locally.</s
     <string name="universal_versions_close">Close</string>
     <string name="universal_versions_original">Original / unspecified version</string>
     <string name="universal_versions_play_error">Unable to play selected version</string>
+    <!-- Player 2.0 TalkBack labels (4.18) -->
+    <string name="player_a11y_previous">Previous track</string>
+    <string name="player_a11y_pause">Pause playback</string>
+    <string name="player_a11y_like">Add to favorites</string>
+    <string name="player_a11y_unlike">Remove from favorites</string>
+    <string name="player_a11y_repeat">Change repeat mode</string>
 </resources>
