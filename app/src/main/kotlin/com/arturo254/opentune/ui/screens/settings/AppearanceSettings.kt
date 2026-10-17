@@ -54,6 +54,7 @@ import com.arturo254.opentune.constants.ChipSortTypeKey
 import com.arturo254.opentune.constants.DarkModeKey
 import com.arturo254.opentune.constants.DefaultOpenTabKey
 import com.arturo254.opentune.constants.DynamicThemeKey
+import com.arturo254.opentune.constants.GalaxReduceMotionKey
 import com.arturo254.opentune.constants.GridItemSize
 import com.arturo254.opentune.constants.GridItemsSizeKey
 import com.arturo254.opentune.constants.LibraryFilter
@@ -166,6 +167,9 @@ fun AppearanceSettings(
             defaultValue = PlayerBackgroundStyle.DEFAULT,
         )
     val (pureBlack, onPureBlackChange) = rememberPreference(PureBlackKey, defaultValue = false)
+    val (galaxReduceMotion, onGalaxReduceMotionChange) = rememberPreference(
+        GalaxReduceMotionKey, defaultValue = false,
+    )
     val (disableBlur, onDisableBlurChange) = rememberPreference(DisableBlurKey, defaultValue = true)
     val (appFontStyle, onAppFontStyleChange) = rememberEnumPreference(AppFontKey, defaultValue = AppFontStyle.OPEN_TUNE)
     val (defaultOpenTab, onDefaultOpenTabChange) = rememberEnumPreference(
@@ -355,6 +359,14 @@ fun AppearanceSettings(
             icon = { Icon(painterResource(R.drawable.haptic), null) },
             checked = hapticEnabled,
             onCheckedChange = onHapticEnabledChange,
+        )
+
+        SwitchPreference(
+            title = { Text(stringResource(R.string.galax_reduce_motion)) },
+            description = stringResource(R.string.galax_reduce_motion_desc),
+            icon = { Icon(painterResource(R.drawable.animation), null) },
+            checked = galaxReduceMotion,
+            onCheckedChange = onGalaxReduceMotionChange,
         )
 
         AnimatedVisibility(visible = !dynamicTheme || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
