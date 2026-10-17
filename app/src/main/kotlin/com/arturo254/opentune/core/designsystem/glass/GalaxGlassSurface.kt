@@ -32,7 +32,10 @@ fun Modifier.galaxGlassEffect(
     val backdrop = LocalLiquidBackdrop.current
     val selectedMode = globalMode ?: spec.mode
     val motion = OpenTuneDesignSystem.galaxMotion
-    val caps = rememberGalaxGlassCapabilities(hasLiveBackdrop = backdrop != null)
+    val caps = rememberGalaxGlassCapabilities(
+        hasLiveBackdrop = backdrop != null,
+        hasSafeCanvasBackdrop = LocalGalaxSafeCanvasBackdrop.current,
+    )
     val resolvedSpec = remember(spec, globalMode) { resolveGalaxGlassSpec(spec, globalMode) }
     val plan = remember(enabled, caps, resolvedSpec, motion.reducedMotion) {
         resolveGalaxGlassPlan(enabled, resolvedSpec, caps, motion.reducedMotion)
@@ -76,7 +79,10 @@ fun GalaxGlassSurface(
 ) {
     val globalMode = LocalGalaxGlassMode.current
     val enabled = isGalaxGlassEnabled(LocalEnableLiquidGlass.current, globalMode)
-    val caps = rememberGalaxGlassCapabilities(LocalLiquidBackdrop.current != null)
+    val caps = rememberGalaxGlassCapabilities(
+        hasLiveBackdrop = LocalLiquidBackdrop.current != null,
+        hasSafeCanvasBackdrop = LocalGalaxSafeCanvasBackdrop.current,
+    )
     val motion = OpenTuneDesignSystem.galaxMotion
     val resolvedSpec = remember(spec, globalMode) { resolveGalaxGlassSpec(spec, globalMode) }
     val plan = remember(enabled, caps, resolvedSpec, motion.reducedMotion) {
