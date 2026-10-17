@@ -120,7 +120,8 @@ fun resolveGalaxGlassPlan(
             tier, GlassFallbackStrategy.NONE, safeOptics)
     }
     return GlassRenderPlan(spec.mode, GlassRenderMode.STATIC_FALLBACK,
-        tier, if (capabilities.hasRuntimeShader && spec.mode != GlassMode.BLUR)
+        tier, if (capabilities.hasRuntimeShader &&
+            (spec.mode == GlassMode.CLASSIC || spec.mode == GlassMode.CLEAR))
             GlassFallbackStrategy.STATIC_SHADER
         else GlassFallbackStrategy.TINT_AND_OUTLINE, optics)
 }
@@ -142,9 +143,7 @@ fun resolveGalaxGlassSpec(
     spec: GlassSurfaceSpec,
     globalMode: GlassMode?,
 ): GlassSurfaceSpec = when {
-    globalMode == null -> spec
-    globalMode == spec.mode -> spec
-    globalMode == GlassMode.CLASSIC -> spec.copy(mode = globalMode, optics = null)
+    globalMode == null || globalMode == spec.mode -> spec
     else -> spec.copy(mode = globalMode, optics = null)
 }
 
