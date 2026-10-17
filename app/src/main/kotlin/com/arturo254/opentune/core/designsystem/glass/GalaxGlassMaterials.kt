@@ -41,7 +41,7 @@ fun galaxGlassMaterial(
     GlassMode.FROSTED -> GalaxGlassMaterial(
         surfaceTint = Color.White.copy(alpha = if (dark) 0.22f else 0.48f),
         borderTint = Color.White.copy(alpha = if (dark) 0.32f else 0.68f),
-        fallbackTint = surfaceBase.copy(alpha = 0.94f),
+        fallbackTint = surfaceBase.copy(alpha = if (dark) 0.91f else 0.94f),
         sheenTop = Color.White.copy(alpha = if (dark) 0.13f else 0.24f),
         sheenBottom = accent.copy(alpha = if (dark) 0.08f else 0.045f),
         rimTop = Color.White.copy(alpha = if (dark) 0.55f else 0.85f),
@@ -54,7 +54,7 @@ fun galaxGlassMaterial(
     GlassMode.CLEAR -> GalaxGlassMaterial(
         surfaceTint = Color.White.copy(alpha = if (dark) 0.035f else 0.085f),
         borderTint = Color.White.copy(alpha = if (dark) 0.40f else 0.34f),
-        fallbackTint = surfaceBase.copy(alpha = 0.93f),
+        fallbackTint = surfaceBase.copy(alpha = if (dark) 0.78f else 0.84f),
         sheenTop = Color.White.copy(alpha = if (dark) 0.10f else 0.16f),
         sheenBottom = accent.copy(alpha = if (dark) 0.07f else 0.055f),
         rimTop = Color.White.copy(alpha = if (dark) 0.68f else 0.90f),
@@ -67,7 +67,7 @@ fun galaxGlassMaterial(
     GlassMode.BLUR -> GalaxGlassMaterial(
         surfaceTint = Color.White.copy(alpha = if (dark) 0.14f else 0.30f),
         borderTint = Color.White.copy(alpha = if (dark) 0.16f else 0.33f),
-        fallbackTint = surfaceBase.copy(alpha = 0.96f),
+        fallbackTint = surfaceBase.copy(alpha = if (dark) 0.92f else 0.95f),
         sheenTop = Color.White.copy(alpha = if (dark) 0.045f else 0.07f),
         sheenBottom = accent.copy(alpha = 0.035f),
         rimTop = Color.White.copy(alpha = if (dark) 0.21f else 0.37f),
