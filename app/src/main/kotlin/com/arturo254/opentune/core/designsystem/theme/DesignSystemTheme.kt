@@ -41,6 +41,9 @@ fun ProvideOpenTuneDesignSystem(
         remember(materialTypography) {
             createOpenTuneTypographyTokens(materialTypography)
         }
+    val galax = remember(colorScheme, materialTypography, artworkRadiusDp) {
+        createGalaxDesignTokens(colorScheme, materialTypography, artworkRadiusDp)
+    }
     val shapes =
         remember(materialShapes, artworkRadiusDp) {
             createOpenTuneShapeTokens(materialShapes, artworkRadiusDp)
@@ -48,6 +51,7 @@ fun ProvideOpenTuneDesignSystem(
 
     CompositionLocalProvider(
         LocalDesignSystemEnvironment provides environment,
+        LocalGalaxDesignTokens provides galax,
         LocalOpenTuneColorRoles provides colors,
         LocalOpenTuneTypographyTokens provides typography,
         LocalOpenTuneSpacingTokens provides DefaultOpenTuneSpacingTokens,
