@@ -82,3 +82,12 @@ fun galaxGlassMaterial(
         borderTint = null,
     )
 }
+
+/** Low tier is strictly a single tint and a solid border, without gradient layers. */
+fun GalaxGlassMaterial.forPerformanceTier(tier: GlassPerformanceTier): GalaxGlassMaterial =
+    if (tier != GlassPerformanceTier.LOW) this else copy(
+        sheenTop = Color.Transparent,
+        sheenBottom = Color.Transparent,
+        rimTop = null,
+        rimBottom = null,
+    )
