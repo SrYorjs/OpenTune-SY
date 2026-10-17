@@ -38,7 +38,9 @@ class PlayerHostArchitectureTest {
         assertTrue(!player.contains("WindowCompat.getInsetsController("))
         assertTrue(!player.contains("navController.navigate(\"always_on_display\")") ||
             lifecycle.contains("latestOnTimeout()"))
-        assertTrue(lifecycle.contains("delay(100L)"))
+        assertTrue(lifecycle.contains("delay(remaining)"))
+        assertTrue(lifecycle.contains("playerAodRemainingDelayMs("))
+        assertTrue(!lifecycle.contains("while (isActive)"))
         assertTrue(lifecycle.contains("latestOnTimeout()"))
         assertTrue(lifecycle.contains("playerHostBackDestination("))
         assertTrue(player.contains("playerActions.seekTo(targetPosition, displayedTrackId = mediaMetadata?.id)"))
