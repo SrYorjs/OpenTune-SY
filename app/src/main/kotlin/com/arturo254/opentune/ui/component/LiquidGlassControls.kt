@@ -39,6 +39,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.preferredFrameRate
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastCoerceAtMost
@@ -134,6 +136,7 @@ fun LiquidGlassIconButton(
     enabled: Boolean = true,
     selected: Boolean = false,
     pureBlack: Boolean = false,
+    accessibilityLabel: String? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val glass = LocalEnableLiquidGlass.current
@@ -177,6 +180,11 @@ fun LiquidGlassIconButton(
                 } else {
                     Modifier
                 }
+            )
+            .then(
+                if (accessibilityLabel != null) {
+                    Modifier.semantics { contentDescription = accessibilityLabel }
+                } else Modifier
             )
             .clickable(
                 enabled = enabled,
