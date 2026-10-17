@@ -108,6 +108,30 @@ class GalaxGlassContractsTest {
         assertEquals(GlassFallbackStrategy.STATIC_SHADER, clear.fallback)
     }
 
+    @Test fun android17NewMaterialsNeverRequestUnvalidatedSkyShader() {
+        for (mode in listOf(GlassMode.FROSTED, GlassMode.CLEAR, GlassMode.BLUR)) {
+            val plan = resolveGalaxGlassPlan(
+                enabled = true,
+                spec = GlassSurfaceSpec(mode = mode),
+                capabilities = caps(sdk = 37, backdrop = false),
+            )
+            assertEquals(GlassRenderMode.STATIC_FALLBACK, plan.renderer)
+            assertEquals(GlassFallbackStrategy.TINT_AND_OUTLINE, plan.fallback)
+            assertFalse(plan.hasExpensiveBackdrop)
+        }
+        // Classic uses existing optically compatible Sky rendering.
+        val classic = resolveGalaxGlassPlan(
+            true, GlassSurfaceSpec(mode = GlassMode.CLASSIC),
+            caps(sdk = 37, backdrop = false),
+        )
+        assertEquals(GlassFallbackStrategy.STATIC_SHADER, classic.fallback)
+        val clear36 = resolveGalaxGlassPlan(
+            true, GlassSurfaceSpec(mode = GlassMode.CLEAR),
+            caps(sdk = 36, backdrop = false),
+        )
+        assertEquals(GlassFallbackStrategy.STATIC_SHADER, clear36.fallback)
+    }
+
     @Test fun androidOldApiFallbackDoesNotPromiseUnsupportedShaders() {
         assertFalse(caps(sdk = 30).hasRuntimeShader)
         assertFalse(caps(sdk = 30).hasRenderEffect)
