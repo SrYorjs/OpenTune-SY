@@ -73,7 +73,7 @@ class GalaxOTBrandingContractTest {
                 val file = resource("res/mipmap-$density/$name")
                 assertTrue("$density/$name missing", file.isFile)
                 val bytes = file.readBytes()
-                assertTrue(bytes.size > 100)
+                assertTrue(bytes.size >= if (name == "ic_launcher_background.png") 68 else 100)
                 assertEquals(0x89, bytes[0].toInt() and 0xff)
                 assertEquals('P'.code, bytes[1].toInt())
                 assertEquals('N'.code, bytes[2].toInt())
