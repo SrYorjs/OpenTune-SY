@@ -14,6 +14,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedContent
+import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.motion.galaxMotion
+import com.arturo254.opentune.core.designsystem.motion.galaxEnterTransition
+import com.arturo254.opentune.core.designsystem.motion.galaxExitTransition
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateDpAsState
@@ -339,11 +343,12 @@ internal fun MainActivityScaffold(
     val searchBarScrollBehavior = navigationEffects.searchBarScrollBehavior
     val topAppBarScrollBehavior = navigationEffects.topAppBarScrollBehavior
 
+    val galaxMotion = OpenTuneDesignSystem.galaxMotion
     val floatingBarsBottomPadding = FloatingToolbarBottomPadding
     val navVisibleHeight = if (slimNav) SlimFloatingToolbarHeight else FloatingToolbarHeight
     val bottomNavigationBarHeight by animateDpAsState(
         targetValue = if (shouldShowNavigationBar && !useRail) navVisibleHeight else 0.dp,
-        animationSpec = NavigationBarAnimationSpec,
+        animationSpec = galaxMotion.navigationBarSpec,
         label = "",
     )
 
@@ -415,126 +420,78 @@ internal fun MainActivityScaffold(
                                             else -> Screens.Home
                                         }.route,
                                         enterTransition = {
-                                            if (
+                                            val topLevel =
                                                 initialState.destination.route in topLevelScreens &&
-                                                targetState.destination.route in topLevelScreens
-                                            ) {
-                                                val initialIndex = navigationItems.indexOfFirst {
-                                                    it.route == initialState.destination.route
-                                                }
-                                                val targetIndex = navigationItems.indexOfFirst {
-                                                    it.route == targetState.destination.route
-                                                }
-                                                val direction = if (targetIndex >= initialIndex) 1 else -1
-                                                slideInHorizontally(
-                                                    animationSpec = spring(
-                                                        dampingRatio = 0.90f,
-                                                        stiffness = 560f,
-                                                    ),
-                                                    initialOffsetX = { width -> direction * width / 7 },
-                                                ) + fadeIn(
-                                                    animationSpec = tween(140)
-                                                )
-                                            } else {
-                                                fadeIn(
-                                                    animationSpec = tween(300)
-                                                ) + scaleIn(
-                                                    initialScale = 0.95f,
-                                                    animationSpec = spring(
-                                                        dampingRatio = 0.85f,
-                                                        stiffness = 400f
-                                                    )
-                                                )
+                                                    targetState.destination.route in topLevelScreens
+                                            val initialIndex = navigationItems.indexOfFirst {
+                                                it.route == initialState.destination.route
                                             }
+                                            val targetIndex = navigationItems.indexOfFirst {
+                                                it.route == targetState.destination.route
+                                            }
+                                            val direction = if (targetIndex >= initialIndex) 1 else -1
+                                            galaxEnterTransition(
+                                                policy = galaxMotion,
+                                                topLevel = topLevel,
+                                                direction = direction,
+                                                popping = false,
+                                            )
                                         },
                                         exitTransition = {
-                                            if (
+                                            val topLevel =
                                                 initialState.destination.route in topLevelScreens &&
-                                                targetState.destination.route in topLevelScreens
-                                            ) {
-                                                val initialIndex = navigationItems.indexOfFirst {
-                                                    it.route == initialState.destination.route
-                                                }
-                                                val targetIndex = navigationItems.indexOfFirst {
-                                                    it.route == targetState.destination.route
-                                                }
-                                                val direction = if (targetIndex >= initialIndex) 1 else -1
-                                                slideOutHorizontally(
-                                                    animationSpec = tween(150),
-                                                    targetOffsetX = { width -> -direction * width / 9 },
-                                                ) + fadeOut(
-                                                    animationSpec = tween(120)
-                                                )
-                                            } else {
-                                                fadeOut(
-                                                    animationSpec = tween(200)
-                                                ) + scaleOut(
-                                                    targetScale = 0.98f,
-                                                    animationSpec = tween(200)
-                                                )
+                                                    targetState.destination.route in topLevelScreens
+                                            val initialIndex = navigationItems.indexOfFirst {
+                                                it.route == initialState.destination.route
                                             }
+                                            val targetIndex = navigationItems.indexOfFirst {
+                                                it.route == targetState.destination.route
+                                            }
+                                            val direction = if (targetIndex >= initialIndex) 1 else -1
+                                            galaxExitTransition(
+                                                policy = galaxMotion,
+                                                topLevel = topLevel,
+                                                direction = direction,
+                                                popping = false,
+                                            )
                                         },
                                         popEnterTransition = {
-                                            if (
+                                            val topLevel =
                                                 (initialState.destination.route in topLevelScreens ||
-                                                        initialState.destination.route?.startsWith("search/") == true) &&
-                                                targetState.destination.route in topLevelScreens
-                                            ) {
-                                                val initialIndex = navigationItems.indexOfFirst {
-                                                    it.route == initialState.destination.route
-                                                }
-                                                val targetIndex = navigationItems.indexOfFirst {
-                                                    it.route == targetState.destination.route
-                                                }
-                                                val direction = if (targetIndex >= initialIndex) 1 else -1
-                                                slideInHorizontally(
-                                                    animationSpec = spring(
-                                                        dampingRatio = 0.90f,
-                                                        stiffness = 560f,
-                                                    ),
-                                                    initialOffsetX = { width -> direction * width / 7 },
-                                                ) + fadeIn(
-                                                    animationSpec = tween(140)
-                                                )
-                                            } else {
-                                                fadeIn(
-                                                    animationSpec = tween(300)
-                                                ) + scaleIn(
-                                                    initialScale = 0.98f,
-                                                    animationSpec = spring(
-                                                        dampingRatio = 0.85f,
-                                                        stiffness = 400f
-                                                    )
-                                                )
+                                                    initialState.destination.route?.startsWith("search/") == true) &&
+                                                    targetState.destination.route in topLevelScreens
+                                            val initialIndex = navigationItems.indexOfFirst {
+                                                it.route == initialState.destination.route
                                             }
+                                            val targetIndex = navigationItems.indexOfFirst {
+                                                it.route == targetState.destination.route
+                                            }
+                                            val direction = if (targetIndex >= initialIndex) 1 else -1
+                                            galaxEnterTransition(
+                                                policy = galaxMotion,
+                                                topLevel = topLevel,
+                                                direction = direction,
+                                                popping = true,
+                                            )
                                         },
                                         popExitTransition = {
-                                            if (
+                                            val topLevel =
                                                 (initialState.destination.route in topLevelScreens ||
-                                                        initialState.destination.route?.startsWith("search/") == true) &&
-                                                targetState.destination.route in topLevelScreens
-                                            ) {
-                                                val initialIndex = navigationItems.indexOfFirst {
-                                                    it.route == initialState.destination.route
-                                                }
-                                                val targetIndex = navigationItems.indexOfFirst {
-                                                    it.route == targetState.destination.route
-                                                }
-                                                val direction = if (targetIndex >= initialIndex) 1 else -1
-                                                slideOutHorizontally(
-                                                    animationSpec = tween(150),
-                                                    targetOffsetX = { width -> -direction * width / 9 },
-                                                ) + fadeOut(
-                                                    animationSpec = tween(120)
-                                                )
-                                            } else {
-                                                fadeOut(
-                                                    animationSpec = tween(200)
-                                                ) + scaleOut(
-                                                    targetScale = 0.95f,
-                                                    animationSpec = tween(200)
-                                                )
+                                                    initialState.destination.route?.startsWith("search/") == true) &&
+                                                    targetState.destination.route in topLevelScreens
+                                            val initialIndex = navigationItems.indexOfFirst {
+                                                it.route == initialState.destination.route
                                             }
+                                            val targetIndex = navigationItems.indexOfFirst {
+                                                it.route == targetState.destination.route
+                                            }
+                                            val direction = if (targetIndex >= initialIndex) 1 else -1
+                                            galaxExitTransition(
+                                                policy = galaxMotion,
+                                                topLevel = topLevel,
+                                                direction = direction,
+                                                popping = true,
+                                            )
                                         },
                                         modifier = Modifier
                                             .nestedScroll(
