@@ -139,6 +139,7 @@ import com.skydoves.cloudy.cloudy
 import timber.log.Timber
 import com.arturo254.opentune.ui.player.CanvasArtworkPlayer
 import com.arturo254.opentune.ui.player.PlayerTimeLabel
+import com.arturo254.opentune.ui.player.actions.PlayerActions
 
 // ============================================================
 // V8 - Apple Music Style Components
@@ -241,43 +242,31 @@ fun V8PlayerBackdrop(
 @Composable
 fun V8PlayerControlsContent(
     mediaMetadata: MediaMetadata,
-    playerDesignStyle: PlayerDesignStyle,
-    sliderStyle: SliderStyle,
     playbackState: Int,
     isPlaying: Boolean,
     isLoading: Boolean,
     repeatMode: Int,
     canSkipPrevious: Boolean,
     canSkipNext: Boolean,
-    textButtonColor: Color,
-    iconButtonColor: Color,
     textBackgroundColor: Color,
-    icBackgroundColor: Color,
     sliderPosition: Long?,
     position: Long,
     duration: Long,
-    playerConnection: PlayerConnection,
+    playerActions: PlayerActions,
+    liked: Boolean,
+    shuffleModeEnabled: Boolean,
     navController: NavController,
     state: BottomSheetState,
     menuState: MenuState,
     bottomSheetPageState: BottomSheetPageState,
-    clipboardManager: ClipboardManager,
-    context: Context,
     onSliderValueChange: (Long) -> Unit,
     onSliderValueChangeFinished: () -> Unit,
     currentFormat: FormatEntity? = null,
-    onResetTimer: () -> Unit = {},
     nextUpMetadata: MediaMetadata? = null,
     onExpandQueue: () -> Unit = {},
-    onShowLyrics: () -> Unit = {},
     playerVolume: Float,
     onVolumeChange: (Float) -> Unit,
 ) {
-    val playerActions = rememberPlayerActions(playerConnection)
-    val currentSong by playerConnection.currentSong.collectAsState(initial = null)
-    val currentSongLiked = currentSong?.song?.liked == true
-    val shuffleModeEnabled by playerConnection.shuffleModeEnabled.collectAsState()
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxWidth()
@@ -370,14 +359,14 @@ fun V8PlayerControlsContent(
                 LiquidGlassIconButton(
                     onClick = { playerActions.toggleFavorite() },
                     size = 44.dp,
-                    selected = currentSongLiked,
+                    selected = liked,
                 ) {
                     Icon(
                         painter = painterResource(
-                            playerFavoriteIconRes(currentSongLiked, v8 = true)
+                            playerFavoriteIconRes(liked, v8 = true)
                         ),
                         contentDescription = null,
-                        tint = textBackgroundColor.copy(alpha = if (currentSongLiked) 1f else 0.78f),
+                        tint = textBackgroundColor.copy(alpha = if (liked) 1f else 0.78f),
                         modifier = Modifier.size(24.dp)
                     )
                 }
