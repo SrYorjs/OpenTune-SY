@@ -4,8 +4,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
 /**
- * Phase 4.5.5: independent visual identities, shared Kyant/Sky renderer.
- * Null tints leave CLASSIC/BLUR and legacy caller styling untouched.
+ * Phase 4.5.5–4.5.6: five mode material contract on one renderer.
+ * Classic retains the original theme-driven Liquid Glass colors.
  */
 @Immutable
 data class GalaxGlassMaterial(
@@ -22,5 +22,9 @@ fun galaxGlassMaterial(mode: GlassMode, dark: Boolean): GalaxGlassMaterial = whe
         surfaceTint = Color.White.copy(alpha = if (dark) 0.055f else 0.10f),
         borderTint = Color.White.copy(alpha = if (dark) 0.48f else 0.38f),
     )
-    else -> GalaxGlassMaterial(null, null)
+    GlassMode.BLUR -> GalaxGlassMaterial(
+        surfaceTint = Color.White.copy(alpha = if (dark) 0.16f else 0.30f),
+        borderTint = Color.White.copy(alpha = if (dark) 0.17f else 0.35f),
+    )
+    GlassMode.CLASSIC, GlassMode.DISABLED -> GalaxGlassMaterial(null, null)
 }
