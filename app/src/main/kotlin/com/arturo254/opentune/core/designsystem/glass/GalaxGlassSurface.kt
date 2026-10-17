@@ -17,7 +17,7 @@ import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 import com.arturo254.opentune.core.designsystem.theme.shapes
 
 /**
- * 4.5.6 bridge: the existing Kyant / Sky optical renderer remains the single
+ * 4.5.7 bridge: the existing Kyant / Sky optical renderer remains the single
  * implementation. This façade supplies bounded capabilities and mode-specific
  * parameters, without capturing Android views or adding another blur pass.
  */
@@ -62,8 +62,8 @@ fun Modifier.galaxGlassEffect(
 
 /**
  * First-class Surface for new GalaxOT cards, dialogs and control islands.
- * Defaults to CLASSIC until the five-way Appearance selector is introduced
- * in 4.5.7; a disabled or unavailable renderer remains opaque and clipped.
+ * Defaults to CLASSIC unless Appearance supplies a persisted global mode.
+ * A disabled or unavailable renderer remains opaque and clipped.
  */
 @Composable
 fun GalaxGlassSurface(
