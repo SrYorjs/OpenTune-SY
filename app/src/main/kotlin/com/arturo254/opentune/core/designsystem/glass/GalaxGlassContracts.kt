@@ -12,9 +12,9 @@ import androidx.compose.ui.platform.LocalContext
 /**
  * GalaxOT Glass Engine 4.5.4.
  *
- * The concepts are routed now; their final optical treatments and the global
- * Appearance switch belong to 4.5.5–4.5.7. CLASSIC maps to the proven Kyant
- * renderer and the existing saved Liquid Glass toggle is left untouched.
+ * Modes have independent optical profiles (4.5.5/4.5.6) while the global
+ * persisted Appearance picker remains the responsibility of 4.5.7.
+ * CLASSIC remains wired to the existing Kyant optical preset.
  */
 enum class GlassMode { FROSTED, CLEAR, BLUR, CLASSIC, DISABLED }
 
@@ -58,22 +58,21 @@ data class GlassRenderPlan(
 }
 
 /**
- * Compatibility with existing GlassPreset: no new shaders are invented.
- * The three concept defaults establish constraints for later art-directed
- * treatments without pretending that the optical materials are complete.
+ * Distinct optical defaults for three new materials; CLASSIC retains STANDARD.
+ * Actual native backdrop rendering/fallback remains the sole GlassEngine.
  */
 fun galaxGlassOptics(mode: GlassMode): GlassOptics = when (mode) {
     GlassMode.FROSTED -> GlassOptics(
-        blurRadius = 10, refraction = 0.035f, curve = 0.085f,
-        dispersion = 0.001f, edge = 0.13f,
+        blurRadius = 14, refraction = 0.030f, curve = 0.080f,
+        dispersion = 0f, edge = 0.14f,
     )
     GlassMode.CLEAR -> GlassOptics(
-        blurRadius = 2, refraction = 0.085f, curve = 0.19f,
-        dispersion = 0.003f, edge = 0.43f,
+        blurRadius = 2, refraction = 0.115f, curve = 0.21f,
+        dispersion = 0.0045f, edge = 0.52f,
     )
     GlassMode.BLUR -> GlassOptics(
-        blurRadius = 12, refraction = 0.025f, curve = 0.075f,
-        dispersion = 0f, edge = 0.10f,
+        blurRadius = 18, refraction = 0f, curve = 0f,
+        dispersion = 0f, edge = 0.08f,
     )
     GlassMode.CLASSIC -> GlassPreset.STANDARD.optics
     GlassMode.DISABLED -> GlassOptics(blurRadius = 0, refraction = 0f, curve = 0f, dispersion = 0f, edge = 0f)
@@ -121,8 +120,32 @@ fun resolveGalaxGlassPlan(
             tier, GlassFallbackStrategy.NONE, safeOptics)
     }
     return GlassRenderPlan(spec.mode, GlassRenderMode.STATIC_FALLBACK,
-        tier, if (capabilities.hasRuntimeShader) GlassFallbackStrategy.STATIC_SHADER
+        tier, if (capabilities.hasRuntimeShader && spec.mode != GlassMode.BLUR)
+            GlassFallbackStrategy.STATIC_SHADER
         else GlassFallbackStrategy.TINT_AND_OUTLINE, optics)
+}
+
+
+/**
+ * Local preview mode has priority over the legacy boolean. Until Appearance
+ * persists its own mode in 4.5.7, a null selection preserves the on/off switch.
+ */
+fun isGalaxGlassEnabled(legacyEnabled: Boolean, selectedMode: GlassMode?): Boolean =
+    selectedMode?.let { it != GlassMode.DISABLED } ?: legacyEnabled
+
+/**
+ * Host presets (NAVIGATION/MINI_PLAYER) are CLASSIC-only compatibility optics.
+ * When another mode is selected, do not let SOFT optics override its identity.
+ * Explicit per-surface optics are preserved when no global override is present.
+ */
+fun resolveGalaxGlassSpec(
+    spec: GlassSurfaceSpec,
+    globalMode: GlassMode?,
+): GlassSurfaceSpec = when {
+    globalMode == null -> spec
+    globalMode == spec.mode -> spec
+    globalMode == GlassMode.CLASSIC -> spec.copy(mode = globalMode, optics = null)
+    else -> spec.copy(mode = globalMode, optics = null)
 }
 
 /** Null means legacy on/off selection: the 4.5.7 five-way selector is not active yet. */
