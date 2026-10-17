@@ -4,6 +4,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalMotionDurationScale
+import com.arturo254.opentune.core.designsystem.motion.GalaxMotionPolicy
+import com.arturo254.opentune.core.designsystem.motion.LocalGalaxMotionPolicy
 import com.arturo254.opentune.core.designsystem.DesignSystemEnvironment
 import com.arturo254.opentune.core.designsystem.LocalDesignSystemEnvironment
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
@@ -18,6 +21,7 @@ import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 @Composable
 fun ProvideOpenTuneDesignSystem(
     artworkRadiusDp: Float = 16f,
+    reduceMotion: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val environment =
@@ -26,6 +30,11 @@ fun ProvideOpenTuneDesignSystem(
                 schemaVersion = OpenTuneDesignSystem.SchemaVersion,
             )
         }
+    // Compose's platform duration scale is the authoritative accessibility
+    // source. The app-level override may also disable decorative transitions.
+    val platformMotionScale = LocalMotionDurationScale.current.scaleFactor
+    val reducedMotion = reduceMotion || platformMotionScale <= 0f
+    val galaxMotion = remember(reducedMotion) { GalaxMotionPolicy(reducedMotion) }
     val colorScheme = MaterialTheme.colorScheme
     val materialTypography = MaterialTheme.typography
     val materialShapes = MaterialTheme.shapes
@@ -52,6 +61,7 @@ fun ProvideOpenTuneDesignSystem(
     CompositionLocalProvider(
         LocalDesignSystemEnvironment provides environment,
         LocalGalaxDesignTokens provides galax,
+        LocalGalaxMotionPolicy provides galaxMotion,
         LocalOpenTuneColorRoles provides colors,
         LocalOpenTuneTypographyTokens provides typography,
         LocalOpenTuneSpacingTokens provides DefaultOpenTuneSpacingTokens,
