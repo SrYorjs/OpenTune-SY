@@ -68,6 +68,11 @@ class GalaxGlassSelectionTest {
         assertTrue(scaffold.contains("rememberLayerBackdrop {"))
         assertTrue(scaffold.contains("Modifier.layerBackdrop(liveGlassBackdrop)"))
         assertTrue(scaffold.contains("Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU"))
+        assertTrue(scaffold.contains("selectedGlassMode == GlassMode.FROSTED"))
+        assertTrue(scaffold.contains("selectedGlassMode == GlassMode.CLEAR"))
+        assertTrue(scaffold.contains("selectedGlassMode == GlassMode.BLUR"))
+        assertTrue(scaffold.contains("!glassBudget.isPowerSaveMode"))
+        assertTrue(scaffold.contains("!glassBudget.isLowRamDevice"))
         assertFalse(scaffold.contains("modifier = Modifier.layerBackdrop(liveGlassBackdrop).fillMaxSize()"))
     }
 
