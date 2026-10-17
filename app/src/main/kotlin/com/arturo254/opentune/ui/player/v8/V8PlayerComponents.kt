@@ -710,8 +710,6 @@ fun V8PlaybackControls(
 
 @Composable
 fun QueueCollapsedContentV8(
-    showCodecOnPlayer: Boolean,
-    currentFormat: FormatEntity?,
     textBackgroundColor: Color,
     onShowLyrics: () -> Unit,
     onExpandQueue: () -> Unit,
