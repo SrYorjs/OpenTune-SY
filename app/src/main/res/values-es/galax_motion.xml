@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="galax_reduce_motion">Reducir movimiento</string>
+    <string name="galax_reduce_motion_desc">Desactiva las transiciones decorativas y los efectos elásticos. La reproducción y los gestos seguirán funcionando.</string>
+</resources>
