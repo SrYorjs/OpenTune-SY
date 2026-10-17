@@ -119,10 +119,14 @@ fun resolveGalaxGlassPlan(
         return GlassRenderPlan(spec.mode, GlassRenderMode.LIVE_BACKDROP,
             tier, GlassFallbackStrategy.NONE, safeOptics)
     }
+    // Hardware-accelerated static lens has not been validated on Android 17.
+    // Preserve CLASSIC's historical path; all NEW materials use a shader-free
+    // fallback on API 37+ until a separate graphical safety gate passes.
+    val safeStaticLens = capabilities.hasRuntimeShader &&
+        (spec.mode == GlassMode.CLASSIC ||
+            (spec.mode == GlassMode.CLEAR && capabilities.sdkInt < 37))
     return GlassRenderPlan(spec.mode, GlassRenderMode.STATIC_FALLBACK,
-        tier, if (capabilities.hasRuntimeShader &&
-            (spec.mode == GlassMode.CLASSIC || spec.mode == GlassMode.CLEAR))
-            GlassFallbackStrategy.STATIC_SHADER
+        tier, if (safeStaticLens) GlassFallbackStrategy.STATIC_SHADER
         else GlassFallbackStrategy.TINT_AND_OUTLINE, optics)
 }
 
