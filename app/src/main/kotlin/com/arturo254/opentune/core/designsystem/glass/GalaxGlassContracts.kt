@@ -112,7 +112,12 @@ fun resolveGalaxGlassPlan(
         return GlassRenderPlan(spec.mode, GlassRenderMode.STATIC_FALLBACK,
             tier, GlassFallbackStrategy.TINT_AND_OUTLINE, optics)
     }
-    if (capabilities.hasLiveBackdrop) {
+    // Defensive planner guard: Android 17 RenderThread's RenderNode recursion
+    // was observed when selecting newly captured materials. Even if another
+    // caller accidentally supplies a live Backdrop, do not execute it on API37+.
+    val liveAllowed = capabilities.hasLiveBackdrop &&
+        (spec.mode == GlassMode.CLASSIC || capabilities.sdkInt < 37)
+    if (liveAllowed) {
         val safeOptics = if (tier == GlassPerformanceTier.BALANCED) {
             optics.copy(blurRadius = optics.blurRadius.coerceAtMost(6), dispersion = 0f)
         } else optics
