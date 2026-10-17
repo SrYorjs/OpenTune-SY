@@ -111,45 +111,46 @@ fun Modifier.openTuneGlassEffect(
             shape,
         )
     } else Modifier
-    val fallbackRim = if (material?.rimTop != null && material.rimBottom != null) {
+    val rimTop = material?.rimTop
+    val rimBottom = material?.rimBottom
+    val fallbackRim = if (rimTop != null && rimBottom != null) {
         Modifier.border(
             width = surfaceTokens.borders.fallbackGlassWidth,
-            brush = Brush.linearGradient(listOf(material.rimTop, material.rimBottom)),
+            brush = Brush.linearGradient(listOf(rimTop, rimBottom)),
             shape = shape,
         )
     } else Modifier.border(surfaceTokens.borders.fallbackGlassWidth, borderColor, shape)
-    val activeRim = if (material?.rimTop != null && material.rimBottom != null) {
+    val activeRim = if (rimTop != null && rimBottom != null) {
         Modifier.border(
             width = surfaceTokens.borders.activeGlassWidth,
-            brush = Brush.linearGradient(listOf(material.rimTop, material.rimBottom)),
+            brush = Brush.linearGradient(listOf(rimTop, rimBottom)),
             shape = shape,
         )
     } else Modifier.border(surfaceTokens.borders.activeGlassWidth, borderColor, shape)
 
     if (mode == GlassRenderMode.STATIC_FALLBACK) {
+        val tint = material?.fallbackTint ?: fallbackSurface
+        // On constrained devices do not allocate size state or a shader pass.
+        val shaderAllowed = allowStaticShader && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            material?.enableStaticLens != false
+        if (!shaderAllowed) {
+            return this.clip(shape).background(tint)
+                .then(surfaceFinish).then(fallbackRim)
+        }
         val density = LocalDensity.current
         var surfaceSize by remember { mutableStateOf(Size.Zero) }
-        val center =
-            remember(surfaceSize) {
-                Offset(
-                    x = surfaceSize.width * 0.5f,
-                    y = surfaceSize.height * 0.5f,
-                )
-            }
-        val useSafeShader =
-            allowStaticShader && material?.enableStaticLens != false &&
-                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                surfaceSize != Size.Zero
-
+        val center = remember(surfaceSize) {
+            Offset(surfaceSize.width * 0.5f, surfaceSize.height * 0.5f)
+        }
         return this
             .onSizeChanged { size ->
                 val next = Size(size.width.toFloat(), size.height.toFloat())
                 if (next != surfaceSize) surfaceSize = next
             }
             .clip(shape)
-            .background(material?.fallbackTint ?: fallbackSurface)
+            .background(tint)
             .then(
-                if (useSafeShader) {
+                if (surfaceSize != Size.Zero) {
                     Modifier.liquidGlass(
                         lensCenter = center,
                         lensSize = surfaceSize,
@@ -163,9 +164,7 @@ fun Modifier.openTuneGlassEffect(
                         edge = optics.edge.coerceIn(0f, 0.009f),
                         glow = LiquidGlassDefaults.NoGlow,
                     )
-                } else {
-                    Modifier
-                }
+                } else Modifier
             )
             .then(surfaceFinish)
             .then(fallbackRim)
