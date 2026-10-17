@@ -51,7 +51,9 @@ class PlayerVisualEngineIntegrationTest {
         assertTrue(mini.contains(".playerVisualGlassEffect("))
         assertTrue(mini.contains(".clip(miniPlayerShape)"))
         assertTrue(mini.contains("surfaceTokens.borders.miniPlayerOpaqueWidth"))
-        assertTrue(adapter.contains("openTuneGlassEffect("))
+        assertTrue(adapter.contains("galaxGlassEffect("))
+        assertTrue(adapter.contains("GlassSurfaceType.MINI_PLAYER"))
+        assertTrue(source("core/designsystem/glass/GalaxGlassSurface.kt").contains("openTuneGlassEffect("))
         assertFalse(adapter.contains("liquidGlassSurface("))
         assertEquals(
             GlassOptics(
