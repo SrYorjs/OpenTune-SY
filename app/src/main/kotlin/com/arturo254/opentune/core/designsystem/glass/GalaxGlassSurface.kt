@@ -13,7 +13,7 @@ import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 import com.arturo254.opentune.core.designsystem.theme.shapes
 
 /**
- * 4.5.4 bridge: the existing Kyant / Sky optical renderer remains the single
+ * 4.5.6 bridge: the existing Kyant / Sky optical renderer remains the single
  * implementation. This façade supplies bounded capabilities and mode-specific
  * parameters, without capturing Android views or adding another blur pass.
  */
@@ -43,6 +43,7 @@ fun Modifier.galaxGlassEffect(
         allowStaticShader = plan.fallback == GlassFallbackStrategy.STATIC_SHADER,
         surfaceTintOverride = material.surfaceTint,
         borderTintOverride = material.borderTint,
+        enableLens = plan.mode != GlassMode.BLUR,
     )
 }
 
@@ -79,6 +80,7 @@ fun GalaxGlassSurface(
         allowStaticShader = plan.fallback == GlassFallbackStrategy.STATIC_SHADER,
         surfaceTintOverride = material.surfaceTint,
         borderTintOverride = material.borderTint,
+        enableLens = plan.mode != GlassMode.BLUR,
         opaqueColor = opaqueColor,
         content = content,
     )
