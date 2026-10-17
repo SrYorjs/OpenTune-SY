@@ -1,6 +1,7 @@
 package com.arturo254.opentune.core.designsystem.theme
 
 import androidx.compose.material3.Typography
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import org.junit.Assert.assertEquals
@@ -55,7 +56,7 @@ class GalaxDesignSystemTest {
         assertEquals(s.onSurfaceVariant, t.colors.textSecondary)
         assertEquals(48.dp, t.iconography.minimumTouchTarget)
         assertEquals(24.dp, t.iconography.standard)
-        assertEquals(32.dp, t.geometry.heroCard.topStart)
+        assertEquals(RoundedCornerShape(32.dp), t.geometry.heroCard)
     }
 
     @Test fun typeAndArtworkShapesInheritCurrentPreferences() {
@@ -64,8 +65,8 @@ class GalaxDesignSystemTest {
         val b = createGalaxDesignTokens(galaxColorScheme(false), material, 42f)
         assertEquals(material.headlineLarge, a.typography.headline)
         assertEquals(material.titleMedium, a.typography.track)
-        assertEquals(0.dp, a.geometry.artwork.topStart)
-        assertEquals(42.dp, b.geometry.artwork.topStart)
+        assertEquals(RoundedCornerShape(0.dp), a.geometry.artwork)
+        assertEquals(RoundedCornerShape(42.dp), b.geometry.artwork)
         assertEquals(material.displayMedium.fontFamily, a.typography.hero.fontFamily)
     }
 
