@@ -22,7 +22,7 @@ import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.theme.OpenTuneShapeRadii
 import com.arturo254.opentune.core.designsystem.theme.shapes
 import com.arturo254.opentune.core.designsystem.theme.surfaces
-import com.arturo254.opentune.core.designsystem.theme.motion
+import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -64,11 +64,13 @@ internal fun Modifier.elasticLiquidPress(
     interactionSource: MutableInteractionSource,
     enabled: Boolean,
 ): Modifier {
+    // Reduced motion removes only the visual deformation; clicks/gestures stay.
+    val policy = OpenTuneDesignSystem.galaxMotion
+    if (policy.reducedMotion) return this
     val pressed by interactionSource.collectIsPressedAsState()
-    val motion = OpenTuneDesignSystem.motion
     val progress by animateFloatAsState(
         targetValue = if (pressed) 1f else 0f,
-        animationSpec = motion.glassPress,
+        animationSpec = policy.pressSpec,
         label = "liquidElasticPress",
     )
     var touchOffset by remember { mutableStateOf(Offset.Zero) }
