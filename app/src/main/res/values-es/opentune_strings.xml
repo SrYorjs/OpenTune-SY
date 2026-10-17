@@ -479,4 +479,10 @@
     <string name="playlist_mix_start_smart">Reproducir Smart Mix</string>
     <string name="playlist_mix_start_manual">Reproducir Mix manual</string>
 
+    <string name="galax_glass_mode">Material Galax Glass</string>
+    <string name="galax_glass_frosted">Vidrio esmerilado</string>
+    <string name="galax_glass_clear">Cristal transparente</string>
+    <string name="galax_glass_blur">Vidrio difuminado</string>
+    <string name="galax_glass_classic">Liquid Glass clásico</string>
+    <string name="galax_glass_disabled">Desactivado</string>
 </resources>
