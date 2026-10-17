@@ -383,8 +383,6 @@ fun Queue(
                 // ============================================================
                 PlayerDesignStyle.V8 -> {
                     QueueCollapsedContentV8(
-                        showCodecOnPlayer = showCodecOnPlayer,
-                        currentFormat = currentFormat,
                         textBackgroundColor = TextBackgroundColor,
                         onShowLyrics = onShowLyrics,
                         onExpandQueue = { state.expandSoft() },
