@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="galax_reduce_motion">Reduce motion</string>
+    <string name="galax_reduce_motion_desc">Remove decorative transitions and elastic effects. Playback controls and gestures still work.</string>
+</resources>
