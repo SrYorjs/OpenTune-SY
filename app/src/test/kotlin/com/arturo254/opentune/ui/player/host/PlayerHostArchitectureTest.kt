@@ -57,6 +57,6 @@ class PlayerHostArchitectureTest {
         assertTrue(visual.contains("CanvasArtwork("))
         assertTrue(player.contains("val canvasArtwork = playerVisuals.canvasArtwork"))
         assertTrue(player.contains("PlayerLyricsPanel("))
-        assertTrue(player.contains("PlayerDesignStyle.V8"))
+        assertTrue(source("ui/player/preferences/PlayerPresentationPreferences.kt").contains("PlayerDesignStyle.V8"))
     }
 }
