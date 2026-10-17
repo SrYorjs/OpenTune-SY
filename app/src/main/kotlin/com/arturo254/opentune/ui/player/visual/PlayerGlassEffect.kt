@@ -4,7 +4,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.arturo254.opentune.core.designsystem.glass.GlassPreset
-import com.arturo254.opentune.core.designsystem.glass.openTuneGlassEffect
+import com.arturo254.opentune.core.designsystem.glass.GlassMode
+import com.arturo254.opentune.core.designsystem.glass.GlassSurfaceSpec
+import com.arturo254.opentune.core.designsystem.glass.GlassSurfaceType
+import com.arturo254.opentune.core.designsystem.glass.galaxGlassEffect
 
 /**
  * Single Player-specific optical preset. Leaves clipping, opaque background,
@@ -16,8 +19,12 @@ import com.arturo254.opentune.core.designsystem.glass.openTuneGlassEffect
 fun Modifier.playerVisualGlassEffect(
     shape: RoundedCornerShape,
     pureBlack: Boolean,
-): Modifier = openTuneGlassEffect(
+): Modifier = galaxGlassEffect(
     shape = shape,
     pureBlack = pureBlack,
-    optics = GlassPreset.SOFT.optics,
+    spec = GlassSurfaceSpec(
+        mode = GlassMode.CLASSIC,
+        surface = GlassSurfaceType.MINI_PLAYER,
+        optics = GlassPreset.SOFT.optics,
+    ),
 )
