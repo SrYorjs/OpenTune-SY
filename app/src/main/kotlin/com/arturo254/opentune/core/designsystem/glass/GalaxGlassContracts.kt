@@ -8,8 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
-import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
-import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 
 /**
  * GalaxOT Glass Engine 4.5.4.
@@ -111,9 +109,9 @@ fun resolveGalaxGlassPlan(
         capabilities, spec.surface, reducedMotion, spec.preferHighQuality,
     )
     if (tier == GlassPerformanceTier.LOW) {
+        // Low-power and scrolling surfaces must NOT allocate shader layers.
         return GlassRenderPlan(spec.mode, GlassRenderMode.STATIC_FALLBACK,
-            tier, if (capabilities.hasRuntimeShader) GlassFallbackStrategy.STATIC_SHADER
-            else GlassFallbackStrategy.TINT_AND_OUTLINE, optics)
+            tier, GlassFallbackStrategy.TINT_AND_OUTLINE, optics)
     }
     if (capabilities.hasLiveBackdrop) {
         val safeOptics = if (tier == GlassPerformanceTier.BALANCED) {
