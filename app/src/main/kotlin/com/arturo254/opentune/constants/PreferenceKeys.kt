@@ -141,6 +141,8 @@ val PlaylistTagsFilterKey = stringPreferencesKey("playlistTagsFilter")
 val ShowHomeCategoryChipsKey = booleanPreferencesKey("showHomeCategoryChips")
 val ShowTagsInLibraryKey = booleanPreferencesKey("showTagsInLibrary")
 val LiquidGlassNavBarKey = booleanPreferencesKey("liquid_glass_nav_bar")
+// Empty/absent value preserves the legacy switch until the user chooses a material.
+val GalaxGlassModeKey = stringPreferencesKey("galax_glass_mode")
 
 val EqualizerEnabledKey = booleanPreferencesKey("equalizerEnabled")
 val EqualizerBandLevelsMbKey = stringPreferencesKey("equalizerBandLevelsMb")
