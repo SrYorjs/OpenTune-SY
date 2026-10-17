@@ -35,6 +35,8 @@ import androidx.palette.graphics.Palette
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.AppFontStyle
 import com.arturo254.opentune.core.designsystem.theme.ProvideOpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.theme.GalaxPalette
+import com.arturo254.opentune.core.designsystem.theme.galaxColorScheme
 import com.arturo254.opentune.utils.withAppFont
 import com.kyant.m3color.hct.Hct
 import com.kyant.m3color.scheme.SchemeMonochrome
@@ -49,7 +51,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlin.math.abs
 import kotlin.math.min
 
-val DefaultThemeColor = Color(0xFFFF3B69)
+val DefaultThemeColor = GalaxPalette.Galaxy
 
 data class ThemeSeedPalette(
     val primary: Color,
@@ -66,6 +68,7 @@ fun OpenTuneTheme(
     themeColor: Color = DefaultThemeColor,
     motionScheme: MotionScheme = MotionScheme.expressive(),
     seedPalette: ThemeSeedPalette? = null,
+    useGalaxBrandPalette: Boolean = false,
     appFontStyle: AppFontStyle = AppFontStyle.OPEN_TUNE,
     artworkCornerRadiusDp: Float = 16f,
     content: @Composable () -> Unit,
@@ -99,14 +102,15 @@ fun OpenTuneTheme(
         }
 
     val baseColorScheme =
-        if (useSystemDynamicColor) {
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        } else {
-            appColorScheme
+        when {
+            useGalaxBrandPalette -> remember(darkTheme) { galaxColorScheme(darkTheme) }
+            useSystemDynamicColor -> if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            else -> appColorScheme
         }
 
-    val colorScheme = remember(baseColorScheme, pureBlack, darkTheme) {
-        val premiumScheme = baseColorScheme.premiumMusicSurfaces(darkTheme)
+    val colorScheme = remember(baseColorScheme, pureBlack, darkTheme, useGalaxBrandPalette) {
+        val premiumScheme =
+            if (useGalaxBrandPalette) baseColorScheme else baseColorScheme.premiumMusicSurfaces(darkTheme)
         if (darkTheme && pureBlack) premiumScheme.pureBlack(true) else premiumScheme
     }
 
