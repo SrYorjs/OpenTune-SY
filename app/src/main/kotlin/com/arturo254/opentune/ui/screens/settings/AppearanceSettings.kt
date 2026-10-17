@@ -100,6 +100,18 @@ import com.arturo254.opentune.constants.DisableBlurKey
 import com.arturo254.opentune.constants.EnableHapticFeedbackKey
 import com.arturo254.opentune.constants.LiquidGlassNavBarKey
 import com.arturo254.opentune.constants.GalaxGlassModeKey
+import com.arturo254.opentune.constants.GalaxLiquidVariantKey
+import com.arturo254.opentune.constants.GalaxLiquidCornerRadiusKey
+import com.arturo254.opentune.constants.GalaxLiquidBlurKey
+import com.arturo254.opentune.constants.GalaxLiquidRefractionHeightKey
+import com.arturo254.opentune.constants.GalaxLiquidRefractionAmountKey
+import com.arturo254.opentune.constants.GalaxLiquidChromaticKey
+import com.arturo254.opentune.constants.GalaxLiquidTintKey
+import com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidVariant
+import com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidTuning
+import com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidPlayground
+import com.arturo254.opentune.core.designsystem.liquid.galvanicRecipe
+import com.arturo254.opentune.core.designsystem.liquid.parseGalaxLiquidVariant
 import com.arturo254.opentune.core.designsystem.glass.GlassMode
 import com.arturo254.opentune.core.designsystem.glass.displayGalaxGlassMode
 import com.arturo254.opentune.constants.PlayerFullscreenKey
@@ -232,21 +244,56 @@ fun AppearanceSettings(
         GalaxGlassModeKey,
         defaultValue = "",
     )
-    val selectedGalaxGlassMode = displayGalaxGlassMode(
-        storedGalaxGlassMode, liquidGlassNavBar,
-    )
+    val selectedGalaxGlassMode = displayGalaxGlassMode(storedGalaxGlassMode, liquidGlassNavBar)
+    val (storedLiquidVariant) = rememberPreference(GalaxLiquidVariantKey, defaultValue = "")
+    val liquidVariant = parseGalaxLiquidVariant(storedLiquidVariant) ?: when (selectedGalaxGlassMode) {
+        GlassMode.FROSTED -> GalaxLiquidVariant.PEARL
+        GlassMode.CLEAR -> GalaxLiquidVariant.CRYSTAL
+        GlassMode.BLUR -> GalaxLiquidVariant.GLACIER
+        GlassMode.CLASSIC -> GalaxLiquidVariant.SILK
+        GlassMode.DISABLED -> GalaxLiquidVariant.DISABLED
+    }
+    val defaults = galvanicRecipe(liquidVariant)
+    val (radius) = rememberPreference(GalaxLiquidCornerRadiusKey, defaults.cornerRadiusDp)
+    val (blur) = rememberPreference(GalaxLiquidBlurKey, defaults.blurRadiusDp)
+    val (height) = rememberPreference(GalaxLiquidRefractionHeightKey, defaults.refractionHeight)
+    val (amount) = rememberPreference(GalaxLiquidRefractionAmountKey, defaults.refractionAmount)
+    val (chromatic) = rememberPreference(GalaxLiquidChromaticKey, defaults.chromaticAberration)
+    val (tint) = rememberPreference(GalaxLiquidTintKey, defaults.tintAlpha)
+    val liquidTuning = if (storedLiquidVariant.isEmpty()) defaults else
+        GalaxLiquidTuning(radius, blur, height, amount, chromatic, tint).bounded()
     val preferencesContext = LocalContext.current
     val glassPreferenceScope = rememberCoroutineScope()
-    val onGalaxGlassModeChange: (GlassMode) -> Unit = { mode ->
-        // Persist both keys atomically and never migrate without user action.
+    val onLiquidVariantChange: (GalaxLiquidVariant) -> Unit = { variant ->
         glassPreferenceScope.launch {
+            val recipe = galvanicRecipe(variant)
             preferencesContext.dataStore.edit { settings ->
-                settings[GalaxGlassModeKey] = mode.name
-                settings[LiquidGlassNavBarKey] = mode != GlassMode.DISABLED
+                settings[GalaxLiquidVariantKey] = variant.name
+                settings[LiquidGlassNavBarKey] = variant != GalaxLiquidVariant.DISABLED
+                settings[GalaxLiquidCornerRadiusKey] = recipe.cornerRadiusDp
+                settings[GalaxLiquidBlurKey] = recipe.blurRadiusDp
+                settings[GalaxLiquidRefractionHeightKey] = recipe.refractionHeight
+                settings[GalaxLiquidRefractionAmountKey] = recipe.refractionAmount
+                settings[GalaxLiquidChromaticKey] = recipe.chromaticAberration
+                settings[GalaxLiquidTintKey] = recipe.tintAlpha
             }
         }
     }
-
+    val onApplyLiquidTuning: (GalaxLiquidTuning) -> Unit = { raw ->
+        val recipe = raw.bounded()
+        glassPreferenceScope.launch {
+            preferencesContext.dataStore.edit { settings ->
+                settings[GalaxLiquidVariantKey] = liquidVariant.name
+                settings[LiquidGlassNavBarKey] = liquidVariant != GalaxLiquidVariant.DISABLED
+                settings[GalaxLiquidCornerRadiusKey] = recipe.cornerRadiusDp
+                settings[GalaxLiquidBlurKey] = recipe.blurRadiusDp
+                settings[GalaxLiquidRefractionHeightKey] = recipe.refractionHeight
+                settings[GalaxLiquidRefractionAmountKey] = recipe.refractionAmount
+                settings[GalaxLiquidChromaticKey] = recipe.chromaticAberration
+                settings[GalaxLiquidTintKey] = recipe.tintAlpha
+            }
+        }
+    }
     val (swipeToSong, onSwipeToSongChange) = rememberPreference(
         SwipeToSongKey,
         defaultValue = false
@@ -446,19 +493,17 @@ fun AppearanceSettings(
         )
 
         EnumListPreference(
-            title = { Text(stringResource(R.string.galax_glass_mode)) },
+            title = { Text("Galax Liquid Glass · 14 estilos + Desactivado") },
             icon = { Icon(painterResource(R.drawable.nav_bar), null) },
-            selectedValue = selectedGalaxGlassMode,
-            onValueSelected = onGalaxGlassModeChange,
-            valueText = { mode ->
-                when (mode) {
-                    GlassMode.FROSTED -> stringResource(R.string.galax_glass_frosted)
-                    GlassMode.CLEAR -> stringResource(R.string.galax_glass_clear)
-                    GlassMode.BLUR -> stringResource(R.string.galax_glass_blur)
-                    GlassMode.CLASSIC -> stringResource(R.string.galax_glass_classic)
-                    GlassMode.DISABLED -> stringResource(R.string.galax_glass_disabled)
-                }
-            },
+            selectedValue = liquidVariant,
+            onValueSelected = onLiquidVariantChange,
+            valueText = { it.title },
+        )
+        GalaxLiquidPlayground(
+            variant = liquidVariant,
+            tuning = liquidTuning,
+            onApply = onApplyLiquidTuning,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
         )
 
         EnumListPreference(
