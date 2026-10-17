@@ -23,6 +23,7 @@ import com.arturo254.opentune.constants.AppFontStyle
 import com.arturo254.opentune.constants.CustomThemeColorKey
 import com.arturo254.opentune.constants.DarkModeKey
 import com.arturo254.opentune.constants.DynamicThemeKey
+import com.arturo254.opentune.constants.GalaxReduceMotionKey
 import com.arturo254.opentune.constants.LyricsSyncOffsetKey
 import com.arturo254.opentune.constants.PureBlackKey
 import com.arturo254.opentune.constants.ThumbnailCornerRadiusKey
@@ -60,6 +61,7 @@ internal fun MainActivityThemeHost(
     val darkTheme by rememberEnumPreference(DarkModeKey, defaultValue = DarkMode.AUTO)
     val appFontStyle by rememberEnumPreference(AppFontKey, defaultValue = AppFontStyle.OPEN_TUNE)
     val lyricsSyncOffset by rememberPreference(LyricsSyncOffsetKey, defaultValue = 0)
+    val reduceMotion by rememberPreference(GalaxReduceMotionKey, defaultValue = false)
     val artworkCornerRadius by rememberPreference(ThumbnailCornerRadiusKey, defaultValue = 16f)
 
     val isSystemInDarkTheme = isSystemInDarkTheme()
@@ -177,6 +179,7 @@ internal fun MainActivityThemeHost(
         useGalaxBrandPalette = !enableDynamicTheme && customThemeColorValue == "default",
         appFontStyle = appFontStyle,
         artworkCornerRadiusDp = artworkCornerRadius,
+        reduceMotion = reduceMotion,
     ) {
         content(
             pureBlack,
