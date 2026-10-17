@@ -95,6 +95,9 @@ import com.arturo254.opentune.constants.CropThumbnailToSquareKey
 import com.arturo254.opentune.constants.DisableBlurKey
 import com.arturo254.opentune.constants.EnableHapticFeedbackKey
 import com.arturo254.opentune.constants.LiquidGlassNavBarKey
+import com.arturo254.opentune.constants.GalaxGlassModeKey
+import com.arturo254.opentune.core.designsystem.glass.GlassMode
+import com.arturo254.opentune.core.designsystem.glass.displayGalaxGlassMode
 import com.arturo254.opentune.constants.PlayerFullscreenKey
 import com.arturo254.opentune.constants.UseLyricsV2Key
 import com.arturo254.opentune.ui.component.DefaultDialog
@@ -220,6 +223,20 @@ fun AppearanceSettings(
         LiquidGlassNavBarKey,
         defaultValue = false
     )
+    val (storedGalaxGlassMode, onStoredGalaxGlassModeChange) = rememberPreference(
+        GalaxGlassModeKey,
+        defaultValue = "",
+    )
+    val selectedGalaxGlassMode = displayGalaxGlassMode(
+        storedGalaxGlassMode, liquidGlassNavBar,
+    )
+    val onGalaxGlassModeChange: (GlassMode) -> Unit = { mode ->
+        // Do not overwrite existing data on first launch. A user-initiated
+        // selection explicitly persists the new key, and keeps old builds
+        // consistent with the equivalent legacy on/off state.
+        onStoredGalaxGlassModeChange(mode.name)
+        onLiquidGlassNavBarChange(mode != GlassMode.DISABLED)
+    }
 
     val (swipeToSong, onSwipeToSongChange) = rememberPreference(
         SwipeToSongKey,
@@ -417,6 +434,22 @@ fun AppearanceSettings(
             icon = { Icon(painterResource(R.drawable.blur_off), null) },
             checked = disableBlur,
             onCheckedChange = onDisableBlurChange,
+        )
+
+        EnumListPreference(
+            title = { Text(stringResource(R.string.galax_glass_mode)) },
+            icon = { Icon(painterResource(R.drawable.nav_bar), null) },
+            selectedValue = selectedGalaxGlassMode,
+            onValueSelected = onGalaxGlassModeChange,
+            valueText = { mode ->
+                when (mode) {
+                    GlassMode.FROSTED -> stringResource(R.string.galax_glass_frosted)
+                    GlassMode.CLEAR -> stringResource(R.string.galax_glass_clear)
+                    GlassMode.BLUR -> stringResource(R.string.galax_glass_blur)
+                    GlassMode.CLASSIC -> stringResource(R.string.galax_glass_classic)
+                    GlassMode.DISABLED -> stringResource(R.string.galax_glass_disabled)
+                }
+            },
         )
 
         EnumListPreference(
@@ -894,12 +927,6 @@ fun AppearanceSettings(
             onCheckedChange = onSlimNavChange
         )
 
-        SwitchPreference(
-            title = { Text(stringResource(R.string.liquid_glass_navbar)) },
-            icon = { Icon(painterResource(R.drawable.nav_bar), null) },
-            checked = liquidGlassNavBar,
-            onCheckedChange = onLiquidGlassNavBarChange
-        )
 
         EnumListPreference(
             title = { Text(stringResource(R.string.grid_cell_size)) },
