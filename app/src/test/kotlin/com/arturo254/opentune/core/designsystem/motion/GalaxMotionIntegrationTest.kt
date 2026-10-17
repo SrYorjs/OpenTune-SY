@@ -33,8 +33,9 @@ class GalaxMotionIntegrationTest {
         assertTrue(settings.contains("galax_reduce_motion"))
         assertTrue(host.contains("rememberPreference(GalaxReduceMotionKey, defaultValue = false)"))
         assertTrue(host.contains("reduceMotion = reduceMotion"))
-        assertTrue(theme.contains("LocalMotionDurationScale provides"))
-        assertTrue(theme.contains("if (effectiveReducedMotion) zeroMotionScale else platformMotionScale"))
+        assertTrue(theme.contains("rememberCoroutineScope().coroutineContext[MotionDurationScale]"))
+        assertTrue(provider.contains("rememberCoroutineScope().coroutineContext[MotionDurationScale]"))
+        assertTrue(theme.contains("if (effectiveReducedMotion) colorScheme else updateTransition(colorScheme)"))
         assertTrue(provider.contains("LocalGalaxMotionPolicy provides galaxMotion"))
         assertTrue(glass.contains("if (policy.reducedMotion) return this"))
     }
