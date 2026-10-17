@@ -12,8 +12,8 @@ import androidx.compose.ui.platform.LocalContext
 /**
  * GalaxOT Glass Engine 4.5.4.
  *
- * Modes have independent optical profiles (4.5.5/4.5.6) while the global
- * persisted Appearance picker remains the responsibility of 4.5.7.
+ * Modes have independent optical profiles (4.5.5/4.5.6), with the persisted
+ * Appearance selector installed in 4.5.7.
  * CLASSIC remains wired to the existing Kyant optical preset.
  */
 enum class GlassMode { FROSTED, CLEAR, BLUR, CLASSIC, DISABLED }
@@ -128,8 +128,8 @@ fun resolveGalaxGlassPlan(
 
 
 /**
- * Local preview mode has priority over the legacy boolean. Until Appearance
- * persists its own mode in 4.5.7, a null selection preserves the on/off switch.
+ * Global selection has priority over the legacy boolean. A null or absent
+ * saved value preserves the existing on/off switch for upgraded users.
  */
 fun isGalaxGlassEnabled(legacyEnabled: Boolean, selectedMode: GlassMode?): Boolean =
     selectedMode?.let { it != GlassMode.DISABLED } ?: legacyEnabled
@@ -159,7 +159,7 @@ fun parseGalaxGlassMode(saved: String?): GlassMode? =
 fun displayGalaxGlassMode(saved: String?, legacyEnabled: Boolean): GlassMode =
     parseGalaxGlassMode(saved) ?: if (legacyEnabled) GlassMode.CLASSIC else GlassMode.DISABLED
 
-/** Null means the old Liquid Glass switch remains the source of truth. */
+/** Null means there is no explicit stored selection; use the old preference. */
 val LocalGalaxGlassMode = staticCompositionLocalOf<GlassMode?> { null }
 
 @Composable
