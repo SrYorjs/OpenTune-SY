@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.R
@@ -73,7 +74,7 @@ fun V2PlayerTopActions(
         ) {
             Image(
                 painter = painterResource(R.drawable.share),
-                contentDescription = null,
+                contentDescription = stringResource(R.string.share),
                 colorFilter = ColorFilter.tint(iconButtonColor),
                 modifier = Modifier.align(Alignment.Center).size(24.dp)
             )
@@ -87,7 +88,7 @@ fun V2PlayerTopActions(
         ) {
             Image(
                 painter = painterResource(playerFavoriteIconRes(liked)),
-                contentDescription = null,
+                contentDescription = stringResource(if (liked) R.string.player_a11y_unlike else R.string.player_a11y_like),
                 colorFilter = ColorFilter.tint(iconButtonColor),
                 modifier = Modifier.align(Alignment.Center).size(24.dp)
             )
