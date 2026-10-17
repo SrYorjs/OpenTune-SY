@@ -32,6 +32,7 @@ class GalaxOTBrandingContractTest {
         val appName = source("res/values/app_name.xml")
         assertTrue(appName.contains("<string name=\"app_name\">GalaxOT</string>"))
         assertFalse(appName.contains(">OpenTune<"))
+        assertTrue(File(repo, "src/debug/res/values/app_name.xml").readText().contains("GalaxOT Debug"))
         assertTrue(source("res/values/strings.xml").contains("GalaxOT"))
         assertTrue(source("res/values-es/strings.xml").contains("GalaxOT"))
         assertTrue(source("res/values/opentune_strings.xml").contains("GalaxOT"))
