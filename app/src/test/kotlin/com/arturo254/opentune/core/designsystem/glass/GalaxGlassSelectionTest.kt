@@ -60,18 +60,20 @@ class GalaxGlassSelectionTest {
         assertFalse(appearance.contains("checked = liquidGlassNavBar,"))
     }
 
-    @Test fun android17RenderThreadCrashGuardDisablesRecursiveCapture() {
+    @Test fun kyantCanvasBackdropIsolatedFromNavHostRenderNodes() {
         val scaffold = source("MainActivityScaffold.kt")
+        val canvas = source("core/designsystem/glass/GalaxCanvasBackdrop.kt")
         assertTrue(scaffold.contains("parseGalaxGlassMode(storedGalaxGlassMode)"))
         assertTrue(scaffold.contains("LocalGalaxGlassMode provides selectedGlassMode"))
         assertTrue(scaffold.contains("LocalEnableLiquidGlass provides enableGalaxGlass"))
-        assertTrue(scaffold.contains("LocalLiquidBackdrop provides null"))
-        // Never recreate the native cyclic RenderNode capture path before a
-        // dedicated physical-device validation of a redesigned backend.
+        assertTrue(scaffold.contains("LocalLiquidBackdrop provides if (enableAmbientBackdrop)"))
+        assertTrue(scaffold.contains("LocalGalaxSafeCanvasBackdrop provides enableAmbientBackdrop"))
+        assertTrue(scaffold.contains("rememberGalaxCanvasBackdrop(pureBlack)"))
+        assertTrue(canvas.contains("rememberCanvasBackdrop(onDraw = drawAmbient)"))
         assertFalse(scaffold.contains("rememberLayerBackdrop("))
         assertFalse(scaffold.contains("Modifier.layerBackdrop("))
-        assertFalse(scaffold.contains("canCaptureBackdrop"))
-        assertFalse(scaffold.contains("LocalLiquidBackdrop provides liveGlassBackdrop"))
+        assertFalse(canvas.contains("Modifier.layerBackdrop("))
+        assertFalse(canvas.contains("rememberLayerBackdrop("))
     }
 
     @Test fun englishAndSpanishOptionsAreAllPresent() {
