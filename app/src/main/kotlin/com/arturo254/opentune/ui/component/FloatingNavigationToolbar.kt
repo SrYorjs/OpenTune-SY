@@ -72,6 +72,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.navigation.OpenTuneNavigationDimensions
+import com.arturo254.opentune.core.designsystem.motion.GalaxHapticCue
+import com.arturo254.opentune.core.designsystem.motion.rememberGalaxHapticFeedback
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.theme.shapes
 import com.arturo254.opentune.ui.screens.Screens
@@ -195,6 +197,7 @@ private fun ToolbarItemsContainer(
     onItemClick: (Screens, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val haptic = rememberGalaxHapticFeedback()
     Row(
         modifier = modifier.wrapContentWidth(),
         horizontalArrangement = Arrangement.spacedBy(1.dp),
@@ -208,7 +211,10 @@ private fun ToolbarItemsContainer(
                 showSelectedLabel = showSelectedLabels,
                 slideFromEnd = slideFromEnd,
                 pureBlack = pureBlack,
-                onClick = { onItemClick(screen, selected) },
+                onClick = {
+                    haptic(GalaxHapticCue.SELECTION)
+                    onItemClick(screen, selected)
+                },
                 modifier = Modifier,
             )
         }
