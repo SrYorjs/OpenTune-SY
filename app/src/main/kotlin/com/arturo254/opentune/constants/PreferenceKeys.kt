@@ -144,6 +144,15 @@ val LiquidGlassNavBarKey = booleanPreferencesKey("liquid_glass_nav_bar")
 // Empty/absent value preserves the legacy switch until the user chooses a material.
 val GalaxGlassModeKey = stringPreferencesKey("galax_glass_mode")
 
+val GalaxLiquidVariantKey = stringPreferencesKey("galax_liquid_variant_v2")
+val GalaxLiquidCornerRadiusKey = floatPreferencesKey("galax_liquid_corner_radius")
+val GalaxLiquidBlurKey = floatPreferencesKey("galax_liquid_blur")
+val GalaxLiquidRefractionHeightKey = floatPreferencesKey("galax_liquid_refraction_height")
+val GalaxLiquidRefractionAmountKey = floatPreferencesKey("galax_liquid_refraction_amount")
+val GalaxLiquidChromaticKey = floatPreferencesKey("galax_liquid_chromatic")
+val GalaxLiquidTintKey = floatPreferencesKey("galax_liquid_tint")
+
+
 val EqualizerEnabledKey = booleanPreferencesKey("equalizerEnabled")
 val EqualizerBandLevelsMbKey = stringPreferencesKey("equalizerBandLevelsMb")
 val EqualizerOutputGainEnabledKey = booleanPreferencesKey("equalizerOutputGainEnabled")
