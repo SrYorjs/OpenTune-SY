@@ -42,6 +42,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.arturo254.opentune.core.designsystem.glass.GlassMode
+import com.arturo254.opentune.core.designsystem.glass.GlassOptics
+import com.arturo254.opentune.core.designsystem.glass.GlassSurfaceSpec
+import com.arturo254.opentune.core.designsystem.glass.GlassSurfaceType
+import com.arturo254.opentune.core.designsystem.glass.galaxGlassEffect
 import com.arturo254.opentune.core.designsystem.component.OpenTuneContextMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -134,14 +139,20 @@ fun FloatingNavigationToolbar(
                         else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.94f)
                     }
                 )
-                .liquidGlassSurface(
+                .galaxGlassEffect(
                     shape = barShape,
                     pureBlack = pureBlack,
-                    blurRadius = 4,
-                    refraction = 0.045f,
-                    curve = 0.10f,
-                    dispersion = 0.0015f,
-                    edge = 0f,
+                    spec = GlassSurfaceSpec(
+                        mode = GlassMode.CLASSIC,
+                        surface = GlassSurfaceType.NAVIGATION,
+                        optics = GlassOptics(
+                            blurRadius = 4,
+                            refraction = 0.045f,
+                            curve = 0.10f,
+                            dispersion = 0.0015f,
+                            edge = 0f,
+                        ),
+                    ),
                 )
                 .padding(
                     horizontal = OpenTuneNavigationDimensions.floatingHorizontalPadding,
