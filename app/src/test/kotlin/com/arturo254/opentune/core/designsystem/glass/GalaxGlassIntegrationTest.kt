@@ -44,6 +44,24 @@ class GalaxGlassIntegrationTest {
         assertTrue(facade.contains("motion.reducedMotion"))
     }
 
+    @Test fun newModesRouteThroughOneRendererWithoutBreakingClassic() {
+        val engine = source("core/designsystem/glass/GlassEngine.kt")
+        val facade = source("core/designsystem/glass/GalaxGlassSurface.kt")
+        val materials = source("core/designsystem/glass/GalaxGlassMaterials.kt")
+        val contracts = source("core/designsystem/glass/GalaxGlassContracts.kt")
+        assertTrue(facade.contains("resolveGalaxGlassSpec(spec, globalMode)"))
+        assertTrue(facade.contains("isGalaxGlassEnabled("))
+        assertTrue(facade.contains("material = material"))
+        assertTrue(engine.contains("material?.enableVibrancy != false"))
+        assertTrue(engine.contains("enableLens && material?.enableLens != false"))
+        assertTrue(engine.contains("material?.fallbackTint ?: fallbackSurface"))
+        assertTrue(engine.contains("if (!shaderAllowed)"))
+        assertTrue(engine.contains("brush = Brush.linearGradient("))
+        assertTrue(materials.contains("GlassMode.CLASSIC, GlassMode.DISABLED"))
+        assertTrue(contracts.contains("spec.copy(mode = globalMode, optics = null)"))
+        assertFalse(facade.contains("spec.copy(mode = selectedMode)"))
+    }
+
     @Test fun globalModesAreNotSilentlyWrittenToDataStoreBeforeFourFiveSeven() {
         val plan = source("core/designsystem/glass/GalaxGlassContracts.kt")
         assertTrue(plan.contains("staticCompositionLocalOf<GlassMode?> { null }"))
