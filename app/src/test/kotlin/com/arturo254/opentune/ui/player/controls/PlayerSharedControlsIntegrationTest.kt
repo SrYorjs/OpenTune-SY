@@ -28,7 +28,7 @@ class PlayerSharedControlsIntegrationTest {
         assertTrue(controls.contains("playerPlaybackIconRes(playbackState, isPlaying)"))
         assertTrue(controls.contains("playerFavoriteIconRes(currentSongLiked"))
         assertTrue(controls.contains("playerRepeatIconRes(repeatMode)"))
-        assertTrue(controls.contains("LiquidGlassIconButton("))
+        assertTrue(v8.contains("LiquidGlassIconButton("))
         assertTrue(controls.contains("V2PlayerTransport("))
         assertTrue(v2.contains("FilledTonalIconButton("))
         assertTrue(controls.contains("ResizableIconButton("))
