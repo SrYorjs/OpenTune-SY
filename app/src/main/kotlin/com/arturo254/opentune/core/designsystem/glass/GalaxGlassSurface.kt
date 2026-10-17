@@ -1,5 +1,7 @@
 package com.arturo254.opentune.core.designsystem.glass
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -8,6 +10,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 import com.arturo254.opentune.core.designsystem.theme.shapes
@@ -23,27 +27,36 @@ fun Modifier.galaxGlassEffect(
     pureBlack: Boolean,
     spec: GlassSurfaceSpec = GlassSurfaceSpec(),
 ): Modifier {
-    val enabled = LocalEnableLiquidGlass.current
+    val globalMode = LocalGalaxGlassMode.current
+    val enabled = isGalaxGlassEnabled(LocalEnableLiquidGlass.current, globalMode)
     val backdrop = LocalLiquidBackdrop.current
-    val selectedMode = LocalGalaxGlassMode.current ?: spec.mode
+    val selectedMode = globalMode ?: spec.mode
     val motion = OpenTuneDesignSystem.galaxMotion
     val caps = rememberGalaxGlassCapabilities(hasLiveBackdrop = backdrop != null)
-    val resolvedSpec = remember(spec, selectedMode) { spec.copy(mode = selectedMode) }
+    val resolvedSpec = remember(spec, globalMode) { resolveGalaxGlassSpec(spec, globalMode) }
     val plan = remember(enabled, caps, resolvedSpec, motion.reducedMotion) {
         resolveGalaxGlassPlan(enabled, resolvedSpec, caps, motion.reducedMotion)
     }
-    if (plan.renderer == GlassRenderMode.OPAQUE) return this
+    if (plan.renderer == GlassRenderMode.OPAQUE) {
+        // Preserve the legacy disabled-toggle no-op; an explicit DISABLED
+        // selection renders a fully opaque, clipped surface instead.
+        if (selectedMode != GlassMode.DISABLED) return this
+        return this.clip(shape)
+            .background(if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainerHigh)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, shape)
+    }
     val dark = pureBlack || MaterialTheme.colorScheme.background.luminance() < 0.45f
-    val material = galaxGlassMaterial(plan.mode, dark)
+    val material = if (plan.mode == GlassMode.CLASSIC) null else galaxGlassMaterial(
+        plan.mode, dark, MaterialTheme.colorScheme.primary,
+        if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainerHigh,
+    )
     return this.openTuneGlassEffect(
         shape = shape,
         pureBlack = pureBlack,
         optics = plan.optics,
         renderModeOverride = plan.renderer,
         allowStaticShader = plan.fallback == GlassFallbackStrategy.STATIC_SHADER,
-        surfaceTintOverride = material.surfaceTint,
-        borderTintOverride = material.borderTint,
-        enableLens = plan.mode != GlassMode.BLUR,
+        material = material,
     )
 }
 
@@ -61,8 +74,8 @@ fun GalaxGlassSurface(
     opaqueColor: Color = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val enabled = LocalEnableLiquidGlass.current
-    val selectedMode = LocalGalaxGlassMode.current ?: spec.mode
+    val globalMode = LocalGalaxGlassMode.current
+    val enabled = isGalaxGlassEnabled(LocalEnableLiquidGlass.current, globalMode)
     val caps = rememberGalaxGlassCapabilities(LocalLiquidBackdrop.current != null)
     val motion = OpenTuneDesignSystem.galaxMotion
     val resolvedSpec = remember(spec, selectedMode) { spec.copy(mode = selectedMode) }
@@ -70,7 +83,10 @@ fun GalaxGlassSurface(
         resolveGalaxGlassPlan(enabled, resolvedSpec, caps, motion.reducedMotion)
     }
     val dark = pureBlack || MaterialTheme.colorScheme.background.luminance() < 0.45f
-    val material = galaxGlassMaterial(plan.mode, dark)
+    val material = if (plan.mode == GlassMode.CLASSIC || plan.mode == GlassMode.DISABLED) null else galaxGlassMaterial(
+        plan.mode, dark, MaterialTheme.colorScheme.primary,
+        if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainerHigh,
+    )
     GlassSurface(
         modifier = modifier,
         shape = shape,
@@ -78,9 +94,7 @@ fun GalaxGlassSurface(
         optics = plan.optics,
         renderModeOverride = plan.renderer,
         allowStaticShader = plan.fallback == GlassFallbackStrategy.STATIC_SHADER,
-        surfaceTintOverride = material.surfaceTint,
-        borderTintOverride = material.borderTint,
-        enableLens = plan.mode != GlassMode.BLUR,
+        material = material,
         opaqueColor = opaqueColor,
         content = content,
     )
