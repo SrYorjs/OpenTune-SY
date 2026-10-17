@@ -51,7 +51,7 @@ class GalaxOTBrandingContractTest {
     @Test fun adaptiveIconContainsTheBrandmarkAndThemedMonochrome() {
         val xml = source("res/mipmap-anydpi-v26/ic_launcher.xml")
         assertTrue(xml.contains("@color/galaxot_launcher_background"))
-        assertTrue(xml.contains("@drawable/galaxot_launcher_foreground"))
+        assertTrue(xml.contains("@drawable/galaxot_icon_transparent"))
         assertTrue(xml.contains("@drawable/galaxot_launcher_monochrome"))
         for (path in listOf(
             "drawable-nodpi/galaxot_logo.webp",
@@ -79,6 +79,27 @@ class GalaxOTBrandingContractTest {
                 assertEquals('N'.code, bytes[2].toInt())
                 assertEquals('G'.code, bytes[3].toInt())
             }
+        }
+    }
+
+    @Test fun launcherBackgroundsAndOriginalIconUseRealAlphaTransparency() {
+        val main = resource("res/drawable-nodpi/galaxot_icon_transparent.png")
+        assertTrue("Original GalaxOT icon image is missing", main.isFile)
+        val mainImage = javax.imageio.ImageIO.read(main)
+        assertTrue(mainImage.colorModel.hasAlpha())
+        assertEquals(0, mainImage.getRGB(0, 0) ushr 24)
+        assertTrue(source("res/values/galaxot_brand.xml").contains(
+            "<color name=\"galaxot_launcher_background\">#00000000</color>"
+        ))
+        for (density in listOf("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi")) {
+            val icon = javax.imageio.ImageIO.read(resource("res/mipmap-$density/ic_launcher.png"))
+            assertTrue("Missing alpha for $density", icon.colorModel.hasAlpha())
+            assertEquals("$density corner should be transparent", 0, icon.getRGB(0, 0) ushr 24)
+            val background = javax.imageio.ImageIO.read(
+                resource("res/mipmap-$density/ic_launcher_background.png")
+            )
+            assertEquals("$density background should be transparent", 0,
+                background.getRGB(0, 0) ushr 24)
         }
     }
 
