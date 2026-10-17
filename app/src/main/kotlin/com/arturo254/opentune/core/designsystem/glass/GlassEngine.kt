@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
@@ -85,6 +86,7 @@ fun Modifier.openTuneGlassEffect(
     surfaceTintOverride: Color? = null,
     borderTintOverride: Color? = null,
     enableLens: Boolean = true,
+    material: GalaxGlassMaterial? = null,
 ): Modifier {
     val enabled = LocalEnableLiquidGlass.current
     val backdrop = LocalLiquidBackdrop.current
@@ -95,8 +97,34 @@ fun Modifier.openTuneGlassEffect(
         pureBlack || MaterialTheme.colorScheme.background.luminance() < 0.45f
     val designColors = OpenTuneDesignSystem.colors
     val surfaceTokens = OpenTuneDesignSystem.surfaces
-    val fallbackSurface = surfaceTintOverride ?: designColors.surfaceGlass
-    val borderColor = borderTintOverride ?: designColors.outlineGlass
+    val fallbackSurface = material?.surfaceTint ?: surfaceTintOverride ?: designColors.surfaceGlass
+    val borderColor = material?.borderTint ?: borderTintOverride ?: designColors.outlineGlass
+    // New materials get cached Compose brush layers, without another blur pass.
+    // CLASSIC has no material overrides, retaining its exact legacy rendering.
+    val surfaceFinish = if (material != null && material.sheenTop != Color.Transparent) {
+        Modifier.background(
+            Brush.verticalGradient(
+                0f to material.sheenTop,
+                0.38f to Color.Transparent,
+                1f to material.sheenBottom,
+            ),
+            shape,
+        )
+    } else Modifier
+    val fallbackRim = if (material?.rimTop != null && material.rimBottom != null) {
+        Modifier.border(
+            width = surfaceTokens.borders.fallbackGlassWidth,
+            brush = Brush.linearGradient(listOf(material.rimTop, material.rimBottom)),
+            shape = shape,
+        )
+    } else Modifier.border(surfaceTokens.borders.fallbackGlassWidth, borderColor, shape)
+    val activeRim = if (material?.rimTop != null && material.rimBottom != null) {
+        Modifier.border(
+            width = surfaceTokens.borders.activeGlassWidth,
+            brush = Brush.linearGradient(listOf(material.rimTop, material.rimBottom)),
+            shape = shape,
+        )
+    } else Modifier.border(surfaceTokens.borders.activeGlassWidth, borderColor, shape)
 
     if (mode == GlassRenderMode.STATIC_FALLBACK) {
         val density = LocalDensity.current
@@ -109,7 +137,8 @@ fun Modifier.openTuneGlassEffect(
                 )
             }
         val useSafeShader =
-            allowStaticShader && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            allowStaticShader && material?.enableStaticLens != false &&
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                 surfaceSize != Size.Zero
 
         return this
@@ -118,7 +147,7 @@ fun Modifier.openTuneGlassEffect(
                 if (next != surfaceSize) surfaceSize = next
             }
             .clip(shape)
-            .background(fallbackSurface)
+            .background(material?.fallbackTint ?: fallbackSurface)
             .then(
                 if (useSafeShader) {
                     Modifier.liquidGlass(
@@ -138,10 +167,11 @@ fun Modifier.openTuneGlassEffect(
                     Modifier
                 }
             )
-            .border(surfaceTokens.borders.fallbackGlassWidth, borderColor, shape)
+            .then(surfaceFinish)
+            .then(fallbackRim)
     }
 
-    val blurDp = optics.blurRadius.coerceIn(2, 12).dp
+    val blurDp = optics.blurRadius.coerceIn(2, if (material == null) 12 else 22).dp
     val lensRadius = (11f + optics.refraction.coerceIn(0f, 0.14f) * 110f).dp
     val lensDepth = (17f + optics.curve.coerceIn(0f, 0.30f) * 58f).dp
     val highlightAlpha =
@@ -153,9 +183,9 @@ fun Modifier.openTuneGlassEffect(
             backdrop = liveBackdrop,
             shape = { shape },
             effects = {
-                vibrancy()
+                if (material?.enableVibrancy != false) vibrancy()
                 blur(blurDp.toPx())
-                if (enableLens) {
+                if (enableLens && material?.enableLens != false) {
                     lens(
                         lensRadius.toPx(),
                         lensDepth.toPx(),
@@ -164,7 +194,8 @@ fun Modifier.openTuneGlassEffect(
                 }
             },
             highlight = {
-                Highlight.Ambient.copy(alpha = highlightAlpha)
+                Highlight.Ambient.copy(alpha =
+                    (highlightAlpha * (material?.highlightScale ?: 1f)).coerceIn(0f, 1f))
             },
             shadow = {
                 Shadow(
@@ -185,11 +216,8 @@ fun Modifier.openTuneGlassEffect(
             },
         )
         .clip(shape)
-        .border(
-            width = surfaceTokens.borders.activeGlassWidth,
-            color = borderColor,
-            shape = shape,
-        )
+        .then(surfaceFinish)
+        .then(activeRim)
 }
 
 /**
@@ -208,10 +236,13 @@ fun GlassSurface(
     surfaceTintOverride: Color? = null,
     borderTintOverride: Color? = null,
     enableLens: Boolean = true,
+    material: GalaxGlassMaterial? = null,
     opaqueColor: Color = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val enabled = LocalEnableLiquidGlass.current && renderModeOverride != GlassRenderMode.OPAQUE
+    // Explicit render plans must not be cancelled by the legacy boolean toggle.
+    val enabled = renderModeOverride?.let { it != GlassRenderMode.OPAQUE }
+        ?: LocalEnableLiquidGlass.current
     val borders = OpenTuneDesignSystem.surfaces.borders
     Box(
         modifier = modifier
@@ -219,7 +250,11 @@ fun GlassSurface(
             .background(if (enabled) Color.Transparent else opaqueColor)
             .then(
                 if (enabled) {
-                    Modifier.openTuneGlassEffect(shape, pureBlack, optics, renderModeOverride, allowStaticShader, surfaceTintOverride, borderTintOverride, enableLens)
+                    Modifier.openTuneGlassEffect(
+                        shape, pureBlack, optics, renderModeOverride,
+                        allowStaticShader, surfaceTintOverride, borderTintOverride,
+                        enableLens, material,
+                    )
                 } else {
                     Modifier.border(
                         width = borders.glassCardWidth,
