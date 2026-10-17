@@ -55,11 +55,21 @@ class GalaxGlassMaterialsTest {
         for (mode in listOf(GlassMode.FROSTED, GlassMode.CLEAR, GlassMode.BLUR)) {
             val dark = galaxGlassMaterial(mode, true, accent, darkBase)
             val light = galaxGlassMaterial(mode, false, accent, lightBase)
-            assertTrue(dark.fallbackTint!!.alpha >= 0.90f)
-            assertTrue(light.fallbackTint!!.alpha >= 0.90f)
+            assertTrue(dark.fallbackTint!!.alpha >= 0.75f)
+            assertTrue(light.fallbackTint!!.alpha >= 0.80f)
             assertEquals(darkBase.red, dark.fallbackTint!!.red, 0.0001f)
             assertEquals(lightBase.blue, light.fallbackTint!!.blue, 0.0001f)
             assertEquals(accent.blue, dark.sheenBottom.blue, 0.0001f)
+        }
+    }
+
+    @Test fun clearIsMoreTransparentThanFrostedAndBlurInSafeMode() {
+        for (dark in listOf(true, false)) {
+            val clear = galaxGlassMaterial(GlassMode.CLEAR, dark).fallbackTint!!
+            val frosted = galaxGlassMaterial(GlassMode.FROSTED, dark).fallbackTint!!
+            val blur = galaxGlassMaterial(GlassMode.BLUR, dark).fallbackTint!!
+            assertTrue(clear.alpha < frosted.alpha)
+            assertTrue(clear.alpha < blur.alpha)
         }
     }
 
