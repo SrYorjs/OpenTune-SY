@@ -36,7 +36,7 @@ fun rememberGalaxCanvasBackdrop(pureBlack: Boolean): Backdrop {
     val drawAmbient: DrawScope.() -> Unit = remember(base, nebula, edge) {
         {
             drawRect(base)
-            val radius = size.maxDimension.coerceAtLeast(1f)
+            val radius = maxOf(size.width, size.height).coerceAtLeast(1f)
             val first = Offset(size.width * 0.78f, size.height * 0.16f)
             val second = Offset(size.width * 0.18f, size.height * 0.88f)
             drawCircle(
