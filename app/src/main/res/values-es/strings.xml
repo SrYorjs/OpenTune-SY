@@ -743,4 +743,10 @@
     <string name="universal_versions_close">Cerrar</string>
     <string name="universal_versions_original">Versión original / no indicada</string>
     <string name="universal_versions_play_error">No se pudo reproducir la versión seleccionada</string>
+    <!-- Player 2.0 TalkBack labels (4.18) -->
+    <string name="player_a11y_previous">Canción anterior</string>
+    <string name="player_a11y_pause">Pausar reproducción</string>
+    <string name="player_a11y_like">Añadir a favoritos</string>
+    <string name="player_a11y_unlike">Quitar de favoritos</string>
+    <string name="player_a11y_repeat">Cambiar modo de repetición</string>
 </resources>
