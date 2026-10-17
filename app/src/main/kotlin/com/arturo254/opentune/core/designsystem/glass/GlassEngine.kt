@@ -81,6 +81,7 @@ fun Modifier.openTuneGlassEffect(
     pureBlack: Boolean,
     optics: GlassOptics = GlassPreset.STANDARD.optics,
     renderModeOverride: GlassRenderMode? = null,
+    allowStaticShader: Boolean = true,
 ): Modifier {
     val enabled = LocalEnableLiquidGlass.current
     val backdrop = LocalLiquidBackdrop.current
@@ -105,7 +106,7 @@ fun Modifier.openTuneGlassEffect(
                 )
             }
         val useSafeShader =
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            allowStaticShader && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                 surfaceSize != Size.Zero
 
         return this
@@ -198,6 +199,7 @@ fun GlassSurface(
     preset: GlassPreset = GlassPreset.STANDARD,
     optics: GlassOptics = preset.optics,
     renderModeOverride: GlassRenderMode? = null,
+    allowStaticShader: Boolean = true,
     opaqueColor: Color = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
     content: @Composable BoxScope.() -> Unit,
 ) {
@@ -209,7 +211,7 @@ fun GlassSurface(
             .background(if (enabled) Color.Transparent else opaqueColor)
             .then(
                 if (enabled) {
-                    Modifier.openTuneGlassEffect(shape, pureBlack, optics, renderModeOverride)
+                    Modifier.openTuneGlassEffect(shape, pureBlack, optics, renderModeOverride, allowStaticShader)
                 } else {
                     Modifier.border(
                         width = borders.glassCardWidth,
