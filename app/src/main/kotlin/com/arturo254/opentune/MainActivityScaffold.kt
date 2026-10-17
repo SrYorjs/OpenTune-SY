@@ -179,10 +179,6 @@ import com.arturo254.opentune.core.designsystem.glass.LocalGalaxGlassMode
 import com.arturo254.opentune.core.designsystem.glass.LocalLiquidBackdrop
 import com.arturo254.opentune.core.designsystem.glass.parseGalaxGlassMode
 import com.arturo254.opentune.core.designsystem.glass.isGalaxGlassEnabled
-import com.arturo254.opentune.core.designsystem.glass.GlassMode
-import com.arturo254.opentune.core.designsystem.glass.rememberGalaxGlassCapabilities
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.skydoves.cloudy.rememberSky
 import com.arturo254.opentune.constants.LyricsSyncOffsetKey
 import com.arturo254.opentune.constants.MiniPlayerBottomSpacing
@@ -312,24 +308,11 @@ internal fun MainActivityScaffold(
     val selectedGlassMode = parseGalaxGlassMode(storedGalaxGlassMode)
     val enableGalaxGlass = isGalaxGlassEnabled(liquidGlassNavBar, selectedGlassMode)
     val liquidGlassSky = rememberSky()
-    // CLASSIC (and un-migrated legacy settings) stay on their original
-    // Sky/Cloudy optical path. New materials alone activate the live Kyant
-    // capture, avoiding accidental Classic visual regressions.
-    val newMaterialSelected = selectedGlassMode == GlassMode.FROSTED ||
-        selectedGlassMode == GlassMode.CLEAR || selectedGlassMode == GlassMode.BLUR
-    val glassBudget = rememberGalaxGlassCapabilities(hasLiveBackdrop = false)
-    val canCaptureBackdrop = enableGalaxGlass && newMaterialSelected &&
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-        !glassBudget.isPowerSaveMode && !glassBudget.isLowRamDevice
-    // Capture route content behind the overlays, never the whole Scaffold:
-    // no feedback loop and no GPU capture cost for CLASSIC/DISABLED/low tier.
-    val liveGlassBackdrop = if (canCaptureBackdrop) {
-        val backingSurface = MaterialTheme.colorScheme.surface
-        rememberLayerBackdrop {
-            drawRect(backingSurface)
-            drawContent()
-        }
-    } else null
+    // CRASH GUARD (4.5.7 / Android 17): Never capture the NavHost with
+    // Kyant layerBackdrop. RenderThread enters a recursive RenderNode graph
+    // (native SIGSEGV/stack overflow) when a live material is selected.
+    // The planner must use its non-capturing, contrast-safe material fallback
+    // until a separate, isolated capture surface passes device validation.
     val menuState = remember { MenuState() }
 
     val haptic = LocalHapticFeedback.current
@@ -395,7 +378,7 @@ internal fun MainActivityScaffold(
                         LocalShimmerTheme provides ShimmerTheme,
                         LocalSyncUtils provides syncUtils,
                         LocalSky provides liquidGlassSky,
-                        LocalLiquidBackdrop provides liveGlassBackdrop,
+                        LocalLiquidBackdrop provides null,
                         LocalGalaxGlassMode provides selectedGlassMode,
                         LocalEnableLiquidGlass provides enableGalaxGlass,
                         LocalBottomSheetPageState provides bottomSheetPageState,
@@ -526,11 +509,6 @@ internal fun MainActivityScaffold(
                                             )
                                         },
                                         modifier = Modifier
-                                            .then(
-                                                if (liveGlassBackdrop != null) {
-                                                    Modifier.layerBackdrop(liveGlassBackdrop)
-                                                } else Modifier
-                                            )
                                             .nestedScroll(
                                                 if (
                                                     navigationItems.fastAny {
