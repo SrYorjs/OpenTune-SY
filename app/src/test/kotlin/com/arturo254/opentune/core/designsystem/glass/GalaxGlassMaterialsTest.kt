@@ -63,6 +63,19 @@ class GalaxGlassMaterialsTest {
         }
     }
 
+    @Test fun lowTierAvoidsGradientAndRimWork() {
+        for (mode in listOf(GlassMode.FROSTED, GlassMode.CLEAR, GlassMode.BLUR)) {
+            val material = galaxGlassMaterial(mode, true)
+            val low = material.forPerformanceTier(GlassPerformanceTier.LOW)
+            assertEquals(material, material.forPerformanceTier(GlassPerformanceTier.HIGH))
+            assertEquals(material, material.forPerformanceTier(GlassPerformanceTier.BALANCED))
+            assertEquals(androidx.compose.ui.graphics.Color.Transparent, low.sheenTop)
+            assertNull(low.rimTop)
+            assertNull(low.rimBottom)
+            assertEquals(material.fallbackTint, low.fallbackTint)
+        }
+    }
+
     @Test fun clearRetainsAVisibleOutlineWhileFrostedRetainsDiffusion() {
         val clear = galaxGlassMaterial(GlassMode.CLEAR, true)
         val frosted = galaxGlassMaterial(GlassMode.FROSTED, true)
