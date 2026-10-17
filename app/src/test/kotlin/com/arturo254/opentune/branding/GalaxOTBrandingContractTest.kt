@@ -39,6 +39,15 @@ class GalaxOTBrandingContractTest {
         assertTrue(source("res/values-es/opentune_strings.xml").contains("GalaxOT"))
     }
 
+    @Test fun publicationTitlesUseTheSameGalaxOTBrand() {
+        val root = if (File("fastlane").isDirectory) File(".") else File("..")
+        for (locale in listOf("en-US", "es-ES")) {
+            val dir = File(root, "fastlane/metadata/android/$locale")
+            assertEquals("GalaxOT", File(dir, "title.txt").readText().trim())
+            assertTrue(File(dir, "short_description.txt").readText().contains("GalaxOT"))
+        }
+    }
+
     @Test fun adaptiveIconContainsTheBrandmarkAndThemedMonochrome() {
         val xml = source("res/mipmap-anydpi-v26/ic_launcher.xml")
         assertTrue(xml.contains("@color/galaxot_launcher_background"))
