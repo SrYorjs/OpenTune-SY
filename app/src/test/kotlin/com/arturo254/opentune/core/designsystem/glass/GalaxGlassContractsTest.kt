@@ -108,6 +108,25 @@ class GalaxGlassContractsTest {
         assertEquals(GlassFallbackStrategy.STATIC_SHADER, clear.fallback)
     }
 
+    @Test fun android17RejectsEvenAccidentallySuppliedLiveBackdrop() {
+        for (mode in listOf(GlassMode.FROSTED, GlassMode.CLEAR, GlassMode.BLUR)) {
+            val plan = resolveGalaxGlassPlan(
+                enabled = true,
+                spec = GlassSurfaceSpec(mode = mode),
+                capabilities = caps(sdk = 37, backdrop = true),
+            )
+            assertEquals(GlassRenderMode.STATIC_FALLBACK, plan.renderer)
+            assertEquals(GlassFallbackStrategy.TINT_AND_OUTLINE, plan.fallback)
+            assertFalse(plan.hasExpensiveBackdrop)
+        }
+        // Classic retains its established behavior; root does not supply a new capture.
+        val classic = resolveGalaxGlassPlan(
+            true, GlassSurfaceSpec(mode = GlassMode.CLASSIC),
+            caps(sdk = 37, backdrop = true),
+        )
+        assertEquals(GlassRenderMode.LIVE_BACKDROP, classic.renderer)
+    }
+
     @Test fun android17NewMaterialsNeverRequestUnvalidatedSkyShader() {
         for (mode in listOf(GlassMode.FROSTED, GlassMode.CLEAR, GlassMode.BLUR)) {
             val plan = resolveGalaxGlassPlan(
