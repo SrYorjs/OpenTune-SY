@@ -147,7 +147,19 @@ fun resolveGalaxGlassSpec(
     else -> spec.copy(mode = globalMode, optics = null)
 }
 
-/** Null means legacy on/off selection: the 4.5.7 five-way selector is not active yet. */
+/**
+ * Persistent 4.5.7 selector contract.
+ * Unknown or absent values are intentionally treated as an un-migrated legacy
+ * preference rather than forcibly switching the user's existing glass state.
+ */
+fun parseGalaxGlassMode(saved: String?): GlassMode? =
+    GlassMode.entries.firstOrNull { it.name.equals(saved, ignoreCase = true) }
+
+/** Shown selection when no Galax Glass key has been saved. */
+fun displayGalaxGlassMode(saved: String?, legacyEnabled: Boolean): GlassMode =
+    parseGalaxGlassMode(saved) ?: if (legacyEnabled) GlassMode.CLASSIC else GlassMode.DISABLED
+
+/** Null means the old Liquid Glass switch remains the source of truth. */
 val LocalGalaxGlassMode = staticCompositionLocalOf<GlassMode?> { null }
 
 @Composable
