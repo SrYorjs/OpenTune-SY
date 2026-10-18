@@ -217,6 +217,8 @@ import com.arturo254.opentune.ui.component.LocalMenuState
 import com.arturo254.opentune.ui.component.LocalSky
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
 import com.arturo254.opentune.ui.component.LiquidGlassControlCluster
+import com.arturo254.opentune.ui.component.LiquidGlassIconButton
+import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidChrome
 import com.mikepenz.markdown.m3.Markdown
 import com.arturo254.opentune.constants.TogetherDisplayNameKey
 import com.arturo254.opentune.ui.component.BottomSheetPageState
@@ -409,9 +411,9 @@ internal fun MainActivityTopBar(
                                                             .background(
                                                                 Brush.verticalGradient(
                                                                     colors = listOf(
-                                                                        surfaceColor.copy(alpha = 0.95f),
-                                                                        surfaceColor.copy(alpha = 0.85f),
-                                                                        surfaceColor.copy(alpha = 0.6f),
+                                                                        surfaceColor.copy(alpha = if (LocalEnableLiquidGlass.current) .74f else .95f),
+                                                                        surfaceColor.copy(alpha = if (LocalEnableLiquidGlass.current) .60f else .85f),
+                                                                        surfaceColor.copy(alpha = if (LocalEnableLiquidGlass.current) .38f else .6f),
                                                                         Color.Transparent
                                                                     )
                                                                 )
@@ -488,8 +490,11 @@ internal fun MainActivityTopBar(
                                                             }
                                                         }
 
-                                                        androidx.compose.material3.IconButton(
-                                                            modifier = Modifier.size(42.dp),
+                                                        LiquidGlassIconButton(
+                                                            modifier = Modifier,
+                                                            size = 42.dp,
+                                                            pureBlack = pureBlack,
+                                                            accessibilityLabel = stringResource(R.string.account),
                                                             onClick = { onShowAccountDialog() },
                                                         ) {
                                                             BadgedBox(
@@ -538,14 +543,14 @@ internal fun MainActivityTopBar(
                                                         topAppBarScrollBehavior
                                                     },
                                                     colors = TopAppBarDefaults.topAppBarColors(
-                                                        containerColor = if (shouldUseFloatingTopBar) {
+                                                        containerColor = if (shouldUseFloatingTopBar || LocalEnableLiquidGlass.current) {
                                                             Color.Transparent
                                                         } else if (pureBlack) {
                                                             Color.Black
                                                         } else {
                                                             MaterialTheme.colorScheme.surface
                                                         },
-                                                        scrolledContainerColor = if (shouldUseFloatingTopBar) {
+                                                        scrolledContainerColor = if (shouldUseFloatingTopBar || LocalEnableLiquidGlass.current) {
                                                             Color.Transparent
                                                         } else if (pureBlack) {
                                                             Color.Black
