@@ -104,7 +104,10 @@ fun FloatingNavigationToolbar(
     // the hide/show animation. The custom bar itself is intentionally static:
     // fewer animated layout passes means smoother scrolling.
     val liquidGlass = LocalEnableLiquidGlass.current
-    val barShape = RoundedCornerShape(OpenTuneNavigationDimensions.floatingRadius)
+    val liquidRadius = com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidTuning.current?.cornerRadiusDp
+    val barShape = RoundedCornerShape(
+        if (liquidGlass && liquidRadius != null) liquidRadius.dp else OpenTuneNavigationDimensions.floatingRadius
+    )
     val selectedIndex = items.indexOfFirst { it.route == selectedRoute }.coerceAtLeast(0)
     var previousSelectedIndex by remember { mutableIntStateOf(selectedIndex) }
     val slideFromEnd = selectedIndex >= previousSelectedIndex
