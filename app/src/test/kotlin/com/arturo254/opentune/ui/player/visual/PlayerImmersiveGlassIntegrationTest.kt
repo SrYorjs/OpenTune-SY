@@ -18,7 +18,8 @@ class PlayerImmersiveGlassIntegrationTest {
     @Test fun fullscreenGlassUsesOwnSourceAndLeavesMiniPlayerNavigationBackdropIntact() {
         val player = source("ui/player/Player.kt")
         assertTrue(player.contains("val playerArtworkBackdrop = rememberLayerBackdrop()"))
-        assertTrue(player.contains("if (activePlayerGlass) playerArtworkBackdrop else inheritedBackdrop"))
+        assertTrue(player.contains("activePlayerGlass -> playerArtworkBackdrop"))
+        assertTrue(player.contains("LocalGalaxCanvasLive provides liveCanvasGlass"))
         assertTrue(player.contains("PlayerArtworkAtmosphere("))
         assertTrue(player.contains("modifier = playerSourceModifier"))
         assertTrue(player.contains("LocalGalaxLiquidBackdrop provides"))
@@ -40,7 +41,7 @@ class PlayerImmersiveGlassIntegrationTest {
             assertTrue(src.indexOf("PlayerArtworkAtmosphere(") < src.indexOf("controls()"))
         }
         val v8 = source("ui/player/v8/V8PlayerScene.kt")
-        assertTrue(v8.contains("canvasArtwork?.preferredAnimationUrl.isNullOrBlank()"))
+        assertTrue(v8.contains("!canvasArtwork?.preferredAnimationUrl.isNullOrBlank()"))
         assertTrue(v8.contains("V8PlayerBackdrop("))
         val atmosphere = source("ui/player/visual/PlayerArtworkAtmosphere.kt")
         assertTrue(atmosphere.contains("targetState = artworkUrl"))
@@ -48,6 +49,13 @@ class PlayerImmersiveGlassIntegrationTest {
         assertTrue(atmosphere.contains("squareHeight"))
         assertTrue(atmosphere.contains("64.dp"))
         assertTrue(atmosphere.contains("BlendMode.DstIn"))
+        val canvasPlayer = source("ui/player/CanvasArtworkPlayer.kt")
+        assertTrue(canvasPlayer.contains("R.layout.galax_canvas_texture_player"))
+        val model = source("core/designsystem/liquid/GalaxLiquidModel.kt")
+        assertTrue(model.contains("LocalGalaxCanvasLive"))
+        val liquid = source("core/designsystem/liquid/GalaxLiquidRenderer.kt")
+        assertTrue(liquid.contains("if (LocalGalaxCanvasLive.current)"))
+        assertTrue(v8.contains("liquidCanvas = immersiveGlass"))
         assertFalse(atmosphere.contains("drawBackdrop("))
         assertFalse(atmosphere.contains("galaxLiquidEffect("))
     }
