@@ -142,7 +142,7 @@ fun GalaxLiquidSettingsScreen(navController: NavController) {
             TopAppBar(
                 title = { Text("Galax Liquid Glass") },
                 navigationIcon = {
-                    IconButton(onClick = exit) {
+                    IconButton(onClick = exit, onLongClick = exit) {
                         Icon(painterResource(R.drawable.arrow_back), contentDescription = "Volver")
                     }
                 },
