@@ -114,3 +114,8 @@ fun parseGalaxLiquidVariant(raw: String?): GalaxLiquidVariant? =
 val LocalGalaxLiquidVariant = staticCompositionLocalOf { GalaxLiquidVariant.DISABLED }
 val LocalGalaxLiquidBackdrop = staticCompositionLocalOf<Backdrop?> { null }
 val LocalGalaxLiquidTuning = staticCompositionLocalOf<GalaxLiquidTuning?> { null }
+
+/** Canvas video is composited via TextureView OUTSIDE Kyant's captured layer.
+ * Its controls must remain transparent to show the moving frame below.
+ * Sampling the static cover would freeze the glass image while Canvas moves. */
+val LocalGalaxCanvasLive = staticCompositionLocalOf { false }
