@@ -24,6 +24,11 @@ class PlayerImmersiveGlassIntegrationTest {
         assertTrue(player.contains("LocalGalaxLiquidBackdrop provides"))
         assertTrue(player.contains("playerBackdrop = if (activePlayerGlass) playerArtworkBackdrop else null"))
         assertTrue(player.contains("usesArtworkPalette = visualSkin.usesArtworkPalette || LocalEnableLiquidGlass.current"))
+        assertTrue(player.contains("compactLandscape = {"))
+        assertTrue(player.contains("compactPortrait = {"))
+        assertTrue(player.contains("if (activePlayerGlass) Color.White"))
+        assertTrue(player.split("PlayerArtworkAtmosphere(").size >= 4)
+
     }
 
     @Test fun allExpandedFamiliesCaptureBackgroundOnlyAndNeverSampleTheirOwnControls() {
@@ -51,5 +56,8 @@ class PlayerImmersiveGlassIntegrationTest {
         assertTrue(toolbar.contains("val drag = itemDrag"))
         assertTrue(toolbar.contains("detectHorizontalDragGestures("))
         assertTrue(toolbar.contains("liquidTabIndicatorX"))
+        assertTrue(toolbar.contains("onSwipeProgress(itemDrag)"))
+        assertTrue(toolbar.contains("onSwipeProgress(0f)"))
+        assertTrue(toolbar.contains("liquidTabDragFeedback"))
     }
 }
