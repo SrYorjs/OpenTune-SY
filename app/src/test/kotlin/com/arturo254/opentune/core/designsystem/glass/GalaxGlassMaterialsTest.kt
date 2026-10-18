@@ -90,7 +90,7 @@ class GalaxGlassMaterialsTest {
         val clear = galaxGlassMaterial(GlassMode.CLEAR, true)
         val frosted = galaxGlassMaterial(GlassMode.FROSTED, true)
         assertTrue(clear.borderTint!!.alpha > clear.surfaceTint!!.alpha)
-        assertEquals(0.22f, frosted.surfaceTint!!.alpha, 0.0001f)
+        assertEquals(androidx.compose.ui.graphics.Color.White.copy(alpha = 0.22f), frosted.surfaceTint)
         assertTrue(galaxGlassOptics(GlassMode.FROSTED).blurRadius >
             galaxGlassOptics(GlassMode.CLEAR).blurRadius)
         assertTrue(galaxGlassOptics(GlassMode.CLEAR).refraction >
