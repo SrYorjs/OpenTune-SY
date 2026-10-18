@@ -228,22 +228,16 @@ private fun ToolbarItemsContainer(
     val haptic = rememberGalaxHapticFeedback()
     val glassEnabled = LocalEnableLiquidGlass.current
     val selectedIndex = items.indexOfFirst { it.route == selectedRoute }
-    val itemBounds = remember(items) { mutableStateMapOf<String, Pair<Int, Int>>() }
+    // Stable-width tabs keep indicator positions invariant while selection
+    // changes. The old dynamic selected-label width made the pill jump/fade.
+    val tabWidth = if (showSelectedLabels) 78.dp else 56.dp
     var horizontalDrag by remember { mutableFloatStateOf(0f) }
-    val density = LocalDensity.current
     val reducedMotion = OpenTuneDesignSystem.galaxMotion.reducedMotion
-    val indicatorBounds = selectedRoute?.let { itemBounds[it] }
-    val targetX = indicatorBounds?.first?.toFloat() ?: 0f
-    val targetWidth = indicatorBounds?.second?.toFloat() ?: 0f
-    val indicatorX by animateFloatAsState(
-        targetValue = targetX,
-        animationSpec = if (reducedMotion) snap() else spring(dampingRatio = .78f, stiffness = 380f),
+    val indicatorX by animateDpAsState(
+        targetValue = tabWidth * selectedIndex.coerceAtLeast(0),
+        animationSpec = if (reducedMotion) snap() else
+            spring(dampingRatio = .82f, stiffness = 280f),
         label = "liquidTabIndicatorX",
-    )
-    val indicatorWidth by animateFloatAsState(
-        targetValue = targetWidth,
-        animationSpec = if (reducedMotion) snap() else spring(dampingRatio = .83f, stiffness = 430f),
-        label = "liquidTabIndicatorWidth",
     )
     val dragStretch by animateFloatAsState(
         targetValue = if (reducedMotion) 0f else horizontalDrag.coerceIn(-150f, 150f) * .42f,
@@ -256,11 +250,11 @@ private fun ToolbarItemsContainer(
         modifier = modifier.wrapContentWidth(),
         contentAlignment = Alignment.CenterStart,
     ) {
-        if (glassEnabled && indicatorBounds != null && indicatorWidth > 0f) {
+        if (glassEnabled && selectedIndex >= 0) {
             Box(
                 Modifier
-                    .offset { IntOffset((indicatorX + dragStretch).roundToInt(), 0) }
-                    .width(with(density) { indicatorWidth.toDp() })
+                    .offset { IntOffset((indicatorX.toPx() + dragStretch).roundToInt(), 0) }
+                    .width(tabWidth)
                     .height(48.dp)
                     .clip(RoundedCornerShape(24.dp))
                     .background(
@@ -306,12 +300,7 @@ private fun ToolbarItemsContainer(
                             }
                         }
                     },
-                    modifier = Modifier.onGloballyPositioned { coordinates ->
-                        val newValue = coordinates.positionInParent().x.roundToInt() to coordinates.size.width
-                        if (itemBounds[screen.route] != newValue) {
-                            itemBounds[screen.route] = newValue
-                        }
-                    },
+                    modifier = Modifier.width(tabWidth),
                 )
             }
         }
@@ -477,7 +466,9 @@ private fun FloatingNavigationToolbarItem(
     modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(24.dp)
-    val showLabel = selected && showSelectedLabel
+    // No selected-only label expansion: constant geometry makes a real
+    // uninterrupted iOS-style sliding capsule possible.
+    val showLabel = showSelectedLabel
 
     val selectedContainer by animateColorAsState(
         targetValue = if (selected) {
@@ -531,12 +522,6 @@ private fun FloatingNavigationToolbarItem(
     Row(
         modifier = modifier
             .height(48.dp)
-            .animateContentSize(
-                animationSpec = spring(
-                    dampingRatio = 0.80f,
-                    stiffness = 560f,
-                )
-            )
             .scale(pressScale)
             // On the SAME target as clickable: horizontal swipes are recognized
             // before taps complete, while vertical scroll is untouched.
@@ -575,7 +560,7 @@ private fun FloatingNavigationToolbarItem(
                 role = Role.Tab,
                 onClick = onClick,
             )
-            .padding(horizontal = horizontalPadding, vertical = 6.dp),
+            .padding(horizontal = 2.dp, vertical = 3.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
