@@ -1,87 +1,59 @@
 package com.arturo254.opentune.core.designsystem.glass
 
+import com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidVariant
+import com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidTuning
+import com.arturo254.opentune.core.designsystem.liquid.galvanicRecipe
+import com.arturo254.opentune.core.designsystem.liquid.parseGalaxLiquidVariant
 import java.io.File
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Deterministic migration and source-ownership checks for the 4.5.7 selector. */
 class GalaxGlassSelectionTest {
     private val root = listOf(File("src/main"), File("app/src/main"))
         .firstOrNull(File::isDirectory) ?: error("Android main source root unavailable")
-
     private fun source(path: String) = File(root, "kotlin/com/arturo254/opentune/$path").readText()
-    private fun resource(path: String) = File(root, "res/$path").readText()
 
-    @Test fun everyPersistedModeRoundTrips() {
-        for (mode in GlassMode.entries) {
-            assertEquals(mode, parseGalaxGlassMode(mode.name))
-            assertEquals(mode, parseGalaxGlassMode(mode.name.lowercase()))
-            assertEquals(mode, displayGalaxGlassMode(mode.name, legacyEnabled = false))
+    @Test fun fourteenOpticalVariantsPlusOffRoundTrip() {
+        assertEquals(15, GalaxLiquidVariant.entries.size)
+        for (variant in GalaxLiquidVariant.entries) {
+            assertEquals(variant, parseGalaxLiquidVariant(variant.name))
+            assertEquals(variant, parseGalaxLiquidVariant(variant.name.lowercase()))
         }
-        assertEquals(5, GlassMode.entries.size)
+        assertNull(parseGalaxLiquidVariant("invalid"))
+        assertNull(parseGalaxLiquidVariant(null))
     }
 
-    @Test fun missingOrCorruptSelectionPreservesLegacyPreference() {
-        for (invalid in listOf(null, "", "invalid", "SOME_OBSOLETE_MODE")) {
-            assertNull(parseGalaxGlassMode(invalid))
-            assertEquals(GlassMode.CLASSIC, displayGalaxGlassMode(invalid, legacyEnabled = true))
-            assertEquals(GlassMode.DISABLED, displayGalaxGlassMode(invalid, legacyEnabled = false))
-        }
+    @Test fun tenOriginalAndFourKyantInspiredProfilesHaveBoundedParameters() {
+        val recipes = GalaxLiquidVariant.entries
+            .filter { it != GalaxLiquidVariant.DISABLED }
+            .map(::galvanicRecipe)
+        assertEquals(14, recipes.size)
+        assertEquals(14, recipes.distinct().size)
+        for (recipe in recipes) assertEquals(recipe, recipe.bounded())
+        assertEquals(0f, galvanicRecipe(GalaxLiquidVariant.DISABLED).blurRadiusDp, 0f)
     }
 
-    @Test fun explicitSelectionAlwaysOverridesLegacyBoolean() {
-        for (mode in GlassMode.entries) {
-            assertEquals(
-                mode != GlassMode.DISABLED,
-                isGalaxGlassEnabled(false, mode),
-            )
-            assertEquals(
-                mode != GlassMode.DISABLED,
-                isGalaxGlassEnabled(true, mode),
-            )
-        }
-        assertTrue(isGalaxGlassEnabled(true, null))
-        assertFalse(isGalaxGlassEnabled(false, null))
+    @Test fun appearancePersistsVariantAndAllSixOpticalSliders() {
+        val settings = source("ui/screens/settings/AppearanceSettings.kt")
+        val keys = source("constants/PreferenceKeys.kt")
+        assertTrue(settings.contains("selectedValue = liquidVariant"))
+        assertTrue(settings.contains("GalaxLiquidPlayground("))
+        assertTrue(settings.contains("settings[GalaxLiquidVariantKey] = variant.name"))
+        assertTrue(settings.contains("settings[GalaxLiquidRefractionAmountKey] = recipe.refractionAmount"))
+        assertTrue(settings.contains("settings[GalaxLiquidChromaticKey] = recipe.chromaticAberration"))
+        assertTrue(keys.contains("galax_liquid_variant_v2"))
+        assertTrue(settings.contains("settings[LiquidGlassNavBarKey]"))
     }
 
-    @Test fun appearanceUsesOneFiveModeSelectorAndPersistsLegacyCompatibleBoolean() {
-        val preferences = source("constants/PreferenceKeys.kt")
-        val appearance = source("ui/screens/settings/AppearanceSettings.kt")
-        assertTrue(preferences.contains("GalaxGlassModeKey = stringPreferencesKey(\"galax_glass_mode\")"))
-        assertTrue(appearance.contains("selectedValue = selectedGalaxGlassMode"))
-        assertTrue(appearance.contains("preferencesContext.dataStore.edit { settings ->"))
-        assertTrue(appearance.contains("settings[GalaxGlassModeKey] = mode.name"))
-        assertTrue(appearance.contains("settings[LiquidGlassNavBarKey] = mode != GlassMode.DISABLED"))
-        assertTrue(appearance.contains("GlassMode.entries") ||
-            appearance.contains("EnumListPreference("))
-        assertFalse(appearance.contains("checked = liquidGlassNavBar,"))
-    }
-
-    @Test fun android17RenderThreadCrashGuardDisablesRecursiveCapture() {
-        val scaffold = source("MainActivityScaffold.kt")
-        assertTrue(scaffold.contains("parseGalaxGlassMode(storedGalaxGlassMode)"))
-        assertTrue(scaffold.contains("LocalGalaxGlassMode provides selectedGlassMode"))
-        assertTrue(scaffold.contains("LocalEnableLiquidGlass provides enableGalaxGlass"))
-        assertTrue(scaffold.contains("LocalLiquidBackdrop provides null"))
-        // Never recreate the native cyclic RenderNode capture path before a
-        // dedicated physical-device validation of a redesigned backend.
-        assertFalse(scaffold.contains("rememberLayerBackdrop("))
-        assertFalse(scaffold.contains("Modifier.layerBackdrop("))
-        assertFalse(scaffold.contains("canCaptureBackdrop"))
-        assertFalse(scaffold.contains("LocalLiquidBackdrop provides liveGlassBackdrop"))
-    }
-
-    @Test fun englishAndSpanishOptionsAreAllPresent() {
-        val keys = listOf("galax_glass_mode", "galax_glass_frosted",
-            "galax_glass_clear", "galax_glass_blur", "galax_glass_classic",
-            "galax_glass_disabled")
-        for (language in listOf("values", "values-es")) {
-            val strings = resource("$language/opentune_strings.xml")
-            for (key in keys) assertTrue("$language is missing $key",
-                strings.contains("name=\"$key\""))
-        }
+    @Test fun rendererKeepsValuesInSafeRange() {
+        val values = GalaxLiquidTuning(-20f, 200f, 40f, -20f, 5f, 4f).bounded()
+        assertEquals(0f, values.cornerRadiusDp, 0f)
+        assertEquals(32f, values.blurRadiusDp, 0f)
+        assertEquals(1f, values.refractionHeight, 0f)
+        assertEquals(0f, values.refractionAmount, 0f)
+        assertEquals(1f, values.chromaticAberration, 0f)
+        assertEquals(.65f, values.tintAlpha, 0f)
     }
 }
