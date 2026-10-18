@@ -18,6 +18,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,12 +45,15 @@ fun GalaxLiquidPlayground(
     modifier: Modifier = Modifier,
 ) {
     var draft by remember(variant, tuning) { mutableStateOf(tuning) }
+    var sampleEnabled by remember { mutableStateOf(true) }
+    var sampleValue by remember { mutableFloatStateOf(.5f) }
+    var sampleTab by remember { mutableIntStateOf(0) }
     val backdrop = rememberLayerBackdrop()
     val colors = MaterialTheme.colorScheme
     Column(modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text("Glass Playground", style = MaterialTheme.typography.titleMedium)
         Text("Vista previa en vivo. Ajusta el vidrio y pulsa Aplicar.", style = MaterialTheme.typography.bodySmall)
-        Box(Modifier.fillMaxWidth().height(216.dp)) {
+        Box(Modifier.fillMaxWidth().height(386.dp)) {
             // SOURCE: captured gradient and typography, with no sampling nodes.
             Box(
                 Modifier.matchParentSize()
@@ -78,6 +83,34 @@ fun GalaxLiquidPlayground(
                 contentAlignment = Alignment.Center,
             ) {
                 Text("GALAX LIQUID", fontWeight = FontWeight.SemiBold, color = colors.onSurface)
+            }
+            Column(
+                Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+            ) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    GalaxLiquidButton(
+                        text = "Button", onClick = { sampleEnabled = !sampleEnabled },
+                        backdrop = backdrop, modifier = Modifier.weight(1f),
+                    )
+                    GalaxLiquidToggle(
+                        checked = sampleEnabled, onCheckedChange = { sampleEnabled = it },
+                        backdrop = backdrop, modifier = Modifier.weight(1f),
+                    )
+                }
+                GalaxLiquidSlider(
+                    value = sampleValue, onValueChange = { sampleValue = it },
+                    backdrop = backdrop, modifier = Modifier.fillMaxWidth(),
+                )
+                GalaxLiquidBottomTabs(
+                    selected = sampleTab,
+                    labels = listOf("Home", "Buscar", "Música"),
+                    onSelected = { sampleTab = it },
+                    backdrop = backdrop, modifier = Modifier.fillMaxWidth(),
+                )
             }
         }
         LabSlider("Corner radius", draft.cornerRadiusDp, 0f..64f, "dp") {
