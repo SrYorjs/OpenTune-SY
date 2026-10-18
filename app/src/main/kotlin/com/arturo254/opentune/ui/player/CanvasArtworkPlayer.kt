@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
@@ -42,6 +43,7 @@ internal fun CanvasArtworkPlayer(
     modifier: Modifier = Modifier,
     resizeMode: Int = AspectRatioFrameLayout.RESIZE_MODE_ZOOM,
 ) {
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
     val context = LocalContext.current
     val frameReceiver by androidx.compose.runtime.rememberUpdatedState(LocalCanvasFrameReceiver.current)
     var texture by remember { mutableStateOf<android.view.TextureView?>(null) }
@@ -194,19 +196,21 @@ internal fun CanvasArtworkPlayer(
 
     // A bounded CPU image is the source, never the AndroidView RenderNode.
     // This keeps the optical pipeline identical and prevents capture cycles.
-    LaunchedEffect(texture, currentUrl, isVideoReady, isPlaying, frameReceiver != null) {
+    LaunchedEffect(texture, currentUrl, isVideoReady, isPlaying, frameReceiver != null, lifecycle) {
         frameReceiver?.invoke(null)
         val view = texture
         if (view != null && isVideoReady && frameReceiver != null) {
+            lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
             do {
                 if (view.isAvailable && view.width > 0 && view.height > 0) {
                     val width = minOf(256, view.width)
                     val height = (width.toFloat() * view.height / view.width).toInt().coerceIn(1, 512)
-                    val bitmap = view.getBitmap(width, height)
+                    val bitmap = runCatching { view.getBitmap(width, height) }.getOrNull()
                     frameReceiver?.invoke(bitmap?.asImageBitmap())
                 }
                 kotlinx.coroutines.delay(67)
             } while (isPlaying)
+            }
         }
     }
     DisposableEffect(initial) {

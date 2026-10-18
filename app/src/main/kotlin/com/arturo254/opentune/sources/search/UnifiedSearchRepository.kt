@@ -17,6 +17,10 @@ import com.arturo254.opentune.sources.resolution.SourceResolutionPreferences
 import com.arturo254.opentune.sources.resolution.SourceResolver
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -41,6 +45,7 @@ constructor(
 ) {
     suspend fun search(
         request: UnifiedSearchRequest,
+        onPartial: (suspend (UnifiedSearchResult) -> Unit)? = null,
     ): UnifiedSearchResult {
         val query = request.query.trim()
         if (query.isEmpty()) {
@@ -52,14 +57,33 @@ constructor(
             return UnifiedSearchResult(query = query)
         }
 
-        val sourceResults =
-            searchSources(
-                sources = sources,
-                query = query,
-                limit = request.limitPerSource,
-                continuationTokens = emptyMap(),
-            )
+        if (onPartial == null) {
+            return snapshot(request, query, searchSources(sources, query, request.limitPerSource, emptyMap()))
+        }
+        return supervisorScope {
+            val completed = Channel<RawSourceSearchResult>(sources.size)
+            sources.forEach { source ->
+                launch {
+                    completed.send(searchSource(source, query, request.limitPerSource, null))
+                }
+            }
+            val accumulated = mutableListOf<RawSourceSearchResult>()
+            var latest = UnifiedSearchResult(query = query)
+            repeat(sources.size) {
+                accumulated += completed.receive()
+                latest = snapshot(request, query, accumulated)
+                onPartial(latest)
+            }
+            completed.close()
+            latest
+        }
+    }
 
+    private suspend fun snapshot(
+        request: UnifiedSearchRequest,
+        query: String,
+        sourceResults: List<RawSourceSearchResult>,
+    ): UnifiedSearchResult {
         val sourceStates =
             sourceResults.associate { sourceResult ->
                 sourceResult.provider to
@@ -190,16 +214,19 @@ constructor(
     ): RawSourceSearchResult {
         val result =
             runCatching {
-                source.searchTracks(
+                withTimeoutOrNull(8_000) { source.searchTracks(
                     TrackSearchRequest(
                         query = query,
                         limit = limit,
                         continuationToken = continuationToken,
                     ),
-                )
+                ) } ?: Result.failure(java.util.concurrent.TimeoutException("Search source timed out"))
             }.fold(
                 onSuccess = { it },
-                onFailure = { throwable -> Result.failure(throwable) },
+                onFailure = { throwable ->
+                    if (throwable is CancellationException) throw throwable
+                    Result.failure(throwable)
+                },
             )
 
         return result.fold(
@@ -210,6 +237,7 @@ constructor(
                 )
             },
             onFailure = { throwable ->
+                if (throwable is CancellationException) throw throwable
                 RawSourceSearchResult(
                     provider = source.id,
                     error =

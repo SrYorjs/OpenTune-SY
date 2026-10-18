@@ -29,7 +29,7 @@ import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 import com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidSurface
-import com.arturo254.opentune.extensions.toMediaMetadata
+import com.arturo254.opentune.models.toMediaMetadata
 import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.ui.component.SongListItem
 import com.arturo254.opentune.ui.screens.library.LibraryScreen
@@ -37,10 +37,14 @@ import com.arturo254.opentune.viewmodels.HomeViewModel
 import com.arturo254.opentune.viewmodels.MoodAndGenresViewModel
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun GalaxMainPages(navController: NavController, pager: PagerState, onOpenSearch: () -> Unit) {
+    val scope = rememberCoroutineScope()
+    androidx.activity.compose.BackHandler(enabled = pager.currentPage != 0) {
+        scope.launch { pager.animateScrollToPage(0) }
+    }
     HorizontalPager(state = pager, key = { Screens.MainScreens[it].route }, modifier = Modifier.fillMaxSize()) { page ->
         when (page) {
             0 -> HomeScreen(navController)
@@ -93,6 +97,9 @@ fun GalaxDiscoverScreen(navController: NavController, onOpenSearch: () -> Unit,
     genresModel: MoodAndGenresViewModel = hiltViewModel(), home: HomeViewModel = hiltViewModel()) {
     val genres by genresModel.moodAndGenres.collectAsState()
     val recommendations by home.quickPicks.collectAsState()
+    val similar by home.similarRecommendations.collectAsState()
+    val discoveries = remember(similar) { similar.orEmpty().flatMap { it.items }
+        .filterIsInstance<com.arturo254.opentune.innertube.models.SongItem>().distinctBy { it.id }.take(6) }
     val player = LocalPlayerConnection.current
     LazyColumn(Modifier.fillMaxSize(), contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -129,10 +136,16 @@ fun GalaxDiscoverScreen(navController: NavController, onOpenSearch: () -> Unit,
             }
         }
         item("for_you") { Text(stringResource(R.string.galax_discover_for_you), Modifier.padding(horizontal = 24.dp), style = MaterialTheme.typography.titleLarge) }
-        if (recommendations.isNullOrEmpty()) {
+        if (recommendations.isNullOrEmpty() && discoveries.isEmpty()) {
             item("start_listening") { Text(stringResource(R.string.galax_discover_empty), Modifier.padding(horizontal = 24.dp), color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
-        items(recommendations.orEmpty().distinctBy { it.id }.take(6), key = { "discovery:${it.id}" }) { song ->
+        items(discoveries, key = { "new:${it.id}" }) { song ->
+            com.arturo254.opentune.ui.component.YouTubeListItem(item = song,
+                modifier = Modifier.padding(horizontal = 12.dp).animateItem().clickable {
+                    player?.playQueue(YouTubeQueue.radio(song.toMediaMetadata()))
+                })
+        }
+        items(if (discoveries.isEmpty()) recommendations.orEmpty().distinctBy { it.id }.take(6) else emptyList(), key = { "discovery:${it.id}" }) { song ->
             SongListItem(song = song, modifier = Modifier.padding(horizontal = 12.dp).animateItem().clickable {
                 player?.playQueue(YouTubeQueue.radio(song.toMediaMetadata()))
             })

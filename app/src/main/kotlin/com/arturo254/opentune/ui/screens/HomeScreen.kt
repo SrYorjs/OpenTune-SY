@@ -193,7 +193,7 @@ fun HomeScreen(
                 }
 
                 item {
-                    QuickPicksSection(
+                    GalaxListeningDeck(
                         quickPicks = picks,
                         mediaMetadata = mediaMetadata,
                         isPlaying = isPlaying,

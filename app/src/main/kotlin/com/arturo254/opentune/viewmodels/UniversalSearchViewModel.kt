@@ -180,6 +180,11 @@ constructor(
         runCatching {
             repository.search(
                 UnifiedSearchRequest(query = normalizedQuery),
+                onPartial = { result ->
+                    if (query.value.trim() == normalizedQuery) {
+                        _state.value = UniversalSearchUiState(query = normalizedQuery, result = result, isLoading = true)
+                    }
+                },
             )
         }.onSuccess { result ->
             if (query.value.trim() == normalizedQuery) {
@@ -190,6 +195,7 @@ constructor(
                     )
             }
         }.onFailure { throwable ->
+            if (throwable is kotlinx.coroutines.CancellationException) throw throwable
             if (query.value.trim() == normalizedQuery) {
                 _state.value =
                     UniversalSearchUiState(

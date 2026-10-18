@@ -25,6 +25,30 @@ import org.junit.Test
 
 class UnifiedSearchRepositoryTest {
     @Test
+    fun publishesFastSourceBeforeSlowSourceFinishes() = runBlocking {
+        val slowGate = CompletableDeferred<Unit>()
+        val fast = FakeSearchSource(ProviderId.YOUTUBE_MUSIC, onSearch = {
+            page(variant(ProviderId.YOUTUBE_MUSIC, "fast"))
+        })
+        val slow = FakeSearchSource(ProviderId.LOCAL, onSearch = {
+            slowGate.await()
+            page(variant(ProviderId.LOCAL, "slow", title = "Another song"))
+        })
+        val sizes = mutableListOf<Int>()
+        val result = withTimeout(2_000) {
+            repository(fast, slow).search(UnifiedSearchRequest("song")) { partial ->
+                sizes += partial.successfulSourceCount
+                if (partial.successfulSourceCount == 1) {
+                    assertEquals("fast", partial.tracks.single().variants.single().sourceId)
+                    slowGate.complete(Unit)
+                }
+            }
+        }
+        assertEquals(listOf(1, 2), sizes)
+        assertEquals(2, result.successfulSourceCount)
+    }
+
+    @Test
     fun searchesAllSourcesConcurrently() =
         runBlocking {
             val started = AtomicInteger(0)
