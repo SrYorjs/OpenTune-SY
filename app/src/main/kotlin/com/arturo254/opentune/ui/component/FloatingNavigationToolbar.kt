@@ -245,7 +245,7 @@ private fun ToolbarItemsContainer(
         label = "liquidTabIndicatorWidth",
     )
     val dragStretch by animateFloatAsState(
-        targetValue = if (reducedMotion) 0f else horizontalDrag.coerceIn(-100f, 100f) * .07f,
+        targetValue = if (reducedMotion) 0f else horizontalDrag.coerceIn(-150f, 150f) * .42f,
         animationSpec = spring(dampingRatio = .74f, stiffness = 530f),
         label = "liquidTabDragFeedback",
     )
@@ -314,6 +314,7 @@ private fun ToolbarItemsContainer(
                         haptic(GalaxHapticCue.SELECTION)
                         onItemClick(screen, selected)
                     },
+                    onSwipeProgress = { drag -> horizontalDrag = drag },
                     onSwipe = { horizontalDelta ->
                         // Gestures begin on the clickable items themselves.
                         // A parent-only detector lost the race to clickable(),
@@ -494,6 +495,7 @@ private fun FloatingNavigationToolbarItem(
     pureBlack: Boolean,
     onClick: () -> Unit,
     onSwipe: (Float) -> Unit,
+    onSwipeProgress: (Float) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(24.dp)
@@ -562,14 +564,19 @@ private fun FloatingNavigationToolbarItem(
                 detectHorizontalDragGestures(
                     onHorizontalDrag = { change, amount ->
                         itemDrag = (itemDrag + amount).coerceIn(-220f, 220f)
+                        onSwipeProgress(itemDrag)
                         change.consume()
                     },
                     onDragEnd = {
                         val drag = itemDrag
                         itemDrag = 0f
+                        onSwipeProgress(0f)
                         if (kotlin.math.abs(drag) > 24.dp.toPx()) onSwipe(drag)
                     },
-                    onDragCancel = { itemDrag = 0f },
+                    onDragCancel = {
+                        itemDrag = 0f
+                        onSwipeProgress(0f)
+                    },
                 )
             }
             .elasticLiquidPress(
