@@ -89,6 +89,7 @@ import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.navigation.OpenTuneNavigationDimensions
 import com.arturo254.opentune.core.designsystem.motion.GalaxHapticCue
+import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 import com.arturo254.opentune.core.designsystem.motion.rememberGalaxHapticFeedback
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.theme.shapes
