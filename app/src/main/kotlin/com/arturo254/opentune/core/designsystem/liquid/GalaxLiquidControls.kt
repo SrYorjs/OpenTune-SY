@@ -33,10 +33,13 @@ fun GalaxLiquidButton(
     onClick: () -> Unit,
     backdrop: Backdrop?,
     modifier: Modifier = Modifier,
+    variant: GalaxLiquidVariant = GalaxLiquidVariant.KYANT_BUTTON,
+    tuning: GalaxLiquidTuning = galvanicRecipe(variant),
 ) {
     Box(
         modifier.galaxLiquidEffect(
-            variant = GalaxLiquidVariant.KYANT_BUTTON,
+            variant = variant,
+            tuning = tuning,
             backdrop = backdrop,
             shapeOverride = RoundedCornerShape(30.dp),
         ).clickable(role = Role.Button, onClick = onClick)
@@ -53,11 +56,14 @@ fun GalaxLiquidToggle(
     onCheckedChange: (Boolean) -> Unit,
     backdrop: Backdrop?,
     modifier: Modifier = Modifier,
+    variant: GalaxLiquidVariant = GalaxLiquidVariant.KYANT_TOGGLE,
+    tuning: GalaxLiquidTuning = galvanicRecipe(variant),
 ) {
     Box(
         modifier
             .galaxLiquidEffect(
-                variant = GalaxLiquidVariant.KYANT_TOGGLE,
+                variant = variant,
+            tuning = tuning,
                 backdrop = backdrop,
                 shapeOverride = RoundedCornerShape(30.dp),
             )
@@ -75,12 +81,15 @@ fun GalaxLiquidSlider(
     onValueChange: (Float) -> Unit,
     backdrop: Backdrop?,
     modifier: Modifier = Modifier,
+    variant: GalaxLiquidVariant = GalaxLiquidVariant.KYANT_SLIDER,
+    tuning: GalaxLiquidTuning = galvanicRecipe(variant),
 ) {
     Slider(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.galaxLiquidEffect(
-            variant = GalaxLiquidVariant.KYANT_SLIDER,
+            variant = variant,
+            tuning = tuning,
             backdrop = backdrop,
             shapeOverride = RoundedCornerShape(32.dp),
         ).padding(horizontal = 12.dp),
@@ -95,10 +104,13 @@ fun GalaxLiquidBottomTabs(
     onSelected: (Int) -> Unit,
     backdrop: Backdrop?,
     modifier: Modifier = Modifier,
+    variant: GalaxLiquidVariant = GalaxLiquidVariant.KYANT_TABS,
+    tuning: GalaxLiquidTuning = galvanicRecipe(variant),
 ) {
     Row(
         modifier.galaxLiquidEffect(
-            variant = GalaxLiquidVariant.KYANT_TABS,
+            variant = variant,
+            tuning = tuning,
             backdrop = backdrop,
             shapeOverride = RoundedCornerShape(34.dp),
         ).padding(5.dp),
