@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidChrome
+import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidVariant
+import com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidVariant
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +35,7 @@ fun Material3SettingsGroup(
     title: String? = null,
     items: List<Material3SettingsItem>
 ) {
+    val liquid = LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -50,10 +54,12 @@ fun Material3SettingsGroup(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .animateContentSize(),
+                .animateContentSize()
+                .then(if (liquid) Modifier.galaxLiquidChrome(RoundedCornerShape(24.dp)) else Modifier),
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                containerColor = if (liquid) androidx.compose.ui.graphics.Color.Transparent
+                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
             ),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
