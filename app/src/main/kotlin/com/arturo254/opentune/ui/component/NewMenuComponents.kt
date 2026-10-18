@@ -34,6 +34,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidChrome
+import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidVariant
+import com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidVariant
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,15 +70,18 @@ fun NewActionButton(
         label = "content"
     )
 
+    val liquid = LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED
+    val shape = RoundedCornerShape(20.dp)
     Card(
         modifier = modifier
+            .then(if (liquid) Modifier.galaxLiquidChrome(shape, emphasis = .85f) else Modifier)
             .clickable(enabled = enabled) { onClick() },
         colors = CardDefaults.cardColors(
-            containerColor = animatedBackground
+            containerColor = if (liquid) Color.Transparent else animatedBackground
         ),
-        shape = RoundedCornerShape(16.dp),
+        shape = shape,
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
+            defaultElevation = if (liquid) 0.dp else 2.dp
         )
     ) {
         Column(
@@ -248,15 +254,17 @@ fun NewIconButton(
         label = "content"
     )
 
+    val liquid = LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED
     Card(
         modifier = modifier
+            .then(if (liquid) Modifier.galaxLiquidChrome(CircleShape, emphasis = 1.1f) else Modifier)
             .clickable(enabled = enabled) { onClick() },
         colors = CardDefaults.cardColors(
-            containerColor = animatedBackground
+            containerColor = if (liquid) Color.Transparent else animatedBackground
         ),
         shape = CircleShape,
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
+            defaultElevation = if (liquid) 0.dp else 2.dp
         )
     ) {
         Box(
@@ -293,8 +301,13 @@ fun MenuSurfaceSection(
 ) {
     Surface(
         shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier = modifier.fillMaxWidth(),
+        color = if (LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED)
+            Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow,
+        modifier = modifier.fillMaxWidth().then(
+            if (LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED)
+                Modifier.galaxLiquidChrome(RoundedCornerShape(24.dp))
+            else Modifier
+        ),
     ) {
         Column(content = content)
     }
