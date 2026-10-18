@@ -1,6 +1,12 @@
 package com.arturo254.opentune.ui.player.visual
 
 import androidx.compose.animation.AnimatedContent
+import com.arturo254.opentune.core.designsystem.motion.galaxMotion
+import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -52,8 +58,9 @@ fun PlayerArtworkAtmosphere(
     val secondary = gradientColors.getOrNull(1) ?: accent
     val floor = lerp(accent, Color(0xFF11131A), .77f)
     val middle = lerp(secondary, Color(0xFF16171D), .66f)
+    val reducedMotion = OpenTuneDesignSystem.galaxMotion.reducedMotion
     val breathing by animateFloatAsState(
-        targetValue = if (isPlaying) 1.035f else 1f,
+        targetValue = if (isPlaying && !reducedMotion) 1.035f else 1f,
         animationSpec = spring(dampingRatio = .93f, stiffness = 90f),
         label = "immersiveArtworkBreathing",
     )
@@ -130,6 +137,36 @@ fun PlayerArtworkAtmosphere(
                 }
             }
         }
+        // GALAXOS orbital ambient: slow, low-alpha aurora inspired by the
+        // CURRENT cover palette, never a fixed neon overlay. Disable in
+        // reduced-motion and while paused to preserve battery and accessibility.
+        if (isPlaying && !reducedMotion) {
+            val orbit = rememberInfiniteTransition(label = "galaxosAmbientOrbit")
+            val phase by orbit.animateFloat(
+                initialValue = -.7f,
+                targetValue = .7f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 10000, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+                label = "galaxosAmbientDrift",
+            )
+            Box(
+                Modifier.fillMaxSize()
+                    .graphicsLayer {
+                        translationX = 20.dp.toPx() * phase
+                        alpha = .35f
+                    }
+                    .background(
+                        Brush.radialGradient(
+                            0f to accent.copy(alpha = .22f),
+                            .60f to secondary.copy(alpha = .08f),
+                            1f to Color.Transparent,
+                        ),
+                    ),
+            )
+        }
+
         // A subtle floor makes progress, title and text legible without
         // producing a harsh straight line across the album artwork.
         Box(
