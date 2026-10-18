@@ -48,11 +48,11 @@ fun V8PlayerScene(
     gradientColors: List<androidx.compose.ui.graphics.Color> = emptyList(),
     controls: @Composable ColumnScope.() -> Unit,
 ) {
-    var canvasFrame by remember(artworkUrl, canvasArtwork?.preferredAnimationUrl) {
+    val canvasFrame = remember(artworkUrl, canvasArtwork?.preferredAnimationUrl) {
         mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
     }
     val receiveFrame: (androidx.compose.ui.graphics.ImageBitmap?) -> Unit = remember(artworkUrl, canvasArtwork?.preferredAnimationUrl) {
-        { canvasFrame = it }
+        { canvasFrame.value = it }
     }
     Box(modifier = Modifier.fillMaxSize()) {
         if (immersiveGlass) {
@@ -65,25 +65,7 @@ fun V8PlayerScene(
                     isPlaying = isPlaying,
                     disableBlur = disableBlur,
                 )
-                canvasFrame?.let { frame ->
-                    androidx.compose.foundation.Image(
-                        bitmap = frame, contentDescription = null,
-                        contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
-                        modifier = Modifier.fillMaxWidth().fillMaxHeight(.73f)
-                            .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
-                            .drawWithCache {
-                                val mask = androidx.compose.ui.graphics.Brush.verticalGradient(
-                                    0f to androidx.compose.ui.graphics.Color.Black,
-                                    .65f to androidx.compose.ui.graphics.Color.Black,
-                                    1f to androidx.compose.ui.graphics.Color.Transparent,
-                                )
-                                onDrawWithContent {
-                                    drawContent()
-                                    drawRect(mask, blendMode = androidx.compose.ui.graphics.BlendMode.DstIn)
-                                }
-                            },
-                    )
-                }
+                CanvasGlassSource(canvasFrame)
             }
         }
         if (!immersiveGlass || !canvasArtwork?.preferredAnimationUrl.isNullOrBlank()) {
@@ -120,4 +102,27 @@ fun V8PlayerScene(
             Spacer(Modifier.height(if (isLandscape) 16.dp else 24.dp))
         }
     }
+}
+
+@Composable
+private fun CanvasGlassSource(frameState: State<androidx.compose.ui.graphics.ImageBitmap?>) {
+    frameState.value?.let { frame ->
+                    androidx.compose.foundation.Image(
+                        bitmap = frame, contentDescription = null,
+                        contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
+                        modifier = Modifier.fillMaxWidth().fillMaxHeight(.73f)
+                            .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+                            .drawWithCache {
+                                val mask = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                    0f to androidx.compose.ui.graphics.Color.Black,
+                                    .65f to androidx.compose.ui.graphics.Color.Black,
+                                    1f to androidx.compose.ui.graphics.Color.Transparent,
+                                )
+                                onDrawWithContent {
+                                    drawContent()
+                                    drawRect(mask, blendMode = androidx.compose.ui.graphics.BlendMode.DstIn)
+                                }
+                            },
+                    )
+                }
 }

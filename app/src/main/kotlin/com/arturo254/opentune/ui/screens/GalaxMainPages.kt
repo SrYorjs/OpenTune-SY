@@ -1,6 +1,7 @@
 package com.arturo254.opentune.ui.screens
 
 import android.net.Uri
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -54,42 +55,11 @@ fun GalaxMainPages(navController: NavController, pager: PagerState, onOpenSearch
     }
 }
 
-/** A source-only nebula and sibling optical panel: never capture its own glass. */
 @Composable
 fun GalaxPortal(title: String, subtitle: String, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
-    val backdrop = rememberLayerBackdrop()
-    val primary = MaterialTheme.colorScheme.primary
-    val secondary = MaterialTheme.colorScheme.tertiary
-    val background = MaterialTheme.colorScheme.surfaceContainerLow
-    val motion = OpenTuneDesignSystem.galaxMotion
-    var phase by remember { mutableFloatStateOf(0f) }
-    LaunchedEffect(motion.reducedMotion) {
-        if (!motion.reducedMotion) while (true) {
-            withFrameMillis { phase = (it % 24000L) / 24000f }
-        }
-    }
-    Box(modifier.padding(horizontal = 20.dp, vertical = 12.dp).fillMaxWidth().heightIn(min = 184.dp).clip(RoundedCornerShape(32.dp))) {
-        Canvas(Modifier.matchParentSize().layerBackdrop(backdrop)) {
-            drawRect(background)
-            val x = size.width * (.65f + .12f * kotlin.math.sin(phase * 6.283f))
-            drawCircle(Brush.radialGradient(listOf(primary.copy(alpha = .40f), Color.Transparent), Offset(x, size.height * .2f), size.width * .65f), size.width * .65f, Offset(x, size.height * .2f))
-            drawCircle(Brush.radialGradient(listOf(secondary.copy(alpha = .24f), Color.Transparent), Offset(size.width * .12f, size.height), size.width * .5f), size.width * .5f, Offset(size.width * .12f, size.height))
-            repeat(23) { i ->
-                drawCircle(primary.copy(alpha = .2f + (i % 4) * .12f), if (i % 5 == 0) 2.2f else 1.2f,
-                    Offset(size.width * ((i * 37 % 101) / 101f), size.height * ((i * 19 % 97) / 97f)))
-            }
-            drawArc(primary.copy(alpha = .18f), -35f + phase * 12f, 230f, false,
-                topLeft = Offset(size.width * .49f, -size.height * .40f), size = androidx.compose.ui.geometry.Size(size.height * 1.8f, size.height * 1.8f), style = androidx.compose.ui.graphics.drawscope.Stroke(1.3f))
-        }
-        GalaxLiquidSurface(backdrop = backdrop, shapeOverride = RoundedCornerShape(32.dp),
-            modifier = Modifier.fillMaxWidth().heightIn(min = 184.dp).then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)) {
-            Column(Modifier.align(Alignment.BottomStart).padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("G A L A X O T", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                Text(title, style = MaterialTheme.typography.headlineMedium)
-                Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-    }
+    com.arturo254.opentune.core.designsystem.theme.GalaxScreenHeading(
+        title, subtitle, modifier.then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+    )
 }
 
 @Composable
@@ -103,7 +73,7 @@ fun GalaxDiscoverScreen(navController: NavController, onOpenSearch: () -> Unit,
     val discoveries = remember(similar) { similar.orEmpty().flatMap { it.items }
         .filterIsInstance<com.arturo254.opentune.innertube.models.SongItem>().distinctBy { it.id }.take(6) }
     val player = LocalPlayerConnection.current
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
+    LazyColumn(Modifier.fillMaxSize().galaxScreenBackground(), contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item("discover_header") {
             GalaxPortal(stringResource(R.string.galax_discover_title), stringResource(R.string.galax_discover_subtitle))

@@ -1,5 +1,7 @@
 package com.arturo254.opentune.ui.component
 
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
+
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -359,19 +361,5 @@ fun LiquidGlassCard(
 fun Modifier.liquidGlassScreenBackground(
     pureBlack: Boolean = false,
 ): Modifier {
-    val primary = MaterialTheme.colorScheme.primary
-    val tertiary = MaterialTheme.colorScheme.tertiary
-    val surface = if (pureBlack) Color.Black else MaterialTheme.colorScheme.background
-
-    return this.background(
-        Brush.verticalGradient(
-            colorStops = arrayOf(
-                0f to primary.copy(alpha = if (pureBlack) 0.10f else 0.14f),
-                0.20f to surface.copy(alpha = 0.965f),
-                0.56f to surface,
-                0.78f to tertiary.copy(alpha = if (pureBlack) 0.045f else 0.07f),
-                1f to surface,
-            )
-        )
-    )
+    return this.galaxScreenBackground(pureBlack)
 }

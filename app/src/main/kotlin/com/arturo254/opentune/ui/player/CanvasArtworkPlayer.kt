@@ -202,13 +202,9 @@ internal fun CanvasArtworkPlayer(
         if (view != null && isVideoReady && frameReceiver != null) {
             lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
             do {
-                if (view.isAvailable && view.width > 0 && view.height > 0) {
-                    val width = minOf(256, view.width)
-                    val height = (width.toFloat() * view.height / view.width).toInt().coerceIn(1, 512)
-                    val bitmap = runCatching { view.getBitmap(width, height) }.getOrNull()
-                    frameReceiver?.invoke(bitmap?.asImageBitmap())
-                }
-                kotlinx.coroutines.delay(67)
+                val bitmap = copyCanvasFrame(view)
+                if (bitmap != null) frameReceiver?.invoke(bitmap.asImageBitmap())
+                kotlinx.coroutines.delay(125)
             } while (isPlaying)
             }
         }

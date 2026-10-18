@@ -30,6 +30,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.rememberUpdatedState
+import com.arturo254.opentune.extensions.togglePlayPause
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -113,12 +115,13 @@ fun HomeScreen(
         }
     }
 
+    val latestHomePage by rememberUpdatedState(homePage)
     LaunchedEffect(Unit) {
         snapshotFlow { lazylistState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
             .collect { lastVisibleIndex ->
                 val len = lazylistState.layoutInfo.totalItemsCount
                 if (lastVisibleIndex != null && lastVisibleIndex >= len - 3) {
-                    viewModel.loadMoreYouTubeItems(homePage?.continuation)
+                    viewModel.loadMoreYouTubeItems(latestHomePage?.continuation)
                 }
             }
     }
@@ -172,19 +175,28 @@ fun HomeScreen(
                 item(key = "galax_home_portal") {
                     GalaxPortal(stringResource(R.string.galax_home_title), stringResource(R.string.galax_home_subtitle))
                 }
+                quickPicks?.firstOrNull()?.let { featured ->
+                    item(key = "galax_featured_track") {
+                        val active = featured.id == mediaMetadata?.id
+                        GalaxFeaturedTrack(featured, active && isPlaying) {
+                            if (active) playerConnection.player.togglePlayPause()
+                            else playerConnection.playQueue(com.arturo254.opentune.playback.queues.YouTubeQueue.radio(featured.toMediaMetadata()))
+                        }
+                    }
+                }
                 item(key = "galax_home_actions") {
                     androidx.compose.foundation.layout.Row(
                         Modifier.fillMaxWidth().padding(horizontal = 20.dp),
                         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
                     ) {
-                        androidx.compose.material3.FilledTonalButton(
-                            onClick = { quickPicks?.randomOrNull()?.let { song ->
+                        androidx.compose.material3.Button(
+                            onClick = { (quickPicks.orEmpty() + speedDialSongs).randomOrNull()?.let { song ->
                                 playerConnection.playQueue(com.arturo254.opentune.playback.queues.YouTubeQueue.radio(song.toMediaMetadata()))
                             } },
-                            enabled = !quickPicks.isNullOrEmpty(),
+                            enabled = !quickPicks.isNullOrEmpty() || speedDialSongs.isNotEmpty(),
                             modifier = Modifier.weight(1f),
                         ) { androidx.compose.material3.Text(stringResource(R.string.shuffle)) }
-                        androidx.compose.material3.OutlinedButton(
+                        androidx.compose.material3.FilledTonalButton(
                             onClick = { navController.navigate(com.arturo254.opentune.ui.screens.musicrecognition.MusicRecognitionRoute) },
                             modifier = Modifier.weight(1f),
                         ) { androidx.compose.material3.Text(stringResource(R.string.music_recognition), maxLines = 2) }

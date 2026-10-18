@@ -67,41 +67,21 @@ fun PlayerArtworkAtmosphere(
     )
 
     BoxWithConstraints(
-        modifier = modifier.fillMaxSize().background(floor),
+        modifier = modifier.fillMaxSize().background(
+            Brush.verticalGradient(listOf(middle, floor)),
+        ),
     ) {
         val squareHeight = maxWidth.coerceAtMost(maxHeight * .59f)
         AnimatedContent(
             targetState = artworkUrl,
             transitionSpec = {
-                fadeIn(tween(520)) togetherWith fadeOut(tween(460))
+                fadeIn(tween(if (reducedMotion) 0 else 240)) togetherWith fadeOut(tween(if (reducedMotion) 0 else 180))
             },
             label = "immersiveAlbumChange",
             modifier = Modifier.fillMaxSize(),
         ) { cover ->
             Box(Modifier.fillMaxSize()) {
                 if (!cover.isNullOrBlank()) {
-                    // Blurred continuation uses the SAME artwork as the top.
-                    AsyncImage(
-                        model = cover,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                            .then(if (!disableBlur) Modifier.blur(64.dp) else Modifier)
-                            .graphicsLayer { alpha = .72f },
-                    )
-                    Box(
-                        Modifier.fillMaxSize().background(
-                            Brush.verticalGradient(
-                                colorStops = arrayOf(
-                                    0f to Color.Transparent,
-                                    .35f to Color.Transparent,
-                                    .57f to middle.copy(alpha = .42f),
-                                    .73f to floor.copy(alpha = .70f),
-                                    1f to floor.copy(alpha = .90f),
-                                )
-                            ),
-                        ),
-                    )
                     // Cover remains proportional (1:1 width), unblurred and
                     // gently dissolves into the lower atmospheric background.
                     Box(
@@ -138,36 +118,6 @@ fun PlayerArtworkAtmosphere(
                 }
             }
         }
-        // GALAXOS orbital ambient: slow, low-alpha aurora inspired by the
-        // CURRENT cover palette, never a fixed neon overlay. Disable in
-        // reduced-motion and while paused to preserve battery and accessibility.
-        if (isPlaying && !reducedMotion) {
-            val orbit = rememberInfiniteTransition(label = "galaxosAmbientOrbit")
-            val phase by orbit.animateFloat(
-                initialValue = -.7f,
-                targetValue = .7f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(durationMillis = 10000, easing = LinearEasing),
-                    repeatMode = RepeatMode.Reverse,
-                ),
-                label = "galaxosAmbientDrift",
-            )
-            Box(
-                Modifier.fillMaxSize()
-                    .graphicsLayer {
-                        translationX = 20.dp.toPx() * phase
-                        alpha = .35f
-                    }
-                    .background(
-                        Brush.radialGradient(
-                            0f to accent.copy(alpha = .22f),
-                            .60f to secondary.copy(alpha = .08f),
-                            1f to Color.Transparent,
-                        ),
-                    ),
-            )
-        }
-
         // A subtle floor makes progress, title and text legible without
         // producing a harsh straight line across the album artwork.
         Box(
