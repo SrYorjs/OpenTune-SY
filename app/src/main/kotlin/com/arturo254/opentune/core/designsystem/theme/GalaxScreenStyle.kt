@@ -1,5 +1,6 @@
 package com.arturo254.opentune.core.designsystem.theme
 
+import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
@@ -59,5 +60,26 @@ fun GalaxScreenHeading(title: String, subtitle: String, modifier: Modifier = Mod
         ))
         Text(subtitle, style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+fun GalaxDestinationTheme(content: @Composable () -> Unit) {
+    val original = MaterialTheme.colorScheme
+    val reducedMotion = com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem.galaxMotion.reducedMotion
+    val scheme = if (original.background.luminance() < .45f) original.copy(
+        background = if (original.background == Color.Black) Color.Black else GalaxScreenStyle.deepSpace,
+        surface = if (original.background == Color.Black) Color.Black else GalaxScreenStyle.deepSpace,
+        surfaceContainerLowest = Color(0xFF04060D),
+        surfaceContainerLow = Color(0xFF0D1220),
+        surfaceContainer = Color(0xFF141B2C),
+        surfaceContainerHigh = Color(0xFF1B253A),
+        surfaceContainerHighest = Color(0xFF26334B),
+    ) else original
+    MaterialTheme(colorScheme = scheme, shapes = MaterialTheme.shapes.copy(
+        small = RoundedCornerShape(12.dp), medium = GalaxScreenStyle.artworkShape,
+        large = GalaxScreenStyle.panelShape, extraLarge = RoundedCornerShape(32.dp),
+    )) {
+        ProvideOpenTuneDesignSystem(artworkRadiusDp = 20f, reduceMotion = reducedMotion, content = content)
     }
 }

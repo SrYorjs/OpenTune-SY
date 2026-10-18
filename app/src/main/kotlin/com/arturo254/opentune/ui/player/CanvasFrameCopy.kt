@@ -14,8 +14,8 @@ internal suspend fun copyCanvasFrame(view: TextureView): Bitmap? {
     if (!view.isAvailable || view.width <= 0 || view.height <= 0) return null
     val width = minOf(192, view.width)
     val height = (width.toFloat() * view.height / view.width).toInt().coerceIn(1, 384)
+    val surface = runCatching { Surface(texture) }.getOrNull() ?: return null
     val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-    val surface = Surface(texture)
     return suspendCancellableCoroutine { continuation ->
         try {
             PixelCopy.request(surface, bitmap, { result ->
@@ -27,7 +27,7 @@ internal suspend fun copyCanvasFrame(view: TextureView): Bitmap? {
                     if (continuation.isActive) continuation.resume(null)
                 }
             }, Handler(Looper.getMainLooper()))
-        } catch (_: IllegalArgumentException) {
+        } catch (_: RuntimeException) {
             surface.release()
             bitmap.recycle()
             if (continuation.isActive) continuation.resume(null)

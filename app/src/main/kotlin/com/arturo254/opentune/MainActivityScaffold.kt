@@ -295,10 +295,6 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import com.arturo254.opentune.constants.EnableHapticFeedbackKey
 import com.arturo254.opentune.constants.PlayerFullscreenKey
 
-/**
- * Owns the visible app chrome: top bar, navigation rail, floating toolbar,
- * player surface, composition locals, menus and dialogs.
- */
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -344,9 +340,7 @@ internal fun MainActivityScaffold(
     val (liquidTint) = rememberPreference(GalaxLiquidTintKey, defaultLiquidTuning.tintAlpha)
     val liquidTuning = if (rawLiquidVariant.isBlank()) defaultLiquidTuning else
         GalaxLiquidTuning(liquidRadius, liquidBlur, liquidHeight, liquidAmount, liquidChromatic, liquidTint).bounded()
-    // Produce exactly one captured background. Importantly, its NavHost subtree
-    // will explicitly receive a null Backdrop; only sibling overlay controls
-    // may sample the captured layer. This prevents recursive RenderNode graphs.
+
     val glassContext = androidx.compose.ui.platform.LocalContext.current
     val saver = (glassContext.getSystemService(android.content.Context.POWER_SERVICE) as? android.os.PowerManager)
         ?.isPowerSaveMode == true
@@ -354,8 +348,7 @@ internal fun MainActivityScaffold(
         ?.isLowRamDevice == true
     val liveLiquidBackdrop = if (
         liquidVariant != GalaxLiquidVariant.DISABLED && !saver && !lowRam &&
-        // Glass Studio captures a separate preview; do not nest it inside
-        // an outer NavHost recording layer (Android 17 RenderThread safety).
+
         navigationState.currentRoute != "settings/appearance/galax_liquid" &&
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
     ) rememberLayerBackdrop() else null
@@ -479,6 +472,7 @@ internal fun MainActivityScaffold(
                                     CompositionLocalProvider(
                                         LocalGalaxLiquidBackdrop provides null,
                                     ) {
+                                    com.arturo254.opentune.core.designsystem.theme.GalaxDestinationTheme {
                                     NavHost(
                                         navController = navController,
                                         startDestination = when (tabOpenedFromShortcut ?: defaultOpenTab) {
@@ -588,7 +582,8 @@ internal fun MainActivityScaffold(
                                             { onActiveChange(true) },
                                         )
                                     }
-                                    } // NavHost is source-only; no sampling here.
+                                    }
+                                    }
                                 }
                                 MainActivityFloatingToolbar(
                                     pureBlack = pureBlack,

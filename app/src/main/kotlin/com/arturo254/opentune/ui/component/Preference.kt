@@ -1,9 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
 package com.arturo254.opentune.ui.component
 
 import androidx.compose.animation.AnimatedContent
@@ -131,113 +125,28 @@ fun PreferenceEntry(
     elevation: Float = 0f,
 ) {
     val inGroup = LocalPreferenceInGroup.current
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    val scale by animateFloatAsState(
-        targetValue = when {
-            !inGroup && isPressed -> 0.97f
-            !inGroup && onClick != null -> 0.99f
-            else -> 1f
-        },
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "prefScale"
-    )
-
-    val containerColor = if (inGroup) {
-        Color.Transparent
-    } else {
-        MaterialTheme.colorScheme.surfaceContainer
-    }
-
-    val rowContent: @Composable () -> Unit = {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = if (inGroup) LocalIndication.current else null,
-                    enabled = isEnabled && onClick != null,
-                    onClick = onClick ?: {},
-                )
-                .alpha(if (isEnabled) 1f else 0.5f)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-        ) {
-            if (icon != null) {
-                IconContainer(
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                ) {
-                    icon()
-                }
-                Spacer(Modifier.width(14.dp))
-            }
-
-            Column(
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier.weight(1f),
-            ) {
-                ProvideTextStyle(
-                    MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Medium,
-                    ),
-                ) {
-                    title()
-                }
-
-                subtitle?.let {
-                    Spacer(Modifier.height(2.dp))
-                    ProvideTextStyle(
-                        MaterialTheme.typography.bodyMedium.copy(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        ),
-                    ) {
-                        it()
+    val row: @Composable () -> Unit = {
+        NewMenuItem(
+            headlineContent = title,
+            supportingContent = if (subtitle != null || description != null || content != null) {
+                {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        subtitle?.invoke()
+                        description?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                        content?.invoke()
                     }
                 }
-
-                if (description != null) {
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
-                content?.invoke()
-            }
-
-            if (trailingContent != null) {
-                Spacer(Modifier.width(12.dp))
-                Box(
-                    modifier = Modifier.align(Alignment.CenterVertically),
-                ) {
-                    trailingContent()
-                }
-            }
-        }
+            } else null,
+            leadingContent = icon,
+            trailingContent = trailingContent,
+            onClick = onClick,
+            enabled = isEnabled,
+            modifier = if (inGroup) modifier else Modifier,
+        )
     }
-
-    if (inGroup) {
-        rowContent()
-    } else {
-        LiquidGlassCard(
-            cornerRadius = 24.dp,
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp)
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                },
-        ) {
-            rowContent()
-        }
-    }
+    if (inGroup) row() else MenuSurfaceSection(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp),
+    ) { row() }
 }
 
 @Composable
@@ -802,20 +711,17 @@ fun PreferenceGroup(
     Column(modifier = modifier.padding(horizontal = 16.dp)) {
         if (title != null) {
             Text(
-                text = title.uppercase(),
+                text = title,
                 style = MaterialTheme.typography.labelLarge.copy(
                     fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 1.2.sp
+                    letterSpacing = 0.sp
                 ),
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
             )
         }
 
-        LiquidGlassCard(
-            cornerRadius = 26.dp,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
+        MenuSurfaceSection(modifier = Modifier.fillMaxWidth()) {
             CompositionLocalProvider(LocalPreferenceInGroup provides true) {
                 Column(
                     modifier = Modifier.padding(vertical = 5.dp),
@@ -857,17 +763,15 @@ fun PreferenceGroupTitle(
     modifier: Modifier = Modifier,
 ) {
     Text(
-        text = title.uppercase(),
+        text = title,
         style = MaterialTheme.typography.labelLarge.copy(
             fontWeight = FontWeight.SemiBold,
-            letterSpacing = 1.2.sp
+            letterSpacing = 0.sp
         ),
         color = MaterialTheme.colorScheme.primary,
         modifier = modifier.padding(horizontal = 20.dp, vertical = 10.dp),
     )
 }
-
-// ── BOTTOM SHEETS EXPRESIVOS ────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1231,7 +1135,6 @@ fun <T> ExpressiveList(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
 
-                    // Indicador expresivo de selección
                     AnimatedContent(
                         targetState = isSelected,
                         transitionSpec = {
