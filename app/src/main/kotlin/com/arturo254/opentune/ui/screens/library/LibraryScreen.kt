@@ -1,12 +1,9 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens.library
+
+import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.motion.galaxMotion
+import com.arturo254.opentune.core.designsystem.motion.galaxEnterTransition
+import com.arturo254.opentune.core.designsystem.motion.galaxExitTransition
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.spring
@@ -50,6 +47,7 @@ import com.arturo254.opentune.utils.rememberPreference
 
 @Composable
 fun LibraryScreen(navController: NavController) {
+    val motion = OpenTuneDesignSystem.galaxMotion
     var filterType by rememberEnumPreference(ChipSortTypeKey, LibraryFilter.LIBRARY)
 
     val database = LocalDatabase.current
@@ -117,19 +115,8 @@ fun LibraryScreen(navController: NavController) {
         AnimatedContent(
             targetState = filterType,
             transitionSpec = {
-                (
-                    slideInHorizontally(
-                        animationSpec = spring(
-                            dampingRatio = 0.88f,
-                            stiffness = 520f,
-                        ),
-                        initialOffsetX = { width -> width / 7 },
-                    ) + fadeIn()
-                ) togetherWith (
-                    slideOutHorizontally(
-                        targetOffsetX = { width -> -width / 9 },
-                    ) + fadeOut()
-                )
+                galaxEnterTransition(motion, topLevel = true, direction = 1) togetherWith
+                    galaxExitTransition(motion, topLevel = true, direction = 1)
             },
             label = "libraryLiquidTransition",
         ) { activeFilter ->

@@ -64,8 +64,8 @@ fun GalaxScreenHeading(title: String, subtitle: String, modifier: Modifier = Mod
 }
 
 @Composable
-fun GalaxDestinationTheme(content: @Composable () -> Unit) {
-    val original = MaterialTheme.colorScheme
+fun GalaxDestinationTheme(immersive: Boolean = false, content: @Composable () -> Unit) {
+    val original = if (immersive) galaxColorScheme(dark = true) else MaterialTheme.colorScheme
     val reducedMotion = com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem.galaxMotion.reducedMotion
     val scheme = if (original.background.luminance() < .45f) original.copy(
         background = if (original.background == Color.Black) Color.Black else GalaxScreenStyle.deepSpace,

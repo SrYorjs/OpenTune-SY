@@ -35,7 +35,7 @@ fun GalaxFeaturedTrack(song: Song, isPlaying: Boolean, onClick: () -> Unit) {
     val context = LocalContext.current
     val fallback = MaterialTheme.colorScheme.primary
     val artwork = song.song.thumbnailUrl
-    val accent by produceState(fallback, artwork, fallback) {
+    val accent by produceState(fallback, artwork, context) {
         value = fallback
         if (!artwork.isNullOrBlank()) {
             value = withContext(Dispatchers.IO) {

@@ -1,10 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- * New UI by ArchiveTune (github.com/ArchiveTuneApp/ArchiveTune)
- */
-
 package com.arturo254.opentune.ui.screens.library
 
 import androidx.annotation.DrawableRes
@@ -308,7 +301,6 @@ fun LibraryMixScreen(
         if (!canEnterReorderMode) reorderEnabled = false
     }
 
-
     ExpressivePullToRefreshBox(
         isRefreshing = isRefreshing,
         onRefresh = { viewModel.syncAllLibrary() },
@@ -352,9 +344,6 @@ fun LibraryMixScreen(
                 }
             }
 
-
-
-            // Modificada para devolver un String en lugar de un Int
             fun String.extractId(): String = this.substringAfterLast('/')
 
             if (shortcuts.isNotEmpty()) {
@@ -365,7 +354,7 @@ fun LibraryMixScreen(
                         onPlayPlaylist = { entry ->
                             playerConnection?.let { connection ->
                                 coroutineScope.launch(Dispatchers.IO) {
-                                    // playlistId ahora será un String (ej: "15" o el UUID de la playlist)
+
                                     val playlistId = entry.route.extractId()
                                     database.playlistSongs(playlistId).first()
                                         .let { playlistSongs ->
@@ -384,7 +373,7 @@ fun LibraryMixScreen(
                         onShufflePlaylist = { entry ->
                             playerConnection?.let { connection ->
                                 coroutineScope.launch(Dispatchers.IO) {
-                                    // playlistId ahora será un String
+
                                     val playlistId = entry.route.extractId()
                                     database.playlistSongs(playlistId).first()
                                         .let { playlistSongs ->
@@ -684,16 +673,13 @@ private fun SpotifyPlaylistCompactCard(
 
     Column(
         modifier = modifier
-            .width(130.dp)
-            .clip(RoundedCornerShape(32.dp))
-            .background(cardBgColor)
-            .clickable(onClick = onClick)
-            .padding(12.dp),
+            .width(156.dp)
+            .clickable(onClick = onClick),
     ) {
         Box(
             modifier = Modifier
-                .size(106.dp)
-                .clip(RoundedCornerShape(24.dp)),
+                .size(156.dp)
+                .clip(com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.artworkShape),
         ) {
             AsyncImage(
                 model = thumbnailUrl,
@@ -743,10 +729,8 @@ private fun LibraryControlCard(
     onToggleReorder: () -> Unit,
     controls: @Composable RowScope.() -> Unit,
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-        shape = MaterialTheme.shapes.large,
-        modifier = Modifier.padding(horizontal = 16.dp),
+    com.arturo254.opentune.ui.component.MenuSurfaceSection(
+        modifier = Modifier.padding(horizontal = 24.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

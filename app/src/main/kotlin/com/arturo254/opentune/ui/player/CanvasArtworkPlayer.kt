@@ -202,7 +202,7 @@ internal fun CanvasArtworkPlayer(
             do {
                 val bitmap = copyCanvasFrame(view)
                 if (bitmap != null) frameReceiver?.invoke(bitmap.asImageBitmap())
-                kotlinx.coroutines.delay(125)
+                kotlinx.coroutines.delay(67)
             } while (isPlaying)
             }
         }

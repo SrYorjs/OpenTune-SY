@@ -1,362 +1,154 @@
 package com.arturo254.opentune.ui.utils
 
-import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
-
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.text.format.Formatter
 import android.widget.Toast
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.text.BasicText
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.arturo254.opentune.innertube.YouTube
-import com.arturo254.opentune.innertube.models.MediaInfo
 import com.arturo254.opentune.LocalDatabase
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
+import com.arturo254.opentune.core.designsystem.component.Artwork
+import com.arturo254.opentune.core.designsystem.theme.GalaxDestinationTheme
+import com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import com.arturo254.opentune.db.entities.FormatEntity
 import com.arturo254.opentune.db.entities.Song
-import com.arturo254.opentune.ui.component.shimmer.ShimmerHost
-import com.arturo254.opentune.ui.component.shimmer.TextPlaceholder
-import android.content.ClipData
-import android.content.ClipboardManager
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.ElevatedCard
+import com.arturo254.opentune.innertube.YouTube
+import com.arturo254.opentune.innertube.models.MediaInfo
+import com.arturo254.opentune.ui.component.MenuSurfaceSection
+import com.arturo254.opentune.ui.component.NewMenuItem
+import kotlinx.coroutines.CancellationException
+import java.text.NumberFormat
+
+private data class MediaDetail(val key: String, val label: String, val value: String, val icon: Int)
 
 @Composable
 fun ShowMediaInfo(videoId: String) {
-
     if (videoId.isBlank()) return
-
-    val windowInsets = WindowInsets.systemBars
     val database = LocalDatabase.current
-    val playerConnection = LocalPlayerConnection.current
+    val connection = LocalPlayerConnection.current
     val context = LocalContext.current
-
-    var info by remember { mutableStateOf<MediaInfo?>(null) }
-    var song by remember { mutableStateOf<Song?>(null) }
-    var currentFormat by remember { mutableStateOf<FormatEntity?>(null) }
-
-    LaunchedEffect(videoId) {
-        info = YouTube.getMediaInfo(videoId).getOrNull()
+    var info by remember(videoId) { mutableStateOf<MediaInfo?>(null) }
+    var song by remember(videoId) { mutableStateOf<Song?>(null) }
+    var format by remember(videoId) { mutableStateOf<FormatEntity?>(null) }
+    var loading by remember(videoId) { mutableStateOf(true) }
+    var attempt by remember(videoId) { mutableIntStateOf(0) }
+    LaunchedEffect(videoId, attempt) {
+        loading = true
+        try {
+            info = YouTube.getMediaInfo(videoId).getOrNull()
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            info = null
+        } finally {
+            loading = false
+        }
     }
-
-    LaunchedEffect(videoId) {
-        database.song(videoId).collect { song = it }
+    LaunchedEffect(videoId) { database.song(videoId).collect { song = it } }
+    LaunchedEffect(videoId) { database.format(videoId).collect { format = it } }
+    val unknown = stringResource(R.string.unknown)
+    val details = buildList {
+        add(MediaDetail("id", stringResource(R.string.media_id), videoId, R.drawable.tag))
+        format?.let { current ->
+            add(MediaDetail("itag", "Itag", current.itag.toString(), R.drawable.code))
+            add(MediaDetail("mime", stringResource(R.string.mime_type), current.mimeType ?: unknown, R.drawable.memory))
+            add(MediaDetail("codec", stringResource(R.string.codecs), current.codecs ?: unknown, R.drawable.tune))
+            add(MediaDetail("rate", stringResource(R.string.bitrate), current.bitrate?.let { "${it / 1000} Kbps" } ?: unknown, R.drawable.graphic_eq))
+            add(MediaDetail("sample", stringResource(R.string.sample_rate), current.sampleRate?.let { "$it Hz" } ?: unknown, R.drawable.equalizer))
+            add(MediaDetail("size", stringResource(R.string.file_size), current.contentLength?.let { Formatter.formatShortFileSize(context, it) } ?: unknown, R.drawable.folder))
+        }
+        connection?.let { add(MediaDetail("volume", stringResource(R.string.volume), "${(it.player.volume * 100).toInt()}%", R.drawable.volume_up)) }
     }
-
-    LaunchedEffect(videoId) {
-        database.format(videoId).collect { currentFormat = it }
-    }
-
-    fun copy(text: String) {
-        val cm =
-            context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as ClipboardManager
-        cm.setPrimaryClip(ClipData.newPlainText("text", text))
+    fun copy(value: String) {
+        (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager)
+            .setPrimaryClip(ClipData.newPlainText("GalaxOS", value))
         Toast.makeText(context, R.string.copied, Toast.LENGTH_SHORT).show()
     }
-
-    LazyColumn(
-        state = rememberLazyListState(),
-        modifier = Modifier
-            .padding(windowInsets.asPaddingValues())
-            .padding(horizontal = 16.dp)
-            .fillMaxSize()
-            .galaxScreenBackground()
-    ) {
-
-        if (song != null) {
-
-            item {
-                SectionTitle(
-                    icon = R.drawable.info,
-                    title = stringResource(R.string.details)
-                )
+    GalaxDestinationTheme {
+        LazyColumn(modifier = Modifier.fillMaxSize().galaxScreenBackground().windowInsetsPadding(WindowInsets.systemBars),
+            contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            item("heading", contentType = "heading") {
+                Text(stringResource(R.string.details), style = MaterialTheme.typography.headlineLarge)
             }
-
-            item {
-
-                ElevatedCard(
-                    shape = MaterialTheme.shapes.extraLarge,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-
-                    Column(Modifier.padding(20.dp)) {
-
-                        val baseList = listOf(
-                            Triple(R.drawable.music_note, stringResource(R.string.song_title), song?.title),
-                            Triple(R.drawable.person, stringResource(R.string.song_artists),
-                                song?.artists?.joinToString { it.name }),
-                            Triple(R.drawable.tag, stringResource(R.string.media_id), song?.id)
-                        )
-
-                        val extendedList = baseList + if (currentFormat != null) {
-                            listOf(
-                                Triple(R.drawable.code, "Itag", currentFormat?.itag?.toString()),
-                                Triple(R.drawable.memory, stringResource(R.string.mime_type), currentFormat?.mimeType),
-                                Triple(R.drawable.tune, stringResource(R.string.codecs), currentFormat?.codecs),
-                                Triple(R.drawable.graphic_eq, stringResource(R.string.bitrate),
-                                    currentFormat?.bitrate?.let { "${it / 1000} Kbps" }),
-                                Triple(R.drawable.equalizer, stringResource(R.string.sample_rate),
-                                    currentFormat?.sampleRate?.let { "$it Hz" }),
-                                Triple(R.drawable.volume_up, stringResource(R.string.volume),
-                                    "${(playerConnection?.player?.volume?.times(100))?.toInt()}%"),
-                                Triple(
-                                    R.drawable.folder,
-                                    stringResource(R.string.file_size),
-                                    currentFormat?.contentLength?.let {
-                                        Formatter.formatShortFileSize(context, it)
+            item("track", contentType = "track") {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Artwork(song?.song?.thumbnailUrl, Modifier.size(88.dp), shape = GalaxScreenStyle.artworkShape)
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(song?.title ?: info?.title ?: unknown, style = MaterialTheme.typography.titleLarge,
+                            maxLines = 3, overflow = TextOverflow.Ellipsis)
+                        Text(song?.artists?.joinToString { it.name } ?: info?.author ?: unknown,
+                            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+            items(details, key = { it.key }, contentType = { "detail" }) { detail ->
+                MenuSurfaceSection {
+                    NewMenuItem(headlineContent = { Text(detail.value, maxLines = 2, overflow = TextOverflow.Ellipsis) },
+                        supportingContent = { Text(detail.label) },
+                        leadingContent = { Icon(painterResource(detail.icon), null) }, onClick = { copy(detail.value) })
+                }
+            }
+            item("information", contentType = "heading") {
+                Text(stringResource(R.string.information), style = MaterialTheme.typography.titleLarge)
+            }
+            if (loading) item("loading", contentType = "status") {
+                LinearProgressIndicator(Modifier.fillMaxWidth())
+            } else if (info == null) item("retry", contentType = "status") {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.no_results_found), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    TextButton(onClick = { attempt++ }) { Text(stringResource(R.string.retry)) }
+                }
+            }
+            info?.let { remote ->
+                item("description", contentType = "description") {
+                    SelectionContainer {
+                        Text(remote.description.orEmpty(), style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+                item("statistics", contentType = "statistics") {
+                    val stats = listOf(
+                        stringResource(R.string.subscribers) to remote.subscribers.orEmpty().ifBlank { unknown },
+                        stringResource(R.string.views) to formatMediaCount(remote.viewCount).ifBlank { unknown },
+                        stringResource(R.string.likes) to formatMediaCount(remote.like).ifBlank { unknown },
+                        stringResource(R.string.dislikes) to formatMediaCount(remote.dislike).ifBlank { unknown },
+                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        stats.chunked(2).forEach { row ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                row.forEach { (label, value) ->
+                                    MenuSurfaceSection(Modifier.weight(1f)) {
+                                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Text(value, style = MaterialTheme.typography.titleLarge)
+                                            Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
                                     }
-                                )
-                            )
-                        } else emptyList()
-
-                        extendedList.forEach { (icon, label, value) ->
-
-                            val text = value ?: stringResource(R.string.unknown)
-
-                            MediaRow(
-                                icon = icon,
-                                label = label,
-                                value = text,
-                                onClick = { copy(text) }
-                            )
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-
-        item {
-            Spacer(Modifier.height(24.dp))
-            SectionTitle(
-                icon = R.drawable.description,
-                title = stringResource(R.string.information)
-            )
-        }
-
-        if (info != null) {
-
-            if (song == null) {
-                item {
-                    InfoBlock(
-                        icon = R.drawable.music_note,
-                        label = "",
-                        text = info?.title ?: ""
-                    )
-                }
-            }
-
-            item {
-                InfoBlock(
-                    icon = R.drawable.person,
-                    label = stringResource(R.string.artists),
-                    text = info?.author ?: ""
-                )
-            }
-
-            item {
-                InfoBlock(
-                    icon = R.drawable.description,
-                    label = stringResource(R.string.description),
-                    text = info?.description ?: ""
-                )
-            }
-
-            item {
-                ElevatedCard(
-                    shape = MaterialTheme.shapes.extraLarge,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp)
-                ) {
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-
-                        StatColumn(
-                            R.drawable.group,
-                            stringResource(R.string.subscribers),
-                            info?.subscribers ?: ""
-                        )
-
-                        StatColumn(
-                            R.drawable.visibility,
-                            stringResource(R.string.views),
-                            info?.viewCount?.toInt()?.let { numberFormatter(it) } ?: ""
-                        )
-
-                        StatColumn(
-                            R.drawable.thumbup,
-                            stringResource(R.string.likes),
-                            info?.like?.toInt()?.let { numberFormatter(it) } ?: ""
-                        )
-
-                        StatColumn(
-                            R.drawable.thumbdown,
-                            stringResource(R.string.dislikes),
-                            info?.dislike?.toInt()?.let { numberFormatter(it) } ?: ""
-                        )
-                    }
-                }
-            }
-
-        } else {
-
-            item {
-                ShimmerHost {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        TextPlaceholder()
-                    }
-                }
-            }
-        }
     }
 }
 
-@Composable
-private fun SectionTitle(icon: Int, title: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(title, style = MaterialTheme.typography.titleMedium)
-    }
-}
-
-@Composable
-private fun MediaRow(
-    icon: Int,
-    label: String,
-    value: String,
-    onClick: () -> Unit
-) {
-    Column(Modifier.padding(vertical = 6.dp)) {
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(Modifier.width(6.dp))
-            Text(label, style = MaterialTheme.typography.labelMedium)
-        }
-
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onClick
-                )
-                .padding(start = 24.dp, top = 4.dp)
-        )
-    }
-}
-
-@Composable
-private fun InfoBlock(icon: Int, label: String, text: String) {
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp)
-    ) {
-
-        Row(verticalAlignment = Alignment.CenterVertically) {
-
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(Modifier.width(8.dp))
-
-            if (label.isNotEmpty()) {
-                Text(label, style = MaterialTheme.typography.labelMedium)
-            }
-        }
-
-        BasicText(
-            text = text,
-            style = MaterialTheme.typography.titleMedium.copy(
-                color = MaterialTheme.colorScheme.onBackground
-            ),
-            modifier = Modifier.padding(start = 28.dp, top = 6.dp)
-        )
-    }
-}
-
-@Composable
-private fun StatColumn(icon: Int, label: String, value: String) {
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary
-        )
-
-        Spacer(Modifier.height(6.dp))
-
-        Text(label, style = MaterialTheme.typography.labelMedium)
-
-        Spacer(Modifier.height(4.dp))
-
-        Text(value, style = MaterialTheme.typography.titleSmall)
-    }
+private fun formatMediaCount(value: Any?): String {
+    val text = value?.toString().orEmpty()
+    return text.toLongOrNull()?.let { NumberFormat.getIntegerInstance().format(it) } ?: text
 }
