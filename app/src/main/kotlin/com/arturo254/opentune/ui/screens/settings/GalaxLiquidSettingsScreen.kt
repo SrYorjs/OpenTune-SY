@@ -182,12 +182,15 @@ fun GalaxLiquidSettingsScreen(navController: NavController) {
                 Text("Preparando Glass Studio...", style = MaterialTheme.typography.bodyLarge)
             }
         } else {
+            // One continuous scroll region: image picker, preview, variants
+            // and optics all move together. No fixed preview / tiny scroll box.
             Column(
                 Modifier.fillMaxSize()
                     .padding(padding)
                     .windowInsetsPadding(LocalPlayerAwareWindowInsets.current)
-                    .padding(horizontal = 15.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 15.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Row(
                     Modifier.fillMaxWidth(),
@@ -213,7 +216,7 @@ fun GalaxLiquidSettingsScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Column(
-                    Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                    Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
