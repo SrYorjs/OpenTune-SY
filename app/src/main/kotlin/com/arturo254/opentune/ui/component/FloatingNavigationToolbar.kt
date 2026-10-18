@@ -490,13 +490,13 @@ private fun FloatingNavigationToolbarItem(
         } else {
             Color.Transparent
         },
-        animationSpec = tween(durationMillis = 110),
+        animationSpec = spring(dampingRatio = .83f, stiffness = 480f),
         label = "selectedContainer",
     )
 
     val horizontalPadding by animateDpAsState(
         targetValue = if (showLabel) 12.dp else 10.dp,
-        animationSpec = tween(durationMillis = 100),
+        animationSpec = spring(dampingRatio = .84f, stiffness = 470f),
         label = "itemPadding",
     )
 
@@ -558,7 +558,7 @@ private fun FloatingNavigationToolbarItem(
     ) {
         Crossfade(
             targetState = selected,
-            animationSpec = tween(durationMillis = 75),
+            animationSpec = tween(durationMillis = 150),
             label = "iconCrossfade",
             modifier = Modifier.scale(iconScale),
         ) { isSelected ->
@@ -575,7 +575,7 @@ private fun FloatingNavigationToolbarItem(
         AnimatedVisibility(
             visible = showLabel,
             enter =
-                fadeIn(tween(70)) +
+                fadeIn(tween(130)) +
                     slideInHorizontally(
                         animationSpec = spring(
                             dampingRatio = 0.82f,
@@ -586,11 +586,11 @@ private fun FloatingNavigationToolbarItem(
                         },
                     ) +
                     expandHorizontally(
-                        animationSpec = tween(105),
+                        animationSpec = tween(175),
                         expandFrom = if (slideFromEnd) Alignment.End else Alignment.Start,
                     ),
             exit =
-                fadeOut(tween(60)) +
+                fadeOut(tween(110)) +
                     slideOutHorizontally(
                         animationSpec = tween(90),
                         targetOffsetX = { width ->
