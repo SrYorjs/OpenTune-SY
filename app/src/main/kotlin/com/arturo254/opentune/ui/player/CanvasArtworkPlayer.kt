@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +32,8 @@ import com.arturo254.opentune.innertube.models.YouTubeClient
 import okhttp3.OkHttpClient
 import java.util.Locale
 
+internal val LocalCanvasFrameReceiver = androidx.compose.runtime.staticCompositionLocalOf<((androidx.compose.ui.graphics.ImageBitmap?) -> Unit)?> { null }
+
 @Composable
 internal fun CanvasArtworkPlayer(
     primaryUrl: String?,
@@ -40,6 +43,8 @@ internal fun CanvasArtworkPlayer(
     resizeMode: Int = AspectRatioFrameLayout.RESIZE_MODE_ZOOM,
 ) {
     val context = LocalContext.current
+    val frameReceiver by androidx.compose.runtime.rememberUpdatedState(LocalCanvasFrameReceiver.current)
+    var texture by remember { mutableStateOf<android.view.TextureView?>(null) }
     val primary = primaryUrl?.takeIf { it.isNotBlank() }
     val fallback = fallbackUrl?.takeIf { it.isNotBlank() }
     val initial = primary ?: fallback ?: return
@@ -187,6 +192,27 @@ internal fun CanvasArtworkPlayer(
         label = "canvasAlpha",
     )
 
+    // A bounded CPU image is the source, never the AndroidView RenderNode.
+    // This keeps the optical pipeline identical and prevents capture cycles.
+    LaunchedEffect(texture, currentUrl, isVideoReady, isPlaying, frameReceiver != null) {
+        frameReceiver?.invoke(null)
+        val view = texture
+        if (view != null && isVideoReady && frameReceiver != null) {
+            do {
+                if (view.isAvailable && view.width > 0 && view.height > 0) {
+                    val width = minOf(256, view.width)
+                    val height = (width.toFloat() * view.height / view.width).toInt().coerceIn(1, 512)
+                    val bitmap = view.getBitmap(width, height)
+                    frameReceiver?.invoke(bitmap?.asImageBitmap())
+                }
+                kotlinx.coroutines.delay(67)
+            } while (isPlaying)
+        }
+    }
+    DisposableEffect(initial) {
+        onDispose { frameReceiver?.invoke(null) }
+    }
+
     AndroidView(
         factory = { viewContext ->
             // Media3 PlayerView defaults to SurfaceView, whose separate window
@@ -202,6 +228,7 @@ internal fun CanvasArtworkPlayer(
             }
         },
         update = { view ->
+            texture = view.videoSurfaceView as? android.view.TextureView
             if (view.player !== exoPlayer) view.player = exoPlayer
             if (view.resizeMode != resizeMode) view.resizeMode = resizeMode
         },

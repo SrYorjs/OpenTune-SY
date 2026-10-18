@@ -13,6 +13,11 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,24 +48,51 @@ fun V8PlayerScene(
     gradientColors: List<androidx.compose.ui.graphics.Color> = emptyList(),
     controls: @Composable ColumnScope.() -> Unit,
 ) {
+    var canvasFrame by remember(artworkUrl, canvasArtwork?.preferredAnimationUrl) {
+        mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null)
+    }
+    val receiveFrame: (androidx.compose.ui.graphics.ImageBitmap?) -> Unit = remember(artworkUrl, canvasArtwork?.preferredAnimationUrl) {
+        { canvasFrame = it }
+    }
     Box(modifier = Modifier.fillMaxSize()) {
         if (immersiveGlass) {
-            // Record only the static cover owned by the CURRENT track.
-            // Canvas/video is drawn as a later sibling, never inside a
-            // layerBackdrop node (SurfaceView and HWUI capture incompatibility).
-            com.arturo254.opentune.ui.player.visual.PlayerArtworkAtmosphere(
-                artworkUrl = artworkUrl,
-                gradientColors = gradientColors,
-                isPlaying = isPlaying,
-                disableBlur = disableBlur,
-                modifier = Modifier.then(
-                    if (playerBackdrop != null) Modifier.layerBackdrop(playerBackdrop) else Modifier
-                ),
-            )
+            Box(Modifier.fillMaxSize().then(
+                if (playerBackdrop != null) Modifier.layerBackdrop(playerBackdrop) else Modifier
+            )) {
+                com.arturo254.opentune.ui.player.visual.PlayerArtworkAtmosphere(
+                    artworkUrl = artworkUrl,
+                    gradientColors = gradientColors,
+                    isPlaying = isPlaying,
+                    disableBlur = disableBlur,
+                )
+                canvasFrame?.let { frame ->
+                    androidx.compose.foundation.Image(
+                        bitmap = frame, contentDescription = null,
+                        contentScale = androidx.compose.ui.layout.ContentScale.FillBounds,
+                        modifier = Modifier.fillMaxWidth().fillMaxHeight(.73f)
+                            .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+                            .drawWithCache {
+                                val mask = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                    0f to androidx.compose.ui.graphics.Color.Black,
+                                    .65f to androidx.compose.ui.graphics.Color.Black,
+                                    1f to androidx.compose.ui.graphics.Color.Transparent,
+                                )
+                                onDrawWithContent {
+                                    drawContent()
+                                    drawRect(mask, blendMode = androidx.compose.ui.graphics.BlendMode.DstIn)
+                                }
+                            },
+                    )
+                }
+            }
         }
         if (!immersiveGlass || !canvasArtwork?.preferredAnimationUrl.isNullOrBlank()) {
             // Preserve the V8 Canvas/video experience without capturing the
             // video player itself into the Kyant backdrop render graph.
+            CompositionLocalProvider(
+                com.arturo254.opentune.ui.player.LocalCanvasFrameReceiver provides
+                    (if (immersiveGlass) receiveFrame else null),
+            ) {
             V8PlayerBackdrop(
                 thumbnailUrl = artworkUrl,
                 canvasArtwork = canvasArtwork,
@@ -69,6 +101,7 @@ fun V8PlayerScene(
                 label = "v8BackdropPortrait",
                 liquidCanvas = immersiveGlass,
             )
+            }
         }
 
         Column(

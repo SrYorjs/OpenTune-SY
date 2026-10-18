@@ -107,14 +107,13 @@ fun NavGraphBuilder.navigationBuilder(
     navController: NavHostController,
     scrollBehavior: TopAppBarScrollBehavior,
     latestVersionName: String,
+    pagerState: androidx.compose.foundation.pager.PagerState,
+    onOpenSearch: () -> Unit,
 ) {
-    composable(Screens.Home.route) {
-        HomeScreen(navController)
-    }
-    composable(
-        Screens.Library.route,
-    ) {
-        LibraryScreen(navController)
+    Screens.MainScreens.forEach { screen ->
+        composable(screen.route) {
+            GalaxMainPages(navController, pagerState, onOpenSearch)
+        }
     }
     composable("history") {
         HistoryScreen(navController)

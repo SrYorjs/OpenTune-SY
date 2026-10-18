@@ -43,6 +43,7 @@ import kotlinx.coroutines.withContext
 
 internal data class MainActivityNavigationState(
     val navController: NavHostController,
+    val pagerState: androidx.compose.foundation.pager.PagerState,
     val accountImageUrl: String?,
     val allLocalItems: List<LocalItem>,
     val allYtItems: List<YTItem>,
@@ -82,6 +83,13 @@ internal fun rememberMainActivityNavigationState(
 ): MainActivityNavigationState {
     val focusManager = LocalFocusManager.current
     val navController = rememberNavController()
+    val defaultOpenTab by rememberEnumPreference(DefaultOpenTabKey, NavigationTab.HOME)
+    val initialPage = remember { when (activity.intent?.action) {
+        MainActivity.ACTION_LIBRARY -> 2
+        MainActivity.ACTION_SEARCH -> 1
+        else -> if (defaultOpenTab == NavigationTab.LIBRARY) 2 else if (defaultOpenTab == NavigationTab.SEARCH) 1 else 0
+    } }
+    val pagerState = androidx.compose.foundation.pager.rememberPagerState(initialPage = initialPage) { 3 }
     val homeViewModel: HomeViewModel = hiltViewModel()
 
     val accountImageUrl by homeViewModel.accountImageUrl.collectAsState()
@@ -110,7 +118,6 @@ internal fun rememberMainActivityNavigationState(
     val isAlwaysOnDisplayScreen = currentRoute == "always_on_display"
     val navigationItems = remember { Screens.MainScreens }
     val (slimNav) = rememberPreference(SlimNavBarKey, defaultValue = false)
-    val defaultOpenTab by rememberEnumPreference(DefaultOpenTabKey, NavigationTab.HOME)
     val pauseSearchHistory by rememberPreference(PauseSearchHistoryKey, defaultValue = false)
 
     val tabOpenedFromShortcut =
@@ -146,7 +153,8 @@ internal fun rememberMainActivityNavigationState(
         when {
             active -> Screens.Search.route
             pendingNavigationRoute != null -> pendingNavigationRoute
-            else -> normalizedNavigationRoute
+            else -> if (normalizedNavigationRoute in Screens.MainScreens.map { it.route })
+                Screens.MainScreens[pagerState.currentPage].route else normalizedNavigationRoute
         }
 
     val onActiveChange: (Boolean) -> Unit = { newActive ->
@@ -201,7 +209,7 @@ internal fun rememberMainActivityNavigationState(
         }
 
     val shouldShowHomeShuffleButton =
-        currentRoute == Screens.Home.route &&
+        selectedNavigationRoute == Screens.Home.route &&
             (allLocalItems.isNotEmpty() || allYtItems.isNotEmpty())
 
     var shouldShowTopBar by rememberSaveable {
@@ -227,6 +235,7 @@ internal fun rememberMainActivityNavigationState(
 
     return MainActivityNavigationState(
         navController = navController,
+        pagerState = pagerState,
         accountImageUrl = accountImageUrl,
         allLocalItems = allLocalItems,
         allYtItems = allYtItems,

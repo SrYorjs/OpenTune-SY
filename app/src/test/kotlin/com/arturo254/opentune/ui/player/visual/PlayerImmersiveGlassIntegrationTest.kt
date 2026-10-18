@@ -54,23 +54,23 @@ class PlayerImmersiveGlassIntegrationTest {
         val model = source("core/designsystem/liquid/GalaxLiquidModel.kt")
         assertTrue(model.contains("LocalGalaxCanvasLive"))
         val liquid = source("core/designsystem/liquid/GalaxLiquidRenderer.kt")
-        assertTrue(liquid.contains("if (LocalGalaxCanvasLive.current)"))
+        assertFalse(liquid.contains("if (LocalGalaxCanvasLive.current)"))
+        assertTrue(canvasPlayer.contains("view.getBitmap(width, height)"))
+        assertTrue(v8.contains("bitmap = frame"))
         assertTrue(v8.contains("liquidCanvas = immersiveGlass"))
         assertFalse(atmosphere.contains("drawBackdrop("))
         assertFalse(atmosphere.contains("galaxLiquidEffect("))
     }
 
-    @Test fun bottomTabsHandleSwipesAtClickableItemNotOnlyOuterToolbar() {
+    @Test fun bottomTabsAndPagesShareContinuousPagerPosition() {
         val toolbar = source("ui/component/FloatingNavigationToolbar.kt")
-        assertTrue(toolbar.contains("onSwipe: (Float) -> Unit"))
-        assertTrue(toolbar.contains("onItemClick(items[next], false)"))
-        assertTrue(toolbar.contains("val drag = itemDrag"))
-        assertTrue(toolbar.contains("detectHorizontalDragGestures("))
-        assertTrue(toolbar.contains("liquidTabIndicatorX"))
-        assertTrue(toolbar.contains("latestOnProgress(itemDrag)"))
-        assertTrue(toolbar.contains("latestOnProgress(0f)"))
-        assertTrue(toolbar.contains("liquidTabDragFeedback"))
-        assertTrue(toolbar.contains(".pointerInput(Unit)"))
-        assertTrue(toolbar.contains("rememberUpdatedState(onSwipe)"))
+        val pages = source("ui/screens/GalaxMainPages.kt")
+        val scaffold = source("MainActivityScaffold.kt")
+        assertTrue(pages.contains("HorizontalPager(state = pager"))
+        assertTrue(toolbar.contains("pagerState.currentPage + pagerState.currentPageOffsetFraction"))
+        assertTrue(toolbar.contains("pagerState.dispatchRawDelta("))
+        assertTrue(toolbar.contains("pagerState.animateScrollToPage("))
+        assertFalse(scaffold.contains("var pageDrag"))
+        assertFalse(toolbar.contains("FloatingNavigationToolbarItem("))
     }
 }

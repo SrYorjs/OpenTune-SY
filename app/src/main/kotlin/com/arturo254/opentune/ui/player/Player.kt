@@ -690,7 +690,6 @@ fun BottomSheetPlayer(
     ) {
         CompositionLocalProvider(
             LocalGalaxLiquidBackdrop provides when {
-                liveCanvasGlass -> null
                 activePlayerGlass -> playerArtworkBackdrop
                 else -> inheritedBackdrop
             },

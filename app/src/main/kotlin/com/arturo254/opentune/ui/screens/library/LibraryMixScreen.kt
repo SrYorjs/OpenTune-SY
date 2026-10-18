@@ -320,6 +320,12 @@ fun LibraryMixScreen(
             contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
             modifier = Modifier.fillMaxSize(),
         ) {
+            item(key = "galax_library_portal") {
+                com.arturo254.opentune.ui.screens.GalaxPortal(
+                    stringResource(R.string.galax_your_library),
+                    stringResource(R.string.galax_library_subtitle),
+                )
+            }
             item(key = "filter") {
                 filterContent()
             }
@@ -780,46 +786,20 @@ private fun LibraryShortcutGrid(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier,
     ) {
-        if (entries.isNotEmpty()) {
-            val heroEntry = entries.first()
-
-            LibraryHeroFavoriteTile(
-                title = heroEntry.title,
-                iconRes = heroEntry.iconRes, badgeText = "Más reproducidos",
-
-                accentColor = heroEntry.accentColor,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(onClick = { onClick(heroEntry.route) }),
-            )
-
-            val remainingEntries = entries.drop(1)
-            remainingEntries.chunked(2).forEach { rowEntries ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    rowEntries.forEachIndexed { index, entry ->
-                        val position = when {
-                            rowEntries.size == 1 -> GridPosition.SINGLE
-                            index == 0 -> GridPosition.LEFT
-                            else -> GridPosition.RIGHT
+        entries.chunked(2).forEach { rowEntries ->
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+                rowEntries.forEach { entry ->
+                    com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidSurface(
+                        shapeOverride = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+                        modifier = Modifier.weight(1f).height(116.dp).clickable { onClick(entry.route) },
+                    ) {
+                        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                            Icon(painterResource(entry.iconRes), null, tint = entry.accentColor, modifier = Modifier.size(26.dp))
+                            Text(entry.title, style = MaterialTheme.typography.titleSmall, maxLines = 2)
                         }
-
-                        LibraryPinnedCollectionTile(
-                            title = entry.title,
-                            iconRes = entry.iconRes,
-                            gridPosition = position,
-                            accentColor = entry.accentColor,
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable(onClick = { onClick(entry.route) }),
-                        )
-                    }
-                    if (rowEntries.size == 1) {
-                        Spacer(Modifier.weight(1f))
                     }
                 }
+                if (rowEntries.size == 1) Spacer(Modifier.weight(1f))
             }
         }
     }

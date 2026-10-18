@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="galax_your_library">Tu biblioteca</string>
+    <string name="galax_home_title">Tu música, en órbita</string>
+    <string name="galax_home_subtitle">Un universo que suena a ti</string>
+    <string name="galax_library_subtitle">Todo lo que te mueve, siempre cerca.</string>
+    <string name="galax_discover_title">Encuentra tu próxima obsesión</string>
+    <string name="galax_discover_subtitle">Nuevos sonidos. Nuevas constelaciones.</string>
+    <string name="galax_search_hint">Canciones, artistas, álbumes…</string>
+    <string name="galax_discover_for_you">Descubre algo nuevo para ti</string>
+    <string name="galax_discover_empty">Escucha música para dar forma a tus recomendaciones. Explora un género para empezar.</string>
+</resources>

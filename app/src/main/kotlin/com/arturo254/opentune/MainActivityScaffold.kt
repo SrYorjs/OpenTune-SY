@@ -561,50 +561,6 @@ internal fun MainActivityScaffold(
                                             )
                                         },
                                         modifier = Modifier
-                                            .pointerInput(
-                                                navigationState.selectedNavigationRoute,
-                                                navigationItems,
-                                                navigationState.active,
-                                            ) {
-                                                // Swiping unused page space changes top-level routes.
-                                                // Horizontal carousels have their own child recognizers;
-                                                // vertical lists/seek gestures retain their behavior.
-                                                val selected = navigationState.selectedNavigationRoute
-                                                val selectedIndex = navigationItems.indexOfFirst { it.route == selected }
-                                                if (selectedIndex >= 0 && !navigationState.active) {
-                                                    var pageDrag = 0f
-                                                    detectHorizontalDragGestures(
-                                                        onHorizontalDrag = { change, distance ->
-                                                            pageDrag += distance
-                                                            change.consume()
-                                                        },
-                                                        onDragCancel = { pageDrag = 0f },
-                                                        onDragEnd = {
-                                                            val destination = when {
-                                                                pageDrag < -64.dp.toPx() -> selectedIndex + 1
-                                                                pageDrag > 64.dp.toPx() -> selectedIndex - 1
-                                                                else -> -1
-                                                            }
-                                                            pageDrag = 0f
-                                                            if (destination in navigationItems.indices) {
-                                                                val route = navigationItems[destination].route
-                                                                if (route == Screens.Search.route) {
-                                                                    onActiveChange(true)
-                                                                } else {
-                                                                    navigationState.setPendingNavigationRoute(route)
-                                                                    navController.navigate(route) {
-                                                                        popUpTo(navController.graph.startDestinationId) {
-                                                                            saveState = true
-                                                                        }
-                                                                        launchSingleTop = true
-                                                                        restoreState = true
-                                                                    }
-                                                                }
-                                                            }
-                                                        },
-                                                    )
-                                                }
-                                            }
                                             .then(
                                                 if (liveLiquidBackdrop != null)
                                                     Modifier.layerBackdrop(liveLiquidBackdrop)
@@ -627,7 +583,9 @@ internal fun MainActivityScaffold(
                                         navigationBuilder(
                                             navController,
                                             topAppBarScrollBehavior,
-                                            latestVersionName
+                                            latestVersionName,
+                                            navigationState.pagerState,
+                                            { onActiveChange(true) },
                                         )
                                     }
                                     } // NavHost is source-only; no sampling here.

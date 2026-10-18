@@ -331,23 +331,9 @@ internal fun RowScope.MainActivityNavigationRail(
                                                         playerBottomSheetState.collapse(spring())
                                                     }
 
-                                                    if (screen.route == Screens.Search.route) {
-                                                        onActiveChange(true)
-                                                    } else if (isSelected) {
-                                                        if(wasPlayerActive) return@NavigationRailItem
-
-                                                        navController.currentBackStackEntry?.savedStateHandle?.set("scrollToTop", true)
-                                                        coroutineScope.launch {
-                                                            searchBarScrollBehavior.state.resetHeightOffset()
-                                                        }
-                                                    } else {
-                                                        navController.navigate(screen.route) {
-                                                            popUpTo(navController.graph.startDestinationId) {
-                                                                saveState = true
-                                                            }
-                                                            launchSingleTop = true
-                                                            restoreState = true
-                                                        }
+                                                    onActiveChange(false)
+                                                    coroutineScope.launch {
+                                                        navigationState.pagerState.animateScrollToPage(navigationItems.indexOf(screen))
                                                     }
                                                 },
                                             )
@@ -864,29 +850,11 @@ internal fun BoxScope.MainActivityFloatingToolbar(
                                             } else null,
                                             musicRecognitionContentDescription = if (shouldShowHomeShuffleButton) stringResource(R.string.music_recognition) else "",
                                             selectedRoute = selectedNavigationRoute,
+                                            pagerState = navigationState.pagerState,
                                             onItemClick = { screen, isSelected ->
-                                                if (screen.route == Screens.Search.route) {
-                                                    onActiveChange(true)
-                                                } else if (isSelected && !active) {
-                                                    navController.currentBackStackEntry?.savedStateHandle?.set(
-                                                        "scrollToTop",
-                                                        true
-                                                    )
-                                                    coroutineScope.launch {
-                                                        searchBarScrollBehavior.state.resetHeightOffset()
-                                                    }
-                                                } else {
-                                                    if (active) {
-                                                        onActiveChange(false)
-                                                    }
-                                                    navigationState.setPendingNavigationRoute(screen.route)
-                                                    navController.navigate(screen.route) {
-                                                        popUpTo(navController.graph.startDestinationId) {
-                                                            saveState = true
-                                                        }
-                                                        launchSingleTop = true
-                                                        restoreState = true
-                                                    }
+                                                onActiveChange(false)
+                                                coroutineScope.launch {
+                                                    navigationState.pagerState.animateScrollToPage(navigationItems.indexOf(screen))
                                                 }
                                             },
                                         )

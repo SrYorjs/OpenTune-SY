@@ -168,6 +168,9 @@ fun HomeScreen(
                 state = lazylistState,
                 contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues()
             ) {
+                item(key = "galax_home_portal") {
+                    GalaxPortal(stringResource(R.string.galax_home_title), stringResource(R.string.galax_home_subtitle))
+                }
                 if (showHomeCategoryChips) {
                     item {
                         ChipsRow(
@@ -180,26 +183,14 @@ fun HomeScreen(
                     }
                 }
 
-                if (selectedChip == null) {
-                    item(key = "global_catalog_discovery") {
-                        GlobalCatalogHomeSection(
-                            tracks = globalCatalogTrending,
-                            playerConnection = playerConnection,
-                            onPlay = viewModel::playSourceVariant,
-                            modifier = Modifier.animateItem(),
-                        )
-                    }
-                }
 
                 quickPicks?.takeIf { it.isNotEmpty() }?.let { picks ->
-            /*
                 item {
                     NavigationTitle(
                         title = stringResource(R.string.quick_picks),
                         modifier = Modifier.animateItem()
                     )
                 }
-            */
 
                 item {
                     QuickPicksSection(
@@ -297,6 +288,17 @@ fun HomeScreen(
                     )
                 }
             }
+
+                if (selectedChip == null) {
+                    item(key = "global_catalog_discovery") {
+                        GlobalCatalogHomeSection(
+                            tracks = globalCatalogTrending,
+                            playerConnection = playerConnection,
+                            onPlay = viewModel::playSourceVariant,
+                            modifier = Modifier.animateItem(),
+                        )
+                    }
+                }
 
             SimilarRecommendationsContainer(
                 viewModel = viewModel,

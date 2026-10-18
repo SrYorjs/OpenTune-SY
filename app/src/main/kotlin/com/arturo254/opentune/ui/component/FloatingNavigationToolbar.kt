@@ -32,6 +32,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.border
 import kotlin.math.roundToInt
 import androidx.compose.foundation.LocalIndication
@@ -114,6 +116,7 @@ fun FloatingNavigationToolbar(
     musicRecognitionContentDescription: String = "",
     scrollBehavior: FloatingToolbarScrollBehavior? = null,
     selectedRoute: String?,
+    pagerState: androidx.compose.foundation.pager.PagerState,
     onItemClick: (Screens, Boolean) -> Unit,
 ) {
     // scrollBehavior is kept in the public API because the host screen owns
@@ -140,7 +143,7 @@ fun FloatingNavigationToolbar(
 
         Row(
             modifier = Modifier
-                .wrapContentWidth()
+                .fillMaxWidth()
                 .height(OpenTuneNavigationDimensions.floatingHeight)
                 .preferredFrameRate(120f)
                 .animateContentSize(
@@ -187,32 +190,11 @@ fun FloatingNavigationToolbar(
                 selectedRoute = selectedRoute,
                 slideFromEnd = slideFromEnd,
                 onItemClick = onItemClick,
-                modifier = Modifier,
+                modifier = Modifier.weight(1f),
+                pagerState = pagerState,
             )
 
-            if ((onShuffleClick != null && shuffleIconRes != null) ||
-                (onFabClick != null && fabIconRes != null)
-            ) {
-                Spacer(
-                    modifier = Modifier
-                        .padding(horizontal = 3.dp)
-                        .width(1.dp)
-                        .height(24.dp)
-                        .background(Color.White.copy(alpha = if (pureBlack) 0.07f else 0.09f))
-                )
 
-                FloatingToolbarAction(
-                    pureBlack = pureBlack,
-                    onFabClick = onFabClick,
-                    fabIconRes = fabIconRes,
-                    fabContentDescription = fabContentDescription,
-                    onShuffleClick = onShuffleClick,
-                    shuffleIconRes = shuffleIconRes,
-                    shuffleContentDescription = shuffleContentDescription,
-                    onMusicRecognitionClick = onMusicRecognitionClick,
-                    musicRecognitionContentDescription = musicRecognitionContentDescription,
-                )
-            }
         }
     }
 }
@@ -226,368 +208,61 @@ private fun ToolbarItemsContainer(
     slideFromEnd: Boolean,
     onItemClick: (Screens, Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    pagerState: androidx.compose.foundation.pager.PagerState,
 ) {
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     val haptic = rememberGalaxHapticFeedback()
-    val glassEnabled = LocalEnableLiquidGlass.current
-    val selectedIndex = items.indexOfFirst { it.route == selectedRoute }
-    // Stable-width tabs keep indicator positions invariant while selection
-    // changes. The old dynamic selected-label width made the pill jump/fade.
-    val tabWidth = if (showSelectedLabels) 78.dp else 56.dp
-    var horizontalDrag by remember { mutableFloatStateOf(0f) }
     val reducedMotion = OpenTuneDesignSystem.galaxMotion.reducedMotion
-    val indicatorX by animateDpAsState(
-        targetValue = tabWidth * selectedIndex.coerceAtLeast(0),
-        animationSpec = if (reducedMotion) snap() else
-            spring(dampingRatio = .82f, stiffness = 280f),
-        label = "liquidTabIndicatorX",
-    )
-    val dragStretch by animateFloatAsState(
-        targetValue = if (reducedMotion) 0f else horizontalDrag.coerceIn(-150f, 150f) * .42f,
-        animationSpec = spring(dampingRatio = .74f, stiffness = 530f),
-        label = "liquidTabDragFeedback",
-    )
-    // The gesture detector lives on individual tabs. Capturing the entire
-    // capsule with a second pointerInput raced with clickable tab content.
-    Box(
-        modifier = modifier.wrapContentWidth(),
-        contentAlignment = Alignment.CenterStart,
-    ) {
-        if (glassEnabled && selectedIndex >= 0) {
-            Box(
-                Modifier
-                    .offset { IntOffset((indicatorX.toPx() + dragStretch).roundToInt(), 0) }
-                    .width(tabWidth)
-                    .height(48.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(
-                        MaterialTheme.colorScheme.primary.copy(
-                            alpha = if (pureBlack) .20f else .15f,
-                        ),
-                    )
-                    .border(
-                        1.dp,
-                        MaterialTheme.colorScheme.primary.copy(alpha = .32f),
-                        RoundedCornerShape(24.dp),
-                    ),
-            )
-        }
-        Row(
-            modifier = Modifier.wrapContentWidth(),
-            horizontalArrangement = Arrangement.spacedBy(1.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            items.forEach { screen ->
-                val selected = selectedRoute == screen.route
-                FloatingNavigationToolbarItem(
-                    screen = screen,
-                    selected = selected,
-                    showSelectedLabel = showSelectedLabels,
-                    slideFromEnd = slideFromEnd,
-                    pureBlack = pureBlack,
-                    onClick = {
-                        haptic(GalaxHapticCue.SELECTION)
-                        onItemClick(screen, selected)
-                    },
-                    onSwipeProgress = { drag -> horizontalDrag = drag },
-                    onSwipe = { horizontalDelta ->
-                        // Gestures begin on the clickable items themselves.
-                        // A parent-only detector lost the race to clickable(),
-                        // so dragging a tab previously did nothing.
-                        val index = items.indexOfFirst { it.route == selectedRoute }
-                        if (index >= 0) {
-                            val next = if (horizontalDelta < 0f) index + 1 else index - 1
-                            if (next in items.indices) {
-                                haptic(GalaxHapticCue.SELECTION)
-                                onItemClick(items[next], false)
-                            }
-                        }
-                    },
-                    modifier = Modifier.width(tabWidth),
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun FloatingToolbarAction(
-    pureBlack: Boolean,
-    onFabClick: (() -> Unit)?,
-    fabIconRes: Int?,
-    fabContentDescription: String,
-    onShuffleClick: (() -> Unit)?,
-    shuffleIconRes: Int?,
-    shuffleContentDescription: String,
-    onMusicRecognitionClick: (() -> Unit)?,
-    musicRecognitionContentDescription: String,
-) {
-    var expanded by rememberSaveable { mutableStateOf(false) }
-
-    val isOverflow = onShuffleClick != null && shuffleIconRes != null
-    val actionIcon = if (isOverflow) R.drawable.more_horiz else fabIconRes
-
-    Box {
-        if (actionIcon != null) {
-            val interactionSource = remember { MutableInteractionSource() }
-            val pressed by interactionSource.collectIsPressedAsState()
-            val scale by animateFloatAsState(
-                targetValue = if (pressed) 0.90f else 1f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMedium,
-                ),
-                label = "toolbarActionScale",
-            )
-
-            val liquidGlass = LocalEnableLiquidGlass.current
-
-            Box(
-                modifier = Modifier
-                    .size(42.dp)
-                    .scale(scale)
-                    .clip(CircleShape)
-                    .background(
-                        if (liquidGlass) {
-                            Color.Black.copy(alpha = if (pureBlack) 0.10f else 0.055f)
-                        } else {
-                            Color.White.copy(alpha = if (pureBlack) 0.11f else 0.14f)
-                        }
-                    )
-                    .clickable(
-                        interactionSource = interactionSource,
-                        indication = LocalIndication.current,
-                        role = Role.Button,
-                    ) {
-                        if (isOverflow) expanded = !expanded
-                        else onFabClick?.invoke()
-                    },
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(actionIcon),
-                    contentDescription = if (isOverflow) {
-                        shuffleContentDescription.ifEmpty { stringResource(R.string.more) }
-                    } else {
-                        fabContentDescription
-                    },
-                    tint = if (pureBlack) Color.White else MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(21.dp),
-                )
-            }
-        }
-
-        if (isOverflow) {
-            OpenTuneContextMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                shape = OpenTuneDesignSystem.shapes.glassCard,
-                containerColor = if (pureBlack) {
-                    Color.Black.copy(alpha = 0.96f)
-                } else {
-                    MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f)
+    val direction = if (androidx.compose.ui.platform.LocalLayoutDirection.current == androidx.compose.ui.unit.LayoutDirection.Rtl) -1 else 1
+    BoxWithConstraints(modifier) {
+        val tabWidth = maxWidth / items.size
+        val widthPx = with(LocalDensity.current) { tabWidth.toPx() }
+        val position = (pagerState.currentPage + pagerState.currentPageOffsetFraction).coerceIn(0f, (items.size - 1).toFloat())
+        var dragPosition by remember { mutableFloatStateOf(0f) }
+        Box(Modifier.fillMaxWidth().height(56.dp).pointerInput(widthPx, direction) {
+            detectHorizontalDragGestures(
+                onDragStart = { dragPosition = pagerState.currentPage + pagerState.currentPageOffsetFraction },
+                onHorizontalDrag = { change, delta ->
+                    change.consume()
+                    dragPosition = (dragPosition + direction * delta / widthPx).coerceIn(0f, (items.size - 1).toFloat())
+                    val actual = pagerState.currentPage + pagerState.currentPageOffsetFraction
+                    pagerState.dispatchRawDelta((dragPosition - actual) * pagerState.layoutInfo.pageSize)
                 },
-                tonalElevation = 0.dp,
-            ) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.music_recognition)) },
-                    onClick = {
-                        expanded = false
-                        onMusicRecognitionClick?.invoke()
-                    },
-                    leadingIcon = {
-                        ActionMenuIcon(
-                            pureBlack = pureBlack,
-                            iconRes = R.drawable.mic,
-                        )
-                    },
-                    enabled = onMusicRecognitionClick != null,
-                    colors = actionMenuColors(pureBlack),
-                )
-
-                if (onShuffleClick != null && shuffleIconRes != null) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.shuffle)) },
-                        onClick = {
-                            expanded = false
-                            onShuffleClick()
-                        },
-                        leadingIcon = {
-                            ActionMenuIcon(
-                                pureBlack = pureBlack,
-                                iconRes = shuffleIconRes,
-                            )
-                        },
-                        colors = actionMenuColors(pureBlack),
-                    )
+                onDragEnd = {
+                    scope.launch { pagerState.animateScrollToPage(dragPosition.roundToInt()) }
+                },
+                onDragCancel = {
+                    scope.launch { pagerState.animateScrollToPage(pagerState.currentPage) }
+                },
+            )
+        }) {
+            // One permanent optical capsule. Position comes from the actual pages,
+            // never from a route transition or a selected-only child animation.
+            Box(Modifier.offset(x = tabWidth * position).width(tabWidth).height(56.dp)
+                .galaxGlassEffect(shape = RoundedCornerShape(26.dp), pureBlack = pureBlack)
+                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = .36f), RoundedCornerShape(26.dp)))
+            Row(Modifier.fillMaxWidth()) {
+                items.forEachIndexed { index, screen ->
+                    val selected = pagerState.currentPage == index
+                    Column(
+                        Modifier.weight(1f).height(56.dp)
+                            .selectable(selected = selected, role = Role.Tab) {
+                                haptic(GalaxHapticCue.SELECTION)
+                                if (reducedMotion) scope.launch { pagerState.scrollToPage(index) }
+                                else onItemClick(screen, selected)
+                            },
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                        Icon(painterResource(if (selected) screen.iconIdActive else screen.iconIdInactive), null,
+                            tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(22.dp))
+                        Text(stringResource(screen.titleId), style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
                 }
             }
         }
     }
 }
 
-@Composable
-private fun ActionMenuIcon(
-    pureBlack: Boolean,
-    iconRes: Int,
-) {
-    Surface(
-        modifier = Modifier.size(38.dp),
-        shape = CircleShape,
-        color = Color.White.copy(alpha = if (pureBlack) 0.10f else 0.12f),
-        contentColor = if (pureBlack) Color.White else MaterialTheme.colorScheme.onSurface,
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                painter = painterResource(iconRes),
-                contentDescription = null,
-                modifier = Modifier.size(18.dp),
-            )
-        }
-    }
-}
-
-@Composable
-private fun actionMenuColors(pureBlack: Boolean) =
-    MenuDefaults.itemColors(
-        textColor = if (pureBlack) Color.White else MaterialTheme.colorScheme.onSurface,
-        leadingIconColor = if (pureBlack) Color.White.copy(alpha = 0.84f) else MaterialTheme.colorScheme.onSurfaceVariant,
-        disabledTextColor = if (pureBlack) Color.White.copy(alpha = 0.38f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-        disabledLeadingIconColor = if (pureBlack) Color.White.copy(alpha = 0.38f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
-    )
-
-@Composable
-private fun FloatingNavigationToolbarItem(
-    screen: Screens,
-    selected: Boolean,
-    showSelectedLabel: Boolean,
-    slideFromEnd: Boolean,
-    pureBlack: Boolean,
-    onClick: () -> Unit,
-    onSwipe: (Float) -> Unit,
-    onSwipeProgress: (Float) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val shape = RoundedCornerShape(24.dp)
-    // No selected-only label expansion: constant geometry makes a real
-    // uninterrupted iOS-style sliding capsule possible.
-    val showLabel = showSelectedLabel
-
-    val selectedContainer by animateColorAsState(
-        targetValue = if (selected) {
-            MaterialTheme.colorScheme.primary.copy(
-                alpha = if (pureBlack) 0.16f else 0.13f
-            )
-        } else {
-            Color.Transparent
-        },
-        animationSpec = spring(dampingRatio = .83f, stiffness = 480f),
-        label = "selectedContainer",
-    )
-
-    val horizontalPadding by animateDpAsState(
-        targetValue = if (showLabel) 12.dp else 10.dp,
-        animationSpec = spring(dampingRatio = .84f, stiffness = 470f),
-        label = "itemPadding",
-    )
-
-    val iconScale by animateFloatAsState(
-        targetValue = if (selected) 1.07f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium,
-        ),
-        label = "iconScale",
-    )
-
-    val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val latestOnSwipe by rememberUpdatedState(onSwipe)
-    val latestOnProgress by rememberUpdatedState(onSwipeProgress)
-    var itemDrag by remember { mutableFloatStateOf(0f) }
-    val pressScale by animateFloatAsState(
-        targetValue = if (pressed) 0.94f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium,
-        ),
-        label = "pressScale",
-    )
-
-    val contentColor =
-        if (selected) {
-            MaterialTheme.colorScheme.primary
-        } else {
-            if (pureBlack) Color.White.copy(alpha = 0.70f)
-            else MaterialTheme.colorScheme.onSurfaceVariant
-        }
-
-    Row(
-        modifier = modifier
-            .height(48.dp)
-            .scale(pressScale)
-            // On the SAME target as clickable: horizontal swipes are recognized
-            // before taps complete, while vertical scroll is untouched.
-            // Stable across drag-driven recomposition: callbacks can change
-            // without restarting the gesture recognizer mid-swipe.
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures(
-                    onHorizontalDrag = { change, amount ->
-                        itemDrag = (itemDrag + amount).coerceIn(-220f, 220f)
-                        latestOnProgress(itemDrag)
-                        change.consume()
-                    },
-                    onDragEnd = {
-                        val drag = itemDrag
-                        itemDrag = 0f
-                        latestOnProgress(0f)
-                        if (kotlin.math.abs(drag) > 24.dp.toPx()) latestOnSwipe(drag)
-                    },
-                    onDragCancel = {
-                        itemDrag = 0f
-                        latestOnProgress(0f)
-                    },
-                )
-            }
-            .elasticLiquidPress(
-                interactionSource = interactionSource,
-                enabled = true,
-            )
-            .clip(shape)
-            // A single spring-driven capsule slides behind the selected tab.
-            // Keep per-tab tint understated to avoid duplicate opaque pills.
-            .background(if (LocalEnableLiquidGlass.current) Color.Transparent else selectedContainer)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = LocalIndication.current,
-                role = Role.Tab,
-                onClick = onClick,
-            )
-            .padding(horizontal = 2.dp, vertical = 3.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Icon(
-                painter = painterResource(if (selected) screen.iconIdActive else screen.iconIdInactive),
-                contentDescription = null,
-                tint = contentColor,
-                modifier = Modifier.size(21.dp).scale(iconScale),
-            )
-            if (showSelectedLabel) {
-                Spacer(Modifier.height(2.dp))
-                Text(
-                    text = stringResource(screen.titleId),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = contentColor,
-                    fontSize = 10.sp,
-                    maxLines = 1,
-                    softWrap = false,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-    }
-}
