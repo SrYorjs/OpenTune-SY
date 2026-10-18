@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens.settings
 
 import android.widget.Toast
@@ -64,14 +56,14 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
+import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TopAppBar
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect

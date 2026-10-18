@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens.settings
 
 import androidx.compose.animation.AnimatedVisibility
@@ -15,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -50,7 +43,7 @@ fun DiscordExperimental(
             LazyColumn(
                 modifier = Modifier
                     .padding(inner.calculateBottomPadding())
-                    .padding(bottom = 80.dp) // extra space for mini player
+                    .padding(bottom = 80.dp)
             ) {
                 item {
                     Text(

@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- *
- * Rediseñado con sistema de diseño OpenTune + Material 3 Expressive
- */
-
 package com.arturo254.opentune.ui.screens.settings
 
 import androidx.compose.animation.AnimatedVisibility
@@ -53,10 +45,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeTopAppBar
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as LargeTopAppBar
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -101,8 +93,6 @@ import com.arturo254.opentune.viewmodels.AboutViewModel
 import com.arturo254.opentune.viewmodels.Contributor
 import kotlinx.coroutines.delay
 
-// ── Shimmer brush (Material 3 Expressive) ──────────────────────────────────
-
 @Composable
 fun shimmerEffect(): Brush {
     val shimmerColors = listOf(
@@ -127,15 +117,11 @@ fun shimmerEffect(): Brush {
     )
 }
 
-// ── Data ───────────────────────────────────────────────────────────────────
-
 private data class SocialLink(
     val iconRes: Int,
     val url: String,
     val label: String,
 )
-
-// ── Main screen ────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -209,12 +195,10 @@ fun AboutScreen(
             ),
         ) {
 
-            // ── Hero card (Expresivo con morphing) ─────────────────────────
             item(key = "hero") {
                 HeroCardExpressive(shimmerBrush = shimmerEffect())
             }
 
-            // ── Social card ───────────────────────────────────────────────
             item(key = "social") {
                 SocialCardExpressive(
                     links = listOf(
@@ -250,7 +234,6 @@ fun AboutScreen(
                 )
             }
 
-            // ── Contributors section header ───────────────────────────────
             item(key = "contributors_header") {
                 SectionHeaderExpressive(
                     title = stringResource(R.string.contributors),
@@ -259,7 +242,6 @@ fun AboutScreen(
                 )
             }
 
-            // ── Contributors content ───────────────────────────────────────
             when {
                 isLoading -> {
                     items(4, key = { "loading_$it" }) {
@@ -289,7 +271,6 @@ fun AboutScreen(
                 }
             }
 
-            // ── License footer ────────────────────────────────────────────
             item(key = "license") {
                 LicenseFooterExpressive(
                     onLicenseClick = {
@@ -298,15 +279,12 @@ fun AboutScreen(
                 )
             }
 
-            // ── Bottom spacer ─────────────────────────────────────────────
             item(key = "bottom_spacer") {
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
 }
-
-// ── Section Header (Material 3) ────────────────────────────────────────────
 
 @Composable
 private fun SectionHeaderExpressive(
@@ -344,8 +322,6 @@ private fun SectionHeaderExpressive(
     }
 }
 
-// ── Hero card (Expresivo con morphing) ─────────────────────────────────────
-
 @Composable
 private fun HeroCardExpressive(shimmerBrush: Brush) {
     var isExpanded by remember { mutableStateOf(false) }
@@ -365,7 +341,6 @@ private fun HeroCardExpressive(shimmerBrush: Brush) {
         }
     }
 
-    // Contenedor con padding superior para evitar corte al expandir
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -395,7 +370,7 @@ private fun HeroCardExpressive(shimmerBrush: Brush) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                // App icon with morphing shape
+
                 Surface(
                     shape = if (isExpanded) CircleShape else RoundedCornerShape(24.dp),
                     color = MaterialTheme.colorScheme.primaryContainer,
@@ -414,7 +389,7 @@ private fun HeroCardExpressive(shimmerBrush: Brush) {
                                 .size(if (isExpanded) 68.dp else 56.dp)
                                 .clip(RoundedCornerShape(if (isExpanded) 24.dp else 16.dp)),
                         )
-                        // Shimmer overlay (solo visible en estado no expandido)
+
                         if (!isExpanded) {
                             Box(
                                 modifier = Modifier
@@ -425,7 +400,6 @@ private fun HeroCardExpressive(shimmerBrush: Brush) {
                     }
                 }
 
-                // App name (animated)
                 AnimatedVisibility(
                     visible = isExpanded,
                     enter = fadeIn(animationSpec = tween(300)) + scaleIn(
@@ -455,7 +429,6 @@ private fun HeroCardExpressive(shimmerBrush: Brush) {
                     )
                 }
 
-                // Version badges
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -484,7 +457,6 @@ private fun HeroCardExpressive(shimmerBrush: Brush) {
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
                 )
 
-                // Developer info
                 DeveloperInfoExpressive()
 
                 AnimatedVisibility(
@@ -507,8 +479,6 @@ private fun HeroCardExpressive(shimmerBrush: Brush) {
         }
     }
 }
-
-// ── Developer Info Component ───────────────────────────────────────────────
 
 @Composable
 private fun DeveloperInfoExpressive() {
@@ -546,8 +516,6 @@ private fun DeveloperInfoExpressive() {
     }
 }
 
-// ── Social card (Material 3 Expressive) ────────────────────────────────────
-
 @Composable
 private fun SocialCardExpressive(
     links: List<SocialLink>,
@@ -566,7 +534,7 @@ private fun SocialCardExpressive(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Section header
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -593,7 +561,6 @@ private fun SocialCardExpressive(
                 )
             }
 
-            // Social links FlowRow (responsive)
             androidx.compose.foundation.layout.FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -610,8 +577,6 @@ private fun SocialCardExpressive(
         }
     }
 }
-
-// ── Contributor Card (Expresivo) ───────────────────────────────────────────
 
 @Composable
 private fun ContributorCardExpressive(
@@ -665,7 +630,6 @@ private fun ContributorCardExpressive(
                 )
             }
 
-            // Name + role
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = contributor.name,
@@ -685,7 +649,6 @@ private fun ContributorCardExpressive(
                 )
             }
 
-            // Forward arrow
             Icon(
                 painter = painterResource(R.drawable.arrow_forward),
                 contentDescription = null,
@@ -698,8 +661,6 @@ private fun ContributorCardExpressive(
         }
     }
 }
-
-// ── License footer (Material 3 Expressive) ─────────────────────────────────
 
 @Composable
 private fun LicenseFooterExpressive(onLicenseClick: () -> Unit) {
@@ -766,8 +727,6 @@ private fun LicenseFooterExpressive(onLicenseClick: () -> Unit) {
     }
 }
 
-// ── Loading shimmer (Expresivo) ────────────────────────────────────────────
-
 @Composable
 private fun ContributorShimmerExpressive() {
     val shimmer = shimmerEffect()
@@ -786,7 +745,7 @@ private fun ContributorShimmerExpressive() {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            // Avatar shimmer con forma Ghostish
+
             Surface(
                 shape = MaterialShapes.Ghostish.toShape(),
                 color = MaterialTheme.colorScheme.secondaryContainer,
@@ -824,8 +783,6 @@ private fun ContributorShimmerExpressive() {
         }
     }
 }
-
-// ── Error card (Material 3 Expressive) ─────────────────────────────────────
 
 @Composable
 private fun ErrorCardExpressive(
@@ -897,8 +854,6 @@ private fun ErrorCardExpressive(
         }
     }
 }
-
-// ── Small helpers ──────────────────────────────────────────────────────────
 
 @Composable
 private fun VersionBadgeExpressive(

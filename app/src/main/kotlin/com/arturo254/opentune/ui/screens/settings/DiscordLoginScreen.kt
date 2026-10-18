@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens.settings
 
 import android.annotation.SuppressLint
@@ -16,6 +8,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.*
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

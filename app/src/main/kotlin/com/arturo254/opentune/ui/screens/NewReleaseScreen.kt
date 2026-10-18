@@ -1,10 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Material 3 Expressive - New Release Screen
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
 package com.arturo254.opentune.ui.screens
 
 import androidx.compose.animation.AnimatedContent
@@ -52,7 +45,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.HorizontalUncontainedCarousel
@@ -129,10 +122,9 @@ fun NewReleaseScreen(
             contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
             verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
-            // Espacio TopAppBar
+
             item { Spacer(modifier = Modifier.height(72.dp)) }
 
-            // ── Hero Stats ──────────────────────────────────────────────────
             item {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     AnimatedVisibility(
@@ -174,7 +166,6 @@ fun NewReleaseScreen(
                 }
             }
 
-            // ── Carrusel Principal Destacado ──────────────────────────────
             item {
                 Box(modifier = Modifier.fillMaxWidth()) {
                     AnimatedVisibility(
@@ -202,7 +193,6 @@ fun NewReleaseScreen(
                 }
             }
 
-            // ── Sección Álbumes ──────────────────────────────────────────────
             item {
                 ReleaseSectionHeader(
                     title = stringResource(R.string.albums),
@@ -249,7 +239,6 @@ fun NewReleaseScreen(
                 )
             }
 
-            // ── Sección Singles ─────────────────────────────────────────────
             item {
                 ReleaseSectionHeader(
                     title = stringResource(R.string.singles),
@@ -296,7 +285,6 @@ fun NewReleaseScreen(
                 )
             }
 
-            // ── Sección EPs ─────────────────────────────────────────────────
             item {
                 ReleaseSectionHeader(
                     title = "EPs",
@@ -338,7 +326,6 @@ fun NewReleaseScreen(
 
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            // ── Error / Empty ───────────────────────────────────────────────
             when (val state = uiState) {
                 is NewReleaseUiState.Error -> item {
                     ErrorState(
@@ -364,7 +351,6 @@ fun NewReleaseScreen(
             }
         }
 
-        // TopAppBar flotante
         TopAppBar(
             modifier = Modifier.align(Alignment.TopCenter),
             title = { Text(stringResource(R.string.new_release_albums)) },
@@ -383,10 +369,6 @@ fun NewReleaseScreen(
         )
     }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Hero Stats - M3 Expressive
-// ═══════════════════════════════════════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -501,10 +483,6 @@ private fun VerticalDividerLine() {
     )
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Section Header — M3 Expressive pill style
-// ═══════════════════════════════════════════════════════════════════════════
-
 @Composable
 private fun ReleaseSectionHeader(
     title: String,
@@ -559,10 +537,6 @@ private fun ReleaseSectionHeader(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Featured Carousel - M3 Expressive (Destacado)
-// ═══════════════════════════════════════════════════════════════════════════
-
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterial3ExpressiveApi::class,
@@ -585,7 +559,7 @@ private fun FeaturedCarousel(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Título de la sección destacada
+
         Row(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -716,7 +690,6 @@ private fun FeaturedCarouselCard(
                     )
             )
 
-            // Gradiente overlay para legibilidad
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -731,7 +704,6 @@ private fun FeaturedCarouselCard(
                     )
             )
 
-            // Información superpuesta
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
@@ -765,7 +737,6 @@ private fun FeaturedCarouselCard(
                 }
             }
 
-            // Badge "Destacado"
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = MaterialTheme.colorScheme.primary,
@@ -807,10 +778,6 @@ private fun FeaturedCarouselCard(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Expressive Carousel - M3 Expressive con formas diferenciadas
-// ═══════════════════════════════════════════════════════════════════════════
-
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterial3ExpressiveApi::class,
@@ -829,7 +796,6 @@ private fun ExpressiveCarousel(
     val distinctItems = items.distinctBy { it.id }
     val carouselState = rememberCarouselState { distinctItems.size }
 
-    // Forma diferenciada según el tipo de lanzamiento
     val cardShape = when (releaseType) {
         AlbumReleaseType.ALBUM -> RoundedCornerShape(
             topStart = 20.dp,
@@ -853,7 +819,6 @@ private fun ExpressiveCarousel(
         )
     }
 
-    // Color de acento según el tipo
     val accentColor = when (releaseType) {
         AlbumReleaseType.ALBUM -> MaterialTheme.colorScheme.primary
         AlbumReleaseType.SINGLE -> MaterialTheme.colorScheme.tertiary
@@ -957,7 +922,6 @@ private fun ExpressiveCarouselCard(
                     .clip(shape)
             )
 
-            // Badge según tipo de lanzamiento
             Surface(
                 shape = RoundedCornerShape(12.dp),
                 color = accentColor.copy(alpha = 0.9f),
@@ -978,7 +942,6 @@ private fun ExpressiveCarouselCard(
                 )
             }
 
-            // Indicador de reproducción
             androidx.compose.animation.AnimatedVisibility(
                 visible = isActive && isPlaying,
                 modifier = Modifier
@@ -1043,10 +1006,6 @@ private fun ExpressiveCarouselCard(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Shimmer de carga para los carruseles
-// ═══════════════════════════════════════════════════════════════════════════
-
 @Composable
 private fun CarouselShimmerRow() {
     Row(
@@ -1087,10 +1046,6 @@ private fun CarouselShimmerRow() {
         }
     }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Error & Empty states — M3 Expressive
-// ═══════════════════════════════════════════════════════════════════════════
 
 @Composable
 private fun ErrorState(

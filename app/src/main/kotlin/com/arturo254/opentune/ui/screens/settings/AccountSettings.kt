@@ -1,13 +1,6 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens.settings
 
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -149,17 +142,17 @@ fun AccountSettings(
 
     Column(
         modifier = Modifier
-            .background(MaterialTheme.colorScheme.surface)
+            .galaxScreenBackground()
             .verticalScroll(rememberScrollState())
     ) {
-        // Header Section
+
         AccountSettingsHeader(onClose = onClose)
 
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Account Card
+
             AccountCard(
                 isLoggedIn = isLoggedIn,
                 accountName = accountName,
@@ -179,7 +172,6 @@ fun AccountSettings(
                 }
             )
 
-            // Token Editor Dialog
             if (showTokenEditor) {
                 TokenEditorDialog(
                     innerTubeCookie = innerTubeCookie,
@@ -199,7 +191,6 @@ fun AccountSettings(
                 )
             }
 
-            // Account Options Section
             AnimatedVisibility(
                 visible = isLoggedIn,
                 enter = fadeIn() + expandVertically(),
@@ -231,7 +222,6 @@ fun AccountSettings(
                 }
             }
 
-            // Sync & Integration Section
             SettingsSection(title = stringResource(R.string.integration)) {
                 SettingsClickableItem(
                     icon = painterResource(R.drawable.playlist_add),
@@ -269,7 +259,6 @@ fun AccountSettings(
                 )
             }
 
-            // Advanced Section
             SettingsSection(title = stringResource(R.string.misc)) {
                 SettingsClickableItem(
                     icon = painterResource(R.drawable.token),
@@ -286,7 +275,6 @@ fun AccountSettings(
                 )
             }
 
-            // Settings & Updates Section
             SettingsSection {
                 SettingsClickableItem(
                     icon = painterResource(R.drawable.settings),
@@ -311,14 +299,12 @@ fun AccountSettings(
                 }
             }
 
-            // App Version Footer
             AppVersionFooter()
 
             Spacer(Modifier.height(8.dp))
         }
     }
 
-    // Playlist Selection Dialog
     if (showPlaylistDialog) {
         PlaylistSelectionDialog(
             onDismiss = { showPlaylistDialog = false }
@@ -328,59 +314,12 @@ fun AccountSettings(
 
 @Composable
 private fun AccountSettingsHeader(onClose: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-                        MaterialTheme.colorScheme.surface
-                    )
-                )
-            )
-            .padding(top = 8.dp, bottom = 16.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // App Icon
-                Icon(
-                    painter = painterResource(R.drawable.opentune),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(44.dp)
-                )
-
-                Text(
-                    text = stringResource(id = R.string.app_name),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            IconButton(
-                onClick = onClose,
-                colors = IconButtonDefaults.iconButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                )
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.close),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+    Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Icon(painterResource(R.drawable.opentune), null, Modifier.size(28.dp), tint = MaterialTheme.colorScheme.primary)
+        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        IconButton(onClick = onClose) { Icon(painterResource(R.drawable.close), stringResource(R.string.close)) }
     }
 }
 
@@ -393,117 +332,21 @@ private fun AccountCard(
     onAccountClick: () -> Unit,
     onLogout: () -> Unit
 ) {
-    val cardColor by animateColorAsState(
-        targetValue = if (isLoggedIn)
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-        else
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        animationSpec = tween(300),
-        label = "cardColor"
-    )
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .clickable(onClick = onAccountClick),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = cardColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Avatar
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (isLoggedIn)
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                if (isLoggedIn && accountImageUrl != null) {
-                    AsyncImage(
-                        model = accountImageUrl,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(60.dp)
-                            .clip(CircleShape)
-                    )
-                } else {
-                    Icon(
-                        painter = painterResource(
-                            if (isLoggedIn) R.drawable.account else R.drawable.login
-                        ),
-                        contentDescription = null,
-                        modifier = Modifier.size(28.dp),
-                        tint = if (isLoggedIn)
-                            MaterialTheme.colorScheme.primary
-                        else
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Spacer(Modifier.width(16.dp))
-
-            // Account Info
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = if (isLoggedIn) accountName else stringResource(R.string.login),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-
-                if (isLoggedIn && accountEmail.isNotEmpty()) {
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = accountEmail,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                } else if (!isLoggedIn) {
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        text = stringResource(R.string.not_logged_in),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            // Logout Button or Arrow
-            if (isLoggedIn) {
-                FilledTonalButton(
-                    onClick = onLogout,
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.action_logout),
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-            } else {
-                Icon(
-                    painter = painterResource(R.drawable.arrow_forward),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+    com.arturo254.opentune.ui.component.MenuSurfaceSection {
+        com.arturo254.opentune.ui.component.NewMenuItem(
+            headlineContent = { Text(if (isLoggedIn) accountName else stringResource(R.string.login),
+                style = MaterialTheme.typography.titleLarge) },
+            supportingContent = { Text(if (isLoggedIn) accountEmail else stringResource(R.string.not_logged_in)) },
+            leadingContent = {
+                com.arturo254.opentune.core.designsystem.component.Artwork(accountImageUrl,
+                    Modifier.size(52.dp), shape = CircleShape, placeholderIcon = R.drawable.account)
+            },
+            trailingContent = { Icon(painterResource(R.drawable.chevron_right), null) },
+            onClick = onAccountClick,
+        )
+        if (isLoggedIn) Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.End) {
+            TextButton(onClick = onLogout) { Text(stringResource(R.string.action_logout)) }
         }
     }
 }
@@ -513,29 +356,10 @@ private fun SettingsSection(
     title: String? = null,
     content: @Composable () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        if (title != null) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
-            )
-        }
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-        ) {
-            Column {
-                content()
-            }
-        }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        title?.let { Text(it, style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 8.dp)) }
+        com.arturo254.opentune.ui.component.MenuSurfaceSection { content() }
     }
 }
 
@@ -547,71 +371,18 @@ private fun SettingsClickableItem(
     showBadge: Boolean = false,
     onClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Icon Container
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
-        ) {
-            if (showBadge) {
-                BadgedBox(
-                    badge = {
-                        Badge(containerColor = MaterialTheme.colorScheme.error)
-                    }
-                ) {
-                    Icon(
-                        painter = icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(22.dp),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            } else {
-                Icon(
-                    painter = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
+    com.arturo254.opentune.ui.component.NewMenuItem(
+        headlineContent = { Text(title) },
+        supportingContent = subtitle?.let { { Text(it) } },
+        leadingContent = { Icon(icon, null, tint = MaterialTheme.colorScheme.primary) },
+        trailingContent = {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (showBadge) Badge()
+                Icon(painterResource(R.drawable.chevron_right), null)
             }
-        }
-
-        Spacer(Modifier.width(14.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-
-        Icon(
-            painter = painterResource(R.drawable.arrow_forward),
-            contentDescription = null,
-            modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-        )
-    }
+        },
+        onClick = onClick,
+    )
 }
 
 @Composable
@@ -622,60 +393,13 @@ private fun SettingsToggleItem(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Icon Container
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = icon,
-                contentDescription = null,
-                modifier = Modifier.size(22.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
-
-        Spacer(Modifier.width(14.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-        }
-
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                uncheckedThumbColor = MaterialTheme.colorScheme.outline,
-                uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
-            )
-        )
-    }
+    com.arturo254.opentune.ui.component.NewMenuItem(
+        headlineContent = { Text(title) },
+        supportingContent = subtitle?.let { { Text(it) } },
+        leadingContent = { Icon(icon, null, tint = MaterialTheme.colorScheme.primary) },
+        trailingContent = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
+        onClick = { onCheckedChange(!checked) },
+    )
 }
 
 @Composable
@@ -683,70 +407,8 @@ private fun UpdateAvailableItem(
     latestVersion: String,
     onClick: () -> Unit
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Icon Container with gradient
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(
-                    Brush.linearGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                        )
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            BadgedBox(
-                badge = {
-                    Badge(containerColor = MaterialTheme.colorScheme.error)
-                }
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.update),
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-
-        Spacer(Modifier.width(14.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.new_version_available),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.tertiary
-            )
-            Text(
-                text = latestVersion,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        Surface(
-            shape = RoundedCornerShape(8.dp),
-            color = MaterialTheme.colorScheme.primary
-        ) {
-            Text(
-                text = stringResource(R.string.update_text),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-            )
-        }
-    }
+    SettingsClickableItem(painterResource(R.drawable.update),
+        stringResource(R.string.new_version_available), latestVersion, showBadge = true, onClick = onClick)
 }
 
 @Composable

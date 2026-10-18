@@ -1,13 +1,6 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens.settings
 
+import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
@@ -20,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -71,8 +65,7 @@ fun DiscordSettings(
     var position by rememberSaveable(playbackState) {
         mutableLongStateOf(playerConnection.player.currentPosition)
     }
-    // Track last RPC timestamps to detect when RPC progress bar reaches the end.
-    // These are now owned by DiscordPresenceManager; read their current values here.
+
     val lastRpcStartTime = DiscordPresenceManager.lastRpcStartTime
     val lastRpcEndTime = DiscordPresenceManager.lastRpcEndTime
     val coroutineScope = rememberCoroutineScope()
@@ -87,19 +80,17 @@ fun DiscordSettings(
     LaunchedEffect(discordToken) {
         val token = discordToken
         if (token.isNotEmpty()) {
-            // Run the network call inside this LaunchedEffect coroutine so it is
-            // cancelled automatically if the composable leaves the composition.
+
             try {
                 withContext(Dispatchers.IO) {
-                    // KizzyRPC.getUserInfo may throw network/socket exceptions when the
-                    // app is backgrounded or network drops; catch them to avoid crashing.
+
                     KizzyRPC.getUserInfo(token)
                 }.onSuccess {
                     discordUsername = it.username
                     discordName = it.name
                 }
             } catch (e: Exception) {
-                // Log and ignore network errors (e.g. SocketException on resume).
+
                 Timber.tag("DiscordSettings").w(e, "getUserInfo failed")
             }
         }
@@ -113,20 +104,9 @@ fun DiscordSettings(
     LaunchedEffect(discordToken, discordRPC) {
         if (discordRPC && discordToken.isNotBlank()) {
             Timber.tag("DiscordSettings").d("RPC enabled with token, MusicService will handle start")
-            // DiscordPresenceManager.start(
-            //     context = context,
-            //     token = discordToken,
-            //     songProvider = { song },
-            //     positionProvider = { playerConnection.player.currentPosition },
-            //     isPausedProvider = {
-            //         val isPlaying = playerConnection.player.playWhenReady &&
-            //                 playerConnection.player.playbackState == STATE_READY
-            //         !isPlaying
-            //     },
-            //     intervalProvider = { getPresenceIntervalMillis(context) }
-            // )
+
         } else {
-            // user disabled RPC or cleared token -> ensure manager is stopped
+
             Timber.tag("DiscordSettings").d("RPC disabled or no token, stopping manager")
             DiscordPresenceManager.stop()
         }
@@ -149,8 +129,6 @@ fun DiscordSettings(
                 LocalPlayerAwareWindowInsets.current.only(WindowInsetsSides.Top)
             )
         )
-
-    // Developer debug moved to DebugSettings (Settings -> Misc)
 
         AnimatedVisibility(visible = !infoDismissed) {
             Card(
@@ -244,32 +222,6 @@ fun DiscordSettings(
             isEnabled = isLoggedIn,
         )
 
-        // Add a refresh action to manually re-update Discord RPC
-        // PreferenceEntry(
-        //     title = { Text(stringResource(R.string.refresh)) },
-        //     description = stringResource(R.string.description_refresh),
-        //     icon = { Icon(painterResource(R.drawable.refresh), null) },
-        //     trailingContent = {
-        //         IconButton(onClick = {
-        //             // trigger update in background
-        //             coroutineScope.launch(Dispatchers.IO) {
-        //                 val token = discordToken
-        //                 if (token.isNotBlank()) {
-        //                     try {
-        //                         val rpc = DiscordRPC(context, token)
-        //                         song?.let { rpc.updateSong(it, position) }
-        //                     } catch (_: Exception) {
-        //                         // ignore
-        //                     }
-        //                 }
-        //             }
-        //         }) {
-        //             Icon(painterResource(R.drawable.update), contentDescription = null)
-        //         }
-        //     }
-        // )
-        
-        // Discord presence image preferences (hoisted so refresh action can read them)
         val imageOptions = listOf("thumbnail", "artist", "appicon", "custom")
         val smallImageOptions = listOf("thumbnail", "artist", "appicon", "custom", "dontshow")
 
@@ -290,7 +242,6 @@ fun DiscordSettings(
             defaultValue = ""
      )
 
-        // When large/small image selection changes, clear any stored artwork for the current song
         LaunchedEffect(largeImageType, smallImageType) {
             ArtworkStorage.removeBySongId(context, song?.song?.id ?: return@LaunchedEffect)
         }
@@ -316,7 +267,6 @@ fun DiscordSettings(
                        isRefreshing = true
                        val start = System.currentTimeMillis()
 
-                       // Resolve large image from current Compose state (respect user selection)
                        val success = DiscordPresenceManager.updatePresence(
                            context = context,
                            token = discordToken,
@@ -325,7 +275,7 @@ fun DiscordSettings(
                            isPaused = !playerConnection.player.isPlaying,
                        )
                        isRefreshing = false
-                        // Show snackbar on main thread
+
                         withContext(Dispatchers.Main) {
                             if (success) {
                                 snackbarHostState.showSnackbar("Refreshed!")
@@ -342,7 +292,6 @@ fun DiscordSettings(
     }
 )
 
-        // Status discord
         val activityStatus = listOf("online", "dnd", "idle", "streaming")
         val (activityStatusSelection, onActivityStatusSelectionChange) = rememberPreference(
             key = DiscordPresenceStatusKey,
@@ -387,7 +336,6 @@ fun DiscordSettings(
             }
         }
 
-        // Platform selector (client platform displayed on Discord)
         val platformOptions = listOf("android", "desktop", "web")
         val (platformSelection, onPlatformSelectionChange) = rememberPreference(
             key = DiscordActivityPlatformKey,
@@ -419,7 +367,6 @@ fun DiscordSettings(
             }
         }
 
-        // Interval selection
        val intervalOptions = listOf("20s", "50s", "1m", "5m", "Custom", "Disabled")
        val (intervalSelection, onIntervalSelectionChange) = rememberPreference(
            key = stringPreferencesKey("discordPresenceIntervalPreset"),
@@ -471,7 +418,7 @@ if (intervalSelection == "Custom") {
             onValueChange = { text ->
                 val number = text.toIntOrNull()
                 if (number != null) {
-                    // Validation: if seconds, enforce >= 30
+
                     if (customUnit == "S" && number < 30) {
                         onCustomValueChange(30)
                     } else {
@@ -505,7 +452,7 @@ if (intervalSelection == "Custom") {
             ExposedDropdownMenu(expanded = unitExpanded, onDismissRequest = { unitExpanded = false }) {
                 listOf("S" to "Seconds", "M" to "Minutes", "H" to "Hours").forEach { (code, label) ->
                     DropdownMenuItem(text = { Text(label) }, onClick = {
-                        // Enforce minimum when switching to seconds
+
                         if (code == "S" && customValue < 30) {
                             onCustomValueChange(30)
                         }
@@ -518,7 +465,6 @@ if (intervalSelection == "Custom") {
     }
 }
 
-        // PREVIEW HEADING
         Text(
             text = stringResource(R.string.preview),
             style = MaterialTheme.typography.headlineSmall,
@@ -573,8 +519,6 @@ if (intervalSelection == "Custom") {
             defaultValue = true
         )
 
-
-    // Activity type selection
         val (activityType, onActivityTypeChange) = rememberPreference(
             key = DiscordActivityTypeKey,
             defaultValue = "LISTENING"
@@ -594,7 +538,6 @@ if (intervalSelection == "Custom") {
             onCheckedChange = { showWhenPaused = it }
         )
 
-        // Activity type selector - OutlinedTextField anchored dropdown
         var activityExpanded by remember { mutableStateOf(false) }
         ExposedDropdownMenuBox(expanded = activityExpanded, onExpandedChange = { activityExpanded = it }) {
             TextField(
@@ -620,7 +563,6 @@ if (intervalSelection == "Custom") {
             }
         }
 
-    // Group button related preferences
     Text(
         text = stringResource(R.string.discord_image_options),
         style = MaterialTheme.typography.headlineSmall,
@@ -764,7 +706,6 @@ if (smallImageType == "custom") {
     )
 }
 
-    // Compute whether the player is currently playing so the preview progress can run.
     val playerIsPlayingForPreview = playerConnection.player.playWhenReady && playbackState == STATE_READY
 
     RichPresence(
@@ -877,7 +818,6 @@ fun ActivitySourceDropdown(
     }
 }
 
-
 @Composable
 fun EditablePreference(
     title: String,
@@ -957,14 +897,12 @@ fun RichPresence(
    val (button2Label) = rememberPreference(DiscordActivityButton2LabelKey, "Go to OpenTune")
    val (button2Enabled) = rememberPreference(DiscordActivityButton2EnabledKey, true)
 
-// Button URL sources + custom
    val (button1UrlSource) = rememberPreference(DiscordActivityButton1UrlSourceKey, "songurl")
    val (button1CustomUrl) = rememberPreference(DiscordActivityButton1CustomUrlKey, "")
 
    val (button2UrlSource) = rememberPreference(DiscordActivityButton2UrlSourceKey, "custom")
    val (button2CustomUrl) = rememberPreference(DiscordActivityButton2CustomUrlKey, "https://github.com/Arturo254/OpenTune")
 
-// Large text source + custom
    val (largeTextSource) = rememberPreference(DiscordLargeTextSourceKey, "album")
    val (largeTextCustom) = rememberPreference(DiscordLargeTextCustomKey, "")
 
@@ -985,8 +923,8 @@ fun RichPresence(
     "WATCHING" -> "Watching"
     "STREAMING" -> "Streaming"
     "COMPETING" -> "Competing in"
-    else -> activityType.replaceFirstChar { 
-        if (it.isLowerCase()) it.titlecase() else it.toString() 
+    else -> activityType.replaceFirstChar {
+        if (it.isLowerCase()) it.titlecase() else it.toString()
        }
     }
 
@@ -996,7 +934,6 @@ fun RichPresence(
     ActivitySource.SONG -> "$activityVerb ${song?.song?.title ?: "Song"}"
     ActivitySource.APP -> "$activityVerb OpenTune"
    }
-
 
     PreferenceEntry(
         title = {
@@ -1053,14 +990,13 @@ fun RichPresence(
                             val songThumb = song?.song?.thumbnailUrl
                             val artistThumb = song?.artists?.firstOrNull()?.thumbnailUrl
 
-                            // Fix: Don't fallback from artist to song thumbnail - each source should be independent
                             val smallModel = when (smallImageType.lowercase()) {
-                                "thumbnail" -> songThumb  // Only show song thumbnail, no fallback
-                                "artist" -> artistThumb   // Only show artist thumbnail, no fallback to song
+                                "thumbnail" -> songThumb
+                                "artist" -> artistThumb
                                 "appicon" -> "https://raw.githubusercontent.com/Arturo254/OpenTune/refs/heads/master/assets/icon.png"
-                                "custom" -> smallImageCustomUrl.takeIf { it.isNotBlank() } ?: songThumb  // Custom with fallback to song only
+                                "custom" -> smallImageCustomUrl.takeIf { it.isNotBlank() } ?: songThumb
                                 "dontshow", "none" -> null
-                                else -> artistThumb  // Default to artist without fallback
+                                else -> artistThumb
                             }
                             smallModel?.let {
                                 Box(
@@ -1090,7 +1026,6 @@ fun RichPresence(
                                 overflow = TextOverflow.Ellipsis,
                             )
 
-                            // Compute a preview for the "state" line according to the selected stateSource
                             val previewState = when (stateSource) {
                                 ActivitySource.ARTIST -> song?.artists?.joinToString { it.name } ?: "Artist"
                                 ActivitySource.ALBUM -> song?.song?.albumName ?: song?.album?.title ?: song?.song?.title ?: "Unknown Album"

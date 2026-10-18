@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens.settings
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -25,7 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -219,7 +211,6 @@ fun StorageSettings(
             isEnabled = isSmartTrimmerAvailable,
         )
 
-        // --- Section: Downloads ---
         CacheCard(
             icon = R.drawable.ic_download,
             title = stringResource(R.string.downloaded_songs),
@@ -252,7 +243,6 @@ fun StorageSettings(
             )
         }
 
-        // --- Section: Song cache ---
         CacheCard(
             icon = R.drawable.ic_music,
             title = stringResource(R.string.song_cache),
@@ -302,7 +292,6 @@ fun StorageSettings(
             )
         }
 
-        // --- Section: Image cache ---
         CacheCard(
             icon = R.drawable.image,
             title = stringResource(R.string.image_cache),
@@ -350,7 +339,6 @@ fun StorageSettings(
             )
         }
 
-        // --- Section: Canvas cache ---
         CacheCard(
             icon = R.drawable.motion_photos_on,
             title = stringResource(R.string.canvas_cache),
@@ -466,7 +454,7 @@ fun CacheCard(
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
                         strokeCap = StrokeCap.Round
                     )
-                    // percent label
+
                     Text(
                         text = "${(progress * 100).toInt()}%",
                         style = MaterialTheme.typography.bodySmall,

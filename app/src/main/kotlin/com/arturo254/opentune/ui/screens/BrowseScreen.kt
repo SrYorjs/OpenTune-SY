@@ -1,13 +1,5 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens
- 
+
  import androidx.compose.foundation.ExperimentalFoundationApi
  import androidx.compose.foundation.combinedClickable
  import androidx.compose.foundation.layout.asPaddingValues
@@ -17,7 +9,7 @@ package com.arturo254.opentune.ui.screens
  import androidx.compose.material3.ExperimentalMaterial3Api
  import androidx.compose.material3.Icon
  import androidx.compose.material3.Text
- import androidx.compose.material3.TopAppBar
+ import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
  import androidx.compose.material3.TopAppBarScrollBehavior
  import androidx.compose.runtime.Composable
  import androidx.compose.runtime.collectAsState
@@ -45,7 +37,7 @@ package com.arturo254.opentune.ui.screens
  import com.arturo254.opentune.innertube.models.AlbumItem
  import com.arturo254.opentune.innertube.models.ArtistItem
  import com.arturo254.opentune.innertube.models.PlaylistItem
- 
+
  @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
  @Composable
  fun BrowseScreen(
@@ -58,12 +50,12 @@ package com.arturo254.opentune.ui.screens
      val playerConnection = LocalPlayerConnection.current ?: return
      val isPlaying by playerConnection.isPlaying.collectAsState()
      val mediaMetadata by playerConnection.mediaMetadata.collectAsState()
- 
+
      val title by viewModel.title.collectAsState()
      val items by viewModel.items.collectAsState()
- 
+
      val coroutineScope = rememberCoroutineScope()
- 
+
      LazyVerticalGrid(
          columns = GridCells.Adaptive(minSize = GridThumbnailHeight + 24.dp),
          contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues()
@@ -86,7 +78,7 @@ package com.arturo254.opentune.ui.screens
                                      is PlaylistItem -> navController.navigate("online_playlist/${item.id}")
                                      is ArtistItem -> navController.navigate("artist/${item.id}")
                                      else -> {
-                                         // Do nothing
+
                                      }
                                  }
                              },
@@ -99,7 +91,7 @@ package com.arturo254.opentune.ui.screens
                                                  navController = navController,
                                                  onDismiss = menuState::dismiss
                                              )
- 
+
                                          is PlaylistItem -> {
                                              YouTubePlaylistMenu(
                                                  playlist = item,
@@ -107,16 +99,16 @@ package com.arturo254.opentune.ui.screens
                                                  onDismiss = menuState::dismiss
                                              )
                                          }
- 
+
                                          is ArtistItem -> {
                                              YouTubeArtistMenu(
                                                  artist = item,
                                                  onDismiss = menuState::dismiss
                                              )
                                          }
- 
+
                                          else -> {
-                                             // Do nothing
+
                                          }
                                      }
                                  }
@@ -124,7 +116,7 @@ package com.arturo254.opentune.ui.screens
                          )
                  )
              }
- 
+
              if (items.isEmpty()) {
                  items(8) {
                      ShimmerHost {
@@ -134,7 +126,7 @@ package com.arturo254.opentune.ui.screens
              }
          }
      }
- 
+
      TopAppBar(
          title = { Text(title ?: "") },
          navigationIcon = {

@@ -24,10 +24,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -71,12 +71,6 @@ private data class LiquidStudioState(
     val tuning: GalaxLiquidTuning,
 )
 
-/**
- * One canonical editor state:
- * selector -> preview + samples + sliders all update in the same composition.
- * A single atomic DataStore edit publishes changes to the application's
- * global Glass provider after a short debounce for continuous drag gestures.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GalaxLiquidSettingsScreen(navController: NavController) {
@@ -148,15 +142,14 @@ fun GalaxLiquidSettingsScreen(navController: NavController) {
 
     LaunchedEffect(loaded, state) {
         if (loaded) {
-            // Dragging the six sliders remains local and immediate; only I/O is
-            // debounced. Cancellation drops obsolete writes when values change.
+
             delay(120)
             persist(state)
         }
     }
 
     val exit: () -> Unit = {
-        // Flush pending slider changes before leaving the screen.
+
         scope.launch {
             if (loaded) persist(state)
             navController.navigateUp()
@@ -182,8 +175,7 @@ fun GalaxLiquidSettingsScreen(navController: NavController) {
                 Text("Preparando Glass Studio...", style = MaterialTheme.typography.bodyLarge)
             }
         } else {
-            // One continuous scroll region: image picker, preview, variants
-            // and optics all move together. No fixed preview / tiny scroll box.
+
             Column(
                 Modifier.fillMaxSize()
                     .padding(padding)

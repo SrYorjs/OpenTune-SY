@@ -1,9 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
 package com.arturo254.opentune.ui.screens.settings
 
 import android.Manifest
@@ -47,10 +41,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -95,8 +89,6 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
 
-// ─── Estado de comprobación de actualización ──────────────────────────────────
-
 private sealed interface UpdateCheckState {
     data object Idle : UpdateCheckState
     data object Loading : UpdateCheckState
@@ -104,8 +96,6 @@ private sealed interface UpdateCheckState {
     data class UpdateAvailable(val info: UpdateInfo) : UpdateCheckState
     data class Error(val message: String) : UpdateCheckState
 }
-
-// ─── Pantalla ─────────────────────────────────────────────────────────────────
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -158,7 +148,6 @@ fun UpdateScreen(
         }
     }
 
-    // ── Función de comprobación ───────────────────────────────────────────────
     fun checkForUpdate() {
         if (updateCheckState == UpdateCheckState.Loading) return
         coroutineScope.launch {
@@ -179,7 +168,6 @@ fun UpdateScreen(
         }
     }
 
-    // ── Diálogos ──────────────────────────────────────────────────────────────
     if (showUpdateDialog) {
         pendingUpdateInfo?.let { info ->
             UpdateAvailableDialog(
@@ -237,7 +225,6 @@ fun UpdateScreen(
 
     val rotationAngle by animateFloatAsState(if (isExpanded) 180f else 0f, label = "rotation")
 
-    // ── Layout ────────────────────────────────────────────────────────────────
     Scaffold(
         topBar = {
             TopAppBar(
@@ -264,7 +251,6 @@ fun UpdateScreen(
                 .padding(horizontal = 16.dp)
         ) {
 
-            // ── Tarjeta versión + botón comprobar ─────────────────────────────
             item {
                 Spacer(Modifier.height(8.dp))
                 Card(
@@ -317,13 +303,11 @@ fun UpdateScreen(
 
                         Spacer(Modifier.height(14.dp))
 
-                        // Botón con estado animado
                         UpdateCheckButton(
                             state = updateCheckState,
                             onClick = ::checkForUpdate
                         )
 
-                        // Feedback textual bajo el botón
                         AnimatedVisibility(
                             visible = updateCheckState == UpdateCheckState.UpToDate ||
                                     updateCheckState is UpdateCheckState.Error
@@ -343,7 +327,6 @@ fun UpdateScreen(
                 Spacer(Modifier.height(16.dp))
             }
 
-            // ── Preferencias ──────────────────────────────────────────────────
             item { PreferenceGroupTitle(title = stringResource(R.string.notification_settings)) }
 
             item {
@@ -394,7 +377,6 @@ fun UpdateScreen(
                 }
             }
 
-            // ── Card nightly ──────────────────────────────────────────────────
             item {
                 AnimatedVisibility(visible = updateChannel == UpdateChannel.NIGHTLY) {
                     val latestHash = commits.firstOrNull()?.sha ?: "—"
@@ -424,7 +406,6 @@ fun UpdateScreen(
                 }
             }
 
-            // ── Historial de commits ──────────────────────────────────────────
             item {
                 Spacer(Modifier.height(16.dp))
                 PreferenceGroupTitle(title = stringResource(R.string.commit_history))
@@ -482,8 +463,6 @@ fun UpdateScreen(
     }
 }
 
-// ─── UpdateCheckButton ────────────────────────────────────────────────────────
-
 @Composable
 private fun UpdateCheckButton(
     state: UpdateCheckState,
@@ -533,8 +512,6 @@ private fun UpdateCheckButton(
         }
     }
 }
-
-// ─── UpdateAvailableDialog ────────────────────────────────────────────────────
 
 @Composable
 private fun UpdateAvailableDialog(
@@ -588,8 +565,6 @@ private fun UpdateAvailableDialog(
     )
 }
 
-// ─── BuildChannelInfoDialog ───────────────────────────────────────────────────
-
 @Composable
 private fun BuildChannelInfoDialog(
     title: String,
@@ -619,8 +594,6 @@ private fun BuildChannelInfoDialog(
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) } }
     )
 }
-
-// ─── CommitItem ───────────────────────────────────────────────────────────────
 
 @Composable
 private fun CommitItem(commit: GitCommit, onClick: () -> Unit) {

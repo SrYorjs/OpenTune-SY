@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens.settings
 
 import androidx.compose.foundation.layout.Arrangement
@@ -31,7 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -123,7 +115,7 @@ fun LastFMSettings(
         var tempPassword by rememberSaveable { mutableStateOf("") }
 
         AlertDialog(
-            onDismissRequest = { 
+            onDismissRequest = {
                 if (!isLoggingIn) {
                     showLoginDialog = false
                     loginError = null
@@ -136,7 +128,7 @@ fun LastFMSettings(
                 ) {
                     OutlinedTextField(
                         value = tempUsername,
-                        onValueChange = { 
+                        onValueChange = {
                             tempUsername = it
                             loginError = null
                         },
@@ -147,7 +139,7 @@ fun LastFMSettings(
                     )
                     OutlinedTextField(
                         value = tempPassword,
-                        onValueChange = { 
+                        onValueChange = {
                             tempPassword = it
                             loginError = null
                         },
@@ -196,16 +188,16 @@ fun LastFMSettings(
                             loginError = "Please enter username and password"
                             return@TextButton
                         }
-                        
+
                         if (!LastFM.isInitialized()) {
                             loginError = "Last.fm API key not configured"
                             Timber.e("Last.fm API key not configured")
                             return@TextButton
                         }
-                        
+
                         isLoggingIn = true
                         loginError = null
-                        
+
                         coroutineScope.launch(Dispatchers.IO) {
                             LastFM.getMobileSession(tempUsername, tempPassword)
                                 .onSuccess { auth ->
@@ -224,11 +216,7 @@ fun LastFMSettings(
                                         isLoggingIn = false
                                         val errorMessage = when (exception) {
                                             is LastFM.LastFmException -> {
-                                                // Last.fm API error codes:
-                                                // 4 = Invalid authentication token
-                                                // 10 = Invalid API key
-                                                // 13 = Invalid method signature
-                                                // 26 = API key suspended
+
                                                 when (exception.code) {
                                                     4 -> "Invalid username or password"
                                                     10 -> "Invalid API key. Please contact the developer."

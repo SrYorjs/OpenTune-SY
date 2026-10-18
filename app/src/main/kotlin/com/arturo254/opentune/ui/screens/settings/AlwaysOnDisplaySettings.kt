@@ -1,11 +1,5 @@
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
 package com.arturo254.opentune.ui.screens.settings
 
 import androidx.compose.animation.AnimatedVisibility
@@ -51,9 +45,9 @@ import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LargeFlexibleTopAppBar
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -118,8 +112,6 @@ import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sin
-
-// ── Shapes (mismos que tenías, no cambian) ────────────────────────────────
 
 private val squircleShape: Shape = GenericShape { size, _ ->
     val cx = size.width / 2.0; val cy = size.height / 2.0
@@ -201,17 +193,13 @@ enum class AodAutoTimeout(val seconds: Int, val labelRes: Int) {
     MINUTE_2(120, R.string.aod_auto_2m)
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  PANTALLA PRINCIPAL DE AJUSTES AOD
-// ═══════════════════════════════════════════════════════════════════════════
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AODSettings(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
 ) {
-    // ── Preferencias ─────────────────────────────────────────────────────
+
     val (rawStyle, setRawStyle) = rememberPreference(AodStyleKey, AodStyle.CLASSIC.name)
     val (rawShape, setRawShape) = rememberPreference(AodArtShapeKey, AodArtShape.ROUNDED.name)
     val (darkness, setDarkness) = rememberPreference(AodDarknessKey, 0.55f)
@@ -744,13 +732,6 @@ private fun aodTimeoutLabelRes(seconds: Int): Int = when (seconds) {
     else -> R.string.aod_auto_never
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  COMPONENTES DE UI M3 Expressive
-// ═══════════════════════════════════════════════════════════════════════════
-
-/**
- * Sección con título y contenido en una tarjeta M3 con bordes suaves.
- */
 @Composable
 private fun AodSettingsSection(
     title: String,
@@ -777,9 +758,6 @@ private fun AodSettingsSection(
     Spacer(Modifier.height(8.dp))
 }
 
-/**
- * Fila con switch estilo M3 Expressive.
- */
 @Composable
 private fun AodSwitchRow(
     icon: Int,
@@ -829,9 +807,6 @@ private fun AodSwitchRow(
     }
 }
 
-/**
- * Fila de slider con etiqueta de valor como pill M3 Expressive.
- */
 @Composable
 private fun AodSliderRow(
     label: String,
@@ -882,9 +857,6 @@ private fun AodSliderRow(
     }
 }
 
-/**
- * Pill / chip con color primario — M3 Expressive style.
- */
 @Composable
 private fun ExpressivePill(text: String) {
     Box(
@@ -903,9 +875,6 @@ private fun ExpressivePill(text: String) {
     }
 }
 
-/**
- * Chip de estilo de controles con preview visual.
- */
 @Composable
 private fun ControlStyleChip(
     style: AodControlStyle,
@@ -948,7 +917,7 @@ private fun ControlStyleChip(
             .padding(horizontal = 12.dp, vertical = 10.dp)
             .width(72.dp)
     ) {
-        // Mini preview del estilo de botón
+
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -1006,10 +975,6 @@ private fun ControlStyleChip(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  CARD: Estilo AOD (horizontal scroll)
-// ═══════════════════════════════════════════════════════════════════════════
-
 @Composable
 private fun AodStyleCard(
     style: AodStyle,
@@ -1065,7 +1030,7 @@ private fun AodStyleCard(
                 onClick = onClick
             )
     ) {
-        // Preview miniatura
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1076,7 +1041,6 @@ private fun AodStyleCard(
             AodStylePreview(style = style)
         }
 
-        // Nombre + descripción
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
@@ -1101,9 +1065,6 @@ private fun AodStyleCard(
     }
 }
 
-/**
- * Preview visual de cada estilo en miniaturas — extraído para limpieza.
- */
 @Composable
 private fun AodStylePreview(style: AodStyle) {
     when (style) {
@@ -1408,7 +1369,7 @@ private fun AodStylePreview(style: AodStyle) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val c = Offset(size.width / 2f, size.height * 0.40f)
-                    // Glow exterior con tono violeta/azul para el preview
+
                     drawCircle(
                         brush = Brush.radialGradient(
                             colors = listOf(
@@ -1420,7 +1381,7 @@ private fun AodStylePreview(style: AodStyle) {
                         ),
                         center = c, radius = size.minDimension * 0.60f
                     )
-                    // Corona interior
+
                     drawCircle(
                         brush = Brush.radialGradient(
                             colors = listOf(
@@ -1432,7 +1393,7 @@ private fun AodStylePreview(style: AodStyle) {
                         ),
                         center = c, radius = size.minDimension * 0.30f
                     )
-                    // Anillo
+
                     drawCircle(
                         color = Color(0xFF7C4DFF).copy(0.40f),
                         center = c, radius = size.minDimension * 0.34f,
@@ -1469,14 +1430,10 @@ private fun AodStylePreview(style: AodStyle) {
                             .background(Color.White.copy(0.32f))
                     )
                 }
-            } // end Box wrapper
+            }
         }
     }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  CARD: Forma de portada
-// ═══════════════════════════════════════════════════════════════════════════
 
 @Composable
 private fun AodShapeCard(

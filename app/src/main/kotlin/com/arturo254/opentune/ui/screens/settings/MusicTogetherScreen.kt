@@ -1,9 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
 package com.arturo254.opentune.ui.screens.settings
 
 import android.annotation.SuppressLint
@@ -58,7 +52,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -214,8 +208,6 @@ fun MusicTogetherScreen(
         setRequireApprovalRaw(v); pushSettingsToActiveSession(approval = v)
     }
 
-    // ── Dialogs ──────────────────────────────────────────────────────────────
-
     if (showNameDialog) {
         TextFieldDialog(
             title = { Text(stringResource(R.string.together_display_name)) },
@@ -256,7 +248,6 @@ fun MusicTogetherScreen(
         )
     }
 
-    // Kick / Ban dialogs
     if (confirmKickParticipantId != null) {
         AlertDialog(
             onDismissRequest = { confirmKickParticipantId = null },
@@ -321,8 +312,6 @@ fun MusicTogetherScreen(
         )
     }
 
-    // ── Screen content ────────────────────────────────────────────────────────
-
     Column(
         Modifier
             .windowInsetsPadding(
@@ -338,7 +327,6 @@ fun MusicTogetherScreen(
             )
         )
 
-        // Status card
         StatusCard(
             state = sessionState,
             onCopyLink = { link ->
@@ -363,7 +351,6 @@ fun MusicTogetherScreen(
                 .padding(top = 4.dp, bottom = 12.dp),
         )
 
-        // Participants card (LAN host only)
         if (hostingLan?.roomState != null && isHostRole) {
             OnlineParticipantsCard(
                 participants = hostingLan.roomState.participants,
@@ -379,7 +366,6 @@ fun MusicTogetherScreen(
             )
         }
 
-        // Host section (LAN only)
         if (!isJoinedAsGuest) {
             HostSectionCard(
                 displayName = displayName,
@@ -412,7 +398,6 @@ fun MusicTogetherScreen(
             )
         }
 
-        // Join section
         JoinSectionCard(
             joinInput = joinInput,
             onJoinInputChange = { joinInput = it },
@@ -427,7 +412,7 @@ fun MusicTogetherScreen(
                 if (text.isNotBlank()) {
                     joinInput = text
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    // Auto-join if valid
+
                     if (TogetherLink.decode(text) != null) {
                         setLastJoinLink(text)
                         playerConnection?.service?.joinTogether(text, displayName)
@@ -459,8 +444,6 @@ fun MusicTogetherScreen(
     )
 }
 
-// ── Host Section Card (LAN only, no mode selector) ─────────────────────────
-
 @Composable
 private fun HostSectionCard(
     displayName: String,
@@ -489,7 +472,7 @@ private fun HostSectionCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(modifier = Modifier.padding(vertical = 8.dp)) {
-            // Header
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -531,7 +514,6 @@ private fun HostSectionCard(
                     )
                 }
 
-                // LAN badge
                 Surface(
                     shape = RoundedCornerShape(50.dp),
                     color = MaterialTheme.colorScheme.secondaryContainer,
@@ -632,8 +614,6 @@ private fun HostSectionCard(
     }
 }
 
-// ── Join Section Card (improved paste + link preview) ──────────────────────
-
 @Composable
 private fun JoinSectionCard(
     joinInput: String,
@@ -662,7 +642,6 @@ private fun JoinSectionCard(
     ) {
         Column(modifier = Modifier.padding(vertical = 8.dp)) {
 
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -705,7 +684,6 @@ private fun JoinSectionCard(
                 }
             }
 
-            // Link input row with paste button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -714,7 +692,7 @@ private fun JoinSectionCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                // Input display — click to edit
+
                 Surface(
                     shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
@@ -757,7 +735,7 @@ private fun JoinSectionCard(
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f),
                         )
-                        // Clear button
+
                         if (joinInput.isNotBlank() && !disableJoinUi) {
                             Icon(
                                 painterResource(R.drawable.close),
@@ -772,7 +750,6 @@ private fun JoinSectionCard(
                     }
                 }
 
-                // Paste button
                 if (!disableJoinUi && !isJoining && !isJoined && !isWaitingApproval) {
                     FilledTonalButton(
                         onClick = onPasteFromClipboard,
@@ -796,7 +773,6 @@ private fun JoinSectionCard(
                 }
             }
 
-            // Parsed link preview (animated)
             AnimatedVisibility(
                 visible = parsedLink != null && !isJoined && !isWaitingApproval,
                 enter = fadeIn(tween(200)) + expandVertically(tween(250)),
@@ -816,7 +792,7 @@ private fun JoinSectionCard(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
-                            // IP badge
+
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
                                 color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
@@ -831,7 +807,7 @@ private fun JoinSectionCard(
                                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 )
                             }
-                            // Session ID snippet
+
                             Text(
                                 text = "Session: ${parsedLink.sessionId.take(8)}…",
                                 style = MaterialTheme.typography.bodySmall,
@@ -851,7 +827,6 @@ private fun JoinSectionCard(
 
             Spacer(Modifier.height(10.dp))
 
-            // Join button
             val interactionSource = remember { MutableInteractionSource() }
             val isPressed by interactionSource.collectIsPressedAsState()
             val scale by animateFloatAsState(
@@ -905,8 +880,6 @@ private fun JoinSectionCard(
         }
     }
 }
-
-// ── Status Card ────────────────────────────────────────────────────────────
 
 @Composable
 private fun StatusCard(
@@ -965,7 +938,7 @@ private fun StatusCard(
                 .padding(18.dp),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                // Status row
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -1035,7 +1008,6 @@ private fun StatusCard(
                     }
                 }
 
-                // Inline content
                 when (state) {
                     is TogetherSessionState.Hosting -> {
                         LanSessionLinkCard(
@@ -1076,8 +1048,6 @@ private fun StatusCard(
     }
 }
 
-// ── LAN Session Link Card ──────────────────────────────────────────────────
-
 @Composable
 private fun LanSessionLinkCard(
     link: String,
@@ -1098,7 +1068,7 @@ private fun LanSessionLinkCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            // IP:port badge
+
             if (localAddressHint != null) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -1139,7 +1109,6 @@ private fun LanSessionLinkCard(
                 }
             }
 
-            // Link display — scrollable code block
             Surface(
                 shape = RoundedCornerShape(14.dp),
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
@@ -1162,9 +1131,8 @@ private fun LanSessionLinkCard(
                 }
             }
 
-            // Action buttons
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                // Copy — primary action
+
                 Button(
                     onClick = onCopy,
                     shape = RoundedCornerShape(14.dp),
@@ -1185,7 +1153,6 @@ private fun LanSessionLinkCard(
                     )
                 }
 
-                // Share
                 FilledTonalButton(
                     onClick = onShare,
                     shape = RoundedCornerShape(14.dp),
@@ -1206,8 +1173,6 @@ private fun LanSessionLinkCard(
         }
     }
 }
-
-// ── Reused composables (identical to original) ────────────────────────────
 
 @Composable
 private fun OnlineParticipantsCard(
@@ -1515,8 +1480,6 @@ private fun InstructionRow(
     }
 }
 
-// ── Shared row primitives ─────────────────────────────────────────────────
-
 @Composable
 private fun Divider() = HorizontalDivider(
     modifier = Modifier.padding(start = 76.dp, end = 18.dp),
@@ -1631,8 +1594,6 @@ private fun ToggleRow(
         )
     }
 }
-
-// ── Checkbox row helper ───────────────────────────────────────────────────
 
 @Composable
 private fun CheckboxRow(

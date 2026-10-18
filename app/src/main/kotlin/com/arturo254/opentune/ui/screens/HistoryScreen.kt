@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens
 
 import androidx.activity.compose.BackHandler
@@ -31,7 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -296,7 +288,7 @@ fun HistoryScreen(
                     }
 
                     val currentDateWrappedItems = wrappedItemsMap[dateAgo] ?: emptyList()
-                    
+
                     itemsIndexed(
                         items = currentDateWrappedItems,
                         key = { index, wrappedItem -> "${dateAgo}_${wrappedItem.item.event.id}_$index" }

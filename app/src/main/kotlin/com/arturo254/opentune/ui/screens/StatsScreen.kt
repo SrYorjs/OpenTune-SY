@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -25,7 +17,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -368,7 +360,6 @@ fun StatsScreen(
                 )
             }
 
-            // HighLights Section
             item {
                 StatsHighlightsSection(
                     topArtist = mostPlayedArtists.firstOrNull(),
@@ -382,7 +373,7 @@ fun StatsScreen(
                 if (mostPlayedArtists.isNotEmpty()) {
                     Spacer(modifier = Modifier.size(16.dp))
                     ArtistPieChart(
-                        artists = mostPlayedArtists.take(5), // Top 5 artists for the chart
+                        artists = mostPlayedArtists.take(5),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp)
@@ -418,8 +409,8 @@ fun StatsScreen(
                             thumbnailUrl = song.thumbnailUrl,
                             isActive = song.id == mediaMetadata?.id,
                             isPlaying = isPlaying,
-                            shape = RoundedCornerShape(8.dp), // Using a constant or the one from Items.kt
-                            modifier = Modifier.size(56.dp) // ListThumbnailSize
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.size(56.dp)
                         )
                     },
                     modifier = Modifier
@@ -499,7 +490,7 @@ fun StatsScreen(
                                 .animateItem(),
                         )
                     }
-                    // Add spacers for incomplete rows if needed to maintain grid alignment
+
                     repeat(2 - rowArtists.size) {
                         Spacer(modifier = Modifier.weight(1f))
                     }
@@ -559,10 +550,8 @@ fun StatsScreen(
                 }
             }
 
-
         }
 
-        // FAB to shuffle most played songs
         if (mostPlayedSongs.isNotEmpty()) {
             HideOnScrollFAB(
                 visible = true,
@@ -624,7 +613,7 @@ fun ArtistPieChart(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        // Pie Chart
+
         Box(
             modifier = Modifier.size(160.dp),
             contentAlignment = Alignment.Center
@@ -634,8 +623,7 @@ fun ArtistPieChart(
             artists.forEach { artist ->
                 val time = artist.timeListened?.toLong() ?: 0L
                 val sweepAngle = (time.toFloat() / totalTime) * 360f
-                
-                // Only draw significant slices
+
                 if (sweepAngle > 1f) {
                     AsyncImage(
                         model = artist.artist.thumbnailUrl,
@@ -648,12 +636,9 @@ fun ArtistPieChart(
                     startAngle += sweepAngle
                 }
             }
-            
-            // Optional: Inner circle for donut effect or just overlay style
-            // For now, keeping it as a full pie chart of images as requested
+
         }
 
-        // Text Info
         Column {
             Text(
                 text = "Total Time Listened",
@@ -674,19 +659,17 @@ fun PieSliceShape(startAngle: Float, sweepAngle: Float): GenericShape {
     return GenericShape { size, _ ->
         val center = Offset(size.width / 2, size.height / 2)
         val radius = size.width / 2
-        
+
         moveTo(center.x, center.y)
-        
-        // Arc start
+
         val startRad = Math.toRadians(startAngle.toDouble())
         val endRad = Math.toRadians((startAngle + sweepAngle).toDouble())
-        
+
         lineTo(
             (center.x + radius * cos(startRad)).toFloat(),
             (center.y + radius * sin(startRad)).toFloat()
         )
-        
-        // Add arc
+
         arcTo(
             rect = androidx.compose.ui.geometry.Rect(
                 center = center,
@@ -696,7 +679,7 @@ fun PieSliceShape(startAngle: Float, sweepAngle: Float): GenericShape {
             sweepAngleDegrees = sweepAngle,
             forceMoveTo = false
         )
-        
+
         lineTo(center.x, center.y)
         close()
     }
@@ -733,7 +716,7 @@ fun StatsHighlightsSection(
                 mainText = topSong.title,
                 subText = "${topSong.songCountListened} plays • ${makeTimeString(topSong.timeListened)}",
                 imageUrl = topSong.thumbnailUrl,
-                onClick = { /* Navigate to player or something? For now just no-op or maybe play? */ }
+                onClick = {   }
             )
         }
     }

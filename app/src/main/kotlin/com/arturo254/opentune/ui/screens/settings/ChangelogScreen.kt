@@ -1,17 +1,13 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
 package com.arturo254.opentune.ui.screens.settings
 
+import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,19 +44,15 @@ fun ChangelogScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    // Estado para el canal actual
     var updateChannel by remember { mutableStateOf(UpdateChannel.STABLE) }
 
-    // Estados para releases estables
     var releases by remember { mutableStateOf<List<ReleaseInfo>>(emptyList()) }
 
-    // Estado para nightly
     var nightlyInfo by remember { mutableStateOf<NightlyInfo?>(null) }
 
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    // Cargar el canal actual desde DataStore
     LaunchedEffect(Unit) {
         updateChannel = context.dataStore.data.map {
             it[UpdateChannelKey]?.let { value ->
@@ -73,10 +65,9 @@ fun ChangelogScreen(
         }.first()
     }
 
-    // Función para cargar el contenido según el canal
     suspend fun loadContent() {
         if (updateChannel == UpdateChannel.NIGHTLY) {
-            // Solo para NIGHTLY usar getLatestReleaseInfo
+
             Updater.getLatestReleaseInfo().onSuccess { releaseInfo ->
                 nightlyInfo = NightlyInfo(
                     versionName = releaseInfo.tagName,
@@ -92,7 +83,7 @@ fun ChangelogScreen(
             }
             isLoading = false
         } else {
-            // Para STABLE, NO usar getLatestReleaseInfo, solo getAllReleases
+
             Updater.getAllReleases(forceRefresh = true).onSuccess { result ->
                 releases = result
                 error = null
@@ -106,13 +97,12 @@ fun ChangelogScreen(
         }
     }
 
-    // Cargar datos iniciales cuando el canal cambie
     LaunchedEffect(updateChannel) {
         isLoading = true
         error = null
 
         if (updateChannel == UpdateChannel.STABLE) {
-            // Intentar usar caché primero para releases estables
+
             val cachedReleases = Updater.getCachedReleases()
             if (cachedReleases.isNotEmpty()) {
                 releases = cachedReleases
@@ -193,7 +183,7 @@ fun ChangelogScreen(
                 }
 
                 updateChannel == UpdateChannel.NIGHTLY && nightlyInfo != null -> {
-                    // Mostrar contenido nightly
+
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
@@ -244,14 +234,14 @@ fun ChangelogScreen(
 @SuppressLint("NonObservableLocale")
 @Composable
 private fun NightlyChangelogCard(nightlyInfo: NightlyInfo) {
-    // Soporte para formato dd-MM-yyyy (como "30-05-2026")
+
     val inputDateFormat1 = SimpleDateFormat("dd-MM-yyyy", LocalLocale.current.platformLocale)
     val inputDateFormat2 = SimpleDateFormat("yyyy-MM-dd", LocalLocale.current.platformLocale)
     val displayDateFormat = SimpleDateFormat("MMMM d, yyyy", LocalLocale.current.platformLocale)
 
     val formattedDate = remember(nightlyInfo.publishedAt) {
         try {
-            // Intentar con dd-MM-yyyy primero
+
             val date = inputDateFormat1.parse(nightlyInfo.publishedAt)
                 ?: inputDateFormat2.parse(nightlyInfo.publishedAt)
             date?.let { displayDateFormat.format(it) } ?: nightlyInfo.publishedAt
@@ -290,7 +280,6 @@ private fun NightlyChangelogCard(nightlyInfo: NightlyInfo) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Mostrar el changelog con soporte Markdown
             if (!nightlyInfo.changelog.isNullOrBlank()) {
                 MarkdownText(
                     markdown = nightlyInfo.changelog,

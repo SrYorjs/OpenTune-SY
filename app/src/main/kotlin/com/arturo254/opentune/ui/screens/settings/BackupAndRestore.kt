@@ -1,9 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
 package com.arturo254.opentune.ui.screens.settings
 
 import android.annotation.SuppressLint
@@ -74,12 +68,12 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
+import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.toShape
@@ -190,13 +184,11 @@ fun BackupAndRestore(
     val coroutineScope = rememberCoroutineScope()
     val clipboardManager = LocalClipboardManager.current
 
-    // Cargar estado inicial del switch
     LaunchedEffect(Unit) {
         val enabled = viewModel.loadCloudBackupEnabled(context)
         viewModel.setCloudBackupEnabled(context, enabled)
     }
 
-    // ── Spotify auto-logout on authentication ────────────────────────────────
     LaunchedEffect(spotifyState.isAuthenticated) {
         if (spotifyState.isAuthenticated) {
             showSpotifyLogin = false
@@ -207,10 +199,10 @@ fun BackupAndRestore(
         rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
             if (uri != null) {
                 viewModel.backup(context, uri)
-                // Si el switch está activado, subir a la nube después del backup
+
                 if (cloudState.isEnabled) {
                     coroutineScope.launch {
-                        delay(2000) // Esperar a que termine el backup
+                        delay(2000)
                         viewModel.uploadExistingBackupToCloud(context, uri)
                     }
                 }
@@ -278,7 +270,6 @@ fun BackupAndRestore(
             ),
         ) {
 
-            // ── Backup / Restore card ─────────────────────────────────────────
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -393,7 +384,6 @@ fun BackupAndRestore(
                 }
             }
 
-            // ── Cloud Backup card ─────────────────────────────────────────────
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -450,7 +440,6 @@ fun BackupAndRestore(
                             )
                         }
 
-                        // Mostrar estado de subida
                         AnimatedVisibility(
                             visible = cloudState.isUploading,
                             enter = fadeIn() + expandVertically(),
@@ -472,7 +461,6 @@ fun BackupAndRestore(
                             }
                         }
 
-                        // Mostrar último enlace si existe
                         AnimatedVisibility(
                             visible = !cloudState.isUploading && cloudState.lastUploadUrl != null,
                             enter = fadeIn() + expandVertically(),
@@ -552,7 +540,6 @@ fun BackupAndRestore(
                             }
                         }
 
-                        // Mostrar error si existe
                         AnimatedVisibility(
                             visible = cloudState.lastError != null && !cloudState.isUploading,
                             enter = fadeIn() + expandVertically(),
@@ -587,7 +574,6 @@ fun BackupAndRestore(
                 }
             }
 
-            // ── Import playlist ───────────────────────────────────────────────
             item {
                 Material3SettingsGroup(
                     title = stringResource(R.string.import_playlist),
@@ -630,7 +616,6 @@ fun BackupAndRestore(
                 )
             }
 
-            // ── Spotify Account card ──────────────────────────────────────────
             item {
                 Card(
                     modifier = Modifier
@@ -649,7 +634,7 @@ fun BackupAndRestore(
                         modifier = Modifier.padding(24.dp),
                         verticalArrangement = Arrangement.spacedBy(20.dp),
                     ) {
-                        // ============ HEADER DRAMÁTICO ============
+
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -674,7 +659,7 @@ fun BackupAndRestore(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                             ) {
-                                // Icon animado
+
                                 Box(
                                     modifier = Modifier
                                         .size(64.dp)
@@ -714,7 +699,6 @@ fun BackupAndRestore(
                                     )
                                 }
 
-                                // Loading indicator animado
                                 AnimatedVisibility(
                                     visible = spotifyState.isLoading,
                                     enter = scaleIn(animationSpec = spring(dampingRatio = 0.6f)),
@@ -728,7 +712,6 @@ fun BackupAndRestore(
                             }
                         }
 
-                        // ============ INFO DE CUENTA (Cuando conectado) ============
                         AnimatedVisibility(
                             visible = spotifyState.isAuthenticated,
                             enter = expandVertically(animationSpec = spring(dampingRatio = 0.75f)) + fadeIn(),
@@ -737,7 +720,7 @@ fun BackupAndRestore(
                             Column(
                                 verticalArrangement = Arrangement.spacedBy(16.dp),
                             ) {
-                                // Account avatar + info
+
                                 Surface(
                                     shape = RoundedCornerShape(20.dp),
                                     color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
@@ -784,7 +767,6 @@ fun BackupAndRestore(
                                     }
                                 }
 
-                                // Toggle con label mejorado
                                 Surface(
                                     shape = RoundedCornerShape(20.dp),
                                     color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
@@ -831,7 +813,6 @@ fun BackupAndRestore(
                                     }
                                 }
 
-                                // Botones de acción con mejor layout
                                 Column(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalArrangement = Arrangement.spacedBy(10.dp),
@@ -858,7 +839,6 @@ fun BackupAndRestore(
                             }
                         }
 
-                        // ============ BOTÓN CONECTAR (Cuando desconectado) ============
                         AnimatedVisibility(
                             visible = !spotifyState.isAuthenticated,
                             enter = expandVertically(animationSpec = spring(dampingRatio = 0.75f)) + fadeIn(),
@@ -875,7 +855,6 @@ fun BackupAndRestore(
                             )
                         }
 
-                        // ============ ERROR DISPLAY (Expressive) ============
                         spotifyState.errorMessage?.let { error ->
                             AnimatedVisibility(
                                 visible = true,
@@ -974,7 +953,6 @@ fun BackupAndRestore(
         indeterminate = backupRestoreProgress?.indeterminate ?: false,
     )
 
-    // ── Spotify Login Sheet ──────────────────────────────────────────────────
     if (showSpotifyLogin) {
         SpotifyLoginSheet(
             onDismiss = { showSpotifyLogin = false },

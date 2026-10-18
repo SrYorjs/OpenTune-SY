@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens.settings
 
 import android.os.Build
@@ -30,7 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
+import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -167,7 +159,7 @@ fun AppearanceSettings(
     )
     val (thumbnailCornerRadius, onThumbnailCornerRadiusChange) = rememberPreference(
         key = ThumbnailCornerRadiusKey,
-        defaultValue = 16f // default dp
+        defaultValue = 16f
     )
     val (cropThumbnailToSquare, onCropThumbnailToSquareChange) = rememberPreference(
         CropThumbnailToSquareKey,
@@ -288,7 +280,6 @@ fun AppearanceSettings(
         EnableHapticFeedbackKey,
         defaultValue = true
     )
-
 
     val isSystemInDarkTheme = isSystemInDarkTheme()
     val useDarkTheme =
@@ -493,7 +484,6 @@ fun AppearanceSettings(
             onSelected = onPlayerBackgroundChange,
         )
 
-        // When custom background is selected, show a direct link to customize it
         if (playerBackground == PlayerBackgroundStyle.CUSTOM) {
             PreferenceEntry(
                 title = { Text(stringResource(R.string.customized_background)) },
@@ -526,7 +516,6 @@ fun AppearanceSettings(
             onValueSelected = setCanvasSource,
         )
 
-
         ThumbnailCornerRadiusSelectorButton(
             modifier = Modifier.padding(16.dp),
             onRadiusSelected = { selectedRadius ->
@@ -541,7 +530,6 @@ fun AppearanceSettings(
             checked = cropThumbnailToSquare,
             onCheckedChange = onCropThumbnailToSquareChange
         )
-
 
         PlayerButtonsSkinSelector(
             selected = playerButtonsStyle,
@@ -880,7 +868,6 @@ fun AppearanceSettings(
             onValueSelected = onDefaultChipChange,
         )
 
-
         PreferenceEntry(
             title = { Text("Always On Display") },
             description = "Estilos, formas y opciones de personalización",
@@ -924,7 +911,6 @@ fun AppearanceSettings(
             checked = slimNav,
             onCheckedChange = onSlimNavChange
         )
-
 
         EnumListPreference(
             title = { Text(stringResource(R.string.grid_cell_size)) },
