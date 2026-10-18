@@ -67,6 +67,7 @@ fun V8PlayerScene(
                 isPlaying = isPlaying,
                 disableBlur = disableBlur,
                 label = "v8BackdropPortrait",
+                liquidCanvas = immersiveGlass,
             )
         }
 
