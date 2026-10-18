@@ -314,6 +314,19 @@ private fun ToolbarItemsContainer(
                         haptic(GalaxHapticCue.SELECTION)
                         onItemClick(screen, selected)
                     },
+                    onSwipe = { horizontalDelta ->
+                        // Gestures begin on the clickable items themselves.
+                        // A parent-only detector lost the race to clickable(),
+                        // so dragging a tab previously did nothing.
+                        val index = items.indexOfFirst { it.route == selectedRoute }
+                        if (index >= 0) {
+                            val next = if (horizontalDelta < 0f) index + 1 else index - 1
+                            if (next in items.indices) {
+                                haptic(GalaxHapticCue.SELECTION)
+                                onItemClick(items[next], false)
+                            }
+                        }
+                    },
                     modifier = Modifier.onGloballyPositioned { coordinates ->
                         val newValue = coordinates.positionInParent().x.roundToInt() to coordinates.size.width
                         if (itemBounds[screen.route] != newValue) {
@@ -480,6 +493,7 @@ private fun FloatingNavigationToolbarItem(
     slideFromEnd: Boolean,
     pureBlack: Boolean,
     onClick: () -> Unit,
+    onSwipe: (Float) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val shape = RoundedCornerShape(24.dp)
@@ -514,6 +528,7 @@ private fun FloatingNavigationToolbarItem(
 
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
+    var itemDrag by remember { mutableFloatStateOf(0f) }
     val pressScale by animateFloatAsState(
         targetValue = if (pressed) 0.94f else 1f,
         animationSpec = spring(
@@ -541,6 +556,22 @@ private fun FloatingNavigationToolbarItem(
                 )
             )
             .scale(pressScale)
+            // On the SAME target as clickable: horizontal swipes are recognized
+            // before taps complete, while vertical scroll is untouched.
+            .pointerInput(onSwipe) {
+                detectHorizontalDragGestures(
+                    onHorizontalDrag = { change, amount ->
+                        itemDrag = (itemDrag + amount).coerceIn(-220f, 220f)
+                        change.consume()
+                    },
+                    onDragEnd = {
+                        val drag = itemDrag
+                        itemDrag = 0f
+                        if (kotlin.math.abs(drag) > 24.dp.toPx()) onSwipe(drag)
+                    },
+                    onDragCancel = { itemDrag = 0f },
+                )
+            }
             .elasticLiquidPress(
                 interactionSource = interactionSource,
                 enabled = true,
