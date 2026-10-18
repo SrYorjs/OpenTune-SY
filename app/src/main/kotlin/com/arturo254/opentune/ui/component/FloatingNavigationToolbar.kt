@@ -72,6 +72,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -249,33 +250,10 @@ private fun ToolbarItemsContainer(
         animationSpec = spring(dampingRatio = .74f, stiffness = 530f),
         label = "liquidTabDragFeedback",
     )
+    // The gesture detector lives on individual tabs. Capturing the entire
+    // capsule with a second pointerInput raced with clickable tab content.
     Box(
-        modifier = modifier
-            .wrapContentWidth()
-            .pointerInput(items, selectedIndex, onItemClick) {
-                // Horizontal swipe belongs only to the navigation capsule,
-                // never to page content, playlists or edge-back gestures.
-                detectHorizontalDragGestures(
-                    onDragEnd = {
-                        val current = selectedIndex
-                        val destination = when {
-                            horizontalDrag < -36.dp.toPx() -> current + 1
-                            horizontalDrag > 36.dp.toPx() -> current - 1
-                            else -> -1
-                        }
-                        horizontalDrag = 0f
-                        if (current >= 0 && destination in items.indices) {
-                            haptic(GalaxHapticCue.SELECTION)
-                            onItemClick(items[destination], false)
-                        }
-                    },
-                    onDragCancel = { horizontalDrag = 0f },
-                    onHorizontalDrag = { change, amount ->
-                        horizontalDrag = (horizontalDrag + amount).coerceIn(-150f, 150f)
-                        change.consume()
-                    },
-                )
-            },
+        modifier = modifier.wrapContentWidth(),
         contentAlignment = Alignment.CenterStart,
     ) {
         if (glassEnabled && indicatorBounds != null && indicatorWidth > 0f) {
@@ -530,6 +508,8 @@ private fun FloatingNavigationToolbarItem(
 
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
+    val latestOnSwipe by rememberUpdatedState(onSwipe)
+    val latestOnProgress by rememberUpdatedState(onSwipeProgress)
     var itemDrag by remember { mutableFloatStateOf(0f) }
     val pressScale by animateFloatAsState(
         targetValue = if (pressed) 0.94f else 1f,
@@ -560,22 +540,24 @@ private fun FloatingNavigationToolbarItem(
             .scale(pressScale)
             // On the SAME target as clickable: horizontal swipes are recognized
             // before taps complete, while vertical scroll is untouched.
-            .pointerInput(onSwipe) {
+            // Stable across drag-driven recomposition: callbacks can change
+            // without restarting the gesture recognizer mid-swipe.
+            .pointerInput(Unit) {
                 detectHorizontalDragGestures(
                     onHorizontalDrag = { change, amount ->
                         itemDrag = (itemDrag + amount).coerceIn(-220f, 220f)
-                        onSwipeProgress(itemDrag)
+                        latestOnProgress(itemDrag)
                         change.consume()
                     },
                     onDragEnd = {
                         val drag = itemDrag
                         itemDrag = 0f
-                        onSwipeProgress(0f)
-                        if (kotlin.math.abs(drag) > 24.dp.toPx()) onSwipe(drag)
+                        latestOnProgress(0f)
+                        if (kotlin.math.abs(drag) > 24.dp.toPx()) latestOnSwipe(drag)
                     },
                     onDragCancel = {
                         itemDrag = 0f
-                        onSwipeProgress(0f)
+                        latestOnProgress(0f)
                     },
                 )
             }
