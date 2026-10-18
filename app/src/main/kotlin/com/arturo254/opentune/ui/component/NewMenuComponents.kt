@@ -8,6 +8,13 @@
 
 package com.arturo254.opentune.ui.component
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.basicMarquee
@@ -72,10 +79,19 @@ fun NewActionButton(
 
     val liquid = LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED
     val shape = RoundedCornerShape(20.dp)
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (liquid && pressed && enabled) .962f else 1f,
+        animationSpec = spring(dampingRatio = .68f, stiffness = 480f),
+        label = "liquidActionPress",
+    )
     Card(
         modifier = modifier
+            .graphicsLayer { scaleX = pressScale; scaleY = pressScale }
             .then(if (liquid) Modifier.galaxLiquidChrome(shape, emphasis = .85f) else Modifier)
-            .clickable(enabled = enabled) { onClick() },
+            .clickable(enabled = enabled, interactionSource = interactionSource,
+                indication = LocalIndication.current, onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = if (liquid) Color.Transparent else animatedBackground
         ),
@@ -255,10 +271,19 @@ fun NewIconButton(
     )
 
     val liquid = LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (liquid && pressed && enabled) .90f else 1f,
+        animationSpec = spring(dampingRatio = .67f, stiffness = 510f),
+        label = "liquidIconPress",
+    )
     Card(
         modifier = modifier
+            .graphicsLayer { scaleX = pressScale; scaleY = pressScale }
             .then(if (liquid) Modifier.galaxLiquidChrome(CircleShape, emphasis = 1.1f) else Modifier)
-            .clickable(enabled = enabled) { onClick() },
+            .clickable(enabled = enabled, interactionSource = interactionSource,
+                indication = LocalIndication.current, onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = if (liquid) Color.Transparent else animatedBackground
         ),
