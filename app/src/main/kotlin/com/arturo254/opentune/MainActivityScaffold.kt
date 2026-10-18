@@ -323,7 +323,6 @@ internal fun MainActivityScaffold(
     val (liquidGlassNavBar) = rememberPreference(LiquidGlassNavBarKey, defaultValue = false)
     val (storedGalaxGlassMode) = rememberPreference(GalaxGlassModeKey, defaultValue = "")
     val selectedGlassMode = parseGalaxGlassMode(storedGalaxGlassMode)
-    val enableGalaxGlass = isGalaxGlassEnabled(liquidGlassNavBar, selectedGlassMode)
     val liquidGlassSky = rememberSky()
     val (rawLiquidVariant) = rememberPreference(GalaxLiquidVariantKey, defaultValue = "")
     val liquidVariant = parseGalaxLiquidVariant(rawLiquidVariant) ?: when (selectedGlassMode) {
@@ -333,6 +332,7 @@ internal fun MainActivityScaffold(
         GlassMode.CLASSIC -> GalaxLiquidVariant.SILK
         GlassMode.DISABLED, null -> if (liquidGlassNavBar) GalaxLiquidVariant.SILK else GalaxLiquidVariant.DISABLED
     }
+    val enableGalaxGlass = liquidVariant != GalaxLiquidVariant.DISABLED
     val defaultLiquidTuning = galvanicRecipe(liquidVariant)
     val (liquidRadius) = rememberPreference(GalaxLiquidCornerRadiusKey, defaultLiquidTuning.cornerRadiusDp)
     val (liquidBlur) = rememberPreference(GalaxLiquidBlurKey, defaultLiquidTuning.blurRadiusDp)
