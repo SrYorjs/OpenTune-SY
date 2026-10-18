@@ -1,11 +1,7 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
 package com.arturo254.opentune.ui.screens.artist
 
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
+import com.arturo254.opentune.ui.screens.GalaxMediaHeader
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -144,7 +140,6 @@ import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.viewmodels.ArtistViewModel
 import com.valentinilk.shimmer.shimmer
 
-// Sealed class for video background state
 sealed class VideoBackgroundState {
     object Loading : VideoBackgroundState()
     object Empty : VideoBackgroundState()
@@ -179,15 +174,12 @@ fun ArtistScreen(
     var showLocal by rememberSaveable { mutableStateOf(false) }
     val density = LocalDensity.current
 
-    // System bars padding
     val systemBarsTopPadding = WindowInsets.systemBars.asPaddingValues().calculateTopPadding()
 
-    // Gradient colors for mesh background
     var gradientColors by remember { mutableStateOf<List<Color>>(emptyList()) }
     val fallbackColor = MaterialTheme.colorScheme.surface.toArgb()
     val surfaceColor = MaterialTheme.colorScheme.surface
 
-    // Get thumbnail URL
     val thumbnail = artistPage?.artist?.thumbnail ?: libraryArtist?.artist?.thumbnailUrl
 
     val artistName = artistPage?.artist?.title ?: libraryArtist?.artist?.name
@@ -200,7 +192,6 @@ fun ArtistScreen(
             ?: "us"
     }
 
-    // Enhanced video background state with error handling and loading state
     val videoBackgroundState by produceState<VideoBackgroundState>(
         initialValue = VideoBackgroundState.Loading,
         artistName, storefront
@@ -216,7 +207,7 @@ fun ArtistScreen(
                 if (url.isNullOrBlank()) {
                     VideoBackgroundState.Empty
                 } else {
-                    // Small delay to ensure smooth transition
+
                     delay(100)
                     VideoBackgroundState.Success(url)
                 }
@@ -228,7 +219,6 @@ fun ArtistScreen(
         }
     }
 
-    // Extract gradient colors from artist image
     LaunchedEffect(thumbnail) {
         if (thumbnail != null) {
             val request = ImageRequest.Builder(context)
@@ -263,18 +253,6 @@ fun ArtistScreen(
         }
     }
 
-    // Calculate gradient opacity based on scroll position
-    val gradientAlpha by remember {
-        derivedStateOf {
-            if (lazyListState.firstVisibleItemIndex == 0) {
-                val offset = lazyListState.firstVisibleItemScrollOffset
-                (1f - (offset / 800f)).coerceIn(0f, 1f)
-            } else {
-                0f
-            }
-        }
-    }
-
     val transparentAppBar by remember {
         derivedStateOf {
             lazyListState.firstVisibleItemIndex == 0 && lazyListState.firstVisibleItemScrollOffset < 100
@@ -290,7 +268,6 @@ fun ArtistScreen(
             .fillMaxSize()
     ) {
 
-        // Video background with state handling
         when (val state = videoBackgroundState) {
             is VideoBackgroundState.Success -> {
                 CanvasArtworkPlayer(
@@ -305,12 +282,11 @@ fun ArtistScreen(
             }
 
             is VideoBackgroundState.Loading -> {
-                // Optional: Show subtle loading indicator or just transparent background
-                // For better UX, we show nothing and let the gradient/blur handle it
+
             }
 
             is VideoBackgroundState.Error, is VideoBackgroundState.Empty -> {
-                // No video, just use gradient background
+
             }
         }
 
@@ -322,131 +298,21 @@ fun ArtistScreen(
                 )
         )
 
-        if (!disableBlur && gradientColors.isNotEmpty() && gradientAlpha > 0f) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxSize(0.65f)
-                    .align(Alignment.TopCenter)
-                    .zIndex(-1f)
-                    .drawBehind {
-                        val width = size.width
-                        val height = size.height
-
-                        if (gradientColors.size >= 3) {
-                            val c0 = gradientColors[0]
-                            val c1 = gradientColors[1]
-                            val c2 = gradientColors[2]
-                            val c3 = gradientColors.getOrElse(3) { c0 }
-                            val c4 = gradientColors.getOrElse(4) { c1 }
-                            // Primary color blob - top center
-                            drawRect(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        c0.copy(alpha = gradientAlpha * 0.72f),
-                                        c0.copy(alpha = gradientAlpha * 0.4f),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(width * 0.5f, height * 0.2f),
-                                    radius = width * 0.7f
-                                )
-                            )
-
-                            // Secondary color blob - top left
-                            drawRect(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        c1.copy(alpha = gradientAlpha * 0.56f),
-                                        c1.copy(alpha = gradientAlpha * 0.3f),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(width * 0.15f, height * 0.35f),
-                                    radius = width * 0.6f
-                                )
-                            )
-
-                            // Third color blob - right side
-                            drawRect(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        c2.copy(alpha = gradientAlpha * 0.52f),
-                                        c2.copy(alpha = gradientAlpha * 0.26f),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(width * 0.85f, height * 0.45f),
-                                    radius = width * 0.65f
-                                )
-                            )
-
-                            drawRect(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        c3.copy(alpha = gradientAlpha * 0.34f),
-                                        c3.copy(alpha = gradientAlpha * 0.18f),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(width * 0.35f, height * 0.6f),
-                                    radius = width * 0.8f
-                                )
-                            )
-
-                            drawRect(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        c4.copy(alpha = gradientAlpha * 0.28f),
-                                        c4.copy(alpha = gradientAlpha * 0.14f),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(width * 0.55f, height * 0.85f),
-                                    radius = width * 0.95f
-                                )
-                            )
-                        } else if (gradientColors.isNotEmpty()) {
-                            drawRect(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        gradientColors[0].copy(alpha = gradientAlpha * 0.6f),
-                                        gradientColors[0].copy(alpha = gradientAlpha * 0.3f),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(width * 0.5f, height * 0.3f),
-                                    radius = width * 0.8f
-                                )
-                            )
-                        }
-
-                        drawRect(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color.Transparent,
-                                    surfaceColor.copy(alpha = gradientAlpha * 0.22f),
-                                    surfaceColor.copy(alpha = gradientAlpha * 0.55f),
-                                    surfaceColor
-                                ),
-                                startY = height * 0.4f,
-                                endY = height
-                            )
-                        )
-                    }
-            )
-        }
-
         LazyColumn(
             state = lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
         ) {
             if (artistPage == null && !showLocal) {
-                // Shimmer loading state
+
                 item(key = "shimmer") {
                     ShimmerHost {
-                        // Hero section placeholder
+
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = systemBarsTopPadding + AppBarHeight)
                         ) {
-                            // Artist image placeholder - circular
+
                             Box(
                                 modifier = Modifier
                                     .padding(top = 8.dp)
@@ -459,7 +325,6 @@ fun ArtistScreen(
 
                             Spacer(modifier = Modifier.height(24.dp))
 
-                            // Artist name placeholder
                             TextPlaceholder(
                                 height = 32.dp,
                                 modifier = Modifier
@@ -469,7 +334,6 @@ fun ArtistScreen(
 
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            // Stats placeholder
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -495,7 +359,6 @@ fun ArtistScreen(
 
                             Spacer(modifier = Modifier.height(24.dp))
 
-                            // Buttons placeholder
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -517,69 +380,22 @@ fun ArtistScreen(
                             Spacer(modifier = Modifier.height(32.dp))
                         }
 
-                        // Songs list placeholder
                         repeat(5) {
                             ListItemPlaceHolder()
                         }
                     }
                 }
             } else {
-                // Hero Header
+
                 item(key = "header") {
-                    val artistName = artistPage?.artist?.title ?: libraryArtist?.artist?.name
-
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = systemBarsTopPadding + AppBarHeight),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Artist Image - Circular with shadow
-                        Box(
-                            modifier = Modifier
-                                .padding(top = 8.dp, bottom = 16.dp)
-                        ) {
-                            if (thumbnail != null) {
-                                AsyncImage(
-                                    model = thumbnail.resize(600, 600),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(210.dp)
-                                        .clip(CircleShape)
-                                )
-                            } else {
-                                // Placeholder when no image
-                                Box(
-                                    modifier = Modifier
-                                        .size(200.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        painter = painterResource(R.drawable.person),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(80.dp),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-
-                        // Artist Name
-                        Text(
-                            text = artistName ?: stringResource(R.string.unknown_artist),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(horizontal = 24.dp)
-                        )
-
-                        // Artist Description (expandable)
-                        val description = artistPage?.description
+GalaxMediaHeader(
+    title = artistPage?.artist?.title ?: libraryArtist?.artist?.name ?: stringResource(R.string.unknown_artist),
+    label = stringResource(R.string.galax_artist_label),
+    artworkUrls = listOf(thumbnail),
+    artist = true,
+    accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
+    modifier = Modifier.padding(top = systemBarsTopPadding + AppBarHeight),
+    supporting = {                        val description = artistPage?.description
                         if (!description.isNullOrBlank()) {
                             var isExpanded by rememberSaveable { mutableStateOf(false) }
                             val maxLines = if (isExpanded) Int.MAX_VALUE else 2
@@ -587,7 +403,7 @@ fun ArtistScreen(
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                                    .padding(vertical = 8.dp)
                                     .combinedClickable(
                                         onClick = { isExpanded = !isExpanded },
                                         onLongClick = {}
@@ -602,7 +418,7 @@ fun ArtistScreen(
                                     },
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = TextAlign.Center,
+                                    textAlign = TextAlign.Start,
                                     maxLines = maxLines,
                                     overflow = TextOverflow.Ellipsis
                                 )
@@ -619,14 +435,13 @@ fun ArtistScreen(
                             }
                         }
 
-                        // Stats Row
-                        Row(
+Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 16.dp, horizontal = 32.dp),
+                                .padding(vertical = 8.dp),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            // Songs count - sum all SongItem instances across all sections
+
                             val songSections = artistPage?.sections?.filter { section ->
                                 section.items.any { it is SongItem }
                             }
@@ -639,7 +454,7 @@ fun ArtistScreen(
                                     ?.distinctBy { it.id }
                                     ?.size ?: librarySongs.size
                             }
-                            // Check if any song section has moreEndpoint (meaning there are more songs)
+
                             val hasMoreSongs = !showLocal && songSections?.any { it.moreEndpoint != null } == true
 
                             if (songCount > 0) {
@@ -649,7 +464,6 @@ fun ArtistScreen(
                                 )
                             }
 
-                            // Albums count - sum all AlbumItem instances across all sections
                             val albumSections = artistPage?.sections?.filter { section ->
                                 section.items.any { it is AlbumItem }
                             }
@@ -662,7 +476,7 @@ fun ArtistScreen(
                                     ?.distinctBy { it.id }
                                     ?.size ?: libraryAlbums.size
                             }
-                            // Check if any album section has moreEndpoint (meaning there are more albums)
+
                             val hasMoreAlbums = !showLocal && albumSections?.any { it.moreEndpoint != null } == true
 
                             if (albumCount > 0) {
@@ -671,16 +485,14 @@ fun ArtistScreen(
                                     label = stringResource(R.string.albums)
                                 )
                             }
-                        }
-
-                        // Action Buttons
-                        Row(
+                        }},
+    actions = {Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 24.dp, vertical = 8.dp),
+                                ,
                             horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally)
                         ) {
-                            // Subscribe/Following Button
+
                             val isSubscribed = libraryArtist?.artist?.bookmarkedAt != null
 
                             FilledTonalButton(
@@ -734,7 +546,6 @@ fun ArtistScreen(
                                 )
                             }
 
-                            // Shuffle Button
                             Button(
                                 onClick = {
                                     if (!showLocal) {
@@ -770,7 +581,6 @@ fun ArtistScreen(
                             }
                         }
 
-                        // Radio Button (for YouTube artists)
                         if (!showLocal) {
                             artistPage?.artist?.radioEndpoint?.let { radioEndpoint ->
                                 OutlinedButton(
@@ -780,7 +590,7 @@ fun ArtistScreen(
                                     shape = RoundedCornerShape(24.dp),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 24.dp, vertical = 8.dp)
+                                        .padding(vertical = 8.dp)
                                         .height(44.dp)
                                 ) {
                                     Icon(
@@ -794,13 +604,12 @@ fun ArtistScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                }
+},
+)
+}
 
-                // Content sections
                 if (showLocal) {
-                    // Local Songs Section
+
                     if (librarySongs.isNotEmpty()) {
                         item {
                             NavigationTitle(
@@ -877,7 +686,6 @@ fun ArtistScreen(
                             )
                         }
 
-                        // Show "View All" if more songs available
                         if (filteredLibrarySongs.size > 5) {
                             item {
                                 Surface(
@@ -904,7 +712,6 @@ fun ArtistScreen(
                         }
                     }
 
-                    // Local Albums Section
                     if (libraryAlbums.isNotEmpty()) {
                         item {
                             NavigationTitle(
@@ -958,7 +765,7 @@ fun ArtistScreen(
                         }
                     }
                 } else {
-                    // YouTube/Remote content sections
+
                     artistPage?.sections?.fastForEach { section ->
                         if (section.items.isNotEmpty()) {
                             item {
@@ -976,7 +783,7 @@ fun ArtistScreen(
                         }
 
                         if ((section.items.firstOrNull() as? SongItem)?.album != null) {
-                            // Song items with album info - display as list
+
                             items(
                                 items = section.items.distinctBy { it.id },
                                 key = { "youtube_song_${it.id}" },
@@ -1033,7 +840,7 @@ fun ArtistScreen(
                                 )
                             }
                         } else {
-                            // Grid items (albums, playlists, etc.)
+
                             item {
                                 LazyRow(
                                     contentPadding = PaddingValues(horizontal = 12.dp),
@@ -1128,14 +935,12 @@ fun ArtistScreen(
                     }
                 }
 
-                // Bottom spacing
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }
 
-        // FAB for switching between local/remote view
         HideOnScrollFAB(
             visible = librarySongs.isNotEmpty() && libraryArtist?.artist?.isLocal != true,
             lazyListState = lazyListState,
@@ -1154,8 +959,6 @@ fun ArtistScreen(
         )
     }
 
-
-    // Top App Bar
     TopAppBar(
         title = {
             val animatedAlpha by animateFloatAsState(
@@ -1182,7 +985,7 @@ fun ArtistScreen(
             }
         },
         actions = {
-            // Share/Copy link button
+
             IconButton(
                 onClick = {
                     viewModel.artistPage?.artist?.shareLink?.let { link ->
@@ -1200,7 +1003,6 @@ fun ArtistScreen(
                 )
             }
 
-            // Share button
             IconButton(
                 onClick = {
                     val shareIntent = Intent().apply {
@@ -1230,9 +1032,6 @@ fun ArtistScreen(
     )
 }
 
-/**
- * Stat item component for displaying statistics like subscriber count, songs, albums
- */
 @Composable
 private fun StatItem(
     value: String,

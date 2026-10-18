@@ -1,0 +1,5 @@
+<resources>
+    <string name="galax_album_label">Album</string>
+    <string name="galax_artist_label">Artist</string>
+    <string name="galax_playlist_label">Playlist</string>
+</resources>

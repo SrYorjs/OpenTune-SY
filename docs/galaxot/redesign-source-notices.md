@@ -172,3 +172,78 @@ Original notices retained here for the Kotlin files delivered without inline com
  * Licensed Under GPL-3.0 | see git history for contributors
  */
 ```
+
+
+# Source notices
+
+Original notices retained here for the Kotlin files delivered without inline comments. Licensing and attribution remain unchanged; see LICENSE and git history.
+
+## app/src/main/kotlin/com/arturo254/opentune/ui/screens/AlbumScreen.kt
+
+```text
+/*
+ * OpenTune Project Original (2026)
+ * Arturo254 (github.com/Arturo254)
+ * Licensed Under GPL-3.0 | see git history for contributors
+ */
+```
+
+## app/src/main/kotlin/com/arturo254/opentune/ui/screens/artist/ArtistScreen.kt
+
+```text
+/*
+ * OpenTune Project Original (2026)
+ * Arturo254 (github.com/Arturo254)
+ * Licensed Under GPL-3.0 | see git history for contributors
+ */
+```
+
+## app/src/main/kotlin/com/arturo254/opentune/ui/screens/playlist/AutoPlaylistScreen.kt
+
+```text
+/*
+ * OpenTune Project Original (2026)
+ * Arturo254 (github.com/Arturo254)
+ * Licensed Under GPL-3.0 | see git history for contributors
+ */
+```
+
+## app/src/main/kotlin/com/arturo254/opentune/ui/screens/playlist/CachePlaylistScreen.kt
+
+```text
+/*
+ * OpenTune Project Original (2026)
+ * Arturo254 (github.com/Arturo254)
+ * Licensed Under GPL-3.0 | see git history for contributors
+ */
+```
+
+## app/src/main/kotlin/com/arturo254/opentune/ui/screens/playlist/LocalPlaylistScreen.kt
+
+```text
+/*
+ * OpenTune Project Original (2026)
+ * Arturo254 (github.com/Arturo254)
+ * Licensed Under GPL-3.0 | see git history for contributors
+ */
+```
+
+## app/src/main/kotlin/com/arturo254/opentune/ui/screens/playlist/OnlinePlaylistScreen.kt
+
+```text
+/*
+ * OpenTune Project Original (2026)
+ * Arturo254 (github.com/Arturo254)
+ * Licensed Under GPL-3.0 | see git history for contributors
+ */
+```
+
+## app/src/main/kotlin/com/arturo254/opentune/ui/screens/playlist/TopPlaylistScreen.kt
+
+```text
+/*
+ * OpenTune Project Original (2026)
+ * Arturo254 (github.com/Arturo254)
+ * Licensed Under GPL-3.0 | see git history for contributors
+ */
+```

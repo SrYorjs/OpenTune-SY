@@ -1,13 +1,8 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens
 
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
+import com.arturo254.opentune.ui.component.LiquidGlassIconButton
+import com.arturo254.opentune.ui.screens.GalaxMediaHeader
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -143,14 +138,6 @@ import com.arturo254.opentune.viewmodels.AlbumUiState
 import com.arturo254.opentune.viewmodels.AlbumViewModel
 import com.valentinilk.shimmer.shimmer
 
-// ============================================================================
-// FUNCIONES DE DESCARGA
-// ============================================================================
-
-/**
- * Descarga la carátula del álbum en la calidad especificada
- * @param quality Calidad: 512 (baja), 768 (media), 1024 (alta)
- */
 suspend fun downloadAlbumCover(
     context: android.content.Context,
     imageUrl: String?,
@@ -208,10 +195,6 @@ suspend fun downloadAlbumCover(
     }
 }
 
-// ============================================================================
-// COMPOSABLE DIALOG DE CALIDAD
-// ============================================================================
-
 @Composable
 private fun QualitySelectionDialog(
     onDismiss: () -> Unit,
@@ -234,7 +217,7 @@ private fun QualitySelectionDialog(
                     .selectableGroup(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Opción Baja Calidad
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -266,7 +249,6 @@ private fun QualitySelectionDialog(
                     }
                 }
 
-                // Opción Media Calidad
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -298,7 +280,6 @@ private fun QualitySelectionDialog(
                     }
                 }
 
-                // Opción Alta Calidad
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -374,19 +355,15 @@ fun AlbumScreen(
     val hideExplicit by rememberPreference(key = HideExplicitKey, defaultValue = false)
     val (disableBlur) = rememberPreference(DisableBlurKey, false)
 
-    // System bars padding
     val systemBarsTopPadding = WindowInsets.systemBars.asPaddingValues().calculateTopPadding()
 
-    // Gradient colors state for album cover
     var gradientColors by remember { mutableStateOf<List<Color>>(emptyList()) }
     val fallbackColor = MaterialTheme.colorScheme.surface.toArgb()
     val surfaceColor = MaterialTheme.colorScheme.surface
 
-    // Estados para descarga de carátula
     var downloadingCover by remember { mutableStateOf(false) }
     var showQualityDialog by remember { mutableStateOf(false) }
 
-    // Extract gradient colors from album cover
     LaunchedEffect(albumWithSongs?.album?.thumbnailUrl) {
         val thumbnailUrl = albumWithSongs?.album?.thumbnailUrl
         if (thumbnailUrl != null) {
@@ -462,20 +439,7 @@ fun AlbumScreen(
         }
     }
 
-    // State for LazyColumn to track scroll
     val lazyListState = rememberLazyListState()
-
-    // Calculate gradient opacity based on scroll position
-    val gradientAlpha by remember {
-        derivedStateOf {
-            if (lazyListState.firstVisibleItemIndex == 0) {
-                val offset = lazyListState.firstVisibleItemScrollOffset
-                (1f - (offset / 600f)).coerceIn(0f, 1f)
-            } else {
-                0f
-            }
-        }
-    }
 
     val showTopBarTitle by remember {
         derivedStateOf {
@@ -492,118 +456,8 @@ fun AlbumScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(surfaceColor),
+            .galaxScreenBackground(),
     ) {
-        // Mesh gradient background layer
-        if (!disableBlur && gradientColors.isNotEmpty() && gradientAlpha > 0f) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxSize(0.55f)
-                    .align(Alignment.TopCenter)
-                    .zIndex(-1f)
-                    .drawBehind {
-                        val width = size.width
-                        val height = size.height
-
-                        if (gradientColors.size >= 3) {
-                            val c0 = gradientColors[0]
-                            val c1 = gradientColors[1]
-                            val c2 = gradientColors[2]
-                            val c3 = gradientColors.getOrElse(3) { c0 }
-                            val c4 = gradientColors.getOrElse(4) { c1 }
-                            // Primary color blob - top center (stronger)
-                            drawRect(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        c0.copy(alpha = gradientAlpha * 0.75f),
-                                        c0.copy(alpha = gradientAlpha * 0.4f),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(width * 0.5f, height * 0.15f),
-                                    radius = width * 0.8f
-                                )
-                            )
-
-                            // Secondary color blob - left side
-                            drawRect(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        c1.copy(alpha = gradientAlpha * 0.55f),
-                                        c1.copy(alpha = gradientAlpha * 0.3f),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(width * 0.1f, height * 0.4f),
-                                    radius = width * 0.6f
-                                )
-                            )
-
-                            // Third color blob - right side
-                            drawRect(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        c2.copy(alpha = gradientAlpha * 0.5f),
-                                        c2.copy(alpha = gradientAlpha * 0.25f),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(width * 0.9f, height * 0.35f),
-                                    radius = width * 0.55f
-                                )
-                            )
-
-                            drawRect(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        c3.copy(alpha = gradientAlpha * 0.35f),
-                                        c3.copy(alpha = gradientAlpha * 0.18f),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(width * 0.25f, height * 0.65f),
-                                    radius = width * 0.75f
-                                )
-                            )
-
-                            drawRect(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        c4.copy(alpha = gradientAlpha * 0.3f),
-                                        c4.copy(alpha = gradientAlpha * 0.15f),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(width * 0.55f, height * 0.85f),
-                                    radius = width * 0.9f
-                                )
-                            )
-                        } else if (gradientColors.isNotEmpty()) {
-                            drawRect(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        gradientColors[0].copy(alpha = gradientAlpha * 0.7f),
-                                        gradientColors[0].copy(alpha = gradientAlpha * 0.35f),
-                                        Color.Transparent
-                                    ),
-                                    center = Offset(width * 0.5f, height * 0.25f),
-                                    radius = width * 0.85f
-                                )
-                            )
-                        }
-
-                        drawRect(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color.Transparent,
-                                    surfaceColor.copy(alpha = gradientAlpha * 0.22f),
-                                    surfaceColor.copy(alpha = gradientAlpha * 0.55f),
-                                    surfaceColor
-                                ),
-                                startY = height * 0.4f,
-                                endY = height
-                            )
-                        )
-                    }
-            )
-        }
 
         LazyColumn(
             state = lazyListState,
@@ -612,101 +466,20 @@ fun AlbumScreen(
             val albumWithSongs = albumWithSongs
             val hasSongs = albumWithSongs?.songs?.isNotEmpty() == true
             if (hasSongs) {
-                // Hero Header
+
                 item(key = "header") {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = systemBarsTopPadding + AppBarHeight),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Album Art - Large centered with shadow and rounded corners
-                        Box(
-                            modifier = Modifier
-                                .padding(top = 8.dp, bottom = 20.dp)
-                        ) {
-                            Surface(
-                                modifier = Modifier
-                                    .size(240.dp)
-                                    .shadow(
-                                        elevation = 24.dp,
-                                        shape = RoundedCornerShape(16.dp),
-                                        spotColor = gradientColors.getOrNull(0)?.copy(alpha = 0.5f)
-                                            ?: MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                                    ),
-                                shape = RoundedCornerShape(16.dp)
-                            ) {
-                                AsyncImage(
-                                    model = albumWithSongs.album.thumbnailUrl,
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
-                                )
-                            }
-
-                            // Download Cover Button - Inside image, bottom-right
-                            Surface(
-                                onClick = { showQualityDialog = true },
-                                shape = CircleShape,
-                                color = Color.Transparent,
-                                modifier = Modifier
-                                    .size(48.dp) // Tamaño ligeramente reducido
-                                    .align(Alignment.BottomEnd)
-                                    .offset(x = (-12).dp, y = (-12).dp)
-                                    .shadow(
-                                        elevation = 4.dp, // Sombra más sutil
-                                        shape = CircleShape,
-                                        ambientColor = Color.Black.copy(alpha = 0.15f),
-                                        spotColor = Color.Black.copy(alpha = 0.15f)
-                                    )
-                                    .clip(CircleShape)
-                                    .background(
-                                        color = Color.Black.copy(alpha = 0.2f), // Más transparente
-                                        shape = CircleShape
-                                    )
-                                    .border(
-                                        width = 0.5.dp, // Borde más fino
-                                        color = Color.White.copy(alpha = 0.15f),
-                                        shape = CircleShape
-                                    )
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (downloadingCover) {
-                                        CircularProgressIndicator(
-                                            strokeWidth = 2.dp,
-                                            modifier = Modifier.size(24.dp), // Ícono más pequeño
-                                            color = Color.White.copy(alpha = 0.9f)
-                                        )
-                                    } else {
-                                        Icon(
-                                            painter = painterResource(R.drawable.download),
-                                            contentDescription = "Descargar carátula",
-                                            tint = Color.White.copy(alpha = 0.8f), // Ícono semi-transparente
-                                            modifier = Modifier.size(24.dp) // Ícono más pequeño
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // Album Title
-                        Text(
-                            text = albumWithSongs.album.title,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(horizontal = 32.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Artist Names (Clickable)
-                        Text(
+GalaxMediaHeader(
+    title = albumWithSongs.album.title,
+    label = stringResource(R.string.galax_album_label),
+    artworkUrls = listOf(albumWithSongs.album.thumbnailUrl),
+    accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
+    modifier = Modifier.padding(top = systemBarsTopPadding + AppBarHeight),
+    facts = listOfNotNull(
+        albumWithSongs.album.year?.toString(),
+        pluralStringResource(R.plurals.n_song, wrappedSongs.size, wrappedSongs.size),
+        albumWithSongs.songs.sumOf { it.song.duration }.takeIf { it > 0 }?.let { makeTimeString(it * 1000L) },
+    ),
+    details = {Text(
                             text = buildAnnotatedString {
                                 withStyle(
                                     style = MaterialTheme.typography.titleMedium.copy(
@@ -727,68 +500,25 @@ fun AlbumScreen(
                                     }
                                 }
                             },
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 32.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Metadata Row - Year, Song Count, Duration
-                        Row(
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.padding(horizontal = 0.dp)
+                        )},
+    actions = {
+Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 48.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Year
-                            albumWithSongs.album.year?.let { year ->
-                                MetadataChip(
-                                    icon = R.drawable.calendar_today,
-                                    text = year.toString()
-                                )
-                            }
-
-                            // Song Count
-                            MetadataChip(
-                                icon = R.drawable.music_note,
-                                text = pluralStringResource(
-                                    R.plurals.n_song,
-                                    wrappedSongs.size,
-                                    wrappedSongs.size
-                                )
-                            )
-
-                            // Duration
-                            val totalDuration = albumWithSongs.songs.sumOf { it.song.duration }
-                            if (totalDuration > 0) {
-                                MetadataChip(
-                                    icon = R.drawable.timer,
-                                    text = makeTimeString(totalDuration * 1000L)
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        // Action Buttons Row
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp),
+                                ,
                             horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // Like/Bookmark Button
-                            Surface(
+
+                            LiquidGlassIconButton(
                                 onClick = {
                                     database.query {
                                         update(albumWithSongs.album.toggleLike())
                                     }
                                 },
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                modifier = Modifier.size(48.dp)
+                                size = 48.dp
                             ) {
                                 Box(
                                     modifier = Modifier.fillMaxSize(),
@@ -811,7 +541,6 @@ fun AlbumScreen(
                                 }
                             }
 
-                            // Play Button
                             Button(
                                 onClick = {
                                     playerConnection.service.getAutomix(playlistId)
@@ -831,7 +560,6 @@ fun AlbumScreen(
                                 )
                             }
 
-                            // Shuffle Button
                             Button(
                                 onClick = {
                                     playerConnection.service.getAutomix(playlistId)
@@ -851,8 +579,7 @@ fun AlbumScreen(
                                 )
                             }
 
-                            // Download Button
-                            Surface(
+                            LiquidGlassIconButton(
                                 onClick = {
                                     when (downloadState) {
                                         Download.STATE_COMPLETED -> {
@@ -929,8 +656,7 @@ fun AlbumScreen(
                                 }
                             }
 
-                            // More Options Button
-                            Surface(
+                            LiquidGlassIconButton(
                                 onClick = {
                                     menuState.show {
                                         AlbumMenu(
@@ -943,9 +669,7 @@ fun AlbumScreen(
                                         )
                                     }
                                 },
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                modifier = Modifier.size(48.dp)
+                                size = 48.dp
                             ) {
                                 Box(
                                     modifier = Modifier.fillMaxSize(),
@@ -960,19 +684,19 @@ fun AlbumScreen(
                                 }
                             }
                         }
+        TextButton(onClick = { showQualityDialog = true }, modifier = Modifier.align(Alignment.End)) {
+            Text(stringResource(R.string.download))
+        }
+    },
+)
+}
 
-                        Spacer(modifier = Modifier.height(24.dp))
-                    }
-                }
-
-                // Songs Section Header
                 item(key = "songs_header") {
                     NavigationTitle(
                         title = stringResource(R.string.songs),
                     )
                 }
 
-                // Songs List
                 itemsIndexed(
                     items = wrappedSongs,
                     key = { _, song -> song.item.id },
@@ -1032,7 +756,6 @@ fun AlbumScreen(
                     )
                 }
 
-                // Other Versions Section
                 if (otherVersions.isNotEmpty()) {
                     item(key = "other_versions_header") {
                         NavigationTitle(
@@ -1223,7 +946,6 @@ fun AlbumScreen(
             }
         }
 
-        // Top App Bar
         val topAppBarColors = if (transparentAppBar) {
             TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent,
@@ -1325,7 +1047,6 @@ fun AlbumScreen(
             }
         )
 
-        // Dialog para seleccionar calidad
         if (showQualityDialog) {
             QualitySelectionDialog(
                 onDismiss = { showQualityDialog = false },
@@ -1348,7 +1069,7 @@ fun AlbumScreen(
                             }
 
                             if (success) {
-                                // Aquí puedes agregar un SnackBar si lo deseas
+
                             }
                         } finally {
                             downloadingCover = false
