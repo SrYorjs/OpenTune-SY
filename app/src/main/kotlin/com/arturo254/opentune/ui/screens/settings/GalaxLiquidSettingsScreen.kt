@@ -1,5 +1,11 @@
 package com.arturo254.opentune.ui.screens.settings
 
+import android.content.Intent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.OutlinedButton
+import android.widget.Toast
+import com.arturo254.opentune.constants.GalaxLiquidPreviewBackgroundUriKey
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -80,6 +86,26 @@ fun GalaxLiquidSettingsScreen(navController: NavController) {
         mutableStateOf(LiquidStudioState(GalaxLiquidVariant.DISABLED, galvanicRecipe(GalaxLiquidVariant.DISABLED)))
     }
     var loaded by remember { mutableStateOf(false) }
+    var selectedBackgroundUri by remember { mutableStateOf("") }
+    val pickBackground = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+                selectedBackgroundUri = uri.toString()
+                scope.launch {
+                    context.dataStore.edit { settings ->
+                        settings[GalaxLiquidPreviewBackgroundUriKey] = uri.toString()
+                    }
+                }
+            } catch (error: SecurityException) {
+                Toast.makeText(context, "No se pudo conservar el permiso de esta imagen", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     suspend fun persist(snapshot: LiquidStudioState) {
         val tuning = snapshot.tuning.bounded()
@@ -98,6 +124,7 @@ fun GalaxLiquidSettingsScreen(navController: NavController) {
 
     LaunchedEffect(context) {
         val settings = context.dataStore.data.first()
+        selectedBackgroundUri = settings[GalaxLiquidPreviewBackgroundUriKey].orEmpty()
         val previouslySaved = parseGalaxLiquidVariant(settings[GalaxLiquidVariantKey])
         val selected = previouslySaved ?: when (settings[GalaxGlassModeKey]) {
             GlassMode.FROSTED.name -> GalaxLiquidVariant.PEARL
@@ -162,9 +189,27 @@ fun GalaxLiquidSettingsScreen(navController: NavController) {
                     .padding(horizontal = 15.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    OutlinedButton(
+                        onClick = { pickBackground.launch(arrayOf("image/*")) },
+                        modifier = Modifier.weight(1f),
+                    ) { Text("Elegir imagen") }
+                    if (selectedBackgroundUri.isNotBlank()) {
+                        TextButton(onClick = {
+                            selectedBackgroundUri = ""
+                            scope.launch {
+                                context.dataStore.edit { it.remove(GalaxLiquidPreviewBackgroundUriKey) }
+                            }
+                        }) { Text("Quitar") }
+                    }
+                }
                 GalaxLiquidPreview(
                     variant = state.variant,
                     tuning = state.tuning,
+                    backgroundUri = selectedBackgroundUri,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Column(
