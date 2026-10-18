@@ -29,6 +29,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -73,15 +75,25 @@ fun GalaxLiquidPreview(
         2 -> listOf(Color(0xFF1E123A), Color(0xFF8C56D6), Color(0xFFF7C2EA))
         else -> listOf(Color(0xFF082B58), Color(0xFF177CB7), Color(0xFFBAE1FF))
     }
+    val previewShape = RoundedCornerShape(30.dp)
     Box(
         modifier.fillMaxWidth().height(430.dp)
-            .clip(RoundedCornerShape(30.dp)),
+            // HWUI must clip every drawBackdrop and AndroidView descendant
+            // to this viewport; ordinary Modifier.clip alone did not stop
+            // a detached black preview rectangle escaping at the top.
+            .graphicsLayer {
+                shape = previewShape
+                clip = true
+                compositingStrategy = CompositingStrategy.Offscreen
+            },
     ) {
         // The only captured subtree. NEVER put drawBackdrop controls here.
         Box(
             Modifier.matchParentSize()
-                .background(Brush.linearGradient(backdropColors))
-                .layerBackdrop(backdrop),
+                // Source recording comes BEFORE all its painted contents,
+                // otherwise the sampler sees an empty/black capture layer.
+                .layerBackdrop(backdrop)
+                .background(Brush.linearGradient(backdropColors)),
         ) {
             if (usePersonalPhoto && backgroundUri.isNotBlank()) {
                 coil3.compose.AsyncImage(
