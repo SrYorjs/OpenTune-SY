@@ -175,6 +175,23 @@ import com.arturo254.opentune.constants.HasPressedStarKey
 import com.arturo254.opentune.constants.LaunchCountKey
 import com.arturo254.opentune.constants.LiquidGlassNavBarKey
 import com.arturo254.opentune.constants.GalaxGlassModeKey
+import com.arturo254.opentune.constants.GalaxLiquidVariantKey
+import com.arturo254.opentune.constants.GalaxLiquidCornerRadiusKey
+import com.arturo254.opentune.constants.GalaxLiquidBlurKey
+import com.arturo254.opentune.constants.GalaxLiquidRefractionHeightKey
+import com.arturo254.opentune.constants.GalaxLiquidRefractionAmountKey
+import com.arturo254.opentune.constants.GalaxLiquidChromaticKey
+import com.arturo254.opentune.constants.GalaxLiquidTintKey
+import com.arturo254.opentune.core.designsystem.glass.GlassMode
+import com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidVariant
+import com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidTuning
+import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidVariant
+import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidTuning
+import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidBackdrop
+import com.arturo254.opentune.core.designsystem.liquid.galvanicRecipe
+import com.arturo254.opentune.core.designsystem.liquid.parseGalaxLiquidVariant
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.arturo254.opentune.core.designsystem.glass.LocalGalaxGlassMode
 import com.arturo254.opentune.core.designsystem.glass.LocalLiquidBackdrop
 import com.arturo254.opentune.core.designsystem.glass.parseGalaxGlassMode
@@ -308,11 +325,35 @@ internal fun MainActivityScaffold(
     val selectedGlassMode = parseGalaxGlassMode(storedGalaxGlassMode)
     val enableGalaxGlass = isGalaxGlassEnabled(liquidGlassNavBar, selectedGlassMode)
     val liquidGlassSky = rememberSky()
-    // CRASH GUARD (4.5.7 / Android 17): Never capture the NavHost with
-    // Kyant layerBackdrop. RenderThread enters a recursive RenderNode graph
-    // (native SIGSEGV/stack overflow) when a live material is selected.
-    // The planner must use its non-capturing, contrast-safe material fallback
-    // until a separate, isolated capture surface passes device validation.
+    val (rawLiquidVariant) = rememberPreference(GalaxLiquidVariantKey, defaultValue = "")
+    val liquidVariant = parseGalaxLiquidVariant(rawLiquidVariant) ?: when (selectedGlassMode) {
+        GlassMode.FROSTED -> GalaxLiquidVariant.PEARL
+        GlassMode.CLEAR -> GalaxLiquidVariant.CRYSTAL
+        GlassMode.BLUR -> GalaxLiquidVariant.GLACIER
+        GlassMode.CLASSIC -> GalaxLiquidVariant.SILK
+        GlassMode.DISABLED, null -> if (liquidGlassNavBar) GalaxLiquidVariant.SILK else GalaxLiquidVariant.DISABLED
+    }
+    val defaultLiquidTuning = galvanicRecipe(liquidVariant)
+    val (liquidRadius) = rememberPreference(GalaxLiquidCornerRadiusKey, defaultLiquidTuning.cornerRadiusDp)
+    val (liquidBlur) = rememberPreference(GalaxLiquidBlurKey, defaultLiquidTuning.blurRadiusDp)
+    val (liquidHeight) = rememberPreference(GalaxLiquidRefractionHeightKey, defaultLiquidTuning.refractionHeight)
+    val (liquidAmount) = rememberPreference(GalaxLiquidRefractionAmountKey, defaultLiquidTuning.refractionAmount)
+    val (liquidChromatic) = rememberPreference(GalaxLiquidChromaticKey, defaultLiquidTuning.chromaticAberration)
+    val (liquidTint) = rememberPreference(GalaxLiquidTintKey, defaultLiquidTuning.tintAlpha)
+    val liquidTuning = if (rawLiquidVariant.isBlank()) defaultLiquidTuning else
+        GalaxLiquidTuning(liquidRadius, liquidBlur, liquidHeight, liquidAmount, liquidChromatic, liquidTint).bounded()
+    // Produce exactly one captured background. Importantly, its NavHost subtree
+    // will explicitly receive a null Backdrop; only sibling overlay controls
+    // may sample the captured layer. This prevents recursive RenderNode graphs.
+    val glassContext = androidx.compose.ui.platform.LocalContext.current
+    val saver = (glassContext.getSystemService(android.content.Context.POWER_SERVICE) as? android.os.PowerManager)
+        ?.isPowerSaveMode == true
+    val lowRam = (glassContext.getSystemService(android.content.Context.ACTIVITY_SERVICE) as? android.app.ActivityManager)
+        ?.isLowRamDevice == true
+    val liveLiquidBackdrop = if (
+        liquidVariant != GalaxLiquidVariant.DISABLED && !saver && !lowRam &&
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+    ) rememberLayerBackdrop() else null
     val menuState = remember { MenuState() }
 
     val haptic = LocalHapticFeedback.current
@@ -380,6 +421,9 @@ internal fun MainActivityScaffold(
                         LocalSky provides liquidGlassSky,
                         LocalLiquidBackdrop provides null,
                         LocalGalaxGlassMode provides selectedGlassMode,
+                        LocalGalaxLiquidVariant provides liquidVariant,
+                        LocalGalaxLiquidTuning provides liquidTuning,
+                        LocalGalaxLiquidBackdrop provides liveLiquidBackdrop,
                         LocalEnableLiquidGlass provides enableGalaxGlass,
                         LocalBottomSheetPageState provides bottomSheetPageState,
                         LocalMenuState provides menuState,
@@ -427,6 +471,9 @@ internal fun MainActivityScaffold(
                                         .fillMaxSize()
                                         .nestedScroll(searchBarScrollBehavior.nestedScrollConnection)
                                 ) {
+                                    CompositionLocalProvider(
+                                        LocalGalaxLiquidBackdrop provides null,
+                                    ) {
                                     NavHost(
                                         navController = navController,
                                         startDestination = when (tabOpenedFromShortcut ?: defaultOpenTab) {
@@ -509,6 +556,11 @@ internal fun MainActivityScaffold(
                                             )
                                         },
                                         modifier = Modifier
+                                            .then(
+                                                if (liveLiquidBackdrop != null)
+                                                    Modifier.layerBackdrop(liveLiquidBackdrop)
+                                                else Modifier
+                                            )
                                             .nestedScroll(
                                                 if (
                                                     navigationItems.fastAny {
@@ -529,6 +581,7 @@ internal fun MainActivityScaffold(
                                             latestVersionName
                                         )
                                     }
+                                    } // NavHost is source-only; no sampling here.
                                 }
                                 MainActivityFloatingToolbar(
                                     pureBlack = pureBlack,
