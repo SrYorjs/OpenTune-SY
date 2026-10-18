@@ -56,6 +56,12 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.arturo254.opentune.ui.player.visual.PlayerArtworkAtmosphere
+import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
+import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidBackdrop
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -325,7 +331,7 @@ fun BottomSheetPlayer(
         downloadRevision = download?.state,
         offlineArtworkUrl = offlineCoverUri,
         offlineAnimationLookup = downloadUtil::getOfflineAnimationUri,
-        usesArtworkPalette = visualSkin.usesArtworkPalette,
+        usesArtworkPalette = visualSkin.usesArtworkPalette || LocalEnableLiquidGlass.current,
     )
     val canvasArtwork = playerVisuals.canvasArtwork
     val gradientColors = playerVisuals.gradientColors
@@ -565,6 +571,14 @@ fun BottomSheetPlayer(
 
     val focusRequester = remember { FocusRequester() }
 
+    // The full player must sample the CURRENT SONG, never the NavHost backdrop
+    // behind it. Source = artwork background only; glass controls are siblings.
+    val activePlayerGlass = LocalEnableLiquidGlass.current && !state.isCollapsed
+    val inheritedBackdrop = LocalGalaxLiquidBackdrop.current
+    val playerArtworkBackdrop = rememberLayerBackdrop()
+    val playerSourceModifier = if (activePlayerGlass)
+        Modifier.layerBackdrop(playerArtworkBackdrop) else Modifier
+
     BottomSheet(
 
         state = state,
@@ -670,6 +684,10 @@ fun BottomSheetPlayer(
             )
         },
     ) {
+        CompositionLocalProvider(
+            LocalGalaxLiquidBackdrop provides
+                if (activePlayerGlass) playerArtworkBackdrop else inheritedBackdrop,
+        ) {
         val onSliderValueChange: (Long) -> Unit = seekSession::onSeekPreview
         val onSliderValueChangeFinished: () -> Unit = {
             seekSession.finish { targetPosition ->
@@ -747,17 +765,27 @@ fun BottomSheetPlayer(
         }
 
         if (!state.isCollapsed && resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop) {
-            PlayerBackground(
-                playerBackground = playerBackground,
-                mediaMetadata = mediaMetadata,
-                gradientColors = gradientColors,
-                disableBlur = disableBlur,
-                blurRadius = blurRadius,
-                playerCustomImageUri = playerCustomImageUri,
-                playerCustomBlur = playerCustomBlur,
-                playerCustomContrast = playerCustomContrast,
-                playerCustomBrightness = playerCustomBrightness
-            )
+            if (activePlayerGlass) {
+                PlayerArtworkAtmosphere(
+                    artworkUrl = playerVisuals.artworkUrl,
+                    gradientColors = gradientColors,
+                    isPlaying = isPlaying,
+                    disableBlur = disableBlur,
+                    modifier = playerSourceModifier,
+                )
+            } else {
+                PlayerBackground(
+                    playerBackground = playerBackground,
+                    mediaMetadata = mediaMetadata,
+                    gradientColors = gradientColors,
+                    disableBlur = disableBlur,
+                    blurRadius = blurRadius,
+                    playerCustomImageUri = playerCustomImageUri,
+                    playerCustomBlur = playerCustomBlur,
+                    playerCustomContrast = playerCustomContrast,
+                    playerCustomBrightness = playerCustomBrightness
+                )
+            }
         }
 
 // distance
@@ -876,6 +904,9 @@ fun BottomSheetPlayer(
                         thumbnailUrl = mediaMetadata?.thumbnailUrl,
                         disableBlur = disableBlur,
                         queuePeekHeight = queueSheetState.collapsedBound,
+                        playerBackdrop = if (activePlayerGlass) playerArtworkBackdrop else null,
+                        immersiveGlass = activePlayerGlass,
+                        gradientColors = gradientColors,
                         nestedScrollConnection = state.preUpPostDownNestedScrollConnection,
                     ) {
                         enrichedMetadata?.let { controlsContent(it) }
@@ -890,6 +921,9 @@ fun BottomSheetPlayer(
                         isPlaying = isPlaying,
                         disableBlur = disableBlur,
                         queuePeekHeight = queueSheetState.collapsedBound,
+                        playerBackdrop = if (activePlayerGlass) playerArtworkBackdrop else null,
+                        immersiveGlass = activePlayerGlass,
+                        gradientColors = gradientColors,
                         nestedScrollConnection = state.preUpPostDownNestedScrollConnection,
                     ) {
                         enrichedMetadata?.let { v8ControlsContent(it) }
@@ -1012,6 +1046,9 @@ fun BottomSheetPlayer(
                         thumbnailUrl = mediaMetadata?.thumbnailUrl,
                         disableBlur = disableBlur,
                         queuePeekHeight = queueSheetState.collapsedBound,
+                        playerBackdrop = if (activePlayerGlass) playerArtworkBackdrop else null,
+                        immersiveGlass = activePlayerGlass,
+                        gradientColors = gradientColors,
                         nestedScrollConnection = state.preUpPostDownNestedScrollConnection,
                     ) {
                         enrichedMetadata?.let { controlsContent(it) }
@@ -1026,6 +1063,9 @@ fun BottomSheetPlayer(
                         isPlaying = isPlaying,
                         disableBlur = disableBlur,
                         queuePeekHeight = queueSheetState.collapsedBound,
+                        playerBackdrop = if (activePlayerGlass) playerArtworkBackdrop else null,
+                        immersiveGlass = activePlayerGlass,
+                        gradientColors = gradientColors,
                         nestedScrollConnection = state.preUpPostDownNestedScrollConnection,
                     ) {
                         enrichedMetadata?.let { v8ControlsContent(it) }
@@ -1095,5 +1135,6 @@ fun BottomSheetPlayer(
             lyricsSyncOffset = lyricsSyncOffset,
             modifier = modifier,
         )
+        } // Expanded player-only backdrop scope.
     }
 }
