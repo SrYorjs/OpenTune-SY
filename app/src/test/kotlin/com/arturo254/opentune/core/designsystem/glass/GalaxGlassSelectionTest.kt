@@ -35,16 +35,26 @@ class GalaxGlassSelectionTest {
         assertEquals(0f, galvanicRecipe(GalaxLiquidVariant.DISABLED).blurRadiusDp, 0f)
     }
 
-    @Test fun appearancePersistsVariantAndAllSixOpticalSliders() {
-        val settings = source("ui/screens/settings/AppearanceSettings.kt")
+    @Test fun dedicatedScreenAutoPersistsVariantAndSixOpticalSliders() {
+        val appearance = source("ui/screens/settings/AppearanceSettings.kt")
+        val studio = source("ui/screens/settings/GalaxLiquidSettingsScreen.kt")
+        val preview = source("core/designsystem/liquid/GalaxLiquidPlayground.kt")
+        val controls = source("core/designsystem/liquid/GalaxLiquidControls.kt")
+        val navigation = source("ui/screens/NavigationBuilder.kt")
         val keys = source("constants/PreferenceKeys.kt")
-        assertTrue(settings.contains("selectedValue = liquidVariant"))
-        assertTrue(settings.contains("GalaxLiquidPlayground("))
-        assertTrue(settings.contains("settings[GalaxLiquidVariantKey] = variant.name"))
-        assertTrue(settings.contains("settings[GalaxLiquidRefractionAmountKey] = recipe.refractionAmount"))
-        assertTrue(settings.contains("settings[GalaxLiquidChromaticKey] = recipe.chromaticAberration"))
+        assertTrue(appearance.contains("settings/appearance/galax_liquid"))
+        assertTrue(navigation.contains("GalaxLiquidSettingsScreen(navController)"))
+        assertTrue(studio.contains("LaunchedEffect(loaded, state)"))
+        assertTrue(studio.contains("delay(120)"))
+        assertTrue(studio.contains("settings[GalaxLiquidVariantKey] = snapshot.variant.name"))
+        assertTrue(studio.contains("settings[GalaxLiquidRefractionAmountKey] = tuning.refractionAmount"))
+        assertTrue(studio.contains("settings[GalaxLiquidChromaticKey] = tuning.chromaticAberration"))
+        assertTrue(studio.contains("onChange = { state = state.copy(tuning = it.bounded()) }"))
+        assertTrue(preview.contains("variant = variant"))
+        assertTrue(preview.contains("tuning = tuning"))
+        assertTrue(preview.contains("onChange(tuning.copy("))
+        assertTrue(controls.contains("tuning = tuning"))
         assertTrue(keys.contains("galax_liquid_variant_v2"))
-        assertTrue(settings.contains("settings[LiquidGlassNavBarKey]"))
     }
 
     @Test fun rendererKeepsValuesInSafeRange() {
