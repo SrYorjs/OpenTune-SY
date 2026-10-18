@@ -38,7 +38,7 @@ fun V8PlayerScene(
     disableBlur: Boolean,
     queuePeekHeight: Dp,
     nestedScrollConnection: NestedScrollConnection,
-    playerBackdrop: com.kyant.backdrop.Backdrop? = null,
+    playerBackdrop: com.kyant.backdrop.backdrops.LayerBackdrop? = null,
     immersiveGlass: Boolean = false,
     gradientColors: List<androidx.compose.ui.graphics.Color> = emptyList(),
     controls: @Composable ColumnScope.() -> Unit,
