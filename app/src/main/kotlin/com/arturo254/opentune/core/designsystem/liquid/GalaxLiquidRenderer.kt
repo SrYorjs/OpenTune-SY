@@ -24,6 +24,7 @@ import com.kyant.backdrop.effects.blur
 import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
+import com.kyant.backdrop.shadow.Shadow
 
 /**
  * Galax Liquid Renderer V1: new, standalone Kyant optical pipeline.
@@ -41,6 +42,7 @@ fun Modifier.galaxLiquidEffect(
     shapeOverride: RoundedCornerShape? = null,
 ): Modifier {
     val style = tuning.bounded()
+    val finish = galvanicFinish(variant)
     val shape = shapeOverride ?: RoundedCornerShape(style.cornerRadiusDp.dp)
     val colors = MaterialTheme.colorScheme
     val dark = pureBlack || colors.background.luminance() < .46f
@@ -55,11 +57,22 @@ fun Modifier.galaxLiquidEffect(
         ?.isPowerSaveMode == true
     val lowRam = (context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager)
         ?.isLowRamDevice == true
-    val surfaceTint = if (dark) Color(0xFF0B1325) else Color.White
-    val rimTop = Color.White.copy(alpha = if (dark) .66f else .90f)
-    val rimBottom = colors.primary.copy(alpha = if (dark) .22f else .30f)
-    val rim = Brush.linearGradient(listOf(rimTop, rimBottom))
+    val surfaceTint = when (finish.colorStyle) {
+        1 -> if (dark) Color(0xFF072344) else Color(0xFFC8F1FF)
+        2 -> if (dark) Color(0xFF2F124E) else Color(0xFFFFE6FA)
+        3 -> if (dark) Color(0xFF211046) else Color(0xFFE8D8FF)
+        else -> if (dark) Color(0xFF111626) else Color.White
+    }
+    val rimTop = Color.White.copy(alpha = if (dark) finish.rimAlpha else finish.rimAlpha * .90f)
+    val rimBottom = colors.primary.copy(alpha = finish.rimAlpha * .24f)
+    val rim = Brush.verticalGradient(listOf(rimTop, rimBottom))
     val tint = surfaceTint.copy(alpha = style.tintAlpha)
+    val opticalHighlight = when (finish.lightStyle) {
+        1 -> Highlight.Default.copy(alpha = finish.rimAlpha)
+        2 -> Highlight.Plain.copy(alpha = finish.rimAlpha * .74f)
+        else -> Highlight.Ambient.copy(alpha = finish.rimAlpha)
+    }
+
     val canRender = backdrop != null && !powerSaver && !lowRam &&
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 
@@ -68,7 +81,7 @@ fun Modifier.galaxLiquidEffect(
         // refraction. Text remains legible, and a high-contrast outline survives.
         return this.clip(shape)
             .background(colors.surfaceContainerHigh.copy(alpha = if (dark) .92f else .91f))
-            .border(1.dp, rim, shape)
+            .border((.7f + finish.rimAlpha * .8f).dp, rim, shape)
     }
 
     return this
@@ -76,19 +89,23 @@ fun Modifier.galaxLiquidEffect(
             backdrop = backdrop!!,
             shape = { shape },
             effects = {
-                vibrancy()
-                blur(style.blurRadiusDp.dp.toPx())
+                if (finish.vibrancy) vibrancy()
+                if (style.blurRadiusDp > 0f) blur(style.blurRadiusDp.dp.toPx())
                 val dimension = size.minDimension.coerceAtLeast(1f)
                 if (style.refractionHeight > 0f && style.refractionAmount > 0f) {
                     lens(
                         refractionHeight = dimension * style.refractionHeight * .5f,
                         refractionAmount = dimension * style.refractionAmount,
-                        depthEffect = true,
+                        depthEffect = finish.depthEffect,
                         chromaticAberration = style.chromaticAberration > .45f,
                     )
                 }
             },
-            highlight = { Highlight.Ambient.copy(alpha = if (dark) .64f else .82f) },
+            highlight = { opticalHighlight },
+            shadow = {
+                Shadow(radius = (4f + finish.shadowAlpha * 60f).dp,
+                    color = Color.Black.copy(alpha = finish.shadowAlpha))
+            },
             onDrawSurface = { drawRect(tint) },
         )
         .clip(shape)
