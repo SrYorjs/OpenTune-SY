@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -46,6 +47,7 @@ fun GalaxMainPages(navController: NavController, pager: PagerState, onOpenSearch
     androidx.activity.compose.BackHandler(enabled = pager.currentPage != 0) {
         scope.launch { pager.animateScrollToPage(0) }
     }
+    Box(Modifier.fillMaxSize()) {
     HorizontalPager(state = pager, key = { Screens.MainScreens[it].route }, modifier = Modifier.fillMaxSize()) { page ->
         when (page) {
             0 -> HomeScreen(navController)
@@ -53,6 +55,12 @@ fun GalaxMainPages(navController: NavController, pager: PagerState, onOpenSearch
             2 -> LibraryScreen(navController)
         }
     }
+        val base = if (MaterialTheme.colorScheme.background.luminance() < .45f)
+            com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.deepSpace else MaterialTheme.colorScheme.background
+        Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(88.dp)
+            .background(Brush.verticalGradient(listOf(Color.Transparent, base.copy(alpha = .94f)))))
+    }
+
 }
 
 @Composable
@@ -91,7 +99,7 @@ fun GalaxDiscoverScreen(navController: NavController, onOpenSearch: () -> Unit,
             Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 val featured = genres.orEmpty().take(4)
                 if (featured.isEmpty()) {
-                    // Useful offline/cold-start discovery; no invented personalization.
+
                     listOf("Pop", "Rock", "Hip-hop", "Electrónica").chunked(2).forEach { row ->
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             row.forEachIndexed { index, title -> MoodAndGenresButton(title, if (index == 0) 0xFF4064AD else 0xFF7554A4,

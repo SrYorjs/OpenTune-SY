@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens
 
 import androidx.activity.compose.BackHandler
@@ -61,7 +53,6 @@ import com.arturo254.opentune.ui.utils.SnapLayoutInfoProvider
 import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.models.toMediaMetadata
 import com.arturo254.opentune.viewmodels.HomeViewModel
-
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -128,7 +119,7 @@ fun HomeScreen(
 
     if (selectedChip != null) {
         BackHandler {
-            // if a chip is selected, go back to the normal homepage first
+
             viewModel.toggleChip(selectedChip)
         }
     }
@@ -213,7 +204,6 @@ fun HomeScreen(
                         )
                     }
                 }
-
 
                 quickPicks?.takeIf { it.isNotEmpty() }?.let { picks ->
                 item {

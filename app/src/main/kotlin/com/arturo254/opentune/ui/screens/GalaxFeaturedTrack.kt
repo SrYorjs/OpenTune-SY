@@ -74,7 +74,7 @@ fun GalaxFeaturedTrack(song: Song, isPlaying: Boolean, onClick: () -> Unit) {
                     colors = IconButtonDefaults.filledTonalIconButtonColors(containerColor = Color.White,
                         contentColor = Color(0xFF10121C)), modifier = Modifier.size(48.dp)) {
                     Icon(painterResource(if (isPlaying) R.drawable.pause else R.drawable.play),
-                        stringResource(if (isPlaying) R.string.pause else R.string.play))
+                        stringResource(if (isPlaying) R.string.player_a11y_pause else R.string.play))
                 }
             }
         }

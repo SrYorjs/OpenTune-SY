@@ -27,13 +27,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.canvas.models.CanvasArtwork
 
-/**
- * V8 immersive composition only. The existing visual engine resolves cover,
- * Canvas and animations, and the enclosing Player controls state and actions.
- *
- * Keeps the original layout's 24dp portrait/16dp landscape trailing spacer,
- * and its horizontal/bottom system insets; no extra surface or gesture owner.
- */
 @Composable
 fun V8PlayerScene(
     isLandscape: Boolean,
@@ -69,8 +62,7 @@ fun V8PlayerScene(
             }
         }
         if (!immersiveGlass || !canvasArtwork?.preferredAnimationUrl.isNullOrBlank()) {
-            // Preserve the V8 Canvas/video experience without capturing the
-            // video player itself into the Kyant backdrop render graph.
+
             CompositionLocalProvider(
                 com.arturo254.opentune.ui.player.LocalCanvasFrameReceiver provides
                     (if (immersiveGlass) receiveFrame else null),

@@ -194,8 +194,6 @@ internal fun CanvasArtworkPlayer(
         label = "canvasAlpha",
     )
 
-    // A bounded CPU image is the source, never the AndroidView RenderNode.
-    // This keeps the optical pipeline identical and prevents capture cycles.
     LaunchedEffect(texture, currentUrl, isVideoReady, isPlaying, frameReceiver != null, lifecycle) {
         frameReceiver?.invoke(null)
         val view = texture
@@ -215,9 +213,7 @@ internal fun CanvasArtworkPlayer(
 
     AndroidView(
         factory = { viewContext ->
-            // Media3 PlayerView defaults to SurfaceView, whose separate window
-            // composition leaked a black box into Glass Studio on some Samsung
-            // builds. TextureView is strictly clipped/composited with Compose.
+
             (android.view.LayoutInflater.from(viewContext)
                 .inflate(R.layout.galax_canvas_texture_player, null, false) as PlayerView).apply {
                 layoutParams = android.view.ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)

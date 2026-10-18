@@ -41,7 +41,6 @@ import com.arturo254.opentune.ui.menu.SongMenu
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 
-/** Current listening picks, with their own safe artwork source for the selected glass. */
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun GalaxListeningDeck(
@@ -80,7 +79,7 @@ fun GalaxListeningDeck(
                     if (active) GalaxLiquidSurface(backdrop = backdrop, shapeOverride = RoundedCornerShape(50),
                         modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp).size(40.dp)) {
                         Icon(painterResource(if (isPlaying) R.drawable.pause else R.drawable.play),
-                            androidx.compose.ui.res.stringResource(if (isPlaying) R.string.pause else R.string.play),
+                            androidx.compose.ui.res.stringResource(if (isPlaying) R.string.player_a11y_pause else R.string.play),
                             Modifier.align(Alignment.Center).size(22.dp), tint = foreground)
                     }
                 }

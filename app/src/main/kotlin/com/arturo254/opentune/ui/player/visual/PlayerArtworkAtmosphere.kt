@@ -37,16 +37,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 
-/**
- * Apple Music-inspired immersive player atmosphere — artwork is the ONLY
- * background source and always belongs to the currently playing track.
- *
- * An unblurred square cover occupies the top width and fades into its OWN
- * heavily blurred extension. Lower controls have contrast without an opaque
- * dark sheet. This source is independently captured by the expanded player,
- * never by the NavHost. Playback, gesture handling and media session are
- * deliberately untouched.
- */
 @Composable
 fun PlayerArtworkAtmosphere(
     artworkUrl: String?,
@@ -82,8 +72,7 @@ fun PlayerArtworkAtmosphere(
         ) { cover ->
             Box(Modifier.fillMaxSize()) {
                 if (!cover.isNullOrBlank()) {
-                    // Cover remains proportional (1:1 width), unblurred and
-                    // gently dissolves into the lower atmospheric background.
+
                     Box(
                         Modifier.align(Alignment.TopCenter)
                             .fillMaxWidth()
@@ -118,8 +107,7 @@ fun PlayerArtworkAtmosphere(
                 }
             }
         }
-        // A subtle floor makes progress, title and text legible without
-        // producing a harsh straight line across the album artwork.
+
         Box(
             Modifier.fillMaxSize().background(
                 Brush.verticalGradient(

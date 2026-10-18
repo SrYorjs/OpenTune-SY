@@ -55,20 +55,12 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.tanh
 
-/**
- * Shared premium glass controls.
- *
- * The press deformation follows the same interaction model used by Kyant's
- * LiquidButton sample: a subtle elastic translation plus directional stretch
- * toward the touch point. The optical surface itself still falls back safely on
- * devices where a live Backdrop is not available.
- */
 @Composable
 internal fun Modifier.elasticLiquidPress(
     interactionSource: MutableInteractionSource,
     enabled: Boolean,
 ): Modifier {
-    // Reduced motion removes only the visual deformation; clicks/gestures stay.
+
     val policy = OpenTuneDesignSystem.galaxMotion
     if (policy.reducedMotion) return this
     val pressed by interactionSource.collectIsPressedAsState()
@@ -354,9 +346,6 @@ fun LiquidGlassCard(
     )
 }
 
-/**
- * Lightweight shared background for the redesigned top-level screens.
- */
 @Composable
 fun Modifier.liquidGlassScreenBackground(
     pureBlack: Boolean = false,

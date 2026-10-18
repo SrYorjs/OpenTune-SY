@@ -1,10 +1,6 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
 package com.arturo254.opentune.ui.utils
+
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 
 import android.text.format.Formatter
 import android.widget.Toast
@@ -96,12 +92,8 @@ fun ShowMediaInfo(videoId: String) {
             .padding(windowInsets.asPaddingValues())
             .padding(horizontal = 16.dp)
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .galaxScreenBackground()
     ) {
-
-        /* ============================================================
-         * DETAILS SECTION
-         * ============================================================ */
 
         if (song != null) {
 
@@ -164,10 +156,6 @@ fun ShowMediaInfo(videoId: String) {
                 }
             }
         }
-
-        /* ============================================================
-         * MEDIA INFO
-         * ============================================================ */
 
         item {
             Spacer(Modifier.height(24.dp))
@@ -264,10 +252,6 @@ fun ShowMediaInfo(videoId: String) {
         }
     }
 }
-
-/* ============================================================
- * COMPONENTS (EXPRESSIVE STYLE)
- * ============================================================ */
 
 @Composable
 private fun SectionTitle(icon: Int, title: String) {

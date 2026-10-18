@@ -1,12 +1,9 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 
 package com.arturo254.opentune.ui.screens.musicrecognition
+
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
+import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -92,6 +89,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -273,7 +271,7 @@ fun MusicRecognitionScreen(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .background(backgroundBrush)
+                    .galaxScreenBackground()
                     .padding(padding)
                     .statusBarsPadding(),
         ) {
@@ -570,7 +568,6 @@ private suspend fun recordMicPcm16Mono(
             minBuffer,
         )
 
-        // Verificar si AudioRecord está inicializado correctamente
         if (record.state != AudioRecord.STATE_INITIALIZED) {
             return@withContext ShortArray(0) to sampleRateHz
         }
@@ -582,7 +579,6 @@ private suspend fun recordMicPcm16Mono(
         try {
             record.startRecording()
 
-            // Verificar que está grabando
             if (record.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
                 return@withContext ShortArray(0) to sampleRateHz
             }
@@ -614,7 +610,7 @@ private suspend fun recordMicPcm16Mono(
             runCatching { record.release() }
         }
     } catch (e: SecurityException) {
-        // Permiso denegado en tiempo de ejecución
+
         e.printStackTrace()
         ShortArray(0) to sampleRateHz
     }
@@ -847,118 +843,38 @@ private fun ListeningOrb(
     isProcessing: Boolean,
     onClick: () -> Unit,
 ) {
-    val ringProgress: Float
-    val ringProgress2: Float
-    if (isActive) {
-        val infinite = rememberInfiniteTransition(label = "orbPulse")
-        val animatedRingProgress by infinite.animateFloat(
-            initialValue = 0f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(animation = tween(1700, easing = LinearEasing)),
-            label = "ring1",
-        )
-        val animatedRingProgress2 by infinite.animateFloat(
-            initialValue = 0.25f,
-            targetValue = 1.25f,
-            animationSpec = infiniteRepeatable(animation = tween(2100, easing = LinearEasing)),
-            label = "ring2",
-        )
-        ringProgress = animatedRingProgress
-        ringProgress2 = animatedRingProgress2
-    } else {
-        ringProgress = 0f
-        ringProgress2 = 0f
-    }
-
-    val orbScale by animateFloatAsState(
-        targetValue = if (isActive) 1.03f else 1f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
-        label = "orbScale",
-    )
-
-    val baseColor =
-        if (isProcessing) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary
-    val surfaceContainerHigh = MaterialTheme.colorScheme.surfaceContainerHigh
-
-    val container =
-        remember(baseColor, surfaceContainerHigh) {
-            Brush.radialGradient(
-                colors =
-                    listOf(
-                        baseColor.copy(alpha = 0.42f),
-                        baseColor.copy(alpha = 0.16f),
-                        surfaceContainerHigh.copy(alpha = 0.9f),
-                    ),
-            )
-        }
-    val density = LocalDensity.current
-    val ringStrokeWidth = remember(density) { with(density) { 10.dp.toPx() } }
-    val ringStroke =
-        remember(ringStrokeWidth) { Stroke(width = ringStrokeWidth, cap = StrokeCap.Round) }
-
-    Box(
-        modifier =
-            modifier
-                .scale(orbScale)
-                .clip(CircleShape)
-                .background(container)
-                .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
+    val motion = com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem.galaxMotion
+    val phase = if (isActive && !motion.reducedMotion) {
+        val transition = rememberInfiniteTransition(label = "recognitionOrbit")
+        transition.animateFloat(0f, 1f,
+            infiniteRepeatable(tween(2200, easing = LinearEasing)), label = "recognitionPhase")
+    } else remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
+    val accent = MaterialTheme.colorScheme.primary
+    val secondary = com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.violet
+    val description = stringResource(R.string.music_recognition_tap_to_listen)
+    Box(modifier, contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
             val r = size.minDimension / 2f
             val center = Offset(size.width / 2f, size.height / 2f)
-
-            if (isActive) {
-                drawRing(center, r, ringProgress, baseColor, ringStroke)
-                drawRing(center, r, ringProgress2, baseColor.copy(alpha = 0.85f), ringStroke)
+            drawCircle(Brush.radialGradient(listOf(accent.copy(alpha = .20f), Color.Transparent), center, r), r, center)
+            drawCircle(accent.copy(alpha = .18f), r * .82f, center, style = Stroke(1.dp.toPx()))
+            drawCircle(secondary.copy(alpha = .15f), r * .96f, center, style = Stroke(1.dp.toPx()))
+            if (isActive && !motion.reducedMotion) {
+                val progress = phase.value
+                drawCircle(accent.copy(alpha = (1f - progress) * .5f),
+                    r * (.55f + progress * .42f), center, style = Stroke(2.dp.toPx()))
             }
-
-            val glow = baseColor.copy(alpha = if (isActive) 0.22f else 0.12f)
-            drawCircle(glow, radius = r * 0.88f, center = center)
-            drawCircle(Color.Black.copy(alpha = 0.06f), radius = r * 0.78f, center = center)
         }
-
-        val icon =
-            when {
-                isProcessing -> R.drawable.cached
-                isActive -> R.drawable.listening
-                else -> R.drawable.mic
+        Surface(onClick = onClick, enabled = !isActive && !isProcessing,
+            modifier = Modifier.size(128.dp), shape = CircleShape,
+            color = accent.copy(alpha = .14f), contentColor = MaterialTheme.colorScheme.onSurface) {
+            Box(contentAlignment = Alignment.Center) {
+                if (isProcessing) CircularProgressIndicator(Modifier.size(48.dp), strokeWidth = 2.dp)
+                else Icon(painterResource(if (isActive) R.drawable.listening else R.drawable.mic),
+                    description, Modifier.size(44.dp))
             }
-
-        val iconAlpha by animateFloatAsState(
-            targetValue = if (isProcessing) 0.9f else 1f,
-            animationSpec = tween(180),
-            label = "iconAlpha",
-        )
-
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null,
-            modifier = Modifier
-                .size(54.dp)
-                .alpha(iconAlpha),
-            tint = MaterialTheme.colorScheme.onSurface,
-        )
+        }
     }
-}
-
-private fun DrawScope.drawRing(
-    center: Offset,
-    baseRadius: Float,
-    progress: Float,
-    color: Color,
-    stroke: Stroke,
-) {
-    val p = progress.coerceIn(0f, 1f)
-    val radius = baseRadius * (0.62f + 0.55f * p)
-    val alpha = (1f - p) * 0.55f
-    drawCircle(
-        color = color.copy(alpha = alpha),
-        radius = radius,
-        center = center,
-        style = stroke,
-    )
 }
 
 @Composable

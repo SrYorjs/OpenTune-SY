@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.component
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -26,6 +18,9 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.draw.clip
+import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -54,7 +49,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Enhanced Action Button - Material 3 Expressive Design
 @Composable
 fun NewActionButton(
     icon: @Composable () -> Unit,
@@ -70,7 +64,7 @@ fun NewActionButton(
         animationSpec = tween(200),
         label = "background"
     )
-    
+
     val animatedContent by animateColorAsState(
         targetValue = if (enabled) contentColor else contentColor.copy(alpha = 0.5f),
         animationSpec = tween(200),
@@ -113,9 +107,9 @@ fun NewActionButton(
             ) {
                 icon()
             }
-            
+
             Spacer(modifier = Modifier.height(6.dp))
-            
+
             Text(
                 text = text,
                 style = MaterialTheme.typography.labelMedium,
@@ -129,7 +123,6 @@ fun NewActionButton(
     }
 }
 
-// Enhanced Menu Item - Material 3 Expressive Design
 @Composable
 fun NewMenuItem(
     headlineContent: @Composable () -> Unit,
@@ -140,19 +133,37 @@ fun NewMenuItem(
     enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
-    androidx.compose.material3.ListItem(
-        headlineContent = headlineContent,
-        leadingContent = leadingContent,
-        trailingContent = trailingContent,
-        supportingContent = supportingContent,
-        modifier = modifier
-            .clickable(enabled = enabled) { onClick?.invoke() }
-            .padding(horizontal = 4.dp),
-        tonalElevation = 0.dp
-    )
+    val motion = com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem.galaxMotion
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (pressed && enabled) motion.pressScale else 1f,
+        animationSpec = motion.pressSpec, label = "menuRowPress")
+    Row(
+        modifier.graphicsLayer { scaleX = scale; scaleY = scale; alpha = if (enabled) 1f else .45f }
+            .clip(RoundedCornerShape(18.dp))
+            .clickable(enabled = enabled && onClick != null, interactionSource = interaction,
+                indication = LocalIndication.current) { onClick?.invoke() }
+            .heightIn(min = 60.dp).padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        leadingContent?.let { leading ->
+            Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = .09f)) {
+                Box(Modifier.size(38.dp), contentAlignment = Alignment.Center) { leading() }
+            }
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.bodyLarge) { headlineContent() }
+            supportingContent?.let { supporting ->
+                androidx.compose.runtime.CompositionLocalProvider(
+                    androidx.compose.material3.LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
+                ) { androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.bodySmall) { supporting() } }
+            }
+        }
+        trailingContent?.invoke()
+    }
 }
 
-// Enhanced Menu Section Header - Material 3 Expressive Design
 @Composable
 fun NewMenuSectionHeader(
     text: String,
@@ -169,7 +180,6 @@ fun NewMenuSectionHeader(
     )
 }
 
-// Enhanced Action Grid - Material 3 Expressive Design
 @Composable
 fun NewActionGrid(
     actions: List<NewAction>,
@@ -177,7 +187,7 @@ fun NewActionGrid(
     columns: Int = 3
 ) {
     val rows = actions.chunked(columns)
-    
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -197,8 +207,7 @@ fun NewActionGrid(
                         contentColor = if (action.contentColor != Color.Unspecified) action.contentColor else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
-                // Fill remaining space if row is not full
+
                 repeat(columns - row.size) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
@@ -207,7 +216,6 @@ fun NewActionGrid(
     }
 }
 
-// Enhanced Action Data Class
 data class NewAction(
     val icon: @Composable () -> Unit,
     val text: String,
@@ -217,7 +225,6 @@ data class NewAction(
     val contentColor: Color = Color.Unspecified
 )
 
-// Enhanced Menu Content - Material 3 Expressive Design
 @Composable
 fun NewMenuContent(
     headerContent: @Composable (() -> Unit)? = null,
@@ -229,26 +236,22 @@ fun NewMenuContent(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Header
+
         headerContent?.invoke()
-        
-        // Action Grid
+
         actionGrid?.invoke()
-        
-        // Divider if both header and actions exist
+
         if (headerContent != null && actionGrid != null) {
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 16.dp),
                 color = MaterialTheme.colorScheme.outlineVariant
             )
         }
-        
-        // Menu Items
+
         menuItems?.invoke()
     }
 }
 
-// Enhanced Icon Button - Material 3 Expressive Design
 @Composable
 fun NewIconButton(
     icon: @Composable () -> Unit,
@@ -263,7 +266,7 @@ fun NewIconButton(
         animationSpec = tween(200),
         label = "background"
     )
-    
+
     val animatedContent by animateColorAsState(
         targetValue = if (enabled) contentColor else contentColor.copy(alpha = 0.5f),
         animationSpec = tween(200),
@@ -303,7 +306,6 @@ fun NewIconButton(
     }
 }
 
-// Enhanced Menu Container - Material 3 Expressive Design
 @Composable
 fun NewMenuContainer(
     content: @Composable () -> Unit,

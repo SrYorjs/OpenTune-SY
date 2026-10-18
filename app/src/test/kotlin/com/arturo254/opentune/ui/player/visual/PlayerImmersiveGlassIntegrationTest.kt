@@ -5,10 +5,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/**
- * 4.5 Player safety gate: fullscreen controls must sample the current song's
- * background, never the NavHost route two screens behind the player.
- */
 class PlayerImmersiveGlassIntegrationTest {
     private val root = listOf(File("src/main/kotlin"), File("app/src/main/kotlin"))
         .firstOrNull(File::isDirectory) ?: error("Android Kotlin source root missing")

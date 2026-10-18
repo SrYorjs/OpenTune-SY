@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -135,50 +127,23 @@ fun MoodAndGenresButton(
     modifier: Modifier = Modifier,
 ) {
     val base = Color(stripeColor)
-    val darkVariant = Color(
-        red = (base.red * 0.58f).coerceIn(0f, 1f),
-        green = (base.green * 0.58f).coerceIn(0f, 1f),
-        blue = (base.blue * 0.58f).coerceIn(0f, 1f),
-    )
-    val accentGlass = Brush.linearGradient(
-        colors = listOf(
-            base.copy(alpha = 0.34f),
-            darkVariant.copy(alpha = 0.16f),
-            Color.Transparent,
-        ),
-        start = Offset(0f, 0f),
-        end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
-    )
-
-    LiquidGlassCard(
-        cornerRadius = 22.dp,
-        modifier = modifier
-            .height(MoodAndGenresButtonHeight)
-            .clickable(onClick = onClick),
-    ) {
-        Box(
-            contentAlignment = Alignment.BottomStart,
-            modifier = Modifier
-                .fillMaxSize()
-                .background(accentGlass)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.Bold,
-                    shadow = Shadow(
-                        color = Color.Black.copy(alpha = 0.24f),
-                        offset = Offset(0f, 1f),
-                        blurRadius = 3f,
-                    ),
-                ),
-                color = Color.White,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
+    val shape = com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.artworkShape
+    Box(modifier.height(MoodAndGenresButtonHeight).clip(shape)
+        .background(Brush.linearGradient(listOf(
+            androidx.compose.ui.graphics.lerp(base, Color(0xFF111525), .45f),
+            androidx.compose.ui.graphics.lerp(base, Color(0xFF111525), .82f))))
+        .clickable(onClick = onClick)) {
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+            drawCircle(base.copy(alpha = .25f), size.height * .9f,
+                Offset(size.width * .95f, size.height * .1f),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(1.dp.toPx()))
+            drawCircle(base.copy(alpha = .13f), size.height * .6f,
+                Offset(size.width * .95f, size.height * .1f))
         }
+        Text(title, modifier = Modifier.align(Alignment.BottomStart).padding(18.dp),
+            style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+            color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 
-val MoodAndGenresButtonHeight = 88.dp
+val MoodAndGenresButtonHeight = 112.dp

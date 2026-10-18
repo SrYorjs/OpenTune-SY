@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.component
 
 import android.widget.Toast
@@ -249,62 +241,18 @@ fun GridItem(
     thumbnailRatio: Float = 1f,
     fillMaxWidth: Boolean = false,
 ) {
-    val shape = RoundedCornerShape(24.dp)
-
     Column(
-        modifier =
-            if (fillMaxWidth) {
-                modifier
-                    .padding(horizontal = 8.dp, vertical = 8.dp)
-                    .fillMaxWidth()
-                    .clip(shape)
-                    .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.44f))
-                    .border(
-                        0.75.dp,
-                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f),
-                        shape,
-                    )
-                    .padding(10.dp)
-            } else {
-                modifier
-                    .padding(horizontal = 8.dp, vertical = 8.dp)
-                    .width(GridThumbnailHeight * thumbnailRatio + 20.dp)
-                    .clip(shape)
-                    .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.44f))
-                    .border(
-                        0.75.dp,
-                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f),
-                        shape,
-                    )
-                    .padding(10.dp)
-            },
-        verticalArrangement = Arrangement.spacedBy(7.dp),
+        modifier = if (fillMaxWidth) modifier.padding(8.dp).fillMaxWidth()
+            else modifier.padding(8.dp).width(GridThumbnailHeight * thumbnailRatio),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         BoxWithConstraints(
             contentAlignment = Alignment.Center,
-            modifier =
-                if (fillMaxWidth) {
-                    Modifier.fillMaxWidth()
-                } else {
-                    Modifier.height(GridThumbnailHeight)
-                }
-                    .aspectRatio(thumbnailRatio)
-                    .clip(
-                        if (thumbnailRatio == 1f) RoundedCornerShape(18.dp)
-                        else RoundedCornerShape(16.dp)
-                    ),
-        ) {
-            thumbnailContent()
-        }
-
+            modifier = Modifier.fillMaxWidth().aspectRatio(thumbnailRatio)
+                .clip(com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.artworkShape),
+        ) { thumbnailContent() }
         title()
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            badges()
-            subtitle()
-        }
+        Row(verticalAlignment = Alignment.CenterVertically) { badges(); subtitle() }
     }
 }
 
@@ -340,7 +288,6 @@ private fun playlistPlaceholderIcon(
         stringResource(R.string.cached_playlist) -> R.drawable.cached
         else -> if (autoPlaylist) R.drawable.trending_up else R.drawable.queue_music
     }
-
 
 private val LibraryCardThumbnailSize = 72.dp
 
@@ -451,7 +398,6 @@ fun LibraryPlaylistFeatureCard(
     }
 }
 
-
 @Composable
 fun LibraryAlbumSpotlightCard(
     album: Album,
@@ -530,7 +476,6 @@ fun LibraryAlbumSpotlightCard(
         }
     }
 }
-
 
 @Composable
 fun LibraryArtistSpotlightCard(
@@ -1573,7 +1518,7 @@ fun YouTubeGridItem(
             }
         }
     },
-    thumbnailRatio: Float = if (item is SongItem) 16f / 9 else 1f,
+    thumbnailRatio: Float = 1f,
     isActive: Boolean = false,
     isPlaying: Boolean = false,
     fillMaxWidth: Boolean = false,
@@ -1785,7 +1730,7 @@ fun ItemThumbnail(
                 AsyncImage(
                     model = request,
                     contentDescription = null,
-                    contentScale = if (shouldApplySquareCrop) ContentScale.Crop else ContentScale.Fit,
+                    contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxSize()
                         .let { if (shouldApplySquareCrop) it.aspectRatio(1f) else it }
@@ -1884,7 +1829,7 @@ fun LocalThumbnail(
         AsyncImage(
             model = request,
             contentDescription = null,
-            contentScale = if (shouldApplySquareCrop) ContentScale.Crop else ContentScale.Fit,
+            contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize().let { if (shouldApplySquareCrop) it.aspectRatio(1f) else it }
         )
 
@@ -2181,7 +2126,6 @@ fun SwipeToSongBox(
     }
 }
 
-// Helper to animate reset of swipe offset
 private fun reset(offset: MutableState<Float>, scope: CoroutineScope) {
     scope.launch {
         animate(
@@ -2192,7 +2136,6 @@ private fun reset(offset: MutableState<Float>, scope: CoroutineScope) {
     }
 }
 
-// Data holder for swipe visuals
 data class Quadruple<A, B, C, D>(
     val first: A,
     val second: B,
@@ -2240,7 +2183,7 @@ private object Icon {
                     .size(16.dp)
                     .padding(end = 2.dp)
             )
-            else -> { /* no icon */ }
+            else -> {   }
         }
     }
 

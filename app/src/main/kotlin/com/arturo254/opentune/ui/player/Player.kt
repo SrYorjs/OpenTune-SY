@@ -1,13 +1,5 @@
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.player
 
 import android.content.ClipboardManager
@@ -194,8 +186,6 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheetPlayer(
@@ -214,15 +204,12 @@ fun BottomSheetPlayer(
     val playerConnection = LocalPlayerConnection.current ?: return
     val playerActions = rememberPlayerActions(playerConnection)
 
-    // A single snapshot consumes the exact same persisted DataStore keys
-    // as the Appearance settings (including legacy V1/V3 values).
     val presentation = rememberPlayerPresentationPreferences()
     val playerDesignStyle = presentation.designStyle
     val playerBackground = presentation.backgroundStyle
     val playerButtonsStyle = presentation.buttonStyle
     val sliderStyle = presentation.sliderStyle
 
-    // Custom background preferences (image + effects)
     val (playerCustomImageUri) = rememberPreference(PlayerCustomImageUriKey, "")
     val (playerCustomBlur) = rememberPreference(PlayerCustomBlurKey, 0f)
     val (playerCustomContrast) = rememberPreference(PlayerCustomContrastKey, 1f)
@@ -244,8 +231,6 @@ fun BottomSheetPlayer(
             mediaMetadata?.id?.let(downloadUtil::getOfflineCoverUri)
         }
 
-    // System bars / fullscreen are already owned by the single PlayerHost
-    // inside MainActivity, where they can also be restored on collapse.
     val (aodAutoTimeoutSeconds) = rememberPreference(AodAutoActivationKey, 0)
     val visualLifecycle = rememberPlayerContentLifecycle(
         isExpanded = state.isExpanded,
@@ -262,8 +247,7 @@ fun BottomSheetPlayer(
     val useDarkTheme = remember(darkTheme, isSystemInDarkTheme) {
         if (darkTheme == DarkMode.AUTO) isSystemInDarkTheme else darkTheme == DarkMode.ON
     }
-    // VisualSkin is the single presentation palette; existing preferences and
-    // MaterialTheme still own dark mode, dynamic colors and pure black.
+
     val visualSkin = rememberVisualSkin(
         designStyle = playerDesignStyle,
         backgroundStyle = playerBackground,
@@ -294,7 +278,6 @@ fun BottomSheetPlayer(
     val canSkipPrevious by playerConnection.canSkipPrevious.collectAsState()
     val canSkipNext by playerConnection.canSkipNext.collectAsState()
 
-
     var position by rememberSaveable(mediaMetadata?.id) {
         mutableLongStateOf(playerConnection.player.currentPosition)
     }
@@ -304,8 +287,6 @@ fun BottomSheetPlayer(
     val seekSession = rememberPlayerSeekSession(mediaMetadata?.id)
     val sliderPosition = seekSession.pendingSeekMs
 
-    // One normalized presentation snapshot for full Player and MiniPlayer.
-    // Reuses the existing position ticker; no second playback/timing engine.
     val playerState = rememberPlayerState(
         PlayerStateInput(
             mediaMetadata = mediaMetadata,
@@ -322,11 +303,9 @@ fun BottomSheetPlayer(
             repeatMode = repeatMode,
         )
     )
-    // Loading still means buffering or a pending seek, just as before 4.2.
+
     val isLoading = playerState.isLoading
 
-    // Visual engine owns Canvas lookup and palette extraction per song.
-    // It is presentation-only; MusicService and PlayerConnection are unchanged.
     val playerVisuals = rememberPlayerVisualState(
         metadata = mediaMetadata,
         downloadRevision = download?.state,
@@ -374,136 +353,23 @@ fun BottomSheetPlayer(
         mutableStateOf(false)
     }
 
-    var sleepTimerValue by remember {
-        mutableFloatStateOf(30f)
-    }
     if (showSleepTimerDialog) {
-        AlertDialog(
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-            onDismissRequest = { showSleepTimerDialog = false },
-
-            icon = {
-                Surface(
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shape = CircleShape
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.bedtime),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .size(28.dp)
-                    )
-                }
+        SleepTimerDialog(
+            onDismiss = { showSleepTimerDialog = false },
+            onConfirm = { minutes ->
+                showSleepTimerDialog = false
+                playerConnection.service.sleepTimer.start(minutes)
             },
-
-            title = {
-                Text(
-                    text = stringResource(R.string.sleep_timer),
-                    style = MaterialTheme.typography.headlineSmallEmphasized
-                )
+            onEndOfSong = {
+                showSleepTimerDialog = false
+                playerConnection.service.sleepTimer.start(-1)
             },
-
-            text = {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-
-                    Text(
-                        text = sleepTimerValue.roundToInt().toString(),
-                        style = MaterialTheme.typography.displayMediumEmphasized,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    Text(
-                        text = pluralStringResource(
-                            R.plurals.minute,
-                            sleepTimerValue.roundToInt(),
-                            sleepTimerValue.roundToInt()
-                        ),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
-                    Spacer(Modifier.height(20.dp))
-
-                    Slider(
-                        value = sleepTimerValue,
-                        onValueChange = { sleepTimerValue = it },
-                        valueRange = 5f..120f,
-                        steps = (120 - 5) / 5 - 1,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    Spacer(Modifier.height(20.dp))
-
-                    ToggleButton(
-                        checked = false,
-                        onCheckedChange = {
-                            showSleepTimerDialog = false
-                            playerConnection.service.sleepTimer.start(-1)
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.music_note),
-                            contentDescription = null
-                        )
-
-                        Spacer(Modifier.width(ToggleButtonDefaults.IconSpacing))
-
-                        Text(stringResource(R.string.end_of_song))
-                    }
-                }
-            },
-
-            dismissButton = {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(
-                        ButtonGroupDefaults.ConnectedSpaceBetween
-                    )
-                ) {
-
-                    ToggleButton(
-                        checked = false,
-                        onCheckedChange = {
-                            showSleepTimerDialog = false
-                        },
-                        shapes = ButtonGroupDefaults.connectedLeadingButtonShapes()
-                    ) {
-                        Text(stringResource(android.R.string.cancel))
-                    }
-
-                    ToggleButton(
-                        checked = false,
-                        onCheckedChange = {
-                            showSleepTimerDialog = false
-
-                            playerConnection.service.sleepTimer.start(
-                                sleepTimerValue.roundToInt()
-                            )
-                        },
-                        shapes = ButtonGroupDefaults.connectedTrailingButtonShapes()
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.play),
-                            contentDescription = null
-                        )
-
-                        Spacer(Modifier.width(ToggleButtonDefaults.IconSpacing))
-
-                        Text(stringResource(android.R.string.ok))
-                    }
-                }
-            },
-
-            confirmButton = {}
         )
     }
 
     var showChoosePlaylistDialog by rememberSaveable {
         mutableStateOf(false)
     }
-
 
     LaunchedEffect(mediaMetadata?.id, playbackState) {
         val startTime = SystemClock.elapsedRealtime()
@@ -572,8 +438,6 @@ fun BottomSheetPlayer(
 
     val focusRequester = remember { FocusRequester() }
 
-    // The full player must sample the CURRENT SONG, never the NavHost backdrop
-    // behind it. Source = artwork background only; glass controls are siblings.
     val activePlayerGlass = LocalEnableLiquidGlass.current && !state.isCollapsed
     val liveCanvasGlass = activePlayerGlass &&
         playerDesignStyle == PlayerDesignStyle.V8 &&
@@ -698,7 +562,7 @@ fun BottomSheetPlayer(
         val onSliderValueChange: (Long) -> Unit = seekSession::onSeekPreview
         val onSliderValueChangeFinished: () -> Unit = {
             seekSession.finish { targetPosition ->
-                // Crossfade adjustment remains owned by PlayerActions.
+
                 playerActions.seekTo(targetPosition, displayedTrackId = mediaMetadata?.id)
                 position = targetPosition
             }
@@ -715,7 +579,7 @@ fun BottomSheetPlayer(
                     shuffleModeEnabled = shuffleModeEnabled,
                     repeatMode = repeatMode,
                 )
-                // One source of Up Next order; no repeated rows for repeat-all/one.
+
                 playbackOrder.upNextIndices.firstOrNull()
                     ?.let { queueWindows.getOrNull(it)?.mediaItem?.metadata }
             }
@@ -795,12 +659,6 @@ fun BottomSheetPlayer(
             }
         }
 
-// distance
-
-        // Player 2.0: one layout dispatcher; all existing compositions remain
-        // intact behind typed orientation/family slots (4.13–4.16 migrate them).
-        // One controls slot across both V8 orientations: Liquid Glass, Canvas,
-        // volume, progress, Up Next and panel actions keep their original owners.
         val v8ControlsContent: @Composable ColumnScope.(MediaMetadata) -> Unit = { metadata ->
             V8PlayerControlsContent(
 
@@ -831,7 +689,7 @@ fun BottomSheetPlayer(
                                     onVolumeChange = { newVolume ->
                                         playerConnection.service.playerVolume.value = newVolume
                                     }
-                                
+
             )
         }
 
@@ -913,7 +771,7 @@ fun BottomSheetPlayer(
                             }
                         }
                     }
-                
+
             },
             cinematicLandscape = {
                     V7PlayerScene(
@@ -987,7 +845,7 @@ fun BottomSheetPlayer(
                             Spacer(Modifier.weight(1f))
                         }
                     }
-                
+
             },
             compactPortrait = {
                     val littleBackground = MaterialTheme.colorScheme.primaryContainer
@@ -1067,7 +925,7 @@ fun BottomSheetPlayer(
                             }
                         }
                     }
-                
+
             },
             cinematicPortrait = {
                     V7PlayerScene(
@@ -1131,7 +989,7 @@ fun BottomSheetPlayer(
 
                         Spacer(Modifier.height(30.dp))
                     }
-                
+
             },
         )
 
@@ -1158,7 +1016,6 @@ fun BottomSheetPlayer(
             pureBlack = pureBlack,
         )
 
-        // Player 2.0: one sheet integration; existing LyricsScreen stays the owner.
         PlayerLyricsPanel(
             mediaMetadata = mediaMetadata,
             sheetState = lyricsSheetState,
@@ -1166,6 +1023,6 @@ fun BottomSheetPlayer(
             lyricsSyncOffset = lyricsSyncOffset,
             modifier = modifier,
         )
-        } // Expanded player-only backdrop scope.
+        }
     }
 }

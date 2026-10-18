@@ -1,10 +1,6 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
 package com.arturo254.opentune.ui.menu
+
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -311,7 +307,7 @@ fun ColumnScope.PlayerMenu(
             bottom = 8.dp + WindowInsets.systemBars.asPaddingValues().calculateBottomPadding(),
         ),
     ) {
-        // ── Cabecera "Now Playing" ────────────────────────────────────────────
+
         item {
             Surface(
                 shape = RoundedCornerShape(28.dp),
@@ -379,7 +375,6 @@ fun ColumnScope.PlayerMenu(
             }
         }
 
-        // ── Volumen (solo fuera de cola) ─────────────────────────────────────
         if (isQueueTrigger != true) {
             item {
                 Spacer(modifier = Modifier.height(12.dp))
@@ -392,7 +387,6 @@ fun ColumnScope.PlayerMenu(
 
         item { Spacer(modifier = Modifier.height(16.dp)) }
 
-        // ── Acciones rápidas ─────────────────────────────────────────────────
         item {
             NewActionGrid(
                 actions = listOf(
@@ -486,12 +480,11 @@ fun ColumnScope.PlayerMenu(
                             navController.navigate("settings/music_together")
                         }
                     ),
-                    // ── Always On Display ─────────────────────────────────────
+
                     NewAction(
                         icon = {
                             Icon(
-                                // Cambia el drawable si "dark_mode" no existe en tu proyecto
-                                // Alternativas: R.drawable.bedtime, R.drawable.phone_android
+
                                 painter = painterResource(R.drawable.dark_mode),
                                 contentDescription = null,
                                 modifier = Modifier.size(28.dp),
@@ -512,7 +505,6 @@ fun ColumnScope.PlayerMenu(
 
         item { Spacer(modifier = Modifier.height(12.dp)) }
 
-        // ── Artista / Álbum ──────────────────────────────────────────────────
         if (splitArtists.isNotEmpty() || mediaMetadata.album != null) {
             item {
                 MenuSurfaceSection(modifier = Modifier.padding(vertical = 6.dp)) {
@@ -563,7 +555,6 @@ fun ColumnScope.PlayerMenu(
             item { Spacer(modifier = Modifier.height(12.dp)) }
         }
 
-        // ── Descarga ─────────────────────────────────────────────────────────
         item {
             MenuSurfaceSection(modifier = Modifier.padding(vertical = 6.dp)) {
                 when (download?.state) {
@@ -640,7 +631,6 @@ fun ColumnScope.PlayerMenu(
             }
         }
 
-        // ── Detalles / Ecualizador / Tempo ───────────────────────────────────
         item {
             MenuSurfaceSection(modifier = Modifier.padding(vertical = 6.dp)) {
                 Column {
@@ -686,8 +676,6 @@ fun ColumnScope.PlayerMenu(
         }
     }
 }
-
-// ── El resto del archivo permanece igual que el original ─────────────────────
 
 @Composable
 private fun PlayerVolumeCard(
@@ -1197,8 +1185,8 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
     }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
-            Column(modifier = Modifier.fillMaxSize()) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            Column(modifier = Modifier.fillMaxSize().galaxScreenBackground()) {
                 TopAppBar(
                     title = { Text(text = stringResource(R.string.equalizer)) },
                     navigationIcon = {
@@ -1222,7 +1210,7 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
                         )
                         Spacer(Modifier.width(8.dp))
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface, scrolledContainerColor = MaterialTheme.colorScheme.surface),
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent, scrolledContainerColor = MaterialTheme.colorScheme.background),
                 )
 
                 Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp)) {
@@ -1241,6 +1229,10 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
                         Spacer(Modifier.height(24.dp))
                         return@Column
                     }
+
+                    com.arturo254.opentune.ui.player.panels.GalaxEqualizerCurve(
+                        bandLevelsMb, minMb, maxMb, stringResource(R.string.eq_bands),
+                    )
 
                     EqSection(title = stringResource(R.string.eq_presets), trailing = { TextButton(onClick = openSystemEqualizer) { Text(text = stringResource(R.string.eq_system)) } }) {
                         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).horizontalScroll(rememberScrollState())) {
@@ -1435,8 +1427,8 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
 
 @Composable
 private fun EqSection(title: String, trailing: @Composable (() -> Unit)? = null, content: @Composable () -> Unit) {
-    Surface(color = MaterialTheme.colorScheme.surfaceContainer, shape = RoundedCornerShape(24.dp), modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(vertical = 16.dp)) {
+    com.arturo254.opentune.ui.component.MenuSurfaceSection(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(vertical = 20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                 Text(text = title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 trailing?.invoke()

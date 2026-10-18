@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
@@ -205,19 +197,6 @@ fun GlobalCatalogHomeSection(
                                 scaleX = scale
                                 scaleY = scale
                             }
-                            .clip(shape)
-                            .background(
-                                MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.50f)
-                            )
-                            .border(
-                                0.75.dp,
-                                if (active) {
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.34f)
-                                } else {
-                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.17f)
-                                },
-                                shape,
-                            )
                             .combinedClickable(
                                 interactionSource = interaction,
                                 onClick = {
@@ -230,13 +209,12 @@ fun GlobalCatalogHomeSection(
                                     }
                                 },
                                 onLongClick = {},
-                            )
-                            .padding(10.dp),
+                            ),
                 ) {
                     Artwork(
                         imageUrl = track.artworkUrl,
                         contentDescription = null,
-                        modifier = Modifier.size(140.dp),
+                        modifier = Modifier.size(160.dp),
                         shape = RoundedCornerShape(20.dp),
                         overlay = {
                             if (active) {
@@ -551,12 +529,7 @@ fun SpeedDialSection(
                             scaleY = cardScale
                             transformOrigin = TransformOrigin.Center
                         }
-                        .clip(RoundedCornerShape(22.dp))
-                        .border(
-                            width = 0.75.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.20f),
-                            shape = RoundedCornerShape(22.dp),
-                        )
+                        .clip(com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.artworkShape)
                         .combinedClickable(
                             interactionSource = interactionSource,
                             onClick = {
@@ -709,9 +682,6 @@ fun SpeedDialSection(
     }
 }
 
-/**
- * Keep Listening section - horizontal grid of local items
- */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun KeepListeningSection(
@@ -741,7 +711,7 @@ fun KeepListeningSection(
     ) {
         items(
             items = keepListening,
-            key = { item -> 
+            key = { item ->
                 when (item) {
                     is Song -> "song_${item.id}"
                     is Album -> "album_${item.id}"
@@ -771,9 +741,6 @@ fun KeepListeningSection(
     }
 }
 
-/**
- * Forgotten Favorites section - horizontal grid of songs
- */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ForgottenFavoritesSection(
@@ -792,7 +759,7 @@ fun ForgottenFavoritesSection(
 ) {
     val rows = min(4, forgottenFavorites.size)
     val distinctForgottenFavorites = remember(forgottenFavorites) { forgottenFavorites.distinctBy { it.id } }
-    
+
     LazyHorizontalGrid(
         state = lazyGridState,
         rows = GridCells.Fixed(rows),
@@ -862,9 +829,6 @@ fun ForgottenFavoritesSection(
     }
 }
 
-/**
- * Account Playlists section - horizontal row of YouTube playlists
- */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AccountPlaylistsSection(
@@ -882,7 +846,7 @@ fun AccountPlaylistsSection(
     modifier: Modifier = Modifier
 ) {
     val distinctPlaylists = remember(accountPlaylists) { accountPlaylists.distinctBy { it.id } }
-    
+
     LazyRow(
         contentPadding = WindowInsets.systemBars
             .only(WindowInsetsSides.Horizontal)
@@ -908,9 +872,6 @@ fun AccountPlaylistsSection(
     }
 }
 
-/**
- * Similar Recommendations section
- */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SimilarRecommendationsSection(
@@ -950,9 +911,6 @@ fun SimilarRecommendationsSection(
     }
 }
 
-/**
- * HomePage Section - a single section from YouTube home page
- */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomePageSectionContent(
@@ -992,9 +950,6 @@ fun HomePageSectionContent(
     }
 }
 
-/**
- * Loading shimmer for home page sections
- */
 @Composable
 fun HomeLoadingShimmer(modifier: Modifier = Modifier) {
     OpenTuneShimmerState(modifier = modifier) {
@@ -1012,11 +967,6 @@ fun HomeLoadingShimmer(modifier: Modifier = Modifier) {
     }
 }
 
-// ============== Helper Composables ==============
-
-/**
- * Wrapper for YouTube grid items with click handling
- */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun YouTubeGridItemWrapper(
@@ -1082,9 +1032,6 @@ private fun YouTubeGridItemWrapper(
     )
 }
 
-/**
- * Local item grid item for songs, albums, artists
- */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LocalGridItem(
@@ -1172,13 +1119,10 @@ private fun LocalGridItem(
                 )
         )
 
-        is Playlist -> { /* Not displayed */ }
+        is Playlist -> {   }
     }
 }
 
-/**
- * Account playlist navigation title with image
- */
 @Composable
 fun AccountPlaylistsTitle(
     accountName: String,
@@ -1219,9 +1163,6 @@ fun AccountPlaylistsTitle(
     )
 }
 
-/**
- * Similar recommendations navigation title
- */
 @Composable
 fun SimilarRecommendationsTitle(
     recommendation: SimilarRecommendation,
@@ -1233,7 +1174,7 @@ fun SimilarRecommendationsTitle(
         title = recommendation.title.title,
         thumbnail = recommendation.title.thumbnailUrl?.let { thumbnailUrl ->
             {
-                val shape = if (recommendation.title is Artist) CircleShape 
+                val shape = if (recommendation.title is Artist) CircleShape
                     else RoundedCornerShape(ThumbnailCornerRadius)
                 AsyncImage(
                     model = thumbnailUrl,
@@ -1256,9 +1197,6 @@ fun SimilarRecommendationsTitle(
     )
 }
 
-/**
- * HomePage section navigation title
- */
 @Composable
 fun HomePageSectionTitle(
     section: HomePage.Section,
@@ -1270,7 +1208,7 @@ fun HomePageSectionTitle(
         label = section.label,
         thumbnail = section.thumbnail?.let { thumbnailUrl ->
             {
-                val shape = if (section.endpoint?.isArtistEndpoint == true) CircleShape 
+                val shape = if (section.endpoint?.isArtistEndpoint == true) CircleShape
                     else RoundedCornerShape(ThumbnailCornerRadius)
                 AsyncImage(
                     model = thumbnailUrl,
@@ -1309,8 +1247,7 @@ fun LazyListScope.AccountPlaylistsContainer(
     item {
         val accountPlaylists by viewModel.accountPlaylists.collectAsState()
         val allItemsMetadata by viewModel.allItemsMetadata.collectAsState()
-        
-        // Check if list is not null and not empty
+
         val currentPlaylists = accountPlaylists
         if (!currentPlaylists.isNullOrEmpty()) {
             Column {
@@ -1352,7 +1289,7 @@ fun LazyListScope.SimilarRecommendationsContainer(
      item {
         val similarRecommendations by viewModel.similarRecommendations.collectAsState()
         val allItemsMetadata by viewModel.allItemsMetadata.collectAsState()
-        
+
         Column {
             similarRecommendations?.forEach { recommendation ->
                 SimilarRecommendationsTitle(

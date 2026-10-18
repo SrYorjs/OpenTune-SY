@@ -1,17 +1,12 @@
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.player
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -87,11 +82,6 @@ import com.arturo254.opentune.ui.utils.ShowMediaInfo
 import com.arturo254.opentune.utils.makeTimeString
 import kotlin.math.roundToInt
 
-
-/**
- * Current Song Header shown at the top of the queue
- * Displays album art, song info, and control buttons
- */
 @Composable
 fun CurrentSongHeader(
     sheetState: BottomSheetState,
@@ -348,137 +338,52 @@ fun CurrentSongHeader(
     }
 }
 
-/**
- * Shared Sleep Timer Dialog component used in both Queue and Player.
- */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun SleepTimerDialog(
     onDismiss: () -> Unit,
     onConfirm: (Int) -> Unit,
     onEndOfSong: () -> Unit,
-    initialValue: Float = 30f
+    initialValue: Float = 30f,
 ) {
-    var sleepTimerValue by remember { mutableFloatStateOf(initialValue) }
-
-    ActionPromptDialog(
-        titleBar = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.secondaryContainer
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.bedtime),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .padding(14.dp)
-                            .size(28.dp),
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-
-                Spacer(Modifier.height(12.dp))
-
-                Text(
-                    text = stringResource(R.string.sleep_timer),
-                    style = MaterialTheme.typography.headlineMediumEmphasized
-                )
+    var sleepTimerValue by androidx.compose.runtime.saveable.rememberSaveable {
+        mutableFloatStateOf(initialValue.coerceIn(5f, 120f))
+    }
+    com.arturo254.opentune.core.designsystem.component.OpenTuneSheet(onDismissRequest = onDismiss) {
+        Column(Modifier.fillMaxWidth().galaxScreenBackground().verticalScroll(rememberScrollState()).padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                Icon(painterResource(R.drawable.bedtime), null, Modifier.size(32.dp), tint = MaterialTheme.colorScheme.primary)
+                Text(stringResource(R.string.sleep_timer), style = MaterialTheme.typography.headlineMedium)
             }
-        },
-        onDismiss = onDismiss,
-        onConfirm = {
-            onConfirm(sleepTimerValue.roundToInt())
-        },
-        onCancel = onDismiss,
-        onReset = {
-            sleepTimerValue = 30f
-        },
-        content = {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-
-                Surface(
-                    shape = RoundedCornerShape(28.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer
-                ) {
-                    Text(
-                        text = pluralStringResource(
-                            R.plurals.minute,
-                            sleepTimerValue.roundToInt(),
-                            sleepTimerValue.roundToInt()
-                        ),
-                        style = MaterialTheme.typography.displaySmall,
-                        modifier = Modifier.padding(
-                            horizontal = 24.dp,
-                            vertical = 12.dp
-                        )
-                    )
-                }
-
-                Spacer(Modifier.height(24.dp))
-
-                Slider(
-                    value = sleepTimerValue,
-                    onValueChange = { sleepTimerValue = it },
-                    valueRange = 5f..120f,
-                    steps = (120 - 5) / 5 - 1,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(Modifier.height(20.dp))
-
-                FilledTonalButton(
-                    onClick = onEndOfSong,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.music_note),
-                        contentDescription = null
-                    )
-
-                    Spacer(Modifier.width(8.dp))
-
-                    Text(
-                        text = stringResource(R.string.end_of_song),
-                        style = MaterialTheme.typography.titleMedium
-                    )
+            Text(pluralStringResource(R.plurals.minute, sleepTimerValue.roundToInt(), sleepTimerValue.roundToInt()),
+                style = MaterialTheme.typography.displaySmall, modifier = Modifier.align(Alignment.CenterHorizontally))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(15, 30, 60, 90).forEach { minutes ->
+                    com.arturo254.opentune.core.designsystem.component.OpenTunePillChip(
+                        onClick = { sleepTimerValue = minutes.toFloat() },
+                        selected = sleepTimerValue.roundToInt() == minutes,
+                        modifier = Modifier.weight(1f), horizontalPadding = 8.dp,
+                    ) { Text(minutes.toString()) }
                 }
             }
-        },
-        confirmButton = {
-            val cancelText = stringResource(android.R.string.cancel)
-            val okText = stringResource(android.R.string.ok)
-
-            ButtonGroup(
-                overflowIndicator = {
-                    ButtonGroupDefaults.OverflowIndicator(it)
+            Slider(value = sleepTimerValue, onValueChange = { sleepTimerValue = it },
+                valueRange = 5f..120f, steps = 22, modifier = Modifier.fillMaxWidth())
+            FilledTonalButton(onClick = onEndOfSong, modifier = Modifier.fillMaxWidth()) {
+                Icon(painterResource(R.drawable.music_note), null)
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.end_of_song))
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                TextButton(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text(stringResource(android.R.string.cancel)) }
+                androidx.compose.material3.Button(onClick = { onConfirm(sleepTimerValue.roundToInt()) }, modifier = Modifier.weight(1f)) {
+                    Text(stringResource(android.R.string.ok))
                 }
-            ) {
-                clickableItem(
-                    onClick = onDismiss,
-                    label = cancelText
-                )
-
-                clickableItem(
-                    onClick = {
-                        onConfirm(sleepTimerValue.roundToInt())
-                    },
-                    label = okText
-                )
             }
         }
-    )
+    }
 }
 
-/**
- * Codec information row displayed when showCodecOnPlayer is enabled.
- */
 @Composable
 fun CodecInfoRow(
     codec: String,
@@ -515,9 +420,6 @@ fun CodecInfoRow(
     }
 }
 
-/**
- * V2 Design Style collapsed queue content.
- */
 @Composable
 fun QueueCollapsedContentV2(
     showCodecOnPlayer: Boolean,
@@ -601,7 +503,6 @@ fun QueueCollapsedContentV2(
             val iconSize = 24.dp
             val borderColor = textBackgroundColor.copy(alpha = 0.35f)
 
-            // Queue button
             Box(
                 modifier = Modifier
                     .size(buttonSize)
@@ -634,7 +535,6 @@ fun QueueCollapsedContentV2(
                 )
             }
 
-            // Sleep timer button
             Box(
                 modifier = Modifier
                     .size(buttonSize)
@@ -670,7 +570,6 @@ fun QueueCollapsedContentV2(
                 }
             }
 
-            // Lyrics button
             Box(
                 modifier = Modifier
                     .size(buttonSize)
@@ -687,7 +586,6 @@ fun QueueCollapsedContentV2(
                 )
             }
 
-            // Repeat mode button
             Box(
                 modifier = Modifier
                     .size(buttonSize)
@@ -730,7 +628,6 @@ fun QueueCollapsedContentV2(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Menu button
             Box(
                 modifier = Modifier
                     .size(buttonSize)
@@ -750,9 +647,6 @@ fun QueueCollapsedContentV2(
     }
 }
 
-/**
- * V3 Design Style collapsed queue content.
- */
 @Composable
 fun QueueCollapsedContentV3(
     showCodecOnPlayer: Boolean,
@@ -791,7 +685,7 @@ fun QueueCollapsedContentV3(
                     ),
                 ),
         ) {
-            // Queue button
+
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
@@ -818,7 +712,6 @@ fun QueueCollapsedContentV3(
                 }
             }
 
-            // Sleep timer button
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
@@ -848,7 +741,6 @@ fun QueueCollapsedContentV3(
                 }
             }
 
-            // Lyrics button
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
@@ -875,7 +767,6 @@ fun QueueCollapsedContentV3(
                 }
             }
 
-            // Menu button
             Box(
                 modifier = Modifier
                     .size(36.dp)
@@ -894,9 +785,6 @@ fun QueueCollapsedContentV3(
     }
 }
 
-/**
- * V1 Design Style collapsed queue content (text buttons).
- */
 @Composable
 fun QueueCollapsedContentV1(
     showCodecOnPlayer: Boolean,
@@ -1039,9 +927,6 @@ fun QueueCollapsedContentV1(
     }
 }
 
-/**
- * V4 Design Style collapsed queue content (pill buttons).
- */
 @Composable
 fun QueueCollapsedContentV4(
     showCodecOnPlayer: Boolean,
@@ -1088,7 +973,6 @@ fun QueueCollapsedContentV4(
             val buttonSize = 48.dp
             val iconSize = 22.dp
 
-            // Queue button (pill)
             Box(
                 modifier = Modifier
                     .height(buttonSize)
@@ -1121,7 +1005,6 @@ fun QueueCollapsedContentV4(
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            // Sleep timer button (circle)
             Box(
                 modifier = Modifier
                     .size(buttonSize)
@@ -1162,7 +1045,6 @@ fun QueueCollapsedContentV4(
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            // Lyrics button (pill)
             Box(
                 modifier = Modifier
                     .height(buttonSize)

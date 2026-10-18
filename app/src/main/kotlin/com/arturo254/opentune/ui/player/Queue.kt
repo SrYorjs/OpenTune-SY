@@ -1,12 +1,6 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.player
+
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 
 import com.arturo254.opentune.ui.player.v8.QueueCollapsedContentV8
 
@@ -111,7 +105,6 @@ import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import androidx.datastore.preferences.core.booleanPreferencesKey
-
 
 @SuppressLint("UnrememberedMutableState", "LocalContextGetResourceValueCall", "StringFormatInvalid")
 @OptIn(ExperimentalFoundationApi::class)
@@ -378,9 +371,6 @@ fun Queue(
                     )
                 }
 
-                // ============================================================
-                // V8 - Apple Music Style Collapsed Content
-                // ============================================================
                 PlayerDesignStyle.V8 -> {
                     QueueCollapsedContentV8(
                         textBackgroundColor = TextBackgroundColor,
@@ -424,8 +414,6 @@ fun Queue(
         }
 
         val coroutineScope = rememberCoroutineScope()
-
-
 
         val headerItems = 1
         val lazyListState = rememberLazyListState()
@@ -522,9 +510,7 @@ fun Queue(
             if (!state.isCollapsed && currentPlayingUid != null) {
                 val indexInMutableList = mutableQueueWindows.indexOfFirst { it.uid == currentPlayingUid }
                 if (indexInMutableList != -1) {
-                    // Scroll to the item + headerItems (Spacer)
-                    // The Spacer is at index 0, so the first song is at index 1.
-                    // If indexInMutableList is 0 (first song), we want to scroll to index 1.
+
                     lazyListState.scrollToItem(indexInMutableList + 1)
                 }
             }
@@ -534,7 +520,7 @@ fun Queue(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .background(backgroundColor),
+                    .galaxScreenBackground(),
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 CurrentSongHeader(
@@ -653,7 +639,7 @@ fun Queue(
                                 Row(
                                     horizontalArrangement = Arrangement.Center,
                                     modifier = Modifier.graphicsLayer {
-                                        // Enable hardware acceleration for smoother dragging
+
                                         compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen
                                     }
                                 ) {
@@ -694,7 +680,7 @@ fun Queue(
                                                     modifier = Modifier
                                                         .draggableHandle()
                                                         .graphicsLayer {
-                                                            // Improve touch response
+
                                                             alpha = 0.99f
                                                         }
                                                 ) {
@@ -748,8 +734,8 @@ fun Queue(
                                                         if (!selection) {
                                                             selection = true
                                                         }
-                                                        selectedSongs.clear() // Clear all selections
-                                                        selectedSongs.add(trackMetadata) // Select current item
+                                                        selectedSongs.clear()
+                                                        selectedSongs.add(trackMetadata)
                                                     },
                                                 ),
                                     )
@@ -769,11 +755,9 @@ fun Queue(
                         }
                     }
 
-
                 }
             }
 
-            // Old header hidden - now using sticky header at top of queue
             Column(
                 modifier =
                     Modifier
@@ -862,7 +846,6 @@ fun Queue(
                 }
             }
 
-            // Bottom bar hidden - controls now in sticky header
             Box(modifier = Modifier.fillMaxSize()) {
                 Box(
                     modifier =
