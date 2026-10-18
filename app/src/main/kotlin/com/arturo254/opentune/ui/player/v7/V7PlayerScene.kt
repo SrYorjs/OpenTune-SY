@@ -32,6 +32,7 @@ fun V7PlayerScene(
     isLandscape: Boolean,
     thumbnailUrl: String?,
     disableBlur: Boolean,
+    isPlaying: Boolean = false,
     queuePeekHeight: Dp,
     nestedScrollConnection: NestedScrollConnection,
     playerBackdrop: com.kyant.backdrop.Backdrop? = null,
@@ -44,7 +45,7 @@ fun V7PlayerScene(
             com.arturo254.opentune.ui.player.visual.PlayerArtworkAtmosphere(
                 artworkUrl = thumbnailUrl,
                 gradientColors = gradientColors,
-                isPlaying = true,
+                isPlaying = isPlaying,
                 disableBlur = disableBlur,
                 modifier = Modifier.then(
                     if (playerBackdrop != null) Modifier.layerBackdrop(playerBackdrop) else Modifier
