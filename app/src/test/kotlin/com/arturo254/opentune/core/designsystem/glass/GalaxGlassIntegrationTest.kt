@@ -40,8 +40,15 @@ class GalaxGlassIntegrationTest {
         assertTrue(playground.contains("rememberLayerBackdrop()"))
         assertTrue(playground.contains(".layerBackdrop(backdrop)"))
         assertTrue(playground.contains(".galaxLiquidEffect("))
-        assertTrue(playground.contains("LabSlider("))
+        assertTrue(playground.contains("LiquidTuningSlider("))
+        assertTrue(playground.contains("tuning = tuning"))
+        assertTrue(playground.contains("onChange(tuning.copy("))
         assertFalse(playground.contains("NavHost("))
+        assertFalse(playground.contains("var draft by remember("))
+        val studio = source("ui/screens/settings/GalaxLiquidSettingsScreen.kt")
+        assertTrue(studio.contains("LaunchedEffect(loaded, state)"))
+        assertTrue(studio.contains("GalaxLiquidPreview("))
+        assertTrue(studio.contains("GalaxLiquidOpticsControls("))
     }
 
     @Test fun existingNavigationAndMiniPlayerUseNewFacade() {
