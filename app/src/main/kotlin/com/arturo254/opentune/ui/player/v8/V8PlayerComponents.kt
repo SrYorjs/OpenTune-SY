@@ -199,11 +199,6 @@ fun V8PlayerBackdrop(
         )
     }
 }
-       )
-                ),
-        )
-    }
-}
 
 @Composable
 fun V8PlayerControlsContent(
