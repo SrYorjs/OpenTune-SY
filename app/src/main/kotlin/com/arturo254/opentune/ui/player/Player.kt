@@ -61,6 +61,7 @@ import com.kyant.backdrop.backdrops.layerBackdrop
 import com.arturo254.opentune.ui.player.visual.PlayerArtworkAtmosphere
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
 import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidBackdrop
+import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxCanvasLive
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -574,6 +575,9 @@ fun BottomSheetPlayer(
     // The full player must sample the CURRENT SONG, never the NavHost backdrop
     // behind it. Source = artwork background only; glass controls are siblings.
     val activePlayerGlass = LocalEnableLiquidGlass.current && !state.isCollapsed
+    val liveCanvasGlass = activePlayerGlass &&
+        playerDesignStyle == PlayerDesignStyle.V8 &&
+        !canvasArtwork?.preferredAnimationUrl.isNullOrBlank()
     val inheritedBackdrop = LocalGalaxLiquidBackdrop.current
     val playerArtworkBackdrop = rememberLayerBackdrop()
     val playerSourceModifier = if (activePlayerGlass)
@@ -685,8 +689,12 @@ fun BottomSheetPlayer(
         },
     ) {
         CompositionLocalProvider(
-            LocalGalaxLiquidBackdrop provides
-                if (activePlayerGlass) playerArtworkBackdrop else inheritedBackdrop,
+            LocalGalaxLiquidBackdrop provides when {
+                liveCanvasGlass -> null
+                activePlayerGlass -> playerArtworkBackdrop
+                else -> inheritedBackdrop
+            },
+            LocalGalaxCanvasLive provides liveCanvasGlass,
         ) {
         val onSliderValueChange: (Long) -> Unit = seekSession::onSeekPreview
         val onSliderValueChangeFinished: () -> Unit = {
