@@ -44,7 +44,9 @@ fun V8PlayerScene(
     controls: @Composable ColumnScope.() -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        if (immersiveGlass) {
+        // Keep V8 Canvas/video artwork alive when available; otherwise the
+        // current-song square cover gets the new Apple-like blur atmosphere.
+        if (immersiveGlass && canvasArtwork?.preferredAnimationUrl.isNullOrBlank()) {
             com.arturo254.opentune.ui.player.visual.PlayerArtworkAtmosphere(
                 artworkUrl = artworkUrl,
                 gradientColors = gradientColors,
@@ -62,6 +64,10 @@ fun V8PlayerScene(
                 disableBlur = disableBlur,
                 // Historical V8 always uses this transition label in both modes.
                 label = "v8BackdropPortrait",
+                modifier = Modifier.then(
+                    if (immersiveGlass && playerBackdrop != null)
+                        Modifier.layerBackdrop(playerBackdrop) else Modifier
+                ),
             )
         }
 
