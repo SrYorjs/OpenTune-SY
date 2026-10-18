@@ -223,6 +223,7 @@ private fun ToolbarItemsContainer(
     modifier: Modifier = Modifier,
 ) {
     val haptic = rememberGalaxHapticFeedback()
+    val glassEnabled = LocalEnableLiquidGlass.current
     val selectedIndex = items.indexOfFirst { it.route == selectedRoute }
     val itemBounds = remember(items) { mutableStateMapOf<String, Pair<Int, Int>>() }
     var horizontalDrag by remember { mutableFloatStateOf(0f) }
@@ -275,7 +276,7 @@ private fun ToolbarItemsContainer(
             },
         contentAlignment = Alignment.CenterStart,
     ) {
-        if (indicatorBounds != null && indicatorWidth > 0f) {
+        if (glassEnabled && indicatorBounds != null && indicatorWidth > 0f) {
             Box(
                 Modifier
                     .offset { IntOffset((indicatorX + dragStretch).roundToInt(), 0) }
