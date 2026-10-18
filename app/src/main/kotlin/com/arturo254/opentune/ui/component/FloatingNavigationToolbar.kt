@@ -564,7 +564,9 @@ private fun FloatingNavigationToolbarItem(
             )
             .padding(horizontal = 2.dp, vertical = 3.dp),
         horizontalArrangement = Arrangement.Center,
-        verticalAlignment = A        Column(
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
@@ -585,8 +587,6 @@ private fun FloatingNavigationToolbarItem(
                     softWrap = false,
                     overflow = TextOverflow.Ellipsis,
                 )
-            }
-        }          )
             }
         }
     }
