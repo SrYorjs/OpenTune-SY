@@ -151,6 +151,7 @@ val GalaxLiquidRefractionHeightKey = floatPreferencesKey("galax_liquid_refractio
 val GalaxLiquidRefractionAmountKey = floatPreferencesKey("galax_liquid_refraction_amount")
 val GalaxLiquidChromaticKey = floatPreferencesKey("galax_liquid_chromatic")
 val GalaxLiquidTintKey = floatPreferencesKey("galax_liquid_tint")
+val GalaxLiquidPreviewBackgroundUriKey = stringPreferencesKey("galax_liquid_preview_background_uri")
 
 
 val EqualizerEnabledKey = booleanPreferencesKey("equalizerEnabled")
