@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -66,6 +67,7 @@ fun GalaxLiquidPreview(
     var sampleTab by remember { mutableIntStateOf(0) }
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
+    val previewVariant = if (enabled) variant else GalaxLiquidVariant.DISABLED
     val backdropColors = when (wallpaperIndex % 3) {
         1 -> listOf(Color(0xFF14233D), Color(0xFF31ACC9), Color(0xFFA1F8F1))
         2 -> listOf(Color(0xFF1E123A), Color(0xFF8C56D6), Color(0xFFF7C2EA))
@@ -136,7 +138,7 @@ fun GalaxLiquidPreview(
                 }
                 .fillMaxWidth(.78f)
                 .height(84.dp)
-                .galaxLiquidEffect(variant = variant, tuning = tuning, backdrop = backdrop)
+                .galaxLiquidEffect(variant = previewVariant, tuning = tuning, backdrop = backdrop)
                 .pointerInput(variant) {
                     detectDragGestures { change, drag ->
                         offsetX = (offsetX + drag.x).coerceIn(-62f, 62f)
@@ -148,7 +150,7 @@ fun GalaxLiquidPreview(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    if (variant == GalaxLiquidVariant.DISABLED) "GLASS OFF"
+                    if (previewVariant == GalaxLiquidVariant.DISABLED) "GLASS OFF"
                     else variant.title.substringAfter(" · "),
                     color = colors.onSurface,
                     fontWeight = FontWeight.Bold,
