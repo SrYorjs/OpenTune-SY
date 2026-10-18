@@ -1,6 +1,6 @@
 package com.arturo254.opentune.core.designsystem.liquid
 
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -140,7 +140,7 @@ fun GalaxLiquidPreview(
                 .height(84.dp)
                 .galaxLiquidEffect(variant = previewVariant, tuning = tuning, backdrop = backdrop)
                 .pointerInput(variant) {
-                    detectDragGestures { change, drag ->
+                    detectDragGesturesAfterLongPress { change, drag ->
                         offsetX = (offsetX + drag.x).coerceIn(-62f, 62f)
                         offsetY = (offsetY + drag.y).coerceIn(-54f, 54f)
                         change.consume()
@@ -156,7 +156,7 @@ fun GalaxLiquidPreview(
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium,
                 )
-                Text("Desliza esta lente", color = colors.onSurface, style = MaterialTheme.typography.labelSmall)
+                Text("Mantén pulsado para mover", color = colors.onSurface, style = MaterialTheme.typography.labelSmall)
             }
         }
 
