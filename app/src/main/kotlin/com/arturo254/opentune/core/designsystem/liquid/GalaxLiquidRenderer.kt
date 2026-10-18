@@ -73,6 +73,24 @@ fun Modifier.galaxLiquidEffect(
         else -> Highlight.Ambient.copy(alpha = finish.rimAlpha)
     }
 
+    if (LocalGalaxCanvasLive.current) {
+        // Surface video cannot be sampled safely by Kyant GraphicsLayer.
+        // Transparent optical chrome lets the ACTUAL moving Canvas be visible
+        // inside every capsule instead of frozen NavHost/album pixels.
+        return this
+            .clip(shape)
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        Color.White.copy(alpha = if (dark) .18f else .25f),
+                        surfaceTint.copy(alpha = style.tintAlpha.coerceIn(.03f, .18f)),
+                        Color.Black.copy(alpha = if (dark) .14f else .07f),
+                    ),
+                ),
+            )
+            .border((.7f + finish.rimAlpha * .8f).dp, rim, shape)
+    }
+
     val canRender = backdrop != null && !powerSaver && !lowRam &&
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
 
