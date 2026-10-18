@@ -23,6 +23,8 @@ import com.arturo254.opentune.core.designsystem.theme.OpenTuneShapeRadii
 import com.arturo254.opentune.core.designsystem.theme.shapes
 import com.arturo254.opentune.core.designsystem.theme.surfaces
 import com.arturo254.opentune.core.designsystem.motion.galaxMotion
+import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidChrome
+import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidTuning
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -312,56 +314,40 @@ fun LiquidGlassCard(
     content: @Composable BoxScope.() -> Unit,
 ) {
     val glass = LocalEnableLiquidGlass.current
-    val shape =
-        if (cornerRadius == OpenTuneShapeRadii.glassCard) {
-            OpenTuneDesignSystem.shapes.glassCard
-        } else {
-            RoundedCornerShape(cornerRadius)
-        }
+    val appliedRadius = if (glass) LocalGalaxLiquidTuning.current?.cornerRadiusDp?.dp else null
+    val shape = if (appliedRadius != null) {
+        RoundedCornerShape(appliedRadius)
+    } else if (cornerRadius == OpenTuneShapeRadii.glassCard) {
+        OpenTuneDesignSystem.shapes.glassCard
+    } else {
+        RoundedCornerShape(cornerRadius)
+    }
 
     val surfaceTokens = OpenTuneDesignSystem.surfaces
-    val primary = MaterialTheme.colorScheme.primary
-    val glassBrush =
-        Brush.linearGradient(
-            colors =
-                if (pureBlack) {
-                    listOf(
-                        Color.White.copy(alpha = surfaceTokens.opacity.glassCardBlackTop),
-                        primary.copy(alpha = surfaceTokens.opacity.glassCardBlackAccent),
-                        Color.Black.copy(alpha = surfaceTokens.opacity.glassCardBlackBottom),
-                    )
-                } else {
-                    listOf(
-                        Color.White.copy(alpha = surfaceTokens.opacity.glassCardLightTop),
-                        primary.copy(alpha = surfaceTokens.opacity.glassCardLightAccent),
-                        MaterialTheme.colorScheme.surface.copy(alpha = surfaceTokens.opacity.glassCardLightSurface),
-                    )
-                }
-        )
-
     Box(
-        modifier = modifier
-            .clip(shape)
-            .background(
-                if (glass) glassBrush
-                else Brush.linearGradient(
-                    listOf(
-                        MaterialTheme.colorScheme.surfaceContainer,
-                        MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = surfaceTokens.opacity.glassCardOpaqueGradientEnd),
+        modifier = modifier.then(
+            if (glass) {
+                Modifier.galaxLiquidChrome(shape, emphasis = 1.08f)
+            } else {
+                Modifier
+                    .clip(shape)
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                MaterialTheme.colorScheme.surfaceContainer,
+                                MaterialTheme.colorScheme.surfaceContainerHigh.copy(
+                                    alpha = surfaceTokens.opacity.glassCardOpaqueGradientEnd,
+                                ),
+                            ),
+                        ),
                     )
-                )
-            )
-            .border(
-                width = surfaceTokens.borders.glassCardWidth,
-                color =
-                    if (glass) {
-                        if (pureBlack) surfaceTokens.borders.glassCardPureBlackColor
-                        else surfaceTokens.borders.glassCardStandardColor
-                    } else {
-                        surfaceTokens.borders.glassCardOpaqueColor
-                    },
-                shape = shape,
-            ),
+                    .border(
+                        surfaceTokens.borders.glassCardWidth,
+                        surfaceTokens.borders.glassCardOpaqueColor,
+                        shape,
+                    )
+            },
+        ),
         content = content,
     )
 }
