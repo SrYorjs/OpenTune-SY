@@ -1,5 +1,6 @@
 package com.arturo254.opentune.ui.player.v7
 
+import com.kyant.backdrop.backdrops.layerBackdrop
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -33,14 +34,31 @@ fun V7PlayerScene(
     disableBlur: Boolean,
     queuePeekHeight: Dp,
     nestedScrollConnection: NestedScrollConnection,
+    playerBackdrop: com.kyant.backdrop.Backdrop? = null,
+    immersiveGlass: Boolean = false,
+    gradientColors: List<androidx.compose.ui.graphics.Color> = emptyList(),
     controls: @Composable ColumnScope.() -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        V7PlayerBackdrop(
-            thumbnailUrl = thumbnailUrl,
-            disableBlur = disableBlur,
-            label = if (isLandscape) "v7BackdropLandscape" else "v7BackdropPortrait",
-        )
+        if (immersiveGlass) {
+            com.arturo254.opentune.ui.player.visual.PlayerArtworkAtmosphere(
+                artworkUrl = thumbnailUrl,
+                gradientColors = gradientColors,
+                isPlaying = true,
+                disableBlur = disableBlur,
+                modifier = Modifier.then(
+                    if (playerBackdrop != null) Modifier.layerBackdrop(playerBackdrop) else Modifier
+                ),
+            )
+        } else {
+            V7PlayerBackdrop(
+                thumbnailUrl = thumbnailUrl,
+                disableBlur = disableBlur,
+                label = if (isLandscape) "v7BackdropLandscape" else "v7BackdropPortrait",
+            )
+        }
+
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
