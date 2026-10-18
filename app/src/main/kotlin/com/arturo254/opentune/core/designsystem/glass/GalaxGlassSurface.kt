@@ -28,11 +28,11 @@ fun Modifier.galaxGlassEffect(
 @Composable
 fun GalaxGlassSurface(
     modifier: Modifier = Modifier,
-    @Suppress("UNUSED_PARAMETER") shape: RoundedCornerShape = OpenTuneDesignSystem.shapes.glassCard,
+    shape: RoundedCornerShape = OpenTuneDesignSystem.shapes.glassCard,
     pureBlack: Boolean = false,
     @Suppress("UNUSED_PARAMETER") spec: GlassSurfaceSpec = GlassSurfaceSpec(),
     @Suppress("UNUSED_PARAMETER") opaqueColor: Color = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    GalaxLiquidSurface(modifier = modifier, pureBlack = pureBlack, content = content)
+    GalaxLiquidSurface(modifier = modifier, pureBlack = pureBlack, shapeOverride = shape, content = content)
 }
