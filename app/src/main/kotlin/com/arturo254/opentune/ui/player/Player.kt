@@ -833,7 +833,8 @@ fun BottomSheetPlayer(
             isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
             compactLandscape = {
                     val littleBackground = MaterialTheme.colorScheme.primaryContainer
-                    val littleTextColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    val littleTextColor = if (activePlayerGlass) Color.White
+                        else MaterialTheme.colorScheme.onPrimaryContainer
                     val progress = calculatePlayerProgress(position, duration, sliderPosition)
                     val progressFraction = progress.fraction
                     val progressOverlayColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
@@ -842,8 +843,17 @@ fun BottomSheetPlayer(
                         modifier =
                             Modifier
                                 .fillMaxSize()
-                                .background(littleBackground),
+                                .background(if (activePlayerGlass) Color.Black else littleBackground),
                     ) {
+                        if (activePlayerGlass) {
+                            PlayerArtworkAtmosphere(
+                                artworkUrl = playerVisuals.artworkUrl,
+                                gradientColors = gradientColors,
+                                isPlaying = isPlaying,
+                                disableBlur = disableBlur,
+                                modifier = playerSourceModifier,
+                            )
+                        }
                         Box(
                             modifier =
                                 Modifier
@@ -972,7 +982,8 @@ fun BottomSheetPlayer(
             },
             compactPortrait = {
                     val littleBackground = MaterialTheme.colorScheme.primaryContainer
-                    val littleTextColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    val littleTextColor = if (activePlayerGlass) Color.White
+                        else MaterialTheme.colorScheme.onPrimaryContainer
                     val progress = calculatePlayerProgress(position, duration, sliderPosition)
                     val progressFraction = progress.fraction
                     val progressOverlayColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
@@ -982,8 +993,17 @@ fun BottomSheetPlayer(
                         modifier =
                             Modifier
                                 .fillMaxSize()
-                                .background(littleBackground),
+                                .background(if (activePlayerGlass) Color.Black else littleBackground),
                     ) {
+                        if (activePlayerGlass) {
+                            PlayerArtworkAtmosphere(
+                                artworkUrl = playerVisuals.artworkUrl,
+                                gradientColors = gradientColors,
+                                isPlaying = isPlaying,
+                                disableBlur = disableBlur,
+                                modifier = playerSourceModifier,
+                            )
+                        }
                         Box(
                             modifier =
                                 Modifier
