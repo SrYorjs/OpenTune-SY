@@ -59,8 +59,10 @@ class PlayerImmersiveGlassIntegrationTest {
         assertTrue(toolbar.contains("val drag = itemDrag"))
         assertTrue(toolbar.contains("detectHorizontalDragGestures("))
         assertTrue(toolbar.contains("liquidTabIndicatorX"))
-        assertTrue(toolbar.contains("onSwipeProgress(itemDrag)"))
-        assertTrue(toolbar.contains("onSwipeProgress(0f)"))
+        assertTrue(toolbar.contains("latestOnProgress(itemDrag)"))
+        assertTrue(toolbar.contains("latestOnProgress(0f)"))
         assertTrue(toolbar.contains("liquidTabDragFeedback"))
+        assertTrue(toolbar.contains(".pointerInput(Unit)"))
+        assertTrue(toolbar.contains("rememberUpdatedState(onSwipe)"))
     }
 }
