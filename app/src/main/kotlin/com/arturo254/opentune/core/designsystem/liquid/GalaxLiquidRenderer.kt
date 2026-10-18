@@ -103,12 +103,13 @@ fun GalaxLiquidSurface(
     pureBlack: Boolean = false,
     tuning: GalaxLiquidTuning = LocalGalaxLiquidTuning.current ?: galvanicRecipe(variant),
     backdrop: Backdrop? = LocalGalaxLiquidBackdrop.current,
+    shapeOverride: RoundedCornerShape? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     Box(
         modifier = modifier.galaxLiquidEffect(
             variant = variant, pureBlack = pureBlack,
-            tuning = tuning, backdrop = backdrop,
+            tuning = tuning, backdrop = backdrop, shapeOverride = shapeOverride,
         ),
         content = content,
     )
