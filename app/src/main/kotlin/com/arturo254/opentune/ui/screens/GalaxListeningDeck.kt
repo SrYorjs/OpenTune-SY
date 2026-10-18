@@ -1,6 +1,9 @@
 package com.arturo254.opentune.ui.screens
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -49,6 +52,9 @@ fun GalaxListeningDeck(
 ) {
     val songs = remember(quickPicks) { quickPicks.distinctBy { it.id } }
     val motion = OpenTuneDesignSystem.galaxMotion
+    val foreground = if (com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidVariant.current ==
+        com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidVariant.DISABLED)
+        MaterialTheme.colorScheme.onSurface else Color.White
     LazyRow(contentPadding = PaddingValues(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         items(songs, key = { it.id }) { song ->
             val backdrop = rememberLayerBackdrop()
@@ -68,17 +74,21 @@ fun GalaxListeningDeck(
                         menuState.show { SongMenu(originalSong = song, navController = navController,
                             metadata = metadataMap[song.id], onDismiss = menuState::dismiss) }
                     })) {
-                AsyncImage(model = song.song.thumbnailUrl, contentDescription = null, contentScale = ContentScale.Crop,
-                    modifier = Modifier.matchParentSize().layerBackdrop(backdrop))
+                Box(Modifier.matchParentSize().layerBackdrop(backdrop)) {
+                    AsyncImage(model = song.song.thumbnailUrl, contentDescription = null, contentScale = ContentScale.Crop,
+                        modifier = Modifier.matchParentSize())
+                    Box(Modifier.matchParentSize().background(Brush.verticalGradient(
+                        0f to Color.Transparent, .45f to Color.Transparent, 1f to Color.Black.copy(alpha = .85f))))
+                }
                 GalaxLiquidSurface(backdrop = backdrop, shapeOverride = RoundedCornerShape(24.dp),
                     modifier = Modifier.align(Alignment.BottomCenter).padding(12.dp).fillMaxWidth()) {
                     Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                            Text(song.song.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                            Text(song.artists.joinToString { it.name }, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(song.song.title, color = foreground, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            Text(song.artists.joinToString { it.name }, color = foreground.copy(alpha = .82f), style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                         Spacer(Modifier.width(8.dp))
-                        Icon(painterResource(if (active && isPlaying) R.drawable.pause else R.drawable.play), null, Modifier.size(24.dp))
+                        Icon(painterResource(if (active && isPlaying) R.drawable.pause else R.drawable.play), null, Modifier.size(24.dp), tint = foreground)
                     }
                 }
             }

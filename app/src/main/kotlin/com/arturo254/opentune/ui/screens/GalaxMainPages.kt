@@ -68,7 +68,7 @@ fun GalaxPortal(title: String, subtitle: String, modifier: Modifier = Modifier, 
             withFrameMillis { phase = (it % 24000L) / 24000f }
         }
     }
-    Box(modifier.padding(horizontal = 20.dp, vertical = 12.dp).fillMaxWidth().height(184.dp).clip(RoundedCornerShape(32.dp))) {
+    Box(modifier.padding(horizontal = 20.dp, vertical = 12.dp).fillMaxWidth().heightIn(min = 184.dp).clip(RoundedCornerShape(32.dp))) {
         Canvas(Modifier.matchParentSize().layerBackdrop(backdrop)) {
             drawRect(background)
             val x = size.width * (.65f + .12f * kotlin.math.sin(phase * 6.283f))
@@ -82,7 +82,7 @@ fun GalaxPortal(title: String, subtitle: String, modifier: Modifier = Modifier, 
                 topLeft = Offset(size.width * .49f, -size.height * .40f), size = androidx.compose.ui.geometry.Size(size.height * 1.8f, size.height * 1.8f), style = androidx.compose.ui.graphics.drawscope.Stroke(1.3f))
         }
         GalaxLiquidSurface(backdrop = backdrop, shapeOverride = RoundedCornerShape(32.dp),
-            modifier = Modifier.matchParentSize().then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)) {
+            modifier = Modifier.fillMaxWidth().heightIn(min = 184.dp).then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)) {
             Column(Modifier.align(Alignment.BottomStart).padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("G A L A X O T", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                 Text(title, style = MaterialTheme.typography.headlineMedium)
