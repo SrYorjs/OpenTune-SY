@@ -23,6 +23,17 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.snap
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.foundation.border
+import kotlin.math.roundToInt
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -212,25 +223,102 @@ private fun ToolbarItemsContainer(
     modifier: Modifier = Modifier,
 ) {
     val haptic = rememberGalaxHapticFeedback()
-    Row(
-        modifier = modifier.wrapContentWidth(),
-        horizontalArrangement = Arrangement.spacedBy(1.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    val selectedIndex = items.indexOfFirst { it.route == selectedRoute }
+    val itemBounds = remember(items) { mutableStateMapOf<String, Pair<Int, Int>>() }
+    var horizontalDrag by remember { mutableFloatStateOf(0f) }
+    val density = LocalDensity.current
+    val reducedMotion = OpenTuneDesignSystem.galaxMotion.reducedMotion
+    val indicatorBounds = selectedRoute?.let { itemBounds[it] }
+    val targetX = indicatorBounds?.first?.toFloat() ?: 0f
+    val targetWidth = indicatorBounds?.second?.toFloat() ?: 0f
+    val indicatorX by animateFloatAsState(
+        targetValue = targetX,
+        animationSpec = if (reducedMotion) snap() else spring(dampingRatio = .78f, stiffness = 380f),
+        label = "liquidTabIndicatorX",
+    )
+    val indicatorWidth by animateFloatAsState(
+        targetValue = targetWidth,
+        animationSpec = if (reducedMotion) snap() else spring(dampingRatio = .83f, stiffness = 430f),
+        label = "liquidTabIndicatorWidth",
+    )
+    val dragStretch by animateFloatAsState(
+        targetValue = if (reducedMotion) 0f else horizontalDrag.coerceIn(-100f, 100f) * .07f,
+        animationSpec = spring(dampingRatio = .74f, stiffness = 530f),
+        label = "liquidTabDragFeedback",
+    )
+    Box(
+        modifier = modifier
+            .wrapContentWidth()
+            .pointerInput(items, selectedIndex, onItemClick) {
+                // Horizontal swipe belongs only to the navigation capsule,
+                // never to page content, playlists or edge-back gestures.
+                detectHorizontalDragGestures(
+                    onDragEnd = {
+                        val current = selectedIndex
+                        val destination = when {
+                            horizontalDrag < -36.dp.toPx() -> current + 1
+                            horizontalDrag > 36.dp.toPx() -> current - 1
+                            else -> -1
+                        }
+                        horizontalDrag = 0f
+                        if (current >= 0 && destination in items.indices) {
+                            haptic(GalaxHapticCue.SELECTION)
+                            onItemClick(items[destination], false)
+                        }
+                    },
+                    onDragCancel = { horizontalDrag = 0f },
+                    onHorizontalDrag = { change, amount ->
+                        horizontalDrag = (horizontalDrag + amount).coerceIn(-150f, 150f)
+                        change.consume()
+                    },
+                )
+            },
+        contentAlignment = Alignment.CenterStart,
     ) {
-        items.forEach { screen ->
-            val selected = selectedRoute == screen.route
-            FloatingNavigationToolbarItem(
-                screen = screen,
-                selected = selected,
-                showSelectedLabel = showSelectedLabels,
-                slideFromEnd = slideFromEnd,
-                pureBlack = pureBlack,
-                onClick = {
-                    haptic(GalaxHapticCue.SELECTION)
-                    onItemClick(screen, selected)
-                },
-                modifier = Modifier,
+        if (indicatorBounds != null && indicatorWidth > 0f) {
+            Box(
+                Modifier
+                    .offset { IntOffset((indicatorX + dragStretch).roundToInt(), 0) }
+                    .width(with(density) { indicatorWidth.toDp() })
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(
+                        MaterialTheme.colorScheme.primary.copy(
+                            alpha = if (pureBlack) .20f else .15f,
+                        ),
+                    )
+                    .border(
+                        1.dp,
+                        MaterialTheme.colorScheme.primary.copy(alpha = .32f),
+                        RoundedCornerShape(24.dp),
+                    ),
             )
+        }
+        Row(
+            modifier = Modifier.wrapContentWidth(),
+            horizontalArrangement = Arrangement.spacedBy(1.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            items.forEach { screen ->
+                val selected = selectedRoute == screen.route
+                FloatingNavigationToolbarItem(
+                    screen = screen,
+                    selected = selected,
+                    showSelectedLabel = showSelectedLabels,
+                    slideFromEnd = slideFromEnd,
+                    pureBlack = pureBlack,
+                    onClick = {
+                        haptic(GalaxHapticCue.SELECTION)
+                        onItemClick(screen, selected)
+                    },
+                    modifier = Modifier.onGloballyPositioned { coordinates ->
+                        val newValue = coordinates.positionInParent().x.roundToInt() to coordinates.size.width
+                        if (itemBounds[screen.route] != newValue) {
+                            itemBounds[screen.route] = newValue
+                        }
+                    },
+                )
+            }
         }
     }
 }
@@ -455,7 +543,9 @@ private fun FloatingNavigationToolbarItem(
                 enabled = true,
             )
             .clip(shape)
-            .background(selectedContainer)
+            // A single spring-driven capsule slides behind the selected tab.
+            // Keep per-tab tint understated to avoid duplicate opaque pills.
+            .background(if (LocalEnableLiquidGlass.current) Color.Transparent else selectedContainer)
             .clickable(
                 interactionSource = interactionSource,
                 indication = LocalIndication.current,
