@@ -229,36 +229,29 @@ fun GalaxLiquidSettingsScreen(navController: NavController) {
                             state = state.copy(tuning = galvanicRecipe(state.variant))
                         }) { Text("Restablecer") }
                     }
-                    GalaxLiquidVariant.entries.chunked(2).forEach { options ->
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            options.forEach { candidate ->
-                                val selected = state.variant == candidate
-                                Card(
-                                    modifier = Modifier.weight(1f).clickable {
-                                        state = LiquidStudioState(candidate, galvanicRecipe(candidate))
-                                    },
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer
-                                            else MaterialTheme.colorScheme.surfaceContainer,
-                                    ),
-                                    border = BorderStroke(
-                                        if (selected) 1.5.dp else .5.dp,
-                                        if (selected) MaterialTheme.colorScheme.primary
-                                            else MaterialTheme.colorScheme.outlineVariant,
-                                    ),
-                                ) {
-                                    Text(
-                                        candidate.title,
-                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 15.dp),
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer
-                                            else MaterialTheme.colorScheme.onSurface,
-                                    )
-                                }
-                            }
-                            if (options.size == 1) Spacer(Modifier.weight(1f))
-                        }
-                    }
+                    Text("Colección Galax • 10 materiales",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    LiquidVariantGrid(
+                        options = GalaxLiquidVariant.entries.take(10),
+                        selectedVariant = state.variant,
+                        onSelect = { state = LiquidStudioState(it, galvanicRecipe(it)) },
+                    )
+                    Text("Kyant Lab • 4 componentes interactivos",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    LiquidVariantGrid(
+                        options = GalaxLiquidVariant.entries.drop(10).take(4),
+                        selectedVariant = state.variant,
+                        onSelect = { state = LiquidStudioState(it, galvanicRecipe(it)) },
+                    )
+                    LiquidVariantGrid(
+                        options = listOf(GalaxLiquidVariant.DISABLED),
+                        selectedVariant = state.variant,
+                        onSelect = { state = LiquidStudioState(it, galvanicRecipe(it)) },
+                    )
                     GalaxLiquidOpticsControls(
                         tuning = state.tuning,
                         onChange = { state = state.copy(tuning = it.bounded()) },
@@ -272,6 +265,76 @@ fun GalaxLiquidSettingsScreen(navController: NavController) {
                     )
                 }
             }
+        }
+    }
+}
+
+private fun liquidVariantDescription(variant: GalaxLiquidVariant): String = when (variant) {
+    GalaxLiquidVariant.SILK -> "Agua suave, transparencia alta"
+    GalaxLiquidVariant.CRYSTAL -> "Cristal nítido, lente profunda"
+    GalaxLiquidVariant.AURORA -> "Brillo iridiscente y color"
+    GalaxLiquidVariant.DEEP_SEA -> "Vidrio oceánico de gran profundidad"
+    GalaxLiquidVariant.PEARL -> "Perla esmerilada de luz tenue"
+    GalaxLiquidVariant.PRISM -> "Aristas prismáticas, refracción intensa"
+    GalaxLiquidVariant.ZERO_GRAVITY -> "Lente flotante casi invisible"
+    GalaxLiquidVariant.GLACIER -> "Hielo difuso y bordes precisos"
+    GalaxLiquidVariant.NEBULA -> "Tinte cósmico y destellos"
+    GalaxLiquidVariant.MIRROR -> "Superficie espejo, agua transparente"
+    GalaxLiquidVariant.KYANT_BUTTON -> "Botón elástico al presionar"
+    GalaxLiquidVariant.KYANT_TOGGLE -> "Interruptor y pulgar refractivo"
+    GalaxLiquidVariant.KYANT_SLIDER -> "Pista con perilla deslizante"
+    GalaxLiquidVariant.KYANT_TABS -> "Cápsula móvil entre secciones"
+    GalaxLiquidVariant.DISABLED -> "Material opaco, sin shaders"
+}
+
+@Composable
+private fun LiquidVariantGrid(
+    options: List<GalaxLiquidVariant>,
+    selectedVariant: GalaxLiquidVariant,
+    onSelect: (GalaxLiquidVariant) -> Unit,
+) {
+    options.chunked(2).forEach { row ->
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+            row.forEach { variant ->
+                val selected = selectedVariant == variant
+                Card(
+                    modifier = Modifier.weight(1f).clickable { onSelect(variant) },
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(19.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer
+                        else MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
+                    border = BorderStroke(
+                        if (selected) 2.dp else .75.dp,
+                        if (selected) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outlineVariant,
+                    ),
+                ) {
+                    Column(
+                        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 13.dp),
+                        verticalArrangement = Arrangement.spacedBy(5.dp),
+                    ) {
+                        Text(
+                            if (selected) "●  SELECCIONADO" else "○  MATERIAL",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (selected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            variant.title.substringAfter(" · "),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            liquidVariantDescription(variant),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            minLines = 2,
+                        )
+                    }
+                }
+            }
+            if (row.size == 1) Spacer(Modifier.weight(1f))
         }
     }
 }
