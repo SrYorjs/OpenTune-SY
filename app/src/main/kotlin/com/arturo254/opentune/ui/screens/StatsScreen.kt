@@ -1,5 +1,6 @@
 package com.arturo254.opentune.ui.screens
 
+import androidx.compose.runtime.remember
 import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable

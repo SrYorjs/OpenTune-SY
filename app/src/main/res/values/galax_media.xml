@@ -9,4 +9,9 @@
     <string name="galax_insight_summary">Your musical universe</string>
     <string name="galax_featured">Featured</string>
     <string name="galax_insight_share_error">Unable to share this summary. Please try again.</string>
+    <string name="galax_loading_error">Unable to load this content. Please try again.</string>
+    <string name="galax_show_more">Show more</string>
+    <string name="galax_queue_order">Lock or unlock queue order</string>
+    <string name="galax_search_results">Search results</string>
+    <string name="galax_items">Items</string>
 </resources>

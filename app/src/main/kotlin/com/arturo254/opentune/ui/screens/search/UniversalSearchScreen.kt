@@ -168,6 +168,13 @@ fun UniversalSearchScreen(
                 .fillMaxSize()
                 .liquidGlassScreenBackground(pureBlack = pureBlack),
     ) {
+        item(key = "galax_search_heading") {
+            Column(Modifier.padding(horizontal = 12.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(query, style = MaterialTheme.typography.headlineLarge)
+                Text(stringResource(R.string.galax_search_results), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
         item(key = "universal_quality_mode") {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(designSpacing.qualityFilterGap),
@@ -187,17 +194,9 @@ fun UniversalSearchScreen(
                     AudioSelectionMode.BEST_QUALITY to R.string.universal_quality_best,
                     AudioSelectionMode.DATA_SAVER to R.string.universal_quality_saver,
                 ).forEach { (mode, label) ->
-                    FilterChip(
-                        selected = qualityMode == mode,
-                        onClick = { qualityMode = mode },
-                        label = {
-                            Text(
-                                text = stringResource(label),
-                                style = MaterialTheme.typography.labelSmall,
-                                maxLines = 1,
-                            )
-                        },
-                    )
+                    com.arturo254.opentune.core.designsystem.component.OpenTunePillChip(
+                        selected = qualityMode == mode, onClick = { qualityMode = mode }, horizontalPadding = 14.dp,
+                    ) { Text(stringResource(label), style = MaterialTheme.typography.labelSmall, maxLines = 1) }
                 }
             }
         }
@@ -416,192 +415,52 @@ private fun UnifiedTrackRow(
     onVersionsClick: () -> Unit,
     onClick: (() -> Unit)?,
 ) {
-    val designColors = OpenTuneDesignSystem.colors
-    val designTypography = OpenTuneDesignSystem.typography
-    val designSpacing = OpenTuneDesignSystem.spacing
-    val designSizes = OpenTuneDesignSystem.sizes
-    val designShapes = OpenTuneDesignSystem.shapes
-    val surfaceTokens = OpenTuneDesignSystem.surfaces
     val recommended = preferredDisplayVariant ?: result.recommendedVariant
-    val artwork =
-        recommended?.artworkUrl
-            ?: result.variants.firstNotNullOfOrNull { it.artworkUrl }
-
-    Surface(
-        shape = designShapes.mediaCard,
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .clickable(
-                    enabled = onClick != null,
-                    onClick = { onClick?.invoke() },
-                ),
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(designSpacing.mediaRowPadding),
-        ) {
-            Artwork(
-                imageUrl = artwork,
-                contentDescription = null,
-                shape = designShapes.searchArtwork,
-                placeholderSize = designSizes.searchPlaceholderIcon,
-                modifier = Modifier.size(designSizes.searchRowArtwork),
+    val artwork = recommended?.artworkUrl ?: result.variants.firstNotNullOfOrNull { it.artworkUrl }
+    val providers = remember(result, preferredDisplayVariant) {
+        (result.variants + listOfNotNull(preferredDisplayVariant)).distinctBy { it.provider }
+            .joinToString(" · ") { providerName(it.provider) }
+    }
+    Column(Modifier.fillMaxWidth().clip(com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.panelShape)
+        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = .035f))
+        .clickable(enabled = onClick != null && !isResolving) { onClick?.invoke() }
+        .padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            Artwork(artwork, Modifier.size(64.dp),
+                shape = com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.artworkShape,
                 overlay = {
-                if (isActive) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = surfaceTokens.opacity.activeArtworkOverlay)),
-                    )
-                    Icon(
-                        painter =
-                            painterResource(
-                                if (isPlaying) R.drawable.pause else R.drawable.play,
-                            ),
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(designSizes.searchOverlayIcon),
-                    )
-                } else if (isResolving) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .background(designColors.overlayArtwork),
-                    )
-                    CircularProgressIndicator(
-                        strokeWidth = 2.dp,
-                        color = Color.White,
-                        modifier = Modifier.size(designSizes.searchResolvingIndicator),
-                    )
-                }
-                },
-            )
-
-            Spacer(Modifier.width(designSpacing.mediaRowArtworkGap))
-
-            Column(
-                verticalArrangement = Arrangement.spacedBy(designSpacing.mediaRowTextGap),
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(
-                    text = result.identity.title,
-                    style = designTypography.songTitle,
-                    color =
-                        if (isActive) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                Text(
-                    text = result.identity.artists.joinToString { it.name },
-                    style = designTypography.songSubtitle,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                Text(
-                    text =
-                        (
-                            result.variants +
-                                listOfNotNull(preferredDisplayVariant)
-                        ).distinctBy { it.provider }
-                            .joinToString(" • ") { variant -> providerName(variant.provider) },
-                    style = designTypography.metadata,
-                    color = designColors.textMuted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                qualitySummary(recommended)?.let { quality ->
-                    Text(
-                        text =
-                            if (recommended?.isCatalogOnly() == true) {
-                                quality + " (catálogo)"
-                            } else {
-                                quality
-                            },
-                        style = designTypography.metadata,
-                        color = MaterialTheme.colorScheme.primary,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-
-            val displayProvider =
-                recommended?.provider
-                    ?: result.variants
-                        .firstOrNull { variant ->
-                            variant.provider == ProviderId.DEEZER ||
-                                variant.provider == ProviderId.SPOTIFY ||
-                                variant.provider == ProviderId.TIDAL ||
-                                variant.provider == ProviderId.APPLE_MUSIC
-                        }
-                        ?.provider
-
-            if (displayProvider != null) {
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = providerShortName(displayProvider),
-                    style = designTypography.badge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier =
-                        Modifier
-                            .clip(designShapes.badge)
-                            .background(designColors.badgeAccent)
-                            .padding(
-                                horizontal = designSpacing.badgeHorizontalPadding,
-                                vertical = designSpacing.badgeVerticalPadding,
-                            ),
-                )
-            }
-
-            IconButton(
-                onClick = onVersionsClick,
-                modifier = Modifier.size(designSizes.searchVersionsButton),
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.tune),
-                    contentDescription = stringResource(R.string.universal_versions_action),
-                    modifier = Modifier.size(designSizes.searchVersionsIcon),
-                )
-            }
-
-            when {
-                isOfflineAvailable -> {
-                    Spacer(Modifier.width(6.dp))
-                    Icon(
-                        painter = painterResource(R.drawable.offline),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(22.dp),
-                    )
-                }
-
-                isPreparingOffline -> {
-                    Spacer(Modifier.width(10.dp))
-                    CircularProgressIndicator(
-                        strokeWidth = 2.dp,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-
-                onDownload != null -> {
-                    Spacer(Modifier.width(2.dp))
-                    IconButton(
-                        onClick = onDownload,
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.download),
-                            contentDescription = null,
-                        )
+                    if (isActive || isResolving) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .3f)),
+                        contentAlignment = Alignment.Center) {
+                        if (isResolving) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp, color = Color.White)
+                        else Icon(painterResource(if (isPlaying) R.drawable.pause else R.drawable.play), null, tint = Color.White)
                     }
+                })
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(result.identity.title, style = MaterialTheme.typography.titleMedium,
+                    color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(result.identity.artists.joinToString { it.name }, style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            IconButton(onClick = onVersionsClick) {
+                Icon(painterResource(R.drawable.tune), stringResource(R.string.universal_versions_action))
+            }
+        }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(providers, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                qualitySummary(recommended)?.let { quality ->
+                    Text(quality, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                }
+            }
+            when {
+                isOfflineAvailable -> Icon(painterResource(R.drawable.offline), stringResource(R.string.offline),
+                    Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
+                isPreparingOffline -> CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                onDownload != null -> IconButton(onClick = onDownload) {
+                    Icon(painterResource(R.drawable.download), stringResource(R.string.download))
                 }
             }
         }

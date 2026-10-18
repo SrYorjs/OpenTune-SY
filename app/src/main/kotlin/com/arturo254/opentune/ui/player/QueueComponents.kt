@@ -103,238 +103,57 @@ fun CurrentSongHeader(
     onInfiniteQueueClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(backgroundColor)
-            .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
-            .bottomSheetDraggable(sheetState)
-            .padding(horizontal = 16.dp)
-            .padding(top = 20.dp, bottom = 8.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .width(48.dp)
-                    .height(5.dp)
-                    .clip(RoundedCornerShape(2.5.dp))
-                    .background(onBackgroundColor.copy(alpha = 0.4f))
-            )
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            AsyncImage(
-                model = mediaMetadata?.thumbnailUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(onBackgroundColor.copy(alpha = 0.06f))
-            )
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                Text(
-                    text = mediaMetadata?.title ?: "",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = onBackgroundColor
-                )
-                Text(
-                    text = mediaMetadata?.artists?.joinToString(", ") { it.name } ?: "",
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = onBackgroundColor.copy(alpha = 0.6f)
-                )
+    Column(modifier.fillMaxWidth().background(backgroundColor)
+        .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+        .bottomSheetDraggable(sheetState).padding(horizontal = 24.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Box(Modifier.align(Alignment.CenterHorizontally).width(36.dp).height(4.dp)
+            .clip(RoundedCornerShape(50)).background(onBackgroundColor.copy(alpha = .25f)))
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(stringResource(R.string.queue), style = MaterialTheme.typography.headlineMedium,
+                    color = onBackgroundColor, fontWeight = FontWeight.Bold)
+                Text(pluralStringResource(R.plurals.n_song, songCount, songCount) + " · " + makeTimeString(queueDuration * 1000L),
+                    style = MaterialTheme.typography.bodySmall, color = onBackgroundColor.copy(alpha = .6f))
             }
-
-            IconButton(
-                onClick = onToggleLike,
-                modifier = Modifier.size(44.dp),
-                colors = IconButtonDefaults.iconButtonColors(
-                    contentColor = if (mediaMetadata?.liked == true)
-                        MaterialTheme.colorScheme.primary
-                    else onBackgroundColor
-                )
-            ) {
-                Icon(
-                    painter = painterResource(
-                        if (mediaMetadata?.liked == true) R.drawable.favorite
-                        else R.drawable.favorite_border
-                    ),
-                    contentDescription = stringResource(R.string.action_like),
-                    modifier = Modifier.size(26.dp)
-                )
+            IconButton(onClick = onMenuClick) {
+                Icon(painterResource(R.drawable.more_vert), stringResource(R.string.more_options), tint = onBackgroundColor)
             }
         }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(onBackgroundColor.copy(alpha = 0.06f))
-                .padding(horizontal = 6.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(0.dp)
-            ) {
-                IconButton(
-                    onClick = onLockClick,
-                    modifier = Modifier.size(40.dp),
-                    colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = onBackgroundColor.copy(alpha = 0.7f)
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(if (locked) R.drawable.lock else R.drawable.lock_open),
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                IconButton(
-                    onClick = onMenuClick,
-                    modifier = Modifier.size(40.dp),
-                    colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = onBackgroundColor.copy(alpha = 0.7f)
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.more_vert),
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            com.arturo254.opentune.core.designsystem.component.Artwork(mediaMetadata?.thumbnailUrl,
+                Modifier.size(56.dp), shape = com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.artworkShape)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text(mediaMetadata?.title.orEmpty(), style = MaterialTheme.typography.titleMedium, color = onBackgroundColor,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(mediaMetadata?.artists?.joinToString { it.name }.orEmpty(), style = MaterialTheme.typography.bodySmall,
+                    color = onBackgroundColor.copy(alpha = .6f), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-
-            Text(
-                text = pluralStringResource(R.plurals.n_song, songCount, songCount)
-                        + "  •  " + makeTimeString(queueDuration * 1000L),
-                style = MaterialTheme.typography.labelMedium,
-                color = onBackgroundColor.copy(alpha = 0.55f),
-                modifier = Modifier.padding(end = 14.dp)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val uncheckedColors = ToggleButtonDefaults.toggleButtonColors(
-                containerColor = onBackgroundColor.copy(alpha = 0.12f),
-                contentColor = onBackgroundColor,
-            )
-            val checkedColors = ToggleButtonDefaults.toggleButtonColors(
-                checkedContainerColor = onBackgroundColor.copy(alpha = 0.22f),
-                checkedContentColor = onBackgroundColor,
-            )
-            val infiniteCheckedColors = ToggleButtonDefaults.toggleButtonColors(
-                checkedContainerColor = MaterialTheme.colorScheme.primary,
-                checkedContentColor = MaterialTheme.colorScheme.onPrimary,
-                containerColor = onBackgroundColor.copy(alpha = 0.12f),
-                contentColor = onBackgroundColor.copy(alpha = 0.5f),
-            )
-
-            ToggleButton(
-                checked = shuffleModeEnabled,
-                onCheckedChange = { onShuffleClick() },
-                modifier = Modifier
-                    .weight(1f)
-                    .size(48.dp),
-                shapes = ButtonGroupDefaults.connectedLeadingButtonShapes(),
-                colors = if (shuffleModeEnabled) checkedColors else uncheckedColors,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.shuffle),
-                    contentDescription = stringResource(R.string.action_shuffle_on),
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-
-            ToggleButton(
-                checked = repeatMode != Player.REPEAT_MODE_OFF,
-                onCheckedChange = { onRepeatClick() },
-                modifier = Modifier
-                    .weight(1f)
-                    .size(48.dp),
-                shapes = ButtonGroupDefaults.connectedMiddleButtonShapes(),
-                colors = if (repeatMode != Player.REPEAT_MODE_OFF) checkedColors else uncheckedColors,
-            ) {
-                Icon(
-                    painter = painterResource(
-                        when (repeatMode) {
-                            Player.REPEAT_MODE_ONE -> R.drawable.repeat_one_on
-                            Player.REPEAT_MODE_ALL -> R.drawable.repeat_on
-                            else -> R.drawable.repeat
-                        }
-                    ),
-                    contentDescription = null,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-
-            ToggleButton(
-                checked = infiniteQueueEnabled,
-                onCheckedChange = { onInfiniteQueueClick() },
-                modifier = Modifier
-                    .weight(1f)
-                    .size(48.dp),
-                shapes = ButtonGroupDefaults.connectedTrailingButtonShapes(),
-                colors = infiniteCheckedColors,
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.all_inclusive),
-                    contentDescription = stringResource(R.string.similar_content),
-                    modifier = Modifier.size(22.dp)
-                )
+            IconButton(onClick = onToggleLike) {
+                Icon(painterResource(if (mediaMetadata?.liked == true) R.drawable.favorite else R.drawable.favorite_border),
+                    stringResource(R.string.action_like), tint = if (mediaMetadata?.liked == true) MaterialTheme.colorScheme.primary else onBackgroundColor)
             }
         }
-
-        Spacer(modifier = Modifier.height(14.dp))
-
-        Text(
-            text = stringResource(R.string.queue_continue_playing),
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = onBackgroundColor
-        )
-
-        Spacer(modifier = Modifier.height(2.dp))
-
-        Text(
-            text = stringResource(R.string.queue_autoplaying_similar),
-            style = MaterialTheme.typography.bodySmall,
-            color = onBackgroundColor.copy(alpha = 0.5f)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        HorizontalDivider(
-            color = onBackgroundColor.copy(alpha = 0.08f),
-            thickness = 1.dp
-        )
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            com.arturo254.opentune.ui.component.LiquidGlassIconButton(onClick = onShuffleClick, selected = shuffleModeEnabled,
+                accessibilityLabel = stringResource(R.string.shuffle)) {
+                Icon(painterResource(R.drawable.shuffle), null, tint = onBackgroundColor)
+            }
+            com.arturo254.opentune.ui.component.LiquidGlassIconButton(onClick = onRepeatClick,
+                selected = repeatMode != Player.REPEAT_MODE_OFF, accessibilityLabel = stringResource(R.string.player_a11y_repeat)) {
+                Icon(painterResource(if (repeatMode == Player.REPEAT_MODE_ONE) R.drawable.repeat_one else R.drawable.repeat), null, tint = onBackgroundColor)
+            }
+            com.arturo254.opentune.ui.component.LiquidGlassIconButton(onClick = onInfiniteQueueClick, selected = infiniteQueueEnabled,
+                accessibilityLabel = stringResource(R.string.similar_content)) {
+                Icon(painterResource(R.drawable.all_inclusive), null, tint = onBackgroundColor)
+            }
+            com.arturo254.opentune.ui.component.LiquidGlassIconButton(onClick = onLockClick, selected = locked,
+                accessibilityLabel = stringResource(R.string.galax_queue_order)) {
+                Icon(painterResource(if (locked) R.drawable.lock else R.drawable.lock_open), null, tint = onBackgroundColor)
+            }
+        }
+        if (infiniteQueueEnabled) Text(stringResource(R.string.queue_autoplaying_similar),
+            style = MaterialTheme.typography.bodySmall, color = onBackgroundColor.copy(alpha = .55f))
     }
 }
 

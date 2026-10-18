@@ -2,6 +2,8 @@
 
 package com.arturo254.opentune.ui.screens
 
+import androidx.compose.material3.Slider
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.widthIn
@@ -525,8 +527,6 @@ private fun TimeRow(
             )
     }
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

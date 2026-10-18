@@ -9,4 +9,9 @@
     <string name="galax_insight_summary">Tu universo musical</string>
     <string name="galax_featured">Destacados</string>
     <string name="galax_insight_share_error">No se pudo compartir el resumen. Inténtalo de nuevo.</string>
+    <string name="galax_loading_error">No se pudo cargar este contenido. Inténtalo de nuevo.</string>
+    <string name="galax_show_more">Ver más</string>
+    <string name="galax_queue_order">Bloquear o desbloquear el orden de la cola</string>
+    <string name="galax_search_results">Resultados de búsqueda</string>
+    <string name="galax_items">Elementos</string>
 </resources>

@@ -1,11 +1,3 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.viewmodels
 
 import androidx.lifecycle.ViewModel
@@ -30,10 +22,11 @@ class ChartsViewModel @Inject constructor() : ViewModel() {
     val error = _error.asStateFlow()
 
     fun loadCharts() {
+        if (_isLoading.value) return
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
-            
+
             YouTube.getChartsPage()
                 .onSuccess { page ->
                     _chartsPage.value = page
@@ -41,12 +34,13 @@ class ChartsViewModel @Inject constructor() : ViewModel() {
                 .onFailure { e ->
                     _error.value = "Failed to load charts: ${e.message}"
                 }
-            
+
             _isLoading.value = false
         }
     }
 
     fun loadMore() {
+        if (_isLoading.value) return
         viewModelScope.launch {
             _chartsPage.value?.continuation?.let { continuation ->
                 _isLoading.value = true
