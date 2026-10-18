@@ -1,5 +1,6 @@
 package com.arturo254.opentune.ui.player.v8
 
+import com.kyant.backdrop.backdrops.layerBackdrop
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -37,17 +38,33 @@ fun V8PlayerScene(
     disableBlur: Boolean,
     queuePeekHeight: Dp,
     nestedScrollConnection: NestedScrollConnection,
+    playerBackdrop: com.kyant.backdrop.Backdrop? = null,
+    immersiveGlass: Boolean = false,
+    gradientColors: List<androidx.compose.ui.graphics.Color> = emptyList(),
     controls: @Composable ColumnScope.() -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        V8PlayerBackdrop(
-            thumbnailUrl = artworkUrl,
-            canvasArtwork = canvasArtwork,
-            isPlaying = isPlaying,
-            disableBlur = disableBlur,
-            // Historical V8 always uses this transition label in both modes.
-            label = "v8BackdropPortrait",
-        )
+        if (immersiveGlass) {
+            com.arturo254.opentune.ui.player.visual.PlayerArtworkAtmosphere(
+                artworkUrl = artworkUrl,
+                gradientColors = gradientColors,
+                isPlaying = isPlaying,
+                disableBlur = disableBlur,
+                modifier = Modifier.then(
+                    if (playerBackdrop != null) Modifier.layerBackdrop(playerBackdrop) else Modifier
+                ),
+            )
+        } else {
+            V8PlayerBackdrop(
+                thumbnailUrl = artworkUrl,
+                canvasArtwork = canvasArtwork,
+                isPlaying = isPlaying,
+                disableBlur = disableBlur,
+                // Historical V8 always uses this transition label in both modes.
+                label = "v8BackdropPortrait",
+            )
+        }
+
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
