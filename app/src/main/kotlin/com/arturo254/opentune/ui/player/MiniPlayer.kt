@@ -76,7 +76,10 @@ private fun NewMiniPlayer(
     val swipeSensitivity by rememberPreference(SwipeSensitivityKey, 0.73f)
     val swipeThumbnail by rememberPreference(com.arturo254.opentune.constants.SwipeThumbnailKey, true)
     val glassEnabled = LocalEnableLiquidGlass.current
-    val miniPlayerShape = OpenTuneDesignSystem.shapes.miniPlayer
+    val configuredLiquidRadius = com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidTuning.current?.cornerRadiusDp
+    val miniPlayerShape = if (glassEnabled && configuredLiquidRadius != null) {
+        androidx.compose.foundation.shape.RoundedCornerShape(configuredLiquidRadius.dp)
+    } else OpenTuneDesignSystem.shapes.miniPlayer
     val surfaceTokens = OpenTuneDesignSystem.surfaces
 
     SwipeableMiniPlayerBox(
