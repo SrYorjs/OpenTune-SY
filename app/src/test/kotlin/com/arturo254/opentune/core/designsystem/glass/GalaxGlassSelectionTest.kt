@@ -3,6 +3,7 @@ package com.arturo254.opentune.core.designsystem.glass
 import com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidVariant
 import com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidTuning
 import com.arturo254.opentune.core.designsystem.liquid.galvanicRecipe
+import com.arturo254.opentune.core.designsystem.liquid.galvanicFinish
 import com.arturo254.opentune.core.designsystem.liquid.parseGalaxLiquidVariant
 import java.io.File
 import org.junit.Assert.assertEquals
@@ -55,6 +56,40 @@ class GalaxGlassSelectionTest {
         assertTrue(preview.contains("onChange(tuning.copy("))
         assertTrue(controls.contains("tuning = tuning"))
         assertTrue(keys.contains("galax_liquid_variant_v2"))
+    }
+
+    @Test fun tenOriginalMaterialsHaveIndependentOpticalAndFinishSignatures() {
+        val original = GalaxLiquidVariant.entries.take(10)
+        assertEquals(10, original.map(::galvanicRecipe).distinct().size)
+        assertEquals(10, original.map(::galvanicFinish).distinct().size)
+        val crystal = galvanicRecipe(GalaxLiquidVariant.CRYSTAL)
+        val glacier = galvanicRecipe(GalaxLiquidVariant.GLACIER)
+        val prism = galvanicRecipe(GalaxLiquidVariant.PRISM)
+        assertTrue(glacier.blurRadiusDp > crystal.blurRadiusDp * 10f)
+        assertTrue(prism.refractionAmount > glacier.refractionAmount * 5f)
+        val renderer = source("core/designsystem/liquid/GalaxLiquidRenderer.kt")
+        assertTrue(renderer.contains("galvanicFinish(variant)"))
+        assertTrue(renderer.contains("shadow = {"))
+        assertTrue(renderer.contains("finish.depthEffect"))
+    }
+
+    @Test fun userPhotoAndInteractionAreConnectedToTheRealBackdrop() {
+        val studio = source("ui/screens/settings/GalaxLiquidSettingsScreen.kt")
+        val preview = source("core/designsystem/liquid/GalaxLiquidPlayground.kt")
+        val controls = source("core/designsystem/liquid/GalaxLiquidControls.kt")
+        val keys = source("constants/PreferenceKeys.kt")
+        assertTrue(keys.contains("galax_liquid_preview_background_uri"))
+        assertTrue(studio.contains("ActivityResultContracts.OpenDocument()"))
+        assertTrue(studio.contains("takePersistableUriPermission("))
+        assertTrue(studio.contains("settings[GalaxLiquidPreviewBackgroundUriKey] = uri.toString()"))
+        assertTrue(studio.contains("selectedBackgroundUri = settings[GalaxLiquidPreviewBackgroundUriKey]"))
+        assertTrue(preview.contains("coil3.compose.AsyncImage("))
+        assertTrue(preview.contains(".layerBackdrop(backdrop)"))
+        assertTrue(preview.contains("detectDragGestures"))
+        assertTrue(controls.contains("collectIsPressedAsState()"))
+        assertTrue(controls.contains("liquidToggleThumb"))
+        assertTrue(controls.contains("liquidSliderThumb"))
+        assertTrue(controls.contains("liquidTabsIndicator"))
     }
 
     @Test fun rendererKeepsValuesInSafeRange() {
