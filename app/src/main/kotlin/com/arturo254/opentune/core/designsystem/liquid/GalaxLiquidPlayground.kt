@@ -10,19 +10,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -32,112 +35,180 @@ import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import kotlin.math.roundToInt
 
 /**
- * Dedicated Kyant-style optical lab, backed by an isolated, static sample
- * layer. Unlike the old NavHost setup, the captured source is a SIBLING of the
- * liquid preview; it cannot draw the glass recursively into itself.
+ * Live preview over a genuine, separately captured Kyant backdrop.
+ *
+ * The captured source contains ONLY wallpaper and lettering. The lens and
+ * four interactive samples are its siblings, so they can never capture their
+ * own graphics layers. This preview is driven by the SAME variant and tuning
+ * values as the global application — no local shadow draft and no fixed demo
+ * recipes that ignore the sliders.
  */
 @Composable
-fun GalaxLiquidPlayground(
+fun GalaxLiquidPreview(
     variant: GalaxLiquidVariant,
     tuning: GalaxLiquidTuning,
-    onApply: (GalaxLiquidTuning) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var draft by remember(variant, tuning) { mutableStateOf(tuning) }
-    var sampleEnabled by remember { mutableStateOf(true) }
-    var sampleValue by remember { mutableFloatStateOf(.5f) }
-    var sampleTab by remember { mutableIntStateOf(0) }
-    val backdrop = rememberLayerBackdrop()
     val colors = MaterialTheme.colorScheme
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text("Glass Playground", style = MaterialTheme.typography.titleMedium)
-        Text("Vista previa en vivo. Ajusta el vidrio y pulsa Aplicar.", style = MaterialTheme.typography.bodySmall)
-        Box(Modifier.fillMaxWidth().height(386.dp)) {
-            // SOURCE: captured gradient and typography, with no sampling nodes.
-            Box(
-                Modifier.matchParentSize()
-                    .layerBackdrop(backdrop)
-                    .background(
-                        Brush.linearGradient(
-                            listOf(colors.primaryContainer, colors.tertiaryContainer, colors.secondaryContainer)
-                        ),
-                        RoundedCornerShape(30.dp),
-                    ),
-            ) {
-                Column(Modifier.align(Alignment.Center).padding(12.dp)) {
-                    Text("GALAXOT", style = MaterialTheme.typography.headlineLarge, color = colors.onPrimaryContainer)
-                    Text("CRYSTAL • WATER • REFRACTION", color = colors.onPrimaryContainer)
-                }
-            }
-            // CONSUMER: its own sibling overlay, never part of the capture.
-            Box(
-                Modifier.align(Alignment.Center)
-                    .fillMaxWidth(.82f)
-                    .height(92.dp)
-                    .galaxLiquidEffect(
-                        variant = variant,
-                        tuning = draft,
-                        backdrop = backdrop,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("GALAX LIQUID", fontWeight = FontWeight.SemiBold, color = colors.onSurface)
-            }
+    val backdrop = rememberLayerBackdrop()
+    var alternateWallpaper by remember { mutableStateOf(false) }
+    var sampleEnabled by remember { mutableStateOf(true) }
+    var sampleValue by remember { mutableFloatStateOf(.58f) }
+    var sampleTab by remember { mutableIntStateOf(0) }
+    val wallpaper = if (alternateWallpaper) {
+        listOf(colors.tertiary, colors.primaryContainer, colors.secondary)
+    } else {
+        listOf(colors.primary, colors.tertiaryContainer, colors.secondaryContainer)
+    }
+
+    Box(
+        modifier.fillMaxWidth().height(318.dp).clip(RoundedCornerShape(26.dp))
+    ) {
+        // SOURCE: no drawBackdrop(), no glass consumers below layerBackdrop.
+        Box(
+            Modifier.matchParentSize()
+                .layerBackdrop(backdrop)
+                .background(Brush.linearGradient(wallpaper))
+        ) {
             Column(
-                Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(5.dp),
+                Modifier.align(Alignment.TopStart).padding(18.dp)
             ) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    GalaxLiquidButton(
-                        text = "Button", onClick = { sampleEnabled = !sampleEnabled },
-                        backdrop = backdrop, modifier = Modifier.weight(1f),
-                    )
-                    GalaxLiquidToggle(
-                        checked = sampleEnabled, onCheckedChange = { sampleEnabled = it },
-                        backdrop = backdrop, modifier = Modifier.weight(1f),
-                    )
-                }
-                GalaxLiquidSlider(
-                    value = sampleValue, onValueChange = { sampleValue = it },
-                    backdrop = backdrop, modifier = Modifier.fillMaxWidth(),
+                Text(
+                    "GALAXOT   /   GLASS STUDIO",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.onPrimaryContainer.copy(alpha = .88f),
                 )
-                GalaxLiquidBottomTabs(
-                    selected = sampleTab,
-                    labels = listOf("Home", "Buscar", "Música"),
-                    onSelected = { sampleTab = it },
-                    backdrop = backdrop, modifier = Modifier.fillMaxWidth(),
+                Text(
+                    "AQUA    /    LIQUID",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Black,
+                    color = colors.onPrimaryContainer,
+                )
+                Text(
+                    "✦   CRYSTAL    ✦    WATER    ✦",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = colors.onPrimaryContainer,
                 )
             }
+            Text(
+                "GALAXOT      14 STYLES      2026",
+                modifier = Modifier.align(Alignment.Center).padding(top = 10.dp),
+                style = MaterialTheme.typography.titleMedium,
+                color = colors.onPrimaryContainer.copy(alpha = .73f),
+            )
         }
-        LabSlider("Corner radius", draft.cornerRadiusDp, 0f..64f, "dp") {
-            draft = draft.copy(cornerRadiusDp = it)
+
+        Box(
+            Modifier.align(Alignment.Center)
+                .padding(bottom = 35.dp)
+                .fillMaxWidth(.79f)
+                .height(81.dp)
+                .galaxLiquidEffect(
+                    variant = variant,
+                    tuning = tuning,
+                    backdrop = backdrop,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                if (variant == GalaxLiquidVariant.DISABLED) "GLASS OFF" else "GALAX LIQUID",
+                color = colors.onSurface,
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleMedium,
+            )
         }
-        LabSlider("Blur radius", draft.blurRadiusDp, 0f..32f, "dp") {
-            draft = draft.copy(blurRadiusDp = it)
-        }
-        LabSlider("Refraction height", draft.refractionHeight, 0f..1f, "") {
-            draft = draft.copy(refractionHeight = it)
-        }
-        LabSlider("Refraction amount", draft.refractionAmount, 0f..1f, "") {
-            draft = draft.copy(refractionAmount = it)
-        }
-        LabSlider("Chromatic aberration", draft.chromaticAberration, 0f..1f, "") {
-            draft = draft.copy(chromaticAberration = it)
-        }
-        LabSlider("Glass tint", draft.tintAlpha, 0f..0.65f, "") {
-            draft = draft.copy(tintAlpha = it)
-        }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-            Button(onClick = { onApply(draft.bounded()) }) { Text("Aplicar a GalaxOT") }
+
+        Column(
+            Modifier.align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(horizontal = 11.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
+            ) {
+                GalaxLiquidButton(
+                    text = "Cambiar fondo",
+                    onClick = { alternateWallpaper = !alternateWallpaper },
+                    backdrop = backdrop,
+                    variant = variant,
+                    tuning = tuning,
+                    modifier = Modifier.weight(1f),
+                )
+                GalaxLiquidToggle(
+                    checked = sampleEnabled,
+                    onCheckedChange = { sampleEnabled = it },
+                    backdrop = backdrop,
+                    variant = variant,
+                    tuning = tuning,
+                    modifier = Modifier.weight(.48f),
+                )
+            }
+            GalaxLiquidSlider(
+                value = sampleValue,
+                onValueChange = { sampleValue = it },
+                backdrop = backdrop,
+                variant = variant,
+                tuning = tuning,
+                modifier = Modifier.fillMaxWidth().height(34.dp),
+            )
+            GalaxLiquidBottomTabs(
+                selected = sampleTab,
+                labels = listOf("Home", "Buscar", "Biblioteca"),
+                onSelected = { sampleTab = it },
+                backdrop = backdrop,
+                variant = variant,
+                tuning = tuning,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
 
 @Composable
-private fun LabSlider(
+fun GalaxLiquidOpticsControls(
+    tuning: GalaxLiquidTuning,
+    onChange: (GalaxLiquidTuning) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(5.dp)) {
+        Text("Glass Playground", style = MaterialTheme.typography.titleMedium)
+        Text(
+            "Los ajustes cambian la vista previa inmediatamente y se guardan automáticamente.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        LiquidTuningSlider("Corner radius", tuning.cornerRadiusDp, 0f..64f, "dp") {
+            onChange(tuning.copy(cornerRadiusDp = it))
+        }
+        LiquidTuningSlider("Blur radius", tuning.blurRadiusDp, 0f..32f, "dp") {
+            onChange(tuning.copy(blurRadiusDp = it))
+        }
+        LiquidTuningSlider("Refraction height", tuning.refractionHeight, 0f..1f, "") {
+            onChange(tuning.copy(refractionHeight = it))
+        }
+        LiquidTuningSlider("Refraction amount", tuning.refractionAmount, 0f..1f, "") {
+            onChange(tuning.copy(refractionAmount = it))
+        }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Chromatic aberration", style = MaterialTheme.typography.bodyMedium)
+                Text("Reflejos de color en los bordes", style = MaterialTheme.typography.labelSmall)
+            }
+            Switch(
+                checked = tuning.chromaticAberration > .5f,
+                onCheckedChange = { onChange(tuning.copy(chromaticAberration = if (it) 1f else 0f)) },
+            )
+        }
+        LiquidTuningSlider("Glass tint", tuning.tintAlpha, 0f..0.65f, "") {
+            onChange(tuning.copy(tintAlpha = it))
+        }
+    }
+}
+
+@Composable
+private fun LiquidTuningSlider(
     label: String,
     value: Float,
     range: ClosedFloatingPointRange<Float>,
@@ -150,10 +221,14 @@ private fun LabSlider(
             Text(
                 if (units.isNotEmpty()) "${value.roundToInt()} $units"
                 else "${(value * 100f).roundToInt()}%",
-                style = MaterialTheme.typography.labelSmall,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
             )
         }
-        Slider(value = value.coerceIn(range.start, range.endInclusive),
-            onValueChange = onChange, valueRange = range)
+        Slider(
+            value = value.coerceIn(range.start, range.endInclusive),
+            onValueChange = onChange,
+            valueRange = range,
+        )
     }
 }
