@@ -40,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
@@ -84,16 +85,14 @@ import com.arturo254.opentune.ui.player.actions.PlayerActions
 
 // ============================================================
 // V8 - Apple Music Style Components
-// ============================================================
-
-@Composable
-fun V8PlayerBackdrop(
+// ============================fun V8PlayerBackdrop(
     thumbnailUrl: String?,
     canvasArtwork: CanvasArtwork? = null,
     isPlaying: Boolean = false,
     disableBlur: Boolean,
     label: String,
     modifier: Modifier = Modifier,
+    liquidCanvas: Boolean = false,
 ) {
     val artworkScale by animateFloatAsState(
         targetValue = if (isPlaying) 1.055f else 1.025f,
@@ -107,7 +106,7 @@ fun V8PlayerBackdrop(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Black),
+            .background(if (liquidCanvas) Color.Transparent else Color.Black),
     ) {
         AnimatedContent(
             targetState = thumbnailUrl,
@@ -123,7 +122,26 @@ fun V8PlayerBackdrop(
                             primaryUrl = canvasArtwork.animated,
                             fallbackUrl = canvasArtwork.videoUrl,
                             isPlaying = isPlaying,
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = if (liquidCanvas) {
+                                // The current animated frame remains crisp on top,
+                                // fading into the underlying blurred static artwork.
+                                // TextureView compositing enables this masking.
+                                Modifier.fillMaxWidth().fillMaxHeight(.73f)
+                                    .graphicsLayer {
+                                        compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen
+                                    }
+                                    .drawWithCache {
+                                        val mask = Brush.verticalGradient(
+                                            0f to Color.Black,
+                                            .65f to Color.Black,
+                                            1f to Color.Transparent,
+                                        )
+                                        onDrawWithContent {
+                                            drawContent()
+                                            drawRect(mask, blendMode = androidx.compose.ui.graphics.BlendMode.DstIn)
+                                        }
+                                    }
+                            } else Modifier.fillMaxSize(),
                             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM,
                         )
                     } else {
@@ -153,12 +171,12 @@ fun V8PlayerBackdrop(
                 .background(
                     Brush.verticalGradient(
                         colorStops = arrayOf(
-                            0f to Color.Black.copy(alpha = 0.08f),
-                            0.30f to Color.Transparent,
-                            0.52f to Color.Black.copy(alpha = 0.12f),
-                            0.70f to accent.copy(alpha = 0.055f),
-                            0.82f to Color.Black.copy(alpha = 0.62f),
-                            1f to Color.Black.copy(alpha = 0.94f),
+                            0f to Color.Black.copy(alpha = if (liquidCanvas) .02f else .08f),
+                            .30f to Color.Transparent,
+                            .52f to Color.Black.copy(alpha = if (liquidCanvas) .04f else .12f),
+                            .70f to accent.copy(alpha = if (liquidCanvas) .045f else .055f),
+                            .82f to Color.Black.copy(alpha = if (liquidCanvas) .10f else .62f),
+                            1f to Color.Black.copy(alpha = if (liquidCanvas) .20f else .94f),
                         )
                     )
                 ),
@@ -175,6 +193,11 @@ fun V8PlayerBackdrop(
                             Color.Black.copy(alpha = 0.08f),
                         )
                     )
+                ),
+        )
+    }
+}
+       )
                 ),
         )
     }
