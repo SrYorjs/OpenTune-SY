@@ -270,6 +270,7 @@ fun AppearanceSettings(
             preferencesContext.dataStore.edit { settings ->
                 settings[GalaxLiquidVariantKey] = variant.name
                 settings[LiquidGlassNavBarKey] = variant != GalaxLiquidVariant.DISABLED
+                settings[GalaxGlassModeKey] = if (variant == GalaxLiquidVariant.DISABLED) GlassMode.DISABLED.name else GlassMode.CLASSIC.name
                 settings[GalaxLiquidCornerRadiusKey] = recipe.cornerRadiusDp
                 settings[GalaxLiquidBlurKey] = recipe.blurRadiusDp
                 settings[GalaxLiquidRefractionHeightKey] = recipe.refractionHeight
@@ -285,6 +286,7 @@ fun AppearanceSettings(
             preferencesContext.dataStore.edit { settings ->
                 settings[GalaxLiquidVariantKey] = liquidVariant.name
                 settings[LiquidGlassNavBarKey] = liquidVariant != GalaxLiquidVariant.DISABLED
+                settings[GalaxGlassModeKey] = if (liquidVariant == GalaxLiquidVariant.DISABLED) GlassMode.DISABLED.name else GlassMode.CLASSIC.name
                 settings[GalaxLiquidCornerRadiusKey] = recipe.cornerRadiusDp
                 settings[GalaxLiquidBlurKey] = recipe.blurRadiusDp
                 settings[GalaxLiquidRefractionHeightKey] = recipe.refractionHeight
