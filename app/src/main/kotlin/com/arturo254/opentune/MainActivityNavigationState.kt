@@ -33,6 +33,8 @@ import com.arturo254.opentune.ui.screens.Screens
 import com.arturo254.opentune.ui.screens.settings.NavigationTab
 import com.arturo254.opentune.ui.utils.appBarScrollBehavior
 import com.arturo254.opentune.ui.utils.resetHeightOffset
+import com.arturo254.opentune.utils.dataStore
+import com.arturo254.opentune.utils.getAsync
 import com.arturo254.opentune.utils.rememberEnumPreference
 import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.viewmodels.HomeViewModel
@@ -90,6 +92,23 @@ internal fun rememberMainActivityNavigationState(
         else -> if (defaultOpenTab == NavigationTab.LIBRARY) 2 else if (defaultOpenTab == NavigationTab.SEARCH) 1 else 0
     } }
     val pagerState = androidx.compose.foundation.pager.rememberPagerState(initialPage = initialPage) { 3 }
+    var initialPageApplied by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!initialPageApplied) {
+            val savedTab = activity.dataStore.getAsync(DefaultOpenTabKey)
+            val page = when (activity.intent?.action) {
+                MainActivity.ACTION_LIBRARY -> 2
+                MainActivity.ACTION_SEARCH -> 1
+                else -> when (savedTab) {
+                    NavigationTab.LIBRARY.name -> 2
+                    NavigationTab.SEARCH.name -> 1
+                    else -> 0
+                }
+            }
+            pagerState.scrollToPage(page)
+            initialPageApplied = true
+        }
+    }
     val homeViewModel: HomeViewModel = hiltViewModel()
 
     val accountImageUrl by homeViewModel.accountImageUrl.collectAsState()

@@ -57,6 +57,7 @@ import com.arturo254.opentune.ui.component.NavigationTitle
 import com.arturo254.opentune.ui.component.liquidGlassScreenBackground
 import com.arturo254.opentune.ui.utils.SnapLayoutInfoProvider
 import com.arturo254.opentune.utils.rememberPreference
+import com.arturo254.opentune.models.toMediaMetadata
 import com.arturo254.opentune.viewmodels.HomeViewModel
 
 
@@ -170,6 +171,24 @@ fun HomeScreen(
             ) {
                 item(key = "galax_home_portal") {
                     GalaxPortal(stringResource(R.string.galax_home_title), stringResource(R.string.galax_home_subtitle))
+                }
+                item(key = "galax_home_actions") {
+                    androidx.compose.foundation.layout.Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+                    ) {
+                        androidx.compose.material3.FilledTonalButton(
+                            onClick = { quickPicks?.randomOrNull()?.let { song ->
+                                playerConnection.playQueue(com.arturo254.opentune.playback.queues.YouTubeQueue.radio(song.toMediaMetadata()))
+                            } },
+                            enabled = !quickPicks.isNullOrEmpty(),
+                            modifier = Modifier.weight(1f),
+                        ) { androidx.compose.material3.Text(stringResource(R.string.shuffle)) }
+                        androidx.compose.material3.OutlinedButton(
+                            onClick = { navController.navigate(com.arturo254.opentune.ui.screens.musicrecognition.MusicRecognitionRoute) },
+                            modifier = Modifier.weight(1f),
+                        ) { androidx.compose.material3.Text(stringResource(R.string.music_recognition), maxLines = 2) }
+                    }
                 }
                 if (showHomeCategoryChips) {
                     item {

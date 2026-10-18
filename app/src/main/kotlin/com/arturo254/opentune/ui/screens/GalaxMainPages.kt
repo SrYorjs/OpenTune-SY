@@ -96,6 +96,8 @@ fun GalaxPortal(title: String, subtitle: String, modifier: Modifier = Modifier, 
 fun GalaxDiscoverScreen(navController: NavController, onOpenSearch: () -> Unit,
     genresModel: MoodAndGenresViewModel = hiltViewModel(), home: HomeViewModel = hiltViewModel()) {
     val genres by genresModel.moodAndGenres.collectAsState()
+    val genresLoading by genresModel.isLoading.collectAsState()
+    val genresFailed by genresModel.failed.collectAsState()
     val recommendations by home.quickPicks.collectAsState()
     val similar by home.similarRecommendations.collectAsState()
     val discoveries = remember(similar) { similar.orEmpty().flatMap { it.items }
@@ -151,11 +153,41 @@ fun GalaxDiscoverScreen(navController: NavController, onOpenSearch: () -> Unit,
             })
         }
         item("all_genres") { Text(stringResource(R.string.mood_and_genres), Modifier.padding(horizontal = 24.dp), style = MaterialTheme.typography.titleLarge) }
+        if (genresLoading) item("genres_loading") {
+            LinearProgressIndicator(Modifier.padding(horizontal = 24.dp).fillMaxWidth())
+        }
+        if (genresFailed) item("genres_retry") {
+            TextButton(onClick = genresModel::refresh, modifier = Modifier.padding(horizontal = 20.dp)) {
+                Text(stringResource(R.string.retry))
+            }
+        }
         items(genres.orEmpty().drop(4).chunked(2)) { row ->
             Row(Modifier.padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEach { genre -> MoodAndGenresButton(genre.title, genre.stripeColor,
                     { navController.navigate("youtube_browse/${genre.endpoint.browseId}?params=${Uri.encode(genre.endpoint.params.orEmpty())}") }, Modifier.weight(1f)) }
                 if (row.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Composable
+fun GalaxCollectionTile(title: String, icon: Int, accent: Color, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val backdrop = rememberLayerBackdrop()
+    val surface = MaterialTheme.colorScheme.surfaceContainer
+    Box(modifier.heightIn(min = 124.dp).clip(RoundedCornerShape(26.dp))) {
+        Canvas(Modifier.matchParentSize().layerBackdrop(backdrop)) {
+            drawRect(surface)
+            drawCircle(Brush.radialGradient(listOf(accent.copy(alpha = .45f), Color.Transparent),
+                Offset(size.width, 0f), size.width), size.width, Offset(size.width, 0f))
+            drawCircle(accent.copy(alpha = .22f), size.width * .4f, Offset(size.width, 0f),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
+        }
+        GalaxLiquidSurface(backdrop = backdrop, shapeOverride = RoundedCornerShape(26.dp),
+            modifier = Modifier.fillMaxWidth().clickable(onClick = onClick)) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                Icon(painterResource(icon), null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
+                Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 2)
             }
         }
     }

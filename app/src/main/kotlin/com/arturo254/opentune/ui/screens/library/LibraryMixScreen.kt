@@ -789,15 +789,10 @@ private fun LibraryShortcutGrid(
         entries.chunked(2).forEach { rowEntries ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 rowEntries.forEach { entry ->
-                    com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidSurface(
-                        shapeOverride = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
-                        modifier = Modifier.weight(1f).height(116.dp).clickable { onClick(entry.route) },
-                    ) {
-                        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                            Icon(painterResource(entry.iconRes), null, tint = entry.accentColor, modifier = Modifier.size(26.dp))
-                            Text(entry.title, style = MaterialTheme.typography.titleSmall, maxLines = 2)
-                        }
-                    }
+                    com.arturo254.opentune.ui.screens.GalaxCollectionTile(
+                        title = entry.title, icon = entry.iconRes, accent = entry.accentColor,
+                        modifier = Modifier.weight(1f), onClick = { onClick(entry.route) },
+                    )
                 }
                 if (rowEntries.size == 1) Spacer(Modifier.weight(1f))
             }

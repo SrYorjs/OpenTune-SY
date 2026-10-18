@@ -24,15 +24,25 @@ class MoodAndGenresViewModel
 constructor() : ViewModel() {
     val moodAndGenres = MutableStateFlow<List<MoodAndGenres.Item>?>(null)
 
-    init {
+    val isLoading = MutableStateFlow(false)
+    val failed = MutableStateFlow(false)
+
+    init { refresh() }
+
+    fun refresh() {
+        if (isLoading.value) return
+        isLoading.value = true
+        failed.value = false
         viewModelScope.launch {
             YouTube
                 .explore()
                 .onSuccess {
                     moodAndGenres.value = it.moodAndGenres
                 }.onFailure {
+                    failed.value = true
                     reportException(it)
                 }
+            isLoading.value = false
         }
     }
 }
