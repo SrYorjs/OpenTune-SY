@@ -41,6 +41,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -87,6 +88,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.navigation.OpenTuneNavigationDimensions
@@ -562,63 +564,29 @@ private fun FloatingNavigationToolbarItem(
             )
             .padding(horizontal = 2.dp, vertical = 3.dp),
         horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Crossfade(
-            targetState = selected,
-            animationSpec = tween(durationMillis = 150),
-            label = "iconCrossfade",
-            modifier = Modifier.scale(iconScale),
-        ) { isSelected ->
-            Icon(
-                painter = painterResource(
-                    if (isSelected) screen.iconIdActive else screen.iconIdInactive
-                ),
-                contentDescription = stringResource(screen.titleId),
-                tint = contentColor,
-                modifier = Modifier.size(22.dp),
-            )
-        }
-
-        AnimatedVisibility(
-            visible = showLabel,
-            enter =
-                fadeIn(tween(130)) +
-                    slideInHorizontally(
-                        animationSpec = spring(
-                            dampingRatio = 0.82f,
-                            stiffness = 620f,
-                        ),
-                        initialOffsetX = { width ->
-                            if (slideFromEnd) width / 2 else -width / 2
-                        },
-                    ) +
-                    expandHorizontally(
-                        animationSpec = tween(175),
-                        expandFrom = if (slideFromEnd) Alignment.End else Alignment.Start,
-                    ),
-            exit =
-                fadeOut(tween(110)) +
-                    slideOutHorizontally(
-                        animationSpec = tween(90),
-                        targetOffsetX = { width ->
-                            if (slideFromEnd) -width / 3 else width / 3
-                        },
-                    ) +
-                    shrinkHorizontally(
-                        animationSpec = tween(90),
-                        shrinkTowards = if (slideFromEnd) Alignment.Start else Alignment.End,
-                    ),
+        verticalAlignment = A        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Spacer(modifier = Modifier.width(6.dp))
+            Icon(
+                painter = painterResource(if (selected) screen.iconIdActive else screen.iconIdInactive),
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(21.dp).scale(iconScale),
+            )
+            if (showSelectedLabel) {
+                Spacer(Modifier.height(2.dp))
                 Text(
                     text = stringResource(screen.titleId),
+                    style = MaterialTheme.typography.labelSmall,
                     color = contentColor,
-                    style = MaterialTheme.typography.labelMedium,
+                    fontSize = 10.sp,
                     maxLines = 1,
+                    softWrap = false,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+        }          )
             }
         }
     }
