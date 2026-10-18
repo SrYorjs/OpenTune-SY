@@ -352,6 +352,9 @@ internal fun MainActivityScaffold(
         ?.isLowRamDevice == true
     val liveLiquidBackdrop = if (
         liquidVariant != GalaxLiquidVariant.DISABLED && !saver && !lowRam &&
+        // Glass Studio captures a separate preview; do not nest it inside
+        // an outer NavHost recording layer (Android 17 RenderThread safety).
+        navigationState.currentRoute != "settings/appearance/galax_liquid" &&
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
     ) rememberLayerBackdrop() else null
     val menuState = remember { MenuState() }
