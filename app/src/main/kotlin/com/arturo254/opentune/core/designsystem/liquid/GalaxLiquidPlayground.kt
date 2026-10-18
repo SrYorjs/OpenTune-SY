@@ -1,5 +1,7 @@
 package com.arturo254.opentune.core.designsystem.liquid
 
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,123 +45,157 @@ import kotlin.math.roundToInt
  * values as the global application — no local shadow draft and no fixed demo
  * recipes that ignore the sliders.
  */
+/**
+ * Glass Studio 2.0: isolated source layer with an optional SAF photo.
+ * The photo, patterned typography and color field are behind the lens,
+ * while all sample controls exist in sibling layers and never capture themselves.
+ */
 @Composable
 fun GalaxLiquidPreview(
     variant: GalaxLiquidVariant,
     tuning: GalaxLiquidTuning,
+    backgroundUri: String = "",
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
     val backdrop = rememberLayerBackdrop()
-    var alternateWallpaper by remember { mutableStateOf(false) }
-    var sampleEnabled by remember { mutableStateOf(true) }
+    var wallpaperIndex by remember { mutableIntStateOf(0) }
+    var usePersonalPhoto by remember(backgroundUri) { mutableStateOf(backgroundUri.isNotBlank()) }
+    var enabled by remember { mutableStateOf(true) }
     var sampleValue by remember { mutableFloatStateOf(.58f) }
     var sampleTab by remember { mutableIntStateOf(0) }
-    val wallpaper = if (alternateWallpaper) {
-        listOf(colors.tertiary, colors.primaryContainer, colors.secondary)
-    } else {
-        listOf(colors.primary, colors.tertiaryContainer, colors.secondaryContainer)
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    var offsetY by remember { mutableFloatStateOf(0f) }
+    val backdropColors = when (wallpaperIndex % 3) {
+        1 -> listOf(Color(0xFF14233D), Color(0xFF31ACC9), Color(0xFFA1F8F1))
+        2 -> listOf(Color(0xFF1E123A), Color(0xFF8C56D6), Color(0xFFF7C2EA))
+        else -> listOf(Color(0xFF082B58), Color(0xFF177CB7), Color(0xFFBAE1FF))
     }
-
     Box(
-        modifier.fillMaxWidth().height(318.dp).clip(RoundedCornerShape(26.dp))
+        modifier.fillMaxWidth().height(430.dp)
+            .clip(RoundedCornerShape(30.dp)),
     ) {
-        // SOURCE: no drawBackdrop(), no glass consumers below layerBackdrop.
+        // The only captured subtree. NEVER put drawBackdrop controls here.
         Box(
             Modifier.matchParentSize()
-                .layerBackdrop(backdrop)
-                .background(Brush.linearGradient(wallpaper))
+                .background(Brush.linearGradient(backdropColors))
+                .layerBackdrop(backdrop),
         ) {
-            Column(
-                Modifier.align(Alignment.TopStart).padding(18.dp)
-            ) {
-                Text(
-                    "GALAXOT   /   GLASS STUDIO",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = colors.onPrimaryContainer.copy(alpha = .88f),
-                )
-                Text(
-                    "AQUA    /    LIQUID",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Black,
-                    color = colors.onPrimaryContainer,
-                )
-                Text(
-                    "✦   CRYSTAL    ✦    WATER    ✦",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = colors.onPrimaryContainer,
+            if (usePersonalPhoto && backgroundUri.isNotBlank()) {
+                coil3.compose.AsyncImage(
+                    model = android.net.Uri.parse(backgroundUri),
+                    contentDescription = "Fondo elegido",
+                    modifier = Modifier.matchParentSize(),
+                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
                 )
             }
+            Box(
+                Modifier.matchParentSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.Black.copy(alpha = .24f), Color.Transparent, Color.Black.copy(alpha = .43f)),
+                        ),
+                    ),
+            )
+            Column(Modifier.align(Alignment.TopStart).padding(18.dp)) {
+                Text(
+                    "GALAXOT    •    GLASS STUDIO",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color.White.copy(alpha = .9f),
+                )
+                Text(
+                    "WATER / REFRACTION",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White,
+                )
+                Text("TOCA, ARRASTRA Y COMPARA",
+                    style = MaterialTheme.typography.labelSmall, color = Color.White.copy(alpha = .85f))
+            }
+            // High-frequency background detail exposes real blur/refraction differences.
             Text(
-                "GALAXOT      14 STYLES      2026",
-                modifier = Modifier.align(Alignment.Center).padding(top = 10.dp),
-                style = MaterialTheme.typography.titleMedium,
-                color = colors.onPrimaryContainer.copy(alpha = .73f),
+                "GALAXOT  / / /  01  02  03  \u2726  LIQUID  / / /  04  05  06",
+                modifier = Modifier.align(Alignment.Center),
+                style = MaterialTheme.typography.titleLarge,
+                color = Color.White.copy(alpha = .76f),
+                maxLines = 2,
+            )
+            Text(
+                "LENTE     AGUA     CRISTAL     LUZ",
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 150.dp),
+                style = MaterialTheme.typography.labelMedium,
+                color = Color.White.copy(alpha = .76f),
             )
         }
 
+        // Draggable optical sample; its pan never becomes part of the capture.
         Box(
             Modifier.align(Alignment.Center)
-                .padding(bottom = 35.dp)
-                .fillMaxWidth(.79f)
-                .height(81.dp)
-                .galaxLiquidEffect(
-                    variant = variant,
-                    tuning = tuning,
-                    backdrop = backdrop,
-                ),
+                .offset {
+                    androidx.compose.ui.unit.IntOffset(offsetX.toInt(), offsetY.toInt() - 23)
+                }
+                .fillMaxWidth(.78f)
+                .height(84.dp)
+                .galaxLiquidEffect(variant = variant, tuning = tuning, backdrop = backdrop)
+                .pointerInput(variant) {
+                    detectDragGestures { change, drag ->
+                        offsetX = (offsetX + drag.x).coerceIn(-62f, 62f)
+                        offsetY = (offsetY + drag.y).coerceIn(-54f, 54f)
+                        change.consume()
+                    }
+                },
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                if (variant == GalaxLiquidVariant.DISABLED) "GLASS OFF" else "GALAX LIQUID",
-                color = colors.onSurface,
-                fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.titleMedium,
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    if (variant == GalaxLiquidVariant.DISABLED) "GLASS OFF"
+                    else variant.title.substringAfter(" · "),
+                    color = colors.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text("Desliza esta lente", color = colors.onSurface, style = MaterialTheme.typography.labelSmall)
+            }
         }
 
         Column(
             Modifier.align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .padding(horizontal = 11.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(7.dp),
-            ) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 GalaxLiquidButton(
-                    text = "Cambiar fondo",
-                    onClick = { alternateWallpaper = !alternateWallpaper },
-                    backdrop = backdrop,
-                    variant = variant,
-                    tuning = tuning,
-                    modifier = Modifier.weight(1f),
+                    text = if (usePersonalPhoto) "Fondo demo" else "Cambiar fondo",
+                    onClick = {
+                        if (usePersonalPhoto) usePersonalPhoto = false
+                        else wallpaperIndex = (wallpaperIndex + 1) % 3
+                        offsetX = 0f
+                        offsetY = 0f
+                    },
+                    backdrop = backdrop, variant = variant, tuning = tuning, modifier = Modifier.weight(1f),
                 )
+                if (backgroundUri.isNotBlank()) {
+                    GalaxLiquidButton(
+                        text = "Mi foto", onClick = { usePersonalPhoto = true },
+                        backdrop = backdrop, variant = variant, tuning = tuning, modifier = Modifier.weight(.65f),
+                    )
+                }
                 GalaxLiquidToggle(
-                    checked = sampleEnabled,
-                    onCheckedChange = { sampleEnabled = it },
-                    backdrop = backdrop,
-                    variant = variant,
-                    tuning = tuning,
-                    modifier = Modifier.weight(.48f),
+                    checked = enabled, onCheckedChange = { enabled = it },
+                    backdrop = backdrop, variant = variant, tuning = tuning,
                 )
             }
             GalaxLiquidSlider(
-                value = sampleValue,
-                onValueChange = { sampleValue = it },
-                backdrop = backdrop,
-                variant = variant,
-                tuning = tuning,
-                modifier = Modifier.fillMaxWidth().height(34.dp),
+                value = sampleValue, onValueChange = { sampleValue = it },
+                backdrop = backdrop, variant = variant, tuning = tuning,
+                modifier = Modifier.fillMaxWidth(),
             )
             GalaxLiquidBottomTabs(
                 selected = sampleTab,
-                labels = listOf("Home", "Buscar", "Biblioteca"),
+                labels = listOf("Inicio", "Buscar", "Música"),
                 onSelected = { sampleTab = it },
-                backdrop = backdrop,
-                variant = variant,
-                tuning = tuning,
+                backdrop = backdrop, variant = variant, tuning = tuning,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
