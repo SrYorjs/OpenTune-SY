@@ -44,9 +44,10 @@ fun V8PlayerScene(
     controls: @Composable ColumnScope.() -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
-        // Keep V8 Canvas/video artwork alive when available; otherwise the
-        // current-song square cover gets the new Apple-like blur atmosphere.
-        if (immersiveGlass && canvasArtwork?.preferredAnimationUrl.isNullOrBlank()) {
+        if (immersiveGlass) {
+            // Record only the static cover owned by the CURRENT track.
+            // Canvas/video is drawn as a later sibling, never inside a
+            // layerBackdrop node (SurfaceView and HWUI capture incompatibility).
             com.arturo254.opentune.ui.player.visual.PlayerArtworkAtmosphere(
                 artworkUrl = artworkUrl,
                 gradientColors = gradientColors,
@@ -56,21 +57,18 @@ fun V8PlayerScene(
                     if (playerBackdrop != null) Modifier.layerBackdrop(playerBackdrop) else Modifier
                 ),
             )
-        } else {
+        }
+        if (!immersiveGlass || !canvasArtwork?.preferredAnimationUrl.isNullOrBlank()) {
+            // Preserve the V8 Canvas/video experience without capturing the
+            // video player itself into the Kyant backdrop render graph.
             V8PlayerBackdrop(
                 thumbnailUrl = artworkUrl,
                 canvasArtwork = canvasArtwork,
                 isPlaying = isPlaying,
                 disableBlur = disableBlur,
-                // Historical V8 always uses this transition label in both modes.
                 label = "v8BackdropPortrait",
-                modifier = Modifier.then(
-                    if (immersiveGlass && playerBackdrop != null)
-                        Modifier.layerBackdrop(playerBackdrop) else Modifier
-                ),
             )
         }
-
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
