@@ -41,7 +41,7 @@ fun GalaxLiquidButton(
             variant = variant,
             tuning = tuning,
             backdrop = backdrop,
-            shapeOverride = RoundedCornerShape(30.dp),
+            // Shape follows Playground corner radius for immediate visual feedback.
         ).clickable(role = Role.Button, onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 11.dp),
         contentAlignment = Alignment.Center,
@@ -65,7 +65,7 @@ fun GalaxLiquidToggle(
                 variant = variant,
             tuning = tuning,
                 backdrop = backdrop,
-                shapeOverride = RoundedCornerShape(30.dp),
+                // Shape follows Playground corner radius for immediate visual feedback.
             )
             .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
             .padding(horizontal = 16.dp, vertical = 11.dp),
@@ -91,7 +91,7 @@ fun GalaxLiquidSlider(
             variant = variant,
             tuning = tuning,
             backdrop = backdrop,
-            shapeOverride = RoundedCornerShape(32.dp),
+            // Shape follows Playground corner radius for immediate visual feedback.
         ).padding(horizontal = 12.dp),
         valueRange = 0f..1f,
     )
@@ -112,7 +112,7 @@ fun GalaxLiquidBottomTabs(
             variant = variant,
             tuning = tuning,
             backdrop = backdrop,
-            shapeOverride = RoundedCornerShape(34.dp),
+            // Shape follows Playground corner radius for immediate visual feedback.
         ).padding(5.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
