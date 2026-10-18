@@ -71,6 +71,7 @@ import com.arturo254.opentune.ui.screens.search.UniversalSearchScreen
 import com.arturo254.opentune.ui.screens.settings.AboutScreen
 import com.arturo254.opentune.ui.screens.settings.AccountSettings
 import com.arturo254.opentune.ui.screens.settings.AppearanceSettings
+import com.arturo254.opentune.ui.screens.settings.GalaxLiquidSettingsScreen
 import com.arturo254.opentune.ui.screens.settings.CustomizeBackground
 import com.arturo254.opentune.ui.screens.settings.BackupAndRestore
 import com.arturo254.opentune.ui.screens.settings.ChangelogScreen
@@ -331,6 +332,9 @@ fun NavGraphBuilder.navigationBuilder(
     }
     composable("settings/appearance") {
         AppearanceSettings(navController, scrollBehavior)
+    }
+    composable("settings/appearance/galax_liquid") {
+        GalaxLiquidSettingsScreen(navController)
     }
     composable("settings/appearance/palette_picker") {
         PalettePickerScreen(navController)
