@@ -85,7 +85,9 @@ import com.arturo254.opentune.ui.player.actions.PlayerActions
 
 // ============================================================
 // V8 - Apple Music Style Components
-// ============================fun V8PlayerBackdrop(
+// ============================================================
+@Composable
+fun V8PlayerBackdrop(
     thumbnailUrl: String?,
     canvasArtwork: CanvasArtwork? = null,
     isPlaying: Boolean = false,
