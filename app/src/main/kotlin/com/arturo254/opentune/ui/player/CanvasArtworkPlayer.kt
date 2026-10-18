@@ -25,6 +25,7 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
+import com.arturo254.opentune.R
 import com.arturo254.opentune.innertube.YouTube
 import com.arturo254.opentune.innertube.models.YouTubeClient
 import okhttp3.OkHttpClient
@@ -188,7 +189,11 @@ internal fun CanvasArtworkPlayer(
 
     AndroidView(
         factory = { viewContext ->
-            PlayerView(viewContext).apply {
+            // Media3 PlayerView defaults to SurfaceView, whose separate window
+            // composition leaked a black box into Glass Studio on some Samsung
+            // builds. TextureView is strictly clipped/composited with Compose.
+            (android.view.LayoutInflater.from(viewContext)
+                .inflate(R.layout.galax_canvas_texture_player, null, false) as PlayerView).apply {
                 layoutParams = android.view.ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)
                 player = exoPlayer
                 useController = false
