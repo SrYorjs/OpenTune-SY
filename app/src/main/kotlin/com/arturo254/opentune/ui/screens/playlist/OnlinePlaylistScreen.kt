@@ -1,5 +1,6 @@
 package com.arturo254.opentune.ui.screens.playlist
 
+import androidx.compose.foundation.clickable
 import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import com.arturo254.opentune.ui.screens.GalaxMediaHeader
 import androidx.activity.compose.BackHandler

@@ -248,7 +248,6 @@ fun LibraryMixScreen(
     val canEnterReorderMode = customPlaylistMode && selectedTagIds.isEmpty()
     var reorderEnabled by rememberSaveable { mutableStateOf(false) }
     val canReorderPlaylists = canEnterReorderMode && reorderEnabled
-    val playlistSectionLeadingItems = if (shortcuts.isNotEmpty()) 3 else 2
     val mutableVisiblePlaylists = remember { mutableStateListOf<Playlist>() }
     var dragInfo by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     val reorderableState = rememberReorderableLazyListState(
@@ -256,19 +255,11 @@ fun LibraryMixScreen(
         scrollThresholdPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
     ) { from, to ->
         if (!canReorderPlaylists) return@rememberReorderableLazyListState
-        if (from.index < playlistSectionLeadingItems || to.index < playlistSectionLeadingItems) {
-            return@rememberReorderableLazyListState
-        }
-
-        val fromIndex = from.index - playlistSectionLeadingItems
-        val toIndex = to.index - playlistSectionLeadingItems
-        if (fromIndex !in mutableVisiblePlaylists.indices || toIndex !in mutableVisiblePlaylists.indices) {
-            return@rememberReorderableLazyListState
-        }
-
+        val moved = moveLibraryEntry(mutableVisiblePlaylists, from.key, to.key) { it.id }
+            ?: return@rememberReorderableLazyListState
         val currentDragInfo = dragInfo
-        dragInfo = if (currentDragInfo == null) fromIndex to toIndex else currentDragInfo.first to toIndex
-        mutableVisiblePlaylists.move(fromIndex, toIndex)
+        dragInfo = if (currentDragInfo == null) moved else currentDragInfo.first to moved.second
+
     }
 
     LaunchedEffect(visiblePlaylists, canReorderPlaylists, reorderableState.isAnyItemDragging, dragInfo) {
@@ -312,10 +303,18 @@ fun LibraryMixScreen(
             contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
             modifier = Modifier.fillMaxSize(),
         ) {
-            item(key = "galax_library_portal") {
-                com.arturo254.opentune.ui.screens.GalaxPortal(
-                    stringResource(R.string.galax_your_library),
-                    stringResource(R.string.galax_library_subtitle),
+            item(key = "galax_library_portal", contentType = "overview") {
+                com.arturo254.opentune.ui.screens.GalaxMediaHeader(
+                    title = stringResource(R.string.galax_your_library),
+                    label = stringResource(R.string.app_name),
+                    artworkUrls = (sortedAlbums.map { it.album.thumbnailUrl } + visiblePlaylists.flatMap { it.thumbnails }).take(4),
+                    facts = listOf(
+                        "${visiblePlaylists.size} ${stringResource(R.string.playlists)}",
+                        "${sortedAlbums.size} ${stringResource(R.string.albums)}",
+                        "${sortedArtists.size} ${stringResource(R.string.artists)}",
+                    ),
+                    details = { Text(stringResource(R.string.galax_library_subtitle),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 )
             }
             item(key = "filter") {
@@ -344,57 +343,12 @@ fun LibraryMixScreen(
                 }
             }
 
-            fun String.extractId(): String = this.substringAfterLast('/')
-
             if (shortcuts.isNotEmpty()) {
-                item(key = "shortcuts") {
-                    LibraryShortcutGrid(
-                        entries = shortcuts,
-                        onClick = navController::navigate,
-                        onPlayPlaylist = { entry ->
-                            playerConnection?.let { connection ->
-                                coroutineScope.launch(Dispatchers.IO) {
-
-                                    val playlistId = entry.route.extractId()
-                                    database.playlistSongs(playlistId).first()
-                                        .let { playlistSongs ->
-                                            if (playlistSongs.isNotEmpty()) {
-                                                connection.playQueue(
-                                                    ListQueue(
-                                                        title = entry.title,
-                                                        items = playlistSongs.map { it.song.toMediaItem() }
-                                                    )
-                                                )
-                                            }
-                                        }
-                                }
-                            }
-                        },
-                        onShufflePlaylist = { entry ->
-                            playerConnection?.let { connection ->
-                                coroutineScope.launch(Dispatchers.IO) {
-
-                                    val playlistId = entry.route.extractId()
-                                    database.playlistSongs(playlistId).first()
-                                        .let { playlistSongs ->
-                                            if (playlistSongs.isNotEmpty()) {
-                                                connection.playQueue(
-                                                    ListQueue(
-                                                        title = entry.title,
-                                                        items = playlistSongs.shuffled()
-                                                            .map { it.song.toMediaItem() }
-                                                    )
-                                                )
-                                            }
-                                        }
-                                }
-                            }
-                        },
-                        modifier = Modifier.padding(horizontal = 24.dp),
-                    )
+                item(key = "shortcuts", contentType = "shortcuts") {
+                    LibraryShortcutGrid(entries = shortcuts, onClick = navController::navigate,
+                        modifier = Modifier.padding(horizontal = 24.dp))
                 }
             }
-
             if (canReorderPlaylists) {
                 itemsIndexed(
                     items = mutableVisiblePlaylists,
@@ -436,29 +390,9 @@ fun LibraryMixScreen(
 
             if (showSpotifyPlaylists && spotifyPlaylists.isNotEmpty()) {
                 item(key = "spotify_playlists_header") {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.spotify_playlists),
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onBackground,
-                        )
-                        Icon(
-                            painter = painterResource(R.drawable.chevron_right),
-                            contentDescription = stringResource(R.string.see_all),
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(CircleShape)
-                                .clickable { onTabSelected(LibraryFilter.SPOTIFY) }
-                                .padding(4.dp),
-                        )
-                    }
+                    com.arturo254.opentune.ui.screens.GalaxSectionHeading(
+                        stringResource(R.string.spotify_playlists), onClick = { onTabSelected(LibraryFilter.SPOTIFY) },
+                    )
                 }
 
                 item(key = "spotify_playlists_row") {
@@ -486,29 +420,9 @@ fun LibraryMixScreen(
 
             if (sortedAlbums.isNotEmpty()) {
                 item(key = "albums_header") {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.your_albums),
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onBackground,
-                        )
-                        Icon(
-                            painter = painterResource(R.drawable.chevron_right),
-                            contentDescription = stringResource(R.string.see_all),
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(CircleShape)
-                                .clickable { onTabSelected(LibraryFilter.ALBUMS) }
-                                .padding(4.dp),
-                        )
-                    }
+                    com.arturo254.opentune.ui.screens.GalaxSectionHeading(
+                        stringResource(R.string.your_albums), onClick = { onTabSelected(LibraryFilter.ALBUMS) },
+                    )
                 }
 
                 item(key = "albums_row") {
@@ -562,29 +476,9 @@ fun LibraryMixScreen(
 
             if (sortedArtists.isNotEmpty()) {
                 item(key = "artists_header") {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.your_artists),
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onBackground,
-                        )
-                        Icon(
-                            painter = painterResource(R.drawable.chevron_right),
-                            contentDescription = stringResource(R.string.see_all),
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier
-                                .size(24.dp)
-                                .clip(CircleShape)
-                                .clickable { onTabSelected(LibraryFilter.ARTISTS) }
-                                .padding(4.dp),
-                        )
-                    }
+                    com.arturo254.opentune.ui.screens.GalaxSectionHeading(
+                        stringResource(R.string.your_artists), onClick = { onTabSelected(LibraryFilter.ARTISTS) },
+                    )
                 }
 
                 item(key = "artists_row") {
@@ -762,8 +656,6 @@ private fun LibraryControlCard(
 private fun LibraryShortcutGrid(
     entries: List<LibraryShortcutEntry>,
     onClick: (String) -> Unit,
-    onPlayPlaylist: (LibraryShortcutEntry) -> Unit,
-    onShufflePlaylist: (LibraryShortcutEntry) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(

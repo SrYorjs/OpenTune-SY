@@ -1,13 +1,4 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.component
-
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
@@ -248,10 +239,10 @@ fun LibraryPlaylistListItem(
 
     LibraryPlaylistFeatureCard(
         playlist = playlist,
+        trailingContent = trailing,
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = openPlaylist),
     )
 }
-
 

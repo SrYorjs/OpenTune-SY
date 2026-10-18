@@ -620,9 +620,7 @@ Row(
                                         }
                                     }
                                 },
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.surfaceVariant,
-                                modifier = Modifier.size(48.dp)
+                                size = 48.dp
                             ) {
                                 Box(
                                     modifier = Modifier.fillMaxSize(),

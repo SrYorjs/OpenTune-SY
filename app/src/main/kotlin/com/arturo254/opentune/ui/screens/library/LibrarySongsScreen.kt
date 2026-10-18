@@ -1,13 +1,7 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens.library
 
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -116,7 +110,7 @@ fun LibrarySongsScreen(
         }
     }
 
-    val wrappedSongs = songs.map { item -> ItemWrapper(item) }.toMutableList()
+    val wrappedSongs = remember(songs) { songs.map { item -> ItemWrapper(item) }.toMutableStateList() }
     var selection by remember {
         mutableStateOf(false)
     }
@@ -137,7 +131,7 @@ fun LibrarySongsScreen(
 
     Box(
         modifier =
-            Modifier.fillMaxSize()
+            Modifier.fillMaxSize().galaxScreenBackground()
                 .pullToRefresh(
                     state = pullRefreshState,
                     isRefreshing = isRefreshing,
@@ -148,6 +142,13 @@ fun LibrarySongsScreen(
             state = lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
         ) {
+                    item(key = "galax_page_intro") {
+                        com.arturo254.opentune.core.designsystem.theme.GalaxScreenHeading(
+                            stringResource(R.string.songs),
+                            "${songs.size} ${stringResource(R.string.songs)}",
+                        )
+                    }
+
             item(
                 key = "filter",
                 contentType = CONTENT_TYPE_HEADER,
@@ -335,8 +336,8 @@ fun LibrarySongsScreen(
                                 }
                                 wrappedSongs.forEach {
                                     it.isSelected = false
-                                } // Clear previous selections
-                                songWrapper.isSelected = true // Select current item
+                                }
+                                songWrapper.isSelected = true
                             },
                         )
                         .animateItem(),

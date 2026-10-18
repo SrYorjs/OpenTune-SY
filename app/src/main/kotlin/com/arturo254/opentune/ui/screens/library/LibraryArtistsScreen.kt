@@ -1,13 +1,6 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
-
 package com.arturo254.opentune.ui.screens.library
 
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -213,7 +206,7 @@ fun LibraryArtistsScreen(
 
     Box(
         modifier =
-            Modifier.fillMaxSize()
+            Modifier.fillMaxSize().galaxScreenBackground()
                 .pullToRefresh(
                     state = pullRefreshState,
                     isRefreshing = isRefreshing,
@@ -226,6 +219,13 @@ fun LibraryArtistsScreen(
                     state = lazyListState,
                     contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
                 ) {
+                    item(key = "galax_page_intro") {
+                        com.arturo254.opentune.core.designsystem.theme.GalaxScreenHeading(
+                            stringResource(R.string.artists),
+                            "${artists.size} ${stringResource(R.string.artists)}",
+                        )
+                    }
+
                     item(
                         key = "filter",
                         contentType = CONTENT_TYPE_HEADER,
@@ -276,6 +276,13 @@ fun LibraryArtistsScreen(
                     ),
                     contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
                 ) {
+                    item(key = "galax_page_intro", span = { GridItemSpan(maxLineSpan) }) {
+                        com.arturo254.opentune.core.designsystem.theme.GalaxScreenHeading(
+                            stringResource(R.string.artists),
+                            "${artists.size} ${stringResource(R.string.artists)}",
+                        )
+                    }
+
                     item(
                         key = "filter",
                         span = { GridItemSpan(maxLineSpan) },

@@ -300,101 +300,16 @@ fun LibraryPlaylistFeatureCard(
     autoPlaylist: Boolean = false,
     trailingContent: @Composable RowScope.() -> Unit = {},
 ) {
-    val subtitleText = playlistCountText(playlist = playlist, autoPlaylist = autoPlaylist)
-    val thumbnailSize = LibraryCardThumbnailSize
-    val thumbnailShape = RoundedCornerShape(18.dp)
-    val context = LocalContext.current
-    val primaryThumbnailUrl = playlist.thumbnails.getOrNull(0)
-    var extractedGlowColor by remember(primaryThumbnailUrl) { mutableStateOf(Color.Transparent) }
-    val glowColor by animateColorAsState(
-        targetValue = extractedGlowColor,
-        animationSpec = tween(400),
-        label = "playlistItemGlow",
-    )
-    LaunchedEffect(primaryThumbnailUrl) {
-        if (primaryThumbnailUrl == null) return@LaunchedEffect
-        val bitmap =
-            runCatching {
-                context.imageLoader
-                    .execute(
-                        ImageRequest
-                            .Builder(context)
-                            .data(primaryThumbnailUrl)
-                            .size(
-                                PlayerColorExtractor.Config.IMAGE_SIZE,
-                                PlayerColorExtractor.Config.IMAGE_SIZE
-                            )
-                            .allowHardware(false)
-                            .build(),
-                    ).image
-                    ?.toBitmap()
-            }.getOrNull() ?: return@LaunchedEffect
-        extractedGlowColor = withContext(Dispatchers.Default) { bitmap.extractThemeColor() }
-    }
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        shape = shape,
-        modifier = modifier,
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-        ) {
-            Box(
-                modifier =
-                    Modifier
-                        .size(thumbnailSize),
-            ) {
-                PlaylistThumbnail(
-                    thumbnails = playlist.thumbnails,
-                    size = thumbnailSize,
-                    placeHolder = {
-                        Icon(
-                            painter = painterResource(
-                                playlistPlaceholderIcon(
-                                    playlist,
-                                    autoPlaylist
-                                )
-                            ),
-                            contentDescription = null,
-                            tint = LocalContentColor.current.copy(alpha = 0.8f),
-                            modifier = Modifier.size(thumbnailSize / 2),
-                        )
-                    },
-                    shape = thumbnailShape,
-                )
-            }
-            Spacer(Modifier.width(16.dp))
-            Column(
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(
-                    text = playlist.playlist.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = subtitleText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.End,
-                modifier = Modifier.padding(start = 12.dp),
-            ) {
-                trailingContent()
-            }
+    Row(modifier.fillMaxWidth().clip(shape).padding(horizontal = 8.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+        com.arturo254.opentune.ui.screens.GalaxCoverMosaic(playlist.thumbnails, modifier = Modifier.size(64.dp))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(playlist.playlist.name, style = MaterialTheme.typography.titleMedium,
+                maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(playlistCountText(playlist, autoPlaylist), style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
+        trailingContent()
     }
 }
 
@@ -406,74 +321,21 @@ fun LibraryAlbumSpotlightCard(
     isPlaying: Boolean = false,
     onPlay: (() -> Unit)? = null,
 ) {
-    val subtitle = pluralStringResource(
-        R.plurals.n_song,
-        album.album.songCount,
-        album.album.songCount
-    )
-
-    val containerColor by animateColorAsState(
-        if (isActive)
-            MaterialTheme.colorScheme.secondaryContainer
-        else
-            MaterialTheme.colorScheme.surfaceContainerLow,
-        animationSpec = spring()
-    )
-
-    Card(
-        shape = RoundedCornerShape(32.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        modifier = modifier
-            .width(130.dp),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(106.dp)
-                    .clip(RoundedCornerShape(24.dp)),
-            ) {
-                LocalThumbnail(
-                    thumbnailUrl = album.album.thumbnailUrl,
-                    isActive = isActive,
-                    isPlaying = isPlaying,
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.fillMaxSize(),
-                )
-                if (onPlay != null) {
-                    AlbumPlayButton(
-                        visible = !isActive,
-                        onClick = onPlay,
-                    )
-                }
-            }
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(
-                    text = album.album.title,
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                )
+    Column(modifier.width(156.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Box(Modifier.size(156.dp)) {
+            com.arturo254.opentune.core.designsystem.component.Artwork(album.album.thumbnailUrl,
+                Modifier.fillMaxSize(), shape = com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.artworkShape)
+            if (onPlay != null) LiquidGlassIconButton(onClick = onPlay, size = 40.dp, selected = isActive,
+                modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp)) {
+                Icon(painterResource(if (isActive && isPlaying) R.drawable.pause else R.drawable.play),
+                    stringResource(if (isActive && isPlaying) R.string.player_a11y_pause else R.string.play),
+                    Modifier.size(20.dp))
             }
         }
+        Text(album.album.title, style = MaterialTheme.typography.titleSmall, maxLines = 1,
+            overflow = TextOverflow.Ellipsis, color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+        Text(album.artists.joinToString { it.name }, style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

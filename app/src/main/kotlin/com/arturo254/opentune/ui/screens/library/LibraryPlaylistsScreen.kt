@@ -1,12 +1,6 @@
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
-
 package com.arturo254.opentune.ui.screens.library
 
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -217,7 +211,6 @@ fun LibraryPlaylistsScreen(
     val canEnterReorderMode = sortType == PlaylistSortType.CUSTOM && selectedTagIds.isEmpty()
     var reorderEnabled by rememberSaveable { mutableStateOf(false) }
     val canReorderPlaylists = canEnterReorderMode && reorderEnabled
-    val playlistSectionLeadingItems = 3 + if (shortcuts.isNotEmpty()) 1 else 0
     val mutableVisiblePlaylists = remember { mutableStateListOf<Playlist>() }
     var dragInfo by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     val reorderableState = rememberReorderableLazyListState(
@@ -225,19 +218,11 @@ fun LibraryPlaylistsScreen(
         scrollThresholdPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
     ) { from, to ->
         if (!canReorderPlaylists) return@rememberReorderableLazyListState
-        if (from.index < playlistSectionLeadingItems || to.index < playlistSectionLeadingItems) {
-            return@rememberReorderableLazyListState
-        }
-
-        val fromIndex = from.index - playlistSectionLeadingItems
-        val toIndex = to.index - playlistSectionLeadingItems
-        if (fromIndex !in mutableVisiblePlaylists.indices || toIndex !in mutableVisiblePlaylists.indices) {
-            return@rememberReorderableLazyListState
-        }
-
+        val moved = moveLibraryEntry(mutableVisiblePlaylists, from.key, to.key) { it.id }
+            ?: return@rememberReorderableLazyListState
         val currentDragInfo = dragInfo
-        dragInfo = if (currentDragInfo == null) fromIndex to toIndex else currentDragInfo.first to toIndex
-        mutableVisiblePlaylists.move(fromIndex, toIndex)
+        dragInfo = if (currentDragInfo == null) moved else currentDragInfo.first to moved.second
+
     }
 
     LaunchedEffect(visiblePlaylists, canReorderPlaylists, reorderableState.isAnyItemDragging, dragInfo) {
@@ -308,6 +293,13 @@ fun LibraryPlaylistsScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp),
             contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
         ) {
+                    item(key = "galax_page_intro") {
+                        com.arturo254.opentune.core.designsystem.theme.GalaxScreenHeading(
+                            stringResource(R.string.playlists),
+                            "${visiblePlaylists.size} ${stringResource(R.string.playlists)}",
+                        )
+                    }
+
             item(key = "filter") {
                 filterContent()
             }
@@ -414,10 +406,8 @@ private fun PlaylistControlCard(
     onToggleReorder: () -> Unit,
     controls: @Composable RowScope.() -> Unit,
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-        shape = MaterialTheme.shapes.large,
-        modifier = Modifier.padding(horizontal = 16.dp),
+    com.arturo254.opentune.ui.component.MenuSurfaceSection(
+        modifier = Modifier.padding(horizontal = 24.dp),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -452,59 +442,17 @@ private fun PlaylistControlCard(
 private fun PlaylistShortcutGrid(
     entries: List<PlaylistShortcutEntry>,
     onClick: (String) -> Unit,
-    onLongClick: (String) -> Unit = {}, // Añadido para aprovechar combinedClickable si lo necesitas
+    onLongClick: (String) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = modifier,
-    ) {
-        if (entries.isNotEmpty()) {
-            val heroEntry = entries.first()
-
-            LibraryHeroFavoriteTile(
-                title = heroEntry.title,
-                iconRes = heroEntry.iconRes,
-                badgeText = "✦",
-                accentColor = heroEntry.accentColor,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .combinedClickable(
-                        onClick = { onClick(heroEntry.route) },
-                        onLongClick = { onLongClick(heroEntry.route) }
-                    )
-            )
-
-            val remainingEntries = entries.drop(1)
-            remainingEntries.chunked(2).forEach { rowEntries ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    rowEntries.forEachIndexed { index, entry ->
-                        val position = when {
-                            rowEntries.size == 1 -> GridPosition.SINGLE
-                            index == 0 -> GridPosition.LEFT
-                            else -> GridPosition.RIGHT
-                        }
-
-                        LibraryPinnedCollectionTile(
-                            title = entry.title,
-                            iconRes = entry.iconRes,
-                            gridPosition = position,
-                            accentColor = entry.accentColor,
-                            modifier = Modifier
-                                .weight(1f)
-                                .combinedClickable(
-                                    onClick = { onClick(entry.route) },
-                                    onLongClick = { onLongClick(entry.route) }
-                                ),
-                        )
-                    }
-                    if (rowEntries.size == 1) {
-                        Spacer(Modifier.weight(1f))
-                    }
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        entries.chunked(2).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                row.forEach { entry ->
+                    com.arturo254.opentune.ui.screens.GalaxCollectionTile(entry.title, entry.iconRes, entry.accentColor,
+                        Modifier.weight(1f), onClick = { onClick(entry.route) })
                 }
+                if (row.size == 1) Spacer(Modifier.weight(1f))
             }
         }
     }
@@ -516,28 +464,9 @@ private fun PlaylistSectionHeaderCard(
     supportingText: String,
     modifier: Modifier = Modifier,
 ) {
-    Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-        shape = MaterialTheme.shapes.large,
-        modifier = modifier,
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 14.dp),
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = supportingText,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
+    Row(modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+        Text(supportingText, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

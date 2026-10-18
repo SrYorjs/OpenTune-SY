@@ -101,3 +101,15 @@ fun GalaxMediaFacts(facts: List<String>, modifier: Modifier = Modifier) {
         }
     }
 }
+
+@Composable
+fun GalaxSectionHeading(title: String, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
+    Row(modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(title, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier.weight(1f))
+        if (onClick != null) androidx.compose.material3.TextButton(onClick = onClick) {
+            Text(androidx.compose.ui.res.stringResource(com.arturo254.opentune.R.string.see_all))
+        }
+    }
+}
