@@ -25,7 +25,12 @@ class OverlayComponentsTest {
         val components = source("core/designsystem/component/OverlayComponents.kt")
         assertTrue(menu.contains("OpenTuneSheet("))
         assertTrue(menu.contains("state.isVisible = false"))
-        assertTrue(nav.contains("OpenTuneContextMenu("))
+        // The navigation now has exactly three page targets. Its old overflow
+        // actions live on Home and keep their external playback/navigation owners.
+        val home = source("ui/screens/HomeScreen.kt")
+        assertTrue(nav.contains("onItemClick(screen, selected)"))
+        assertTrue(home.contains("MusicRecognitionRoute"))
+        assertTrue(home.contains("playerConnection.playQueue("))
         listOf("fun OpenTuneSheet(", "fun OpenTuneDialog(", "fun OpenTuneMenu(",
             "fun OpenTuneContextMenu(", "fun OpenTuneMenuItem(").forEach { assertTrue(components.contains(it)) }
         assertTrue(!components.contains("MusicService"))
