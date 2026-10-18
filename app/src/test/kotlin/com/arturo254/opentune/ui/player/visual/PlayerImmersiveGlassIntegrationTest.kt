@@ -34,11 +34,14 @@ class PlayerImmersiveGlassIntegrationTest {
     @Test fun allExpandedFamiliesCaptureBackgroundOnlyAndNeverSampleTheirOwnControls() {
         for (scene in listOf("ui/player/v7/V7PlayerScene.kt", "ui/player/v8/V8PlayerScene.kt")) {
             val src = source(scene)
-            assertTrue(src.contains("if (immersiveGlass)"))
+            assertTrue(src.contains("if (immersiveGlass"))
             assertTrue(src.contains("PlayerArtworkAtmosphere("))
             assertTrue(src.contains("Modifier.layerBackdrop(playerBackdrop)"))
             assertTrue(src.indexOf("PlayerArtworkAtmosphere(") < src.indexOf("controls()"))
         }
+        val v8 = source("ui/player/v8/V8PlayerScene.kt")
+        assertTrue(v8.contains("canvasArtwork?.preferredAnimationUrl.isNullOrBlank()"))
+        assertTrue(v8.contains("V8PlayerBackdrop("))
         val atmosphere = source("ui/player/visual/PlayerArtworkAtmosphere.kt")
         assertTrue(atmosphere.contains("targetState = artworkUrl"))
         assertTrue(atmosphere.contains("ContentScale.Crop"))
