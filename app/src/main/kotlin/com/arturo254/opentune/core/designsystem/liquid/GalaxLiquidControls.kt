@@ -31,7 +31,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -143,7 +143,9 @@ fun GalaxLiquidSlider(
                 detectTapGestures { onValueChange((it.x / size.width).coerceIn(0f, 1f)) }
             }
             .pointerInput(onValueChange) {
-                detectDragGestures { change, _ ->
+                // Horizontal drag adjusts the demo; a vertical drag continues
+                // scrolling the entire Glass Studio instead of locking it.
+                detectHorizontalDragGestures { change, _ ->
                     onValueChange((change.position.x / size.width).coerceIn(0f, 1f))
                     change.consume()
                 }
