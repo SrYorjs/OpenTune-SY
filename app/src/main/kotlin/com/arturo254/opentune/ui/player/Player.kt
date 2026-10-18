@@ -911,7 +911,9 @@ fun BottomSheetPlayer(
             cinematicLandscape = {
                     V7PlayerScene(
                         isLandscape = true,
-                        thumbnailUrl = mediaMetadata?.thumbnailUrl,
+                        thumbnailUrl = if (activePlayerGlass) playerVisuals.artworkUrl
+                            else mediaMetadata?.thumbnailUrl,
+                        isPlaying = isPlaying,
                         disableBlur = disableBlur,
                         queuePeekHeight = queueSheetState.collapsedBound,
                         playerBackdrop = if (activePlayerGlass) playerArtworkBackdrop else null,
@@ -1063,7 +1065,9 @@ fun BottomSheetPlayer(
             cinematicPortrait = {
                     V7PlayerScene(
                         isLandscape = false,
-                        thumbnailUrl = mediaMetadata?.thumbnailUrl,
+                        thumbnailUrl = if (activePlayerGlass) playerVisuals.artworkUrl
+                            else mediaMetadata?.thumbnailUrl,
+                        isPlaying = isPlaying,
                         disableBlur = disableBlur,
                         queuePeekHeight = queueSheetState.collapsedBound,
                         playerBackdrop = if (activePlayerGlass) playerArtworkBackdrop else null,
