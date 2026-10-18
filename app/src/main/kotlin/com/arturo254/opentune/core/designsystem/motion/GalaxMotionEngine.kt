@@ -26,7 +26,7 @@ import com.arturo254.opentune.core.designsystem.theme.DefaultOpenTuneMotionToken
 @Immutable
 data class GalaxMotionPolicy(
     val reducedMotion: Boolean = false,
-    val navigationFadeMs: Int = 140,
+    val navigationFadeMs: Int = 170,
     val surfaceFadeMs: Int = 200,
     val gentleSlideDivisor: Int = 7,
     val outgoingSlideDivisor: Int = 9,
@@ -57,7 +57,7 @@ fun galaxEnterTransition(
     if (policy.reducedMotion) return EnterTransition.None
     if (topLevel) {
         return slideInHorizontally(
-            animationSpec = spring(dampingRatio = 0.90f, stiffness = 560f),
+            animationSpec = spring(dampingRatio = 0.86f, stiffness = 430f),
             initialOffsetX = { width -> direction.coerceIn(-1, 1) * width / policy.gentleSlideDivisor },
         ) + fadeIn(animationSpec = tween(policy.navigationFadeMs))
     }
@@ -76,9 +76,9 @@ fun galaxExitTransition(
     if (policy.reducedMotion) return ExitTransition.None
     if (topLevel) {
         return slideOutHorizontally(
-            animationSpec = tween(150),
+            animationSpec = spring(dampingRatio = 0.92f, stiffness = 495f),
             targetOffsetX = { width -> -direction.coerceIn(-1, 1) * width / policy.outgoingSlideDivisor },
-        ) + fadeOut(animationSpec = tween(120))
+        ) + fadeOut(animationSpec = tween(policy.navigationFadeMs))
     }
     return fadeOut(animationSpec = tween(policy.surfaceFadeMs)) + scaleOut(
         targetScale = if (popping) 0.95f else 0.98f,
