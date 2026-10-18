@@ -1,5 +1,6 @@
 package com.arturo254.opentune.ui.screens
 
+import androidx.compose.foundation.lazy.items
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
@@ -378,45 +379,13 @@ private fun NewReleaseHero(
     epCount: Int,
     modifier: Modifier = Modifier,
 ) {
-    ElevatedCard(
-        modifier = modifier,
-        shape = RoundedCornerShape(28.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 3.dp),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            HeroStat(
-                count = albumCount,
-                label = stringResource(R.string.albums),
-                iconRes = R.drawable.album,
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-            VerticalDividerLine()
-            HeroStat(
-                count = singleCount,
-                label = stringResource(R.string.singles),
-                iconRes = R.drawable.music_note,
-                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-            )
-            VerticalDividerLine()
-            HeroStat(
-                count = epCount,
-                label = "EPs",
-                iconRes = R.drawable.queue_music,
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-            )
-        }
+    Column(modifier.padding(horizontal = 24.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(stringResource(R.string.new_release_albums), style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold)
+        GalaxMediaFacts(listOf(
+            "$albumCount ${stringResource(R.string.albums)}",
+            "$singleCount ${stringResource(R.string.singles)}", "$epCount EPs",
+        ))
     }
 }
 
@@ -552,70 +521,19 @@ private fun FeaturedCarousel(
     menuState: com.arturo254.opentune.ui.component.MenuState,
     modifier: Modifier = Modifier,
 ) {
-    val distinctItems = albums.take(5).distinctBy { it.id }
-    val carouselState = rememberCarouselState { distinctItems.size }
-
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(28.dp)
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = painterResource(R.drawable.star),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
+    val distinctItems = remember(albums) { albums.distinctBy { it.id }.take(5) }
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        GalaxSectionHeading(stringResource(R.string.galax_featured))
+        androidx.compose.foundation.lazy.LazyRow(contentPadding = PaddingValues(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            items(distinctItems, key = { it.id }) { album ->
+                FeaturedCarouselCard(album, mediaMetadata?.album?.id == album.id, isPlaying,
+                    onClick = { navController.navigate("album/${album.id}") },
+                    onLongClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        menuState.show { YouTubeAlbumMenu(albumItem = album, navController = navController, onDismiss = menuState::dismiss) }
+                    })
             }
-            Text(
-                text = "Lo más destacado",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-
-        HorizontalUncontainedCarousel(
-            state = carouselState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .wrapContentHeight()
-                .padding(vertical = 8.dp),
-            itemWidth = 280.dp,
-            itemSpacing = 12.dp,
-            contentPadding = PaddingValues(horizontal = 16.dp),
-        ) { i ->
-            val album = distinctItems[i]
-            val isActive = mediaMetadata?.album?.id == album.id
-
-            FeaturedCarouselCard(
-                album = album,
-                isActive = isActive,
-                isPlaying = isPlaying,
-                onClick = { navController.navigate("album/${album.id}") },
-                onLongClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    menuState.show {
-                        YouTubeAlbumMenu(
-                            albumItem = album,
-                            navController = navController,
-                            onDismiss = menuState::dismiss,
-                        )
-                    }
-                },
-            )
         }
     }
 }
@@ -629,153 +547,7 @@ private fun FeaturedCarouselCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    val elevation by animateFloatAsState(
-        targetValue = if (isActive) 12f else 4f,
-        animationSpec = spring(
-            Spring.DampingRatioMediumBouncy,
-            Spring.StiffnessMedium,
-        ),
-        label = "featured_elevation",
-    )
-
-    Card(
-        modifier = Modifier
-            .width(280.dp)
-            .height(160.dp)
-            .shadow(
-                elevation = elevation.dp,
-                shape = RoundedCornerShape(
-                    topStart = 20.dp,
-                    topEnd = 20.dp,
-                    bottomStart = 16.dp,
-                    bottomEnd = 16.dp
-                ),
-                clip = false
-            )
-            .clip(
-                RoundedCornerShape(
-                    topStart = 20.dp,
-                    topEnd = 20.dp,
-                    bottomStart = 16.dp,
-                    bottomEnd = 16.dp
-                )
-            )
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick,
-            ),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isActive) 4.dp else 2.dp
-        )
-    ) {
-        Box(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            AsyncImage(
-                model = album.thumbnail,
-                contentDescription = album.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = 20.dp,
-                            topEnd = 20.dp,
-                            bottomStart = 16.dp,
-                            bottomEnd = 16.dp
-                        )
-                    )
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.6f)
-                            ),
-                            startY = 0.5f
-                        )
-                    )
-            )
-
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = album.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                album.artists?.firstOrNull()?.let { artist ->
-                    Text(
-                        text = artist.name,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.8f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                album.year?.let { year ->
-                    Text(
-                        text = year.toString(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.6f)
-                    )
-                }
-            }
-
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(12.dp)
-            ) {
-                Text(
-                    text = "★",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                )
-            }
-
-            androidx.compose.animation.AnimatedVisibility(
-                visible = isActive && isPlaying,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(12.dp),
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(32.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            painter = painterResource(R.drawable.play),
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
-                }
-            }
-        }
-    }
+    GalaxReleaseCard(album, isActive, isPlaying, onClick, onLongClick, Modifier.width(208.dp))
 }
 
 @OptIn(
@@ -793,70 +565,17 @@ private fun ExpressiveCarousel(
     haptic: androidx.compose.ui.hapticfeedback.HapticFeedback,
     menuState: com.arturo254.opentune.ui.component.MenuState,
 ) {
-    val distinctItems = items.distinctBy { it.id }
-    val carouselState = rememberCarouselState { distinctItems.size }
-
-    val cardShape = when (releaseType) {
-        AlbumReleaseType.ALBUM -> RoundedCornerShape(
-            topStart = 20.dp,
-            topEnd = 20.dp,
-            bottomStart = 16.dp,
-            bottomEnd = 16.dp
-        )
-
-        AlbumReleaseType.SINGLE -> RoundedCornerShape(
-            topStart = 12.dp,
-            topEnd = 24.dp,
-            bottomStart = 24.dp,
-            bottomEnd = 12.dp
-        )
-
-        AlbumReleaseType.EP -> RoundedCornerShape(
-            topStart = 16.dp,
-            topEnd = 16.dp,
-            bottomStart = 20.dp,
-            bottomEnd = 20.dp
-        )
-    }
-
-    val accentColor = when (releaseType) {
-        AlbumReleaseType.ALBUM -> MaterialTheme.colorScheme.primary
-        AlbumReleaseType.SINGLE -> MaterialTheme.colorScheme.tertiary
-        AlbumReleaseType.EP -> MaterialTheme.colorScheme.secondary
-    }
-
-    HorizontalMultiBrowseCarousel(
-        state = carouselState,
-        modifier = Modifier
-            .fillMaxWidth()
-            .wrapContentHeight()
-            .padding(vertical = 8.dp),
-        preferredItemWidth = 148.dp,
-        itemSpacing = 10.dp,
-        contentPadding = PaddingValues(horizontal = 16.dp),
-    ) { i ->
-        val album = distinctItems[i]
-        val isActive = mediaMetadata?.album?.id == album.id
-
-        ExpressiveCarouselCard(
-            album = album,
-            releaseType = releaseType,
-            isActive = isActive,
-            isPlaying = isPlaying,
-            shape = cardShape,
-            accentColor = accentColor,
-            onClick = { navController.navigate("album/${album.id}") },
-            onLongClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                menuState.show {
-                    YouTubeAlbumMenu(
-                        albumItem = album,
-                        navController = navController,
-                        onDismiss = menuState::dismiss,
-                    )
-                }
-            },
-        )
+    val distinctItems = remember(items) { items.distinctBy { it.id } }
+    androidx.compose.foundation.lazy.LazyRow(contentPadding = PaddingValues(horizontal = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        items(distinctItems, key = { it.id }) { album ->
+            GalaxReleaseCard(album, mediaMetadata?.album?.id == album.id, isPlaying,
+                onClick = { navController.navigate("album/${album.id}") },
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    menuState.show { YouTubeAlbumMenu(albumItem = album, navController = navController, onDismiss = menuState::dismiss) }
+                }, modifier = Modifier.width(164.dp))
+        }
     }
 }
 
@@ -872,138 +591,7 @@ private fun ExpressiveCarouselCard(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    val elevation by animateFloatAsState(
-        targetValue = if (isActive) 10f else 3f,
-        animationSpec = spring(
-            Spring.DampingRatioMediumBouncy,
-            Spring.StiffnessMedium,
-        ),
-        label = "expressive_elevation",
-    )
-
-    Column(
-        modifier = Modifier
-            .width(148.dp)
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick,
-            ),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(148.dp)
-                .shadow(
-                    elevation = elevation.dp,
-                    shape = shape,
-                    clip = false
-                )
-                .clip(shape)
-                .let { modifier ->
-                    if (isActive) {
-                        modifier.border(
-                            width = 3.dp,
-                            color = accentColor,
-                            shape = shape
-                        )
-                    } else {
-                        modifier
-                    }
-                }
-        ) {
-            AsyncImage(
-                model = album.thumbnail,
-                contentDescription = album.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(shape)
-            )
-
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = accentColor.copy(alpha = 0.9f),
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-            ) {
-                Text(
-                    text = when (releaseType) {
-                        AlbumReleaseType.ALBUM -> "LP"
-                        AlbumReleaseType.SINGLE -> "S"
-                        AlbumReleaseType.EP -> "EP"
-                    },
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                )
-            }
-
-            androidx.compose.animation.AnimatedVisibility(
-                visible = isActive && isPlaying,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(6.dp),
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = accentColor,
-                    modifier = Modifier.size(24.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            painter = painterResource(R.drawable.play),
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(12.dp),
-                        )
-                    }
-                }
-            }
-        }
-
-        Text(
-            text = album.title,
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
-            color = if (isActive) accentColor else MaterialTheme.colorScheme.onSurface,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-        )
-
-        album.artists?.firstOrNull()?.let { artist ->
-            Text(
-                text = artist.name,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
-            )
-        }
-
-        album.year?.let { year ->
-            Text(
-                text = year.toString(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.outline,
-                maxLines = 1,
-                textAlign = TextAlign.Center,
-            )
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-    }
+    GalaxReleaseCard(album, isActive, isPlaying, onClick, onLongClick, Modifier.width(164.dp))
 }
 
 @Composable
@@ -1151,5 +739,27 @@ private fun EmptyState(
             Spacer(modifier = Modifier.width(8.dp))
             Text(stringResource(R.string.refresh))
         }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun GalaxReleaseCard(album: AlbumItem, isActive: Boolean, isPlaying: Boolean,
+    onClick: () -> Unit, onLongClick: () -> Unit, modifier: Modifier = Modifier) {
+    Column(modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick),
+        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
+            com.arturo254.opentune.core.designsystem.component.Artwork(album.thumbnail, Modifier.fillMaxSize(),
+                shape = com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.artworkShape)
+            if (isActive) Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surface.copy(alpha = .7f),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(10.dp)) {
+                Icon(painterResource(if (isPlaying) R.drawable.pause else R.drawable.play), null,
+                    Modifier.padding(8.dp).size(18.dp))
+            }
+        }
+        Text(album.title, style = MaterialTheme.typography.titleSmall, maxLines = 2,
+            overflow = TextOverflow.Ellipsis, color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+        Text(album.artists.orEmpty().joinToString { it.name }, style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }

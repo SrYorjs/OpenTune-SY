@@ -1,13 +1,12 @@
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class)
 
-/*
- * OpenTune Project Original (2026)
- * Arturo254 (github.com/Arturo254)
- * Licensed Under GPL-3.0 | see git history for contributors
- */
-
 package com.arturo254.opentune.ui.screens
 
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.State
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.res.Configuration
@@ -31,6 +30,13 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidChrome
+import com.arturo254.opentune.core.designsystem.motion.galaxMotion
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -141,10 +147,6 @@ import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  Utilidad: extrae el color dominante de la portada vía Palette API
-// ═══════════════════════════════════════════════════════════════════════════
-
 @Composable
 private fun rememberDominantColor(thumbnailUrl: String?): Color {
     val context = LocalContext.current
@@ -158,8 +160,8 @@ private fun rememberDominantColor(thumbnailUrl: String?): Color {
         runCatching {
             val req = ImageRequest.Builder(context)
                 .data(thumbnailUrl)
-                .allowHardware(false)   // Palette necesita bitmap de software
-                .size(128, 128)         // Tamaño pequeño es suficiente y más rápido
+                .allowHardware(false)
+                .size(128, 128)
                 .build()
             val result = context.imageLoader.execute(req)
             if (result is SuccessResult) {
@@ -178,10 +180,6 @@ private fun rememberDominantColor(thumbnailUrl: String?): Color {
     }
     return dominantColor
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  Estado compartido entre transiciones — clave de sincronización
-// ═══════════════════════════════════════════════════════════════════════════
 
 private data class AodMediaState(
     val id: String?,
@@ -205,6 +203,7 @@ fun AlwaysOnDisplayScreen(navController: NavController) {
     val dialogWindow = (view.parent as? DialogWindowProvider)?.window
     val window = dialogWindow ?: activityWindow
 
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
     val (fullscreenMode) = rememberPreference(AodFullscreenKey, true)
 
     DisposableEffect(Unit, fullscreenMode) {
@@ -228,7 +227,6 @@ fun AlwaysOnDisplayScreen(navController: NavController) {
         }
     }
 
-    // ── Preferencias ────────────────────────────────────────────────────
     val (rawStyle) = rememberPreference(AodStyleKey, AodStyle.CLASSIC.name)
     val (rawShape) = rememberPreference(AodArtShapeKey, AodArtShape.ROUNDED.name)
     val (darkness) = rememberPreference(AodDarknessKey, 0.55f)
@@ -254,7 +252,6 @@ fun AlwaysOnDisplayScreen(navController: NavController) {
         runCatching { AodControlStyle.valueOf(rawControlStyle) }.getOrDefault(AodControlStyle.ROUNDED)
     }
 
-    // ── Player state ─────────────────────────────────────────────────────
     val mediaMetadata by playerConnection.mediaMetadata.collectAsState()
     val isPlaying by playerConnection.isPlaying.collectAsState()
     val playbackState by playerConnection.playbackState.collectAsState()
@@ -265,17 +262,16 @@ fun AlwaysOnDisplayScreen(navController: NavController) {
     var duration by rememberSaveable(mediaMetadata?.id) { mutableLongStateOf(playerConnection.player.duration) }
     var sliderPosition by remember(mediaMetadata?.id) { mutableStateOf<Long?>(null) }
 
-    LaunchedEffect(mediaMetadata?.id, playbackState) {
-        if (playbackState == STATE_READY) {
-            while (isActive) {
-                delay(200L)
+    LaunchedEffect(mediaMetadata?.id, playbackState, isPlaying, lifecycle) {
+        lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+            if (playbackState == STATE_READY) do {
                 position = playerConnection.player.currentPosition
                 duration = playerConnection.player.duration
                 sliderPosition?.let {
-                    if (abs(playerConnection.player.currentPosition - it) <= 1_500L) sliderPosition =
-                        null
+                    if (abs(position - it) <= 1_500L) sliderPosition = null
                 }
-            }
+                delay(200L)
+            } while (isActive && isPlaying)
         }
     }
 
@@ -288,8 +284,7 @@ fun AlwaysOnDisplayScreen(navController: NavController) {
         mediaMetadata?.artists?.joinToString(", ") { it.name }.orEmpty()
     }
 
-    // ── Estado sincronizado para transiciones ────────────────────────────
-    val mediaState = remember(mediaMetadata?.id) {
+    val mediaState = remember(mediaMetadata?.id, mediaMetadata?.thumbnailUrl, mediaMetadata?.title, artistText) {
         AodMediaState(
             id = mediaMetadata?.id,
             thumbnailUrl = mediaMetadata?.thumbnailUrl,
@@ -298,7 +293,6 @@ fun AlwaysOnDisplayScreen(navController: NavController) {
         )
     }
 
-    // ── Color dominante (se comparte entre layouts) ───────────────────────
     val dominantColor = rememberDominantColor(mediaState.thumbnailUrl)
 
     val configuration = LocalConfiguration.current
@@ -324,19 +318,20 @@ fun AlwaysOnDisplayScreen(navController: NavController) {
         .statusBarsPadding()
         .navigationBarsPadding()
 
-    // ── Reloj del sistema (opcional) ─────────────────────────────────────
     var clockText by remember { mutableStateOf("") }
     val clockPattern = if (clockFormat24h) "HH:mm" else "hh:mm a"
-    LaunchedEffect(showClock) {
-        if (showClock) {
-            while (isActive) {
-                clockText = SimpleDateFormat(clockPattern, Locale.getDefault()).format(Date())
-                delay(10_000L)
+    LaunchedEffect(showClock, clockPattern, lifecycle) {
+        lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+            if (showClock) {
+                val formatter = SimpleDateFormat(clockPattern, Locale.getDefault())
+                while (isActive) {
+                    clockText = formatter.format(Date())
+                    delay((60_000L - System.currentTimeMillis() % 60_000L).coerceAtLeast(1L))
+                }
             }
         }
     }
 
-    // ── Parámetros unificados pasados a todos los layouts ─────────────────
     val commonParams = AodCommonParams(
         mediaState = mediaState,
         dominantColor = dominantColor,
@@ -400,10 +395,6 @@ fun AlwaysOnDisplayScreen(navController: NavController) {
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  Datos compartidos — evita param explosion
-// ═══════════════════════════════════════════════════════════════════════════
-
 private data class AodCommonParams(
     val mediaState: AodMediaState,
     val dominantColor: Color,
@@ -434,84 +425,14 @@ private data class AodCommonParams(
     val contentModifier: Modifier,
 )
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  CLASSIC
-// ═══════════════════════════════════════════════════════════════════════════
-
 @Composable
 private fun ClassicAodLayout(
     params: AodCommonParams,
     artSizeDp: Dp,
     artShape: AodArtShape,
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (!params.fullscreen) {
-            CollapseButton(
-                onClick = params.onCollapse,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .statusBarsPadding()
-                    .padding(14.dp)
-            )
-        }
-
-        if (params.isLandscape) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 48.dp)
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(artSizeDp * 1.28f)
-                ) {
-                    AmbientHalo(color = params.dominantColor)
-                    SyncedArtImage(
-                        mediaState = params.mediaState,
-                        sizeDp = artSizeDp,
-                        shape = artShape,
-                        duration = params.transitionDuration
-                    )
-                }
-                Spacer(Modifier.width(32.dp))
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    AodMetaAndControls(params = params, isLandscape = true)
-                }
-            }
-        } else {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = params.contentModifier.padding(horizontal = 36.dp)
-            ) {
-                Spacer(Modifier.weight(1f))
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(artSizeDp * 1.28f)
-                ) {
-                    AmbientHalo(color = params.dominantColor)
-                    SyncedArtImage(
-                        mediaState = params.mediaState,
-                        sizeDp = artSizeDp,
-                        shape = artShape,
-                        duration = params.transitionDuration
-                    )
-                }
-                Spacer(Modifier.height(28.dp))
-                AodMetaAndControls(params = params)
-                Spacer(Modifier.weight(1f))
-            }
-        }
-    }
+    GalaxAodLayout(params, artSizeDp, artShape)
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  BACKGROUND / AMBIENT
-// ═══════════════════════════════════════════════════════════════════════════
 
 @Composable
 private fun BackgroundAodLayout(
@@ -520,342 +441,22 @@ private fun BackgroundAodLayout(
     artShape: AodArtShape,
     darkness: Float,
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Fondo borroso sincronizado
-        AnimatedContent(
-            targetState = params.mediaState.thumbnailUrl,
-            transitionSpec = { fadeIn(tween(params.transitionDuration)) togetherWith fadeOut(tween((params.transitionDuration * 0.85f).toInt())) },
-            label = "aod_bg"
-        ) { url ->
-            if (url != null) {
-                AsyncImage(
-                    model = url, contentDescription = null, contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .cloudy(radius = 100)
-                        .graphicsLayer { scaleX = 1.10f; scaleY = 1.10f }
-                )
-            } else {
-                Box(modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black))
-            }
-        }
-        // Oscurecimiento
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Color.Black.copy(
-                        alpha = (0.28f + darkness * 0.62f).coerceIn(
-                            0.22f,
-                            0.92f
-                        )
-                    )
-                )
-        )
-        // Viñetas
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.28f)
-                .align(Alignment.TopCenter)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            Color.Black.copy(0.82f),
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.38f)
-                .align(Alignment.BottomCenter)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            Color.Transparent,
-                            Color.Black.copy(0.72f)
-                        )
-                    )
-                )
-        )
-
-        if (!params.fullscreen) {
-            CollapseButton(
-                onClick = params.onCollapse,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .statusBarsPadding()
-                    .padding(14.dp)
-            )
-        }
-
-        if (params.isLandscape) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 48.dp)
-            ) {
-                SyncedArtImage(
-                    mediaState = params.mediaState,
-                    sizeDp = (artSizeDp * 0.72f).coerceAtLeast(100.dp),
-                    shape = artShape,
-                    duration = params.transitionDuration
-                )
-                Spacer(Modifier.width(32.dp))
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    AodMetaAndControls(params = params, isLandscape = true)
-                }
-            }
-        } else {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = params.contentModifier.padding(horizontal = 36.dp)
-            ) {
-                Spacer(Modifier.weight(1f))
-                SyncedArtImage(
-                    mediaState = params.mediaState,
-                    sizeDp = (artSizeDp * 0.72f).coerceAtLeast(100.dp),
-                    shape = artShape,
-                    duration = params.transitionDuration
-                )
-                Spacer(Modifier.height(24.dp))
-                AodMetaAndControls(params = params)
-                Spacer(Modifier.weight(1f))
-            }
-        }
-    }
+    GalaxAodLayout(params, artSizeDp, artShape, backgroundArt = true, darkness = darkness)
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  MINIMAL
-// ═══════════════════════════════════════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MinimalAodLayout(params: AodCommonParams) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (!params.fullscreen) {
-            CollapseButton(
-                onClick = params.onCollapse,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .statusBarsPadding()
-                    .padding(14.dp)
-            )
-        }
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = params.contentModifier.padding(horizontal = if (params.isLandscape) 80.dp else 48.dp)
-        ) {
-            if (params.showClock && params.clockText.isNotEmpty()) {
-                SyncedText(key = params.clockText, duration = 400) {
-                    Text(
-                        text = params.clockText,
-                        color = Color.White.copy(alpha = 0.80f),
-                        style = MaterialTheme.typography.displaySmall,
-                        fontWeight = FontWeight.Light,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                Spacer(Modifier.height(16.dp))
-            }
-
-            AnimatedVisibility(visible = params.showArtist, enter = fadeIn(), exit = fadeOut()) {
-                SyncedText(key = params.mediaState.artist, duration = params.transitionDuration) {
-                    Text(
-                        text = params.mediaState.artist.uppercase(),
-                        color = Color.White.copy(alpha = 0.40f),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontSize = ((if (params.isLandscape) 12f else 10f) * params.textScale).sp,
-                        letterSpacing = 2.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .basicMarquee()
-                    )
-                }
-            }
-            if (params.showArtist && params.showTitle) Spacer(Modifier.height(10.dp))
-            if (params.showTitle && params.showArtist) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.20f)
-                        .height(0.8.dp)
-                        .background(Color.White.copy(alpha = 0.18f))
-                )
-                Spacer(Modifier.height(10.dp))
-            }
-            AnimatedVisibility(visible = params.showTitle, enter = fadeIn(), exit = fadeOut()) {
-                SyncedText(key = params.mediaState.title, duration = params.transitionDuration) {
-                    Text(
-                        text = params.mediaState.title,
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = if (params.isLandscape) 1 else 2,
-                        overflow = TextOverflow.Ellipsis,
-                        textAlign = TextAlign.Center,
-                        fontSize = ((if (params.isLandscape) 28f else 24f) * params.textScale).sp,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-            if ((params.showTitle || params.showArtist) && (params.showProgress || params.showControls || params.showTime))
-                Spacer(Modifier.height(if (params.isLandscape) 24.dp else 36.dp))
-
-            AnimatedVisibility(visible = params.showProgress, enter = fadeIn(), exit = fadeOut()) {
-                SquigglySlider(
-                    value = params.progressFraction,
-                    onValueChange = params.onSeekChange,
-                    onValueChangeFinished = params.onSeekFinished,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = SliderDefaults.colors(
-                        thumbColor = Color.White,
-                        activeTrackColor = Color.White,
-                        inactiveTrackColor = Color.White.copy(alpha = 0.18f),
-                        activeTickColor = Color.Transparent,
-                        inactiveTickColor = Color.Transparent,
-                    )
-                )
-            }
-            AnimatedVisibility(visible = params.showTime, enter = fadeIn(), exit = fadeOut()) {
-                TimeRow(
-                    displayPosition = params.displayPosition, duration = params.duration,
-                    textScale = params.textScale, isLandscape = params.isLandscape
-                )
-            }
-            if ((params.showProgress || params.showTime) && params.showControls)
-                Spacer(Modifier.height(if (params.isLandscape) 24.dp else 32.dp))
-            AnimatedVisibility(visible = params.showControls, enter = fadeIn(), exit = fadeOut()) {
-                AodControlButtons(
-                    isPlaying = params.isPlaying,
-                    canSkipPrev = params.canSkipPrev,
-                    canSkipNext = params.canSkipNext,
-                    onSkipPrev = params.onSkipPrev,
-                    onPlayPause = params.onPlayPause,
-                    onSkipNext = params.onSkipNext,
-                    controlStyle = params.controlStyle,
-                    accentColor = params.dominantColor,
-                    isLandscape = params.isLandscape,
-                    minimal = true,
-                )
-            }
-        }
-    }
+    GalaxAodLayout(params, 0.dp, AodArtShape.ROUNDED, minimal = true)
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  LARGE
-// ═══════════════════════════════════════════════════════════════════════════
 
 @Composable
 private fun LargeAodLayout(
     params: AodCommonParams,
     artShape: AodArtShape,
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        // Arte a pantalla completa con fade-out inferior
-        AnimatedContent(
-            targetState = params.mediaState.thumbnailUrl,
-            transitionSpec = {
-                fadeIn(tween(params.transitionDuration)) togetherWith fadeOut(
-                    tween(
-                        params.transitionDuration
-                    )
-                )
-            },
-            label = "large_art"
-        ) { url ->
-            Box(modifier = Modifier.fillMaxSize()) {
-                val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-                val screenHeight = LocalConfiguration.current.screenHeightDp.dp
-                AsyncImage(
-                    model = url, contentDescription = null, contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(if (params.isLandscape) screenHeight else screenWidth)
-                        .clip(artShape.toShape())
-                        .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-                        .drawWithCache {
-                            val gradient = Brush.verticalGradient(
-                                colorStops = arrayOf(
-                                    0f to Color.Black,
-                                    0.18f to Color.Black,
-                                    1f to Color.Transparent
-                                )
-                            )
-                            onDrawWithContent {
-                                drawContent()
-                                drawRect(brush = gradient, blendMode = BlendMode.DstIn)
-                            }
-                        }
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.42f)
-                        .align(Alignment.BottomCenter)
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color.Transparent,
-                                    Color.Black.copy(0.7f),
-                                    Color.Black.copy(0.92f)
-                                )
-                            )
-                        )
-                )
-            }
-        }
-
-        if (!params.fullscreen) {
-            CollapseButton(
-                onClick = params.onCollapse,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .statusBarsPadding()
-                    .padding(14.dp)
-            )
-        }
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .then(if (!params.fullscreen) Modifier.navigationBarsPadding() else Modifier)
-                .padding(horizontal = if (params.isLandscape) 48.dp else 36.dp)
-                .padding(bottom = if (params.isLandscape) 32.dp else 28.dp)
-        ) {
-            if (params.showClock && params.clockText.isNotEmpty()) {
-                Text(
-                    text = params.clockText, color = Color.White.copy(0.70f),
-                    style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Light,
-                    textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(8.dp))
-            }
-            AodMetaAndControls(params = params, isLandscape = params.isLandscape)
-        }
-    }
+    GalaxAodLayout(params, 340.dp, artShape, large = true)
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  SPOTLIGHT ★ — halo real con color extraído de la portada
-// ═══════════════════════════════════════════════════════════════════════════
 
 @Composable
 private fun SpotlightAodLayout(
@@ -866,196 +467,10 @@ private fun SpotlightAodLayout(
     spotlightIntensity: Float,
     spotlightPulse: Boolean,
 ) {
-    // Color del halo con animación suave al cambiar de canción
-    val animatedHaloColor by animateColorAsState(
-        targetValue = params.dominantColor,
-        animationSpec = tween(params.transitionDuration + 200),
-        label = "spotlight_color"
-    )
-
-    // Pulso animado (breathing effect)
-    val infiniteTransition = rememberInfiniteTransition(label = "spotlight_pulse")
-    val pulseScale by if (spotlightPulse) {
-        infiniteTransition.animateFloat(
-            initialValue = 0.92f,
-            targetValue = 1.08f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(2800, easing = FastOutSlowInEasing),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "pulse_scale"
-        )
-    } else {
-        remember { mutableStateOf(1.0f) }
-    }
-
-    val pulseAlpha by if (spotlightPulse) {
-        infiniteTransition.animateFloat(
-            initialValue = 0.85f,
-            targetValue = 1.0f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(2800, easing = FastOutSlowInEasing),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "pulse_alpha"
-        )
-    } else {
-        remember { mutableStateOf(1.0f) }
-    }
-
-    Box(modifier = Modifier.fillMaxSize()) {
-
-        // ── Capas de brillo del spotlight ───────────────────────────────
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val artApproxRadius = artSizeDp.toPx() / 2f
-            val cx = size.width / 2f
-            val cy = if (params.isLandscape) size.height / 2f else size.height * 0.38f
-            val center = Offset(cx, cy)
-
-            // Máxima intensidad configurada por el usuario
-            val maxAlpha = spotlightIntensity.coerceIn(0.10f, 1.0f)
-
-            // ① Glow exterior difuso — radio muy amplio, muy translúcido
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        animatedHaloColor.copy(alpha = maxAlpha * 0.22f * pulseAlpha),
-                        animatedHaloColor.copy(alpha = maxAlpha * 0.08f * pulseAlpha),
-                        Color.Transparent
-                    ),
-                    center = center,
-                    radius = artApproxRadius * 3.6f * pulseScale
-                ),
-                center = center,
-                radius = artApproxRadius * 3.6f * pulseScale
-            )
-
-            // ② Halo medio — define el "cono" de luz
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        animatedHaloColor.copy(alpha = maxAlpha * 0.55f * pulseAlpha),
-                        animatedHaloColor.copy(alpha = maxAlpha * 0.18f * pulseAlpha),
-                        Color.Transparent
-                    ),
-                    center = center,
-                    radius = artApproxRadius * 1.9f * pulseScale
-                ),
-                center = center,
-                radius = artApproxRadius * 1.9f * pulseScale
-            )
-
-            // ③ Corona interior brillante — justo alrededor de la portada
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = maxAlpha * 0.45f * pulseAlpha),
-                        animatedHaloColor.copy(alpha = maxAlpha * 0.75f * pulseAlpha),
-                        animatedHaloColor.copy(alpha = maxAlpha * 0.20f * pulseAlpha),
-                        Color.Transparent
-                    ),
-                    center = center,
-                    radius = artApproxRadius * 1.28f * pulseScale
-                ),
-                center = center,
-                radius = artApproxRadius * 1.28f * pulseScale
-            )
-
-            // ④ Anillo de borde — contorno sutil con color dominante
-            drawCircle(
-                color = animatedHaloColor.copy(alpha = maxAlpha * 0.38f * pulseAlpha),
-                center = center,
-                radius = artApproxRadius * 1.14f,
-                style = androidx.compose.ui.graphics.drawscope.Stroke(
-                    width = 1.5.dp.toPx()
-                )
-            )
-
-            // ⑤ Anillo exterior decorativo
-            drawCircle(
-                color = animatedHaloColor.copy(alpha = maxAlpha * 0.12f * pulseAlpha),
-                center = center,
-                radius = artApproxRadius * 1.60f,
-                style = androidx.compose.ui.graphics.drawscope.Stroke(
-                    width = 0.8.dp.toPx()
-                )
-            )
-
-            // ⑥ Oscurecimiento del fondo lejos del centro
-            drawCircle(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        Color.Transparent,
-                        Color.Black.copy(alpha = darkness * 0.5f)
-                    ),
-                    center = center,
-                    radius = size.maxDimension * 0.75f
-                ),
-                center = center,
-                radius = size.maxDimension * 0.75f
-            )
-        }
-
-        if (!params.fullscreen) {
-            CollapseButton(
-                onClick = params.onCollapse,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .statusBarsPadding()
-                    .padding(14.dp)
-            )
-        }
-
-        if (params.isLandscape) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 48.dp)
-            ) {
-                SyncedArtImage(
-                    mediaState = params.mediaState,
-                    sizeDp = artSizeDp,
-                    shape = artShape,
-                    duration = params.transitionDuration
-                )
-                Spacer(Modifier.width(32.dp))
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    AodMetaAndControls(params = params, isLandscape = true)
-                }
-            }
-        } else {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = params.contentModifier.padding(horizontal = 36.dp)
-            ) {
-                Spacer(Modifier.weight(1f))
-                SyncedArtImage(
-                    mediaState = params.mediaState,
-                    sizeDp = artSizeDp,
-                    shape = artShape,
-                    duration = params.transitionDuration
-                )
-                Spacer(Modifier.height(32.dp))
-                AodMetaAndControls(params = params)
-                Spacer(Modifier.weight(1f))
-            }
-        }
-    }
+    GalaxAodLayout(params, artSizeDp, artShape, spotlight = true, darkness = darkness,
+        intensity = spotlightIntensity, pulse = spotlightPulse)
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  Shared composables
-// ═══════════════════════════════════════════════════════════════════════════
-
-/**
- * Imagen de portada con transición sincronizada al [mediaState].
- * Todos los layouts usan este composable → fade del arte ocurre al mismo tiempo
- */
 @Composable
 private fun SyncedArtImage(
     mediaState: AodMediaState,
@@ -1065,7 +480,7 @@ private fun SyncedArtImage(
     modifier: Modifier = Modifier
 ) {
     AnimatedContent(
-        targetState = mediaState,       // ← sincronizado con title + artist
+        targetState = mediaState,
         transitionSpec = {
             fadeIn(tween(duration)) togetherWith fadeOut(tween((duration * 0.85f).toInt()))
         },
@@ -1082,47 +497,7 @@ private fun SyncedArtImage(
     }
 }
 
-/**
- * Halo ambiente con gradiente radial colorido, reemplaza el Canvas blanco del classic.
- */
-@Composable
-private fun AmbientHalo(color: Color, modifier: Modifier = Modifier) {
-    val animatedColor by animateColorAsState(
-        targetValue = color,
-        animationSpec = tween(800),
-        label = "ambient_halo_color"
-    )
-    Canvas(modifier = modifier.fillMaxSize()) {
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(
-                    animatedColor.copy(alpha = 0.22f),
-                    animatedColor.copy(alpha = 0.07f),
-                    Color.Transparent
-                )
-            )
-        )
-    }
-}
-
-/**
- * Wrapper que sincroniza el crossfade de texto con la misma key del mediaState.
- */
 @SuppressLint("UnusedContentLambdaTargetStateParameter")
-@Composable
-private fun SyncedText(
-    key: String,
-    duration: Int,
-    content: @Composable () -> Unit
-) {
-    AnimatedContent(
-        targetState = key,
-        transitionSpec = { fadeIn(tween(duration)) togetherWith fadeOut(tween((duration * 0.75f).toInt())) },
-        label = "synced_text_$key"
-    ) {
-        content()
-    }
-}
 
 @Composable
 private fun TimeRow(
@@ -1152,106 +527,6 @@ private fun TimeRow(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AodMetaAndControls(
-    params: AodCommonParams,
-    isLandscape: Boolean = false,
-) {
-    if (params.showClock && params.clockText.isNotEmpty() && params.mediaState.id != null) {
-        Text(
-            text = params.clockText,
-            color = Color.White.copy(0.60f),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Light,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(8.dp))
-    }
-
-    if (params.showTitle) {
-        SyncedText(key = params.mediaState.title, duration = params.transitionDuration) {
-            Text(
-                text = params.mediaState.title,
-                color = Color.White,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-                fontSize = ((if (isLandscape) 28f else 24f) * params.textScale).sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .basicMarquee()
-            )
-        }
-        Spacer(Modifier.height(if (isLandscape) 6.dp else 4.dp))
-    }
-
-    if (params.showArtist) {
-        SyncedText(key = params.mediaState.artist, duration = params.transitionDuration) {
-            Text(
-                text = params.mediaState.artist,
-                color = Color.White.copy(alpha = 0.55f),
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-                fontSize = ((if (isLandscape) 18f else 16f) * params.textScale).sp,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .basicMarquee()
-            )
-        }
-    }
-
-    if ((params.showTitle || params.showArtist) && (params.showProgress || params.showControls))
-        Spacer(Modifier.height(if (isLandscape) 20.dp else 30.dp))
-
-    if (params.showProgress) {
-        SquigglySlider(
-            value = params.progressFraction,
-            onValueChange = params.onSeekChange,
-            onValueChangeFinished = params.onSeekFinished,
-            modifier = Modifier.fillMaxWidth(),
-            colors = SliderDefaults.colors(
-                thumbColor = Color.White,
-                activeTrackColor = Color.White,
-                inactiveTrackColor = Color.White.copy(0.22f),
-                activeTickColor = Color.Transparent,
-                inactiveTickColor = Color.Transparent,
-            )
-        )
-    }
-
-    if (params.showTime) {
-        TimeRow(
-            displayPosition = params.displayPosition, duration = params.duration,
-            textScale = params.textScale, isLandscape = isLandscape
-        )
-    }
-
-    if ((params.showProgress || params.showTime) && params.showControls)
-        Spacer(Modifier.height(if (isLandscape) 24.dp else 34.dp))
-
-    if (params.showControls) {
-        AodControlButtons(
-            isPlaying = params.isPlaying,
-            canSkipPrev = params.canSkipPrev,
-            canSkipNext = params.canSkipNext,
-            onSkipPrev = params.onSkipPrev,
-            onPlayPause = params.onPlayPause,
-            onSkipNext = params.onSkipNext,
-            controlStyle = params.controlStyle,
-            accentColor = params.dominantColor,
-            isLandscape = isLandscape,
-        )
-    }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  BOTONES DE CONTROL — soportan AodControlStyle
-// ═══════════════════════════════════════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1267,74 +542,16 @@ private fun AodControlButtons(
     isLandscape: Boolean = false,
     minimal: Boolean = false,
 ) {
-    val buttonSize =
-        if (isLandscape) (if (minimal) 56.dp else 64.dp) else (if (minimal) 48.dp else 56.dp)
-    val playButtonSize =
-        if (isLandscape) (if (minimal) 72.dp else 84.dp) else (if (minimal) 62.dp else 74.dp)
-    val iconSize =
-        if (isLandscape) (if (minimal) 26.dp else 32.dp) else (if (minimal) 22.dp else 28.dp)
-    val playIconSize =
-        if (isLandscape) (if (minimal) 32.dp else 38.dp) else (if (minimal) 26.dp else 32.dp)
-
-    val playBg = when (controlStyle) {
-        AodControlStyle.ROUNDED, AodControlStyle.SQUARE -> Color.White
-        AodControlStyle.ACCENT -> accentColor.copy(alpha = 0.90f)
-        AodControlStyle.MINIMAL_FLAT -> Color.White.copy(0.08f)
-    }
-    val playTint = when (controlStyle) {
-        AodControlStyle.ACCENT -> Color.White
-        AodControlStyle.MINIMAL_FLAT -> Color.White.copy(0.90f)
-        else -> Color.Black
-    }
-
-    var expandedButton by remember { mutableStateOf<Int?>(null) }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        AodButton(
-            iconRes = R.drawable.skip_previous,
-            enabled = canSkipPrev,
-            baseSize = buttonSize,
-            iconSize = iconSize,
-            isExpanded = expandedButton == 0,
-            controlStyle = controlStyle,
-            accentColor = accentColor,
-            onClick = { expandedButton = 0; onSkipPrev() },
-            onAnimEnd = { expandedButton = null },
-            modifier = Modifier.weight(if (expandedButton == 0) 1.3f else 1f)
-        )
-        Spacer(Modifier.width(2.dp))
-        AodButton(
-            iconRes = if (isPlaying) R.drawable.pause else R.drawable.play,
-            enabled = true,
-            baseSize = playButtonSize,
-            iconSize = playIconSize,
-            isExpanded = expandedButton == 1,
-            controlStyle = controlStyle,
-            accentColor = accentColor,
-            isPlayButton = true,
-            playBg = playBg,
-            playTint = playTint,
-            onClick = { expandedButton = 1; onPlayPause() },
-            onAnimEnd = { expandedButton = null },
-            modifier = Modifier.weight(if (expandedButton == 1) 1.3f else 1f)
-        )
-        Spacer(Modifier.width(2.dp))
-        AodButton(
-            iconRes = R.drawable.skip_next,
-            enabled = canSkipNext,
-            baseSize = buttonSize,
-            iconSize = iconSize,
-            isExpanded = expandedButton == 2,
-            controlStyle = controlStyle,
-            accentColor = accentColor,
-            onClick = { expandedButton = 2; onSkipNext() },
-            onAnimEnd = { expandedButton = null },
-            modifier = Modifier.weight(if (expandedButton == 2) 1.3f else 1f)
-        )
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically) {
+        AodButton(R.drawable.skip_previous, canSkipPrev, 48.dp, 24.dp, false, controlStyle, accentColor,
+            onClick = onSkipPrev)
+        AodButton(if (isPlaying) R.drawable.pause else R.drawable.play, true, 64.dp, 30.dp, false,
+            controlStyle, accentColor, isPlayButton = true,
+            playBg = if (controlStyle == AodControlStyle.ACCENT) accentColor.copy(alpha = .25f) else Color.White.copy(alpha = .12f),
+            playTint = Color.White, onClick = onPlayPause)
+        AodButton(R.drawable.skip_next, canSkipNext, 48.dp, 24.dp, false, controlStyle, accentColor,
+            onClick = onSkipNext)
     }
 }
 
@@ -1355,55 +572,24 @@ private fun AodButton(
     onAnimEnd: () -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
-    val animatedSize by animateDpAsState(
-        targetValue = if (isExpanded) baseSize * 1.2f else baseSize,
-        animationSpec = tween(150, easing = LinearEasing),
-        finishedListener = { onAnimEnd() },
-        label = "btn_size"
-    )
-
-    val buttonShape = when (controlStyle) {
-        AodControlStyle.SQUARE -> androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-        else -> CircleShape
-    }
-
-    val bg = when {
-        isPlayButton -> playBg
-        controlStyle == AodControlStyle.ACCENT ->
-            accentColor.copy(alpha = if (enabled) 0.22f else 0.06f)
-
-        else -> Color.White.copy(if (enabled) 0.10f else 0.04f)
-    }
-    val tint = when {
-        isPlayButton -> playTint
-        controlStyle == AodControlStyle.ACCENT && enabled ->
-            accentColor.copy(alpha = 0.95f)
-
-        else -> Color.White.copy(if (enabled) 0.92f else 0.28f)
-    }
-
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .size(animatedSize)
-            .clip(buttonShape)
-            .background(bg)
-            .clickable(
-                enabled = enabled,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
-            )
-    ) {
-        Icon(
-            painter = painterResource(iconRes),
-            contentDescription = null,
-            tint = tint,
-            modifier = Modifier
-                .size(iconSize)
-                .animateContentSize()
-        )
+    val interaction = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val motion = com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem.galaxMotion
+    val scale = animateFloatAsState(if (pressed && enabled) motion.pressScale else 1f,
+        animationSpec = motion.pressSpec, label = "aodPress")
+    val shape = if (controlStyle == AodControlStyle.SQUARE) RoundedCornerShape(16.dp) else CircleShape
+    val background = if (isPlayButton) playBg else if (controlStyle == AodControlStyle.ACCENT)
+        accentColor.copy(alpha = .10f) else Color.White.copy(alpha = .04f)
+    Box(modifier.size(baseSize).graphicsLayer { scaleX = scale.value; scaleY = scale.value; alpha = if (enabled) 1f else .3f }
+        .clip(shape).background(background).galaxLiquidChrome(shape)
+        .clickable(enabled = enabled, interactionSource = interaction, indication = null, onClick = onClick),
+        contentAlignment = Alignment.Center) {
+        Icon(painterResource(iconRes), stringResource(when (iconRes) {
+            R.drawable.skip_previous -> R.string.player_a11y_previous
+            R.drawable.skip_next -> R.string.next_song
+            R.drawable.pause -> R.string.player_a11y_pause
+            else -> R.string.play
+        }), tint = if (isPlayButton) playTint else Color.White, modifier = Modifier.size(iconSize))
     }
 }
 
@@ -1425,5 +611,89 @@ private fun CollapseButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
             tint = Color.White.copy(0.70f),
             modifier = Modifier.size(26.dp)
         )
+    }
+}
+
+@Composable
+private fun GalaxAodLayout(params: AodCommonParams, artSize: Dp, artShape: AodArtShape,
+    minimal: Boolean = false, backgroundArt: Boolean = false, large: Boolean = false,
+    spotlight: Boolean = false, darkness: Float = .55f, intensity: Float = .75f, pulse: Boolean = false) {
+    val backdrop = rememberLayerBackdrop()
+    val motion = com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem.galaxMotion
+    val lifecycleState by androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
+    val phase: State<Float> = if (spotlight && pulse && params.isPlaying && !motion.reducedMotion &&
+        lifecycleState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED)) {
+        rememberInfiniteTransition(label = "aodAmbient").animateFloat(.82f, 1f,
+            infiniteRepeatable(tween(3200, easing = LinearEasing), RepeatMode.Reverse), label = "aodAmbientPhase")
+    } else remember { mutableStateOf(1f) }
+    Box(Modifier.fillMaxSize()) {
+        Box(Modifier.matchParentSize().layerBackdrop(backdrop)) {
+            GalaxAodBackdrop(params.mediaState.thumbnailUrl, params.dominantColor, backgroundArt,
+                minimal, darkness, if (spotlight) intensity else .35f, phase)
+        }
+        CompositionLocalProvider(com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidBackdrop provides backdrop) {
+            BoxWithConstraints(params.contentModifier.padding(24.dp)) {
+                val coverSize = (if (large) maxWidth * .82f else artSize)
+                    .coerceAtMost(if (params.isLandscape) maxWidth * .43f else maxHeight * .48f)
+                    .coerceAtLeast(80.dp)
+                if (params.isLandscape && !minimal) Row(Modifier.fillMaxSize(),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        SyncedArtImage(params.mediaState, coverSize, artShape,
+                            if (motion.reducedMotion) 0 else params.transitionDuration)
+                    }
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally) { GalaxAodMetadata(params) }
+                } else Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically)) {
+                    if (!minimal) SyncedArtImage(params.mediaState, coverSize, artShape,
+                        if (motion.reducedMotion) 0 else params.transitionDuration)
+                    GalaxAodMetadata(params)
+                }
+                if (!params.fullscreen) CollapseButton(params.onCollapse, Modifier.align(Alignment.TopEnd))
+            }
+        }
+    }
+}
+
+@Composable
+private fun GalaxAodBackdrop(url: String?, accent: Color, art: Boolean, minimal: Boolean,
+    darkness: Float, intensity: Float, phase: State<Float>) {
+    Box(Modifier.fillMaxSize().background(Color.Black)) {
+        if (art && !url.isNullOrBlank()) {
+            val context = LocalContext.current
+            val image = remember(url, context) { ImageRequest.Builder(context).data(url).size(384).build() }
+            AsyncImage(image, null, contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize().graphicsLayer { alpha = (1f - darkness.coerceIn(0f, 1f)) * .38f })
+        }
+        if (!minimal) Canvas(Modifier.fillMaxSize().graphicsLayer { scaleX = phase.value; scaleY = phase.value }) {
+            val center = Offset(size.width * .5f, size.height * .3f)
+            val radius = size.width * .9f
+            drawCircle(Brush.radialGradient(listOf(accent.copy(alpha = .18f * intensity.coerceIn(0f, 1f)), Color.Transparent),
+                center, radius), radius, center)
+        }
+    }
+}
+
+@Composable
+private fun GalaxAodMetadata(params: AodCommonParams) {
+    Column(Modifier.widthIn(max = 480.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        if (params.showClock) Text(params.clockText, color = Color.White.copy(alpha = .65f),
+            fontSize = (32f * params.textScale).sp, fontWeight = FontWeight.Light)
+        if (params.showTitle) Text(params.mediaState.title, color = Color.White,
+            fontSize = (24f * params.textScale).sp, fontWeight = FontWeight.SemiBold,
+            maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+        if (params.showArtist) Text(params.mediaState.artist, color = Color.White.copy(alpha = .58f),
+            fontSize = (15f * params.textScale).sp, maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+        if (params.showProgress) Slider(value = params.progressFraction, onValueChange = params.onSeekChange,
+            onValueChangeFinished = params.onSeekFinished,
+            colors = SliderDefaults.colors(thumbColor = Color.White, activeTrackColor = Color.White,
+                inactiveTrackColor = Color.White.copy(alpha = .15f)), modifier = Modifier.fillMaxWidth())
+        if (params.showTime) TimeRow(params.displayPosition, params.duration, params.textScale, params.isLandscape)
+        if (params.showControls) AodControlButtons(params.isPlaying, params.canSkipPrev, params.canSkipNext,
+            params.onSkipPrev, params.onPlayPause, params.onSkipNext, params.controlStyle, params.dominantColor,
+            params.isLandscape)
     }
 }

@@ -2,4 +2,11 @@
     <string name="galax_album_label">Album</string>
     <string name="galax_artist_label">Artist</string>
     <string name="galax_playlist_label">Playlist</string>
+    <string name="galax_insight_intro">Your year in orbit</string>
+    <string name="galax_insight_minutes">Minutes</string>
+    <string name="galax_insight_plays">Plays</string>
+    <string name="galax_insight_identity">Your listening identity</string>
+    <string name="galax_insight_summary">Your musical universe</string>
+    <string name="galax_featured">Featured</string>
+    <string name="galax_insight_share_error">Unable to share this summary. Please try again.</string>
 </resources>

@@ -674,3 +674,28 @@ Original notices retained here for the Kotlin files delivered without inline com
  * Licensed Under GPL-3.0 | see git history for contributors
  */
 ```
+
+
+# Source notices
+
+Original notices retained here for the Kotlin files delivered without inline comments. Licensing and attribution remain unchanged; see LICENSE and git history.
+
+## app/src/main/kotlin/com/arturo254/opentune/ui/screens/AlwaysOnDisplayScreen.kt
+
+```text
+/*
+ * OpenTune Project Original (2026)
+ * Arturo254 (github.com/Arturo254)
+ * Licensed Under GPL-3.0 | see git history for contributors
+ */
+```
+
+## app/src/main/kotlin/com/arturo254/opentune/ui/screens/YearInMusicScreen.kt
+
+```text
+/*
+ * OpenTune Insight — Year in Music, redesigned (2026)
+ * Arturo254 (github.com/Arturo254)
+ * Licensed Under GPL-3.0 | see git history for contributors
+ */
+```

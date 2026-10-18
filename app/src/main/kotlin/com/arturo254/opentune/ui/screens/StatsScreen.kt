@@ -1,5 +1,6 @@
 package com.arturo254.opentune.ui.screens
 
+import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -111,14 +112,14 @@ fun StatsScreen(
     val mostPlayedArtists by viewModel.mostPlayedArtists.collectAsState()
     val mostPlayedAlbums by viewModel.mostPlayedAlbums.collectAsState()
     val firstEvent by viewModel.firstEvent.collectAsState()
-    val currentDate = LocalDateTime.now()
+    val currentDate = remember { LocalDateTime.now() }
 
     val coroutineScope = rememberCoroutineScope()
     val lazyListState = rememberLazyListState()
     val selectedOption by viewModel.selectedOption.collectAsState()
 
-    val weeklyDates =
-        if (currentDate != null && firstEvent != null) {
+    val weeklyDates = remember(currentDate, firstEvent) {
+if (currentDate != null && firstEvent != null) {
             generateSequence(currentDate) { it.minusWeeks(1) }
                 .takeWhile { it.isAfter(firstEvent?.event?.timestamp?.minusWeeks(1)) }
                 .mapIndexed { index, date ->
@@ -144,9 +145,10 @@ fun StatsScreen(
         } else {
             emptyList()
         }
+    }
 
-    val monthlyDates =
-        if (currentDate != null && firstEvent != null) {
+    val monthlyDates = remember(currentDate, firstEvent) {
+if (currentDate != null && firstEvent != null) {
             generateSequence(
                 currentDate.plusMonths(1).withDayOfMonth(1).minusDays(1)
             ) { it.minusMonths(1) }
@@ -171,9 +173,10 @@ fun StatsScreen(
         } else {
             emptyList()
         }
+    }
 
-    val yearlyDates =
-        if (currentDate != null && firstEvent != null) {
+    val yearlyDates = remember(currentDate, firstEvent) {
+if (currentDate != null && firstEvent != null) {
             generateSequence(
                 currentDate
                     .plusYears(1)
@@ -192,6 +195,7 @@ fun StatsScreen(
         } else {
             emptyList()
         }
+    }
 
     val (disableBlur) = rememberPreference(DisableBlurKey, true)
     val color1 = MaterialTheme.colorScheme.primary
@@ -201,101 +205,8 @@ fun StatsScreen(
     val color5 = MaterialTheme.colorScheme.secondaryContainer
     val surfaceColor = MaterialTheme.colorScheme.surface
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (!disableBlur) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxSize(0.7f)
-                    .align(Alignment.TopCenter)
-                    .zIndex(-1f)
-                    .drawWithCache {
-                        val width = this.size.width
-                        val height = this.size.height
+    Box(modifier = Modifier.fillMaxSize().galaxScreenBackground()) {
 
-                        val brush1 = Brush.radialGradient(
-                            colors = listOf(
-                                color1.copy(alpha = 0.38f),
-                                color1.copy(alpha = 0.24f),
-                                color1.copy(alpha = 0.14f),
-                                color1.copy(alpha = 0.06f),
-                                Color.Transparent
-                            ),
-                            center = Offset(width * 0.15f, height * 0.1f),
-                            radius = width * 0.55f
-                        )
-
-                        val brush2 = Brush.radialGradient(
-                            colors = listOf(
-                                color2.copy(alpha = 0.34f),
-                                color2.copy(alpha = 0.2f),
-                                color2.copy(alpha = 0.11f),
-                                color2.copy(alpha = 0.05f),
-                                Color.Transparent
-                            ),
-                            center = Offset(width * 0.85f, height * 0.2f),
-                            radius = width * 0.65f
-                        )
-
-                        val brush3 = Brush.radialGradient(
-                            colors = listOf(
-                                color3.copy(alpha = 0.3f),
-                                color3.copy(alpha = 0.17f),
-                                color3.copy(alpha = 0.09f),
-                                color3.copy(alpha = 0.04f),
-                                Color.Transparent
-                            ),
-                            center = Offset(width * 0.3f, height * 0.45f),
-                            radius = width * 0.6f
-                        )
-
-                        val brush4 = Brush.radialGradient(
-                            colors = listOf(
-                                color4.copy(alpha = 0.26f),
-                                color4.copy(alpha = 0.14f),
-                                color4.copy(alpha = 0.08f),
-                                color4.copy(alpha = 0.03f),
-                                Color.Transparent
-                            ),
-                            center = Offset(width * 0.7f, height * 0.5f),
-                            radius = width * 0.7f
-                        )
-
-                        val brush5 = Brush.radialGradient(
-                            colors = listOf(
-                                color5.copy(alpha = 0.22f),
-                                color5.copy(alpha = 0.12f),
-                                color5.copy(alpha = 0.06f),
-                                color5.copy(alpha = 0.02f),
-                                Color.Transparent
-                            ),
-                            center = Offset(width * 0.5f, height * 0.75f),
-                            radius = width * 0.8f
-                        )
-
-                        val overlayBrush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Transparent,
-                                surfaceColor.copy(alpha = 0.22f),
-                                surfaceColor.copy(alpha = 0.55f),
-                                surfaceColor
-                            ),
-                            startY = height * 0.4f,
-                            endY = height
-                        )
-
-                        onDrawBehind {
-                            drawRect(brush = brush1)
-                            drawRect(brush = brush2)
-                            drawRect(brush = brush3)
-                            drawRect(brush = brush4)
-                            drawRect(brush = brush5)
-                            drawRect(brush = overlayBrush)
-                        }
-                    }
-            )
-        }
         LazyColumn(
             state = lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current
@@ -305,6 +216,11 @@ fun StatsScreen(
                 LocalPlayerAwareWindowInsets.current.only(WindowInsetsSides.Top)
             )
         ) {
+            item("galax_stats_intro") {
+                com.arturo254.opentune.core.designsystem.theme.GalaxScreenHeading(
+                    stringResource(R.string.stats), stringResource(R.string.year_in_music))
+            }
+
             item {
                 ChoiceChipsRow(
                     chips =
