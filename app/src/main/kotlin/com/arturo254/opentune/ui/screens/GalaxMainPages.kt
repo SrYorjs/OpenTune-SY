@@ -31,6 +31,7 @@ import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 import com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidSurface
+import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidChrome
 import com.arturo254.opentune.models.toMediaMetadata
 import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.ui.component.SongListItem
@@ -87,11 +88,32 @@ fun GalaxDiscoverScreen(navController: NavController, onOpenSearch: () -> Unit,
             GalaxPortal(stringResource(R.string.galax_discover_title), stringResource(R.string.galax_discover_subtitle))
         }
         item("search_field") {
-            Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth().heightIn(min = 60.dp).clickable(onClick = onOpenSearch)) {
-                Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Icon(painterResource(R.drawable.search), null)
-                    Text(stringResource(R.string.galax_search_hint), style = MaterialTheme.typography.bodyLarge)
+            val shape = com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.pillShape
+            Box(
+                Modifier.padding(horizontal = com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.pagePadding)
+                    .fillMaxWidth()
+                    .heightIn(min = 64.dp)
+                    .clip(shape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .galaxLiquidChrome(shape, emphasis = .57f)
+                    .clickable(onClick = onOpenSearch),
+                contentAlignment = Alignment.CenterStart,
+            ) {
+                Row(
+                    Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.search),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Text(
+                        text = stringResource(R.string.galax_search_hint),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
         }
