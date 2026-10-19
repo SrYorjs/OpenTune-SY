@@ -29,6 +29,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.rememberUpdatedState
 import com.arturo254.opentune.extensions.togglePlayPause
@@ -114,6 +115,9 @@ fun HomeScreen(
         }
     }
 
+    var showAllRecommendations by rememberSaveable { mutableStateOf(false) }
+    val latestShowAllRecommendations by rememberUpdatedState(showAllRecommendations)
+
     val selectedChip by viewModel.selectedChip.collectAsState()
 
     val isLoading: Boolean by viewModel.isLoading.collectAsState()
@@ -150,7 +154,12 @@ fun HomeScreen(
             .collect { lastVisibleIndex ->
                 val len = lazylistState.layoutInfo.totalItemsCount
                 val continuation = latestHomePage?.continuation
-                if (lastVisibleIndex != null && continuation != null && lastVisibleIndex >= len - 3) {
+                if (
+                    latestShowAllRecommendations &&
+                    lastVisibleIndex != null &&
+                    continuation != null &&
+                    lastVisibleIndex >= len - 3
+                ) {
                     viewModel.loadMoreYouTubeItems(continuation)
                 }
             }
@@ -466,8 +475,10 @@ fun HomeScreen(
                 }
             }
 
-            homePage?.sections?.forEach { section ->
-                item {
+            homePage?.sections?.take(
+                if (showAllRecommendations) Int.MAX_VALUE else 3,
+            )?.forEachIndexed { index, section ->
+                item(key = "galax_home_remote_title_$index") {
                     HomePageSectionTitle(
                         section = section,
                         navController = navController,
@@ -475,7 +486,7 @@ fun HomeScreen(
                     )
                 }
 
-                item {
+                item(key = "galax_home_remote_content_$index") {
                     HomePageSectionContent(
                         section = section,
                         mediaMetadata = mediaMetadata,
@@ -490,7 +501,21 @@ fun HomeScreen(
                 }
             }
 
-            if (isLoading || homePage?.continuation != null && homePage?.sections?.isNotEmpty() == true) {
+            if ((homePage?.sections?.size ?: 0) > 3) {
+                item(key = "galax_home_more_discovery") {
+                    GalaxHomeCatalogControl(
+                        expanded = showAllRecommendations,
+                        hiddenCount = ((homePage?.sections?.size ?: 0) - 3).coerceAtLeast(0),
+                        onToggle = { showAllRecommendations = !showAllRecommendations },
+                    )
+                }
+            }
+
+            if (isLoading || (
+                showAllRecommendations &&
+                    homePage?.continuation != null &&
+                    homePage?.sections?.isNotEmpty() == true
+                )) {
                 item {
                     HomeLoadingShimmer(modifier = Modifier.animateItem())
                 }
