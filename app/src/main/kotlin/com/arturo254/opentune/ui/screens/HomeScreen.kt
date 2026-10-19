@@ -1,5 +1,13 @@
 package com.arturo254.opentune.ui.screens
 
+import androidx.compose.ui.platform.LocalContext
+
+import androidx.compose.runtime.setValue
+
+import androidx.compose.runtime.mutableStateOf
+
+import android.widget.Toast
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Box
@@ -63,6 +71,8 @@ fun HomeScreen(
     val menuState = LocalMenuState.current
     val bottomSheetPageState = LocalBottomSheetPageState.current
     val playerConnection = LocalPlayerConnection.current ?: return
+    val context = LocalContext.current
+    var shufflePending by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
 
     val isPlaying by playerConnection.isPlaying.collectAsState()
@@ -177,12 +187,21 @@ fun HomeScreen(
                 }
                 item(key = "galax_home_actions") {
                     GalaxHomeActions(
-                        canShuffle = !quickPicks.isNullOrEmpty() || speedDialSongs.isNotEmpty(),
+                        canShuffle = !shufflePending,
+                        isShuffling = shufflePending,
                         onShuffle = {
-                            (quickPicks.orEmpty() + speedDialSongs).randomOrNull()?.let { song ->
-                                playerConnection.playQueue(
-                                    com.arturo254.opentune.playback.queues.YouTubeQueue.radio(song.toMediaMetadata()),
-                                )
+                            if (!shufflePending) {
+                                shufflePending = true
+                                viewModel.playGalaxShuffle(playerConnection) { started ->
+                                    shufflePending = false
+                                    if (!started) {
+                                        Toast.makeText(
+                                            context,
+                                            R.string.galax_shuffle_unavailable,
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    }
+                                }
                             }
                         },
                         onRecognition = {
