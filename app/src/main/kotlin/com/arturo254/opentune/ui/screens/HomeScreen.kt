@@ -258,9 +258,10 @@ fun HomeScreen(
                 }
                 if (orbitSongs.isNotEmpty()) {
                     item(key = "galax_orbit_intro") {
-                        GalaxHomeSectionIntro(
-                            title = stringResource(R.string.speed_dial),
-                            subtitle = stringResource(R.string.galax_discover_for_you),
+                        GalaxHomeOrbitHeading(
+                            title = "Tu música en órbita",
+                            subtitle = "Tus canciones giran alrededor de lo que más te gusta.",
+                            songCount = orbitSongs.size,
                         )
                     }
                     item(key = "galax_orbit_mosaic") {
@@ -297,8 +298,11 @@ fun HomeScreen(
                     }
                 }
 
-                if (showHomeCategoryChips) {
-                    item {
+                if (showHomeCategoryChips && homePage?.chips?.isNotEmpty() == true) {
+                    item(key = "galax_home_filter_heading") {
+                        GalaxHomeChapterDivider("FILTRA TU GALAXIA")
+                    }
+                    item(key = "galax_home_filter_chips") {
                         ChipsRow(
                             chips = homePage?.chips.orEmpty().map { it to it.title },
                             currentValue = selectedChip,
@@ -309,55 +313,16 @@ fun HomeScreen(
                     }
                 }
 
-                quickPicks?.filterNot { it.id in highlightedIds }?.takeIf { it.isNotEmpty() }?.let { picks ->
-                item {
-                    NavigationTitle(
-                        title = stringResource(R.string.quick_picks),
-                        modifier = Modifier.animateItem()
-                    )
+                item(key = "galax_chapter_personal") {
+                    GalaxHomeChapterDivider("HECHO PARA TI  /  01")
                 }
-
-                item {
-                    GalaxListeningDeck(
-                        quickPicks = picks,
-                        mediaMetadata = mediaMetadata,
-                        isPlaying = isPlaying,
-                        navController = navController,
-                        playerConnection = playerConnection,
-                        menuState = menuState,
-                        haptic = haptic,
-                        metadataMap = allItemsMetadata
-                    )
-                }
-            }
-
-            speedDialSongs.filterNot { it.id in highlightedIds }.takeIf { it.isNotEmpty() }?.let { songs ->
-                item {
-                    NavigationTitle(
-                        title = stringResource(R.string.speed_dial),
-                        modifier = Modifier.animateItem()
-                    )
-                }
-
-                item {
-                    SpeedDialSection(
-                        speedDialSongs = songs,
-                        mediaMetadata = mediaMetadata,
-                        isPlaying = isPlaying,
-                        navController = navController,
-                        playerConnection = playerConnection,
-                        menuState = menuState,
-                        haptic = haptic,
-                        metadataMap = allItemsMetadata
-                    )
-                }
-            }
 
             keepListening?.takeIf { it.isNotEmpty() }?.let { items ->
                 item {
-                    NavigationTitle(
+                    GalaxHomeZoneHeader(
                         title = stringResource(R.string.keep_listening),
-                        modifier = Modifier.animateItem()
+                        zone = GalaxHomeZone.RECENT,
+                        modifier = Modifier.animateItem(),
                     )
                 }
 
@@ -376,6 +341,55 @@ fun HomeScreen(
                 }
             }
 
+
+                quickPicks?.filterNot { it.id in highlightedIds }?.takeIf { it.isNotEmpty() }?.let { picks ->
+                item {
+                    GalaxHomeZoneHeader(
+                        title = stringResource(R.string.quick_picks),
+                        zone = GalaxHomeZone.CURATED,
+                        modifier = Modifier.animateItem(),
+                    )
+                }
+
+                item {
+                    GalaxListeningDeck(
+                        quickPicks = picks,
+                        mediaMetadata = mediaMetadata,
+                        isPlaying = isPlaying,
+                        navController = navController,
+                        playerConnection = playerConnection,
+                        menuState = menuState,
+                        haptic = haptic,
+                        metadataMap = allItemsMetadata
+                    )
+                }
+            }
+
+
+            speedDialSongs.filterNot { it.id in highlightedIds }.takeIf { it.isNotEmpty() }?.let { songs ->
+                item {
+                    GalaxHomeZoneHeader(
+                        title = stringResource(R.string.speed_dial),
+                        zone = GalaxHomeZone.MIX,
+                        modifier = Modifier.animateItem(),
+                    )
+                }
+
+                item {
+                    SpeedDialSection(
+                        speedDialSongs = songs,
+                        mediaMetadata = mediaMetadata,
+                        isPlaying = isPlaying,
+                        navController = navController,
+                        playerConnection = playerConnection,
+                        menuState = menuState,
+                        haptic = haptic,
+                        metadataMap = allItemsMetadata
+                    )
+                }
+            }
+
+
             AccountPlaylistsContainer(
                 viewModel = viewModel,
                 accountName = accountName,
@@ -391,9 +405,10 @@ fun HomeScreen(
 
             forgottenFavorites?.takeIf { it.isNotEmpty() }?.let { favorites ->
                 item {
-                    NavigationTitle(
+                    GalaxHomeZoneHeader(
                         title = stringResource(R.string.forgotten_favorites),
-                        modifier = Modifier.animateItem()
+                        zone = GalaxHomeZone.MEMORY,
+                        modifier = Modifier.animateItem(),
                     )
                 }
 
@@ -415,6 +430,15 @@ fun HomeScreen(
             }
 
                 if (selectedChip == null) {
+                    item(key = "galax_chapter_discovery") {
+                        GalaxHomeChapterDivider("EXPLORAR EL UNIVERSO  /  02")
+                    }
+                    item(key = "global_catalog_title") {
+                        GalaxHomeZoneHeader(
+                            title = "Más allá de tu biblioteca",
+                            zone = GalaxHomeZone.TRENDS,
+                        )
+                    }
                     item(key = "global_catalog_discovery") {
                         GlobalCatalogHomeSection(
                             tracks = globalCatalogTrending,
@@ -435,6 +459,12 @@ fun HomeScreen(
                 haptic = haptic,
                 scope = scope
             )
+
+            homePage?.sections?.takeIf { it.isNotEmpty() }?.let {
+                item(key = "galax_chapter_catalog") {
+                    GalaxHomeChapterDivider("RECOMENDADO PARA TU UNIVERSO  /  03")
+                }
+            }
 
             homePage?.sections?.forEach { section ->
                 item {
