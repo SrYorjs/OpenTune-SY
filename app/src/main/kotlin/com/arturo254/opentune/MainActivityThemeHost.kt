@@ -1,6 +1,5 @@
 package com.arturo254.opentune
 
-import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -116,56 +115,48 @@ internal fun MainActivityThemeHost(
         }
 
     var themeColor by rememberSaveable(stateSaver = ColorSaver) {
-        mutableStateOf(DefaultThemeColor)
+        mutableStateOf(customThemeColor)
     }
+    var artworkThemeActive by remember { mutableStateOf(false) }
 
-    LaunchedEffect(
-        playerConnection,
-        enableDynamicTheme,
-        isSystemInDarkTheme,
-        customThemeColor,
-    ) {
-        val connection = playerConnection
-        if (!enableDynamicTheme || connection == null) {
-            themeColor =
-                if (!enableDynamicTheme) {
-                    customThemeColor
-                } else {
-                    DefaultThemeColor
-                }
-            return@LaunchedEffect
-        }
-
+    LaunchedEffect(playerConnection, customThemeColor) {
+        themeColor = customThemeColor
+        artworkThemeActive = false
+        val connection = playerConnection ?: return@LaunchedEffect
         connection.service.currentMediaMetadata.collectLatest { song ->
-            if (song != null) {
-                withContext(Dispatchers.Default) {
-                    try {
-                        val result =
-                            activity.imageLoader.execute(
-                                ImageRequest
-                                    .Builder(activity)
-                                    .data(song.thumbnailUrl)
+            if (song == null) {
+                artworkThemeActive = false
+                themeColor = customThemeColor
+            } else {
+                val artwork = song.thumbnailUrl.takeIf { !it.isNullOrBlank() }
+                if (artwork == null) {
+                    artworkThemeActive = false
+                    themeColor = customThemeColor
+                } else {
+                    val extracted = withContext(Dispatchers.IO) {
+                        try {
+                            val result = activity.imageLoader.execute(
+                                ImageRequest.Builder(activity)
+                                    .data(artwork)
+                                    .size(112)
                                     .allowHardware(false)
                                     .build(),
                             )
-                        val extractedColor = result.image?.toBitmap()?.extractThemeColor()
-
-                        withContext(Dispatchers.Main) {
-                            themeColor = extractedColor ?: DefaultThemeColor
+                            result.image?.toBitmap()?.extractThemeColor()
+                        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                            throw cancelled
+                        } catch (_: Exception) {
+                            null
                         }
-                    } catch (_: Exception) {
-                        withContext(Dispatchers.Main) {
-                            themeColor = DefaultThemeColor
-                        }
+                    }
+                    if (extracted == null) {
+                        artworkThemeActive = false
+                        themeColor = customThemeColor
+                    } else {
+                        themeColor = extracted
+                        artworkThemeActive = true
                     }
                 }
-            } else {
-                themeColor =
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        DefaultThemeColor
-                    } else {
-                        customThemeColor
-                    }
             }
         }
     }
@@ -175,8 +166,8 @@ internal fun MainActivityThemeHost(
         pureBlack = pureBlack,
         motionScheme = MotionScheme.expressive(),
         themeColor = themeColor,
-        seedPalette = if (!enableDynamicTheme) customThemeSeedPalette else null,
-        useGalaxBrandPalette = !enableDynamicTheme && customThemeColorValue == "default",
+        seedPalette = if (!artworkThemeActive) customThemeSeedPalette else null,
+        useGalaxBrandPalette = !artworkThemeActive && !enableDynamicTheme && customThemeColorValue == "default",
         appFontStyle = appFontStyle,
         artworkCornerRadiusDp = artworkCornerRadius,
         reduceMotion = reduceMotion,
