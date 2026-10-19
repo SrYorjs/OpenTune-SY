@@ -1,9 +1,11 @@
 package com.arturo254.opentune.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,7 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -22,6 +24,8 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
@@ -42,6 +46,7 @@ import coil3.toBitmap
 import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidChrome
 import com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle
+import com.arturo254.opentune.core.designsystem.theme.GalaxVisualKit
 import com.arturo254.opentune.db.entities.Song
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -76,16 +81,58 @@ fun GalaxFeaturedTrack(song: Song, isPlaying: Boolean, onClick: () -> Unit) {
             }
         }
     }
-    val upper = lerp(accent, Color.Black, .54f)
-    val base = lerp(accent, Color.Black, .90f)
-    Box(
-        Modifier.padding(horizontal = GalaxScreenStyle.pagePadding, vertical = 9.dp)
+    val deep = lerp(accent, GalaxVisualKit.night, .88f)
+    val middle = lerp(accent, GalaxVisualKit.abyss, .61f)
+    val upper = lerp(accent, GalaxVisualKit.layer, .53f)
+    val scheme = MaterialTheme.colorScheme
+    BoxWithConstraints(
+        modifier = Modifier
+            .padding(horizontal = GalaxScreenStyle.pagePadding, vertical = 5.dp)
             .fillMaxWidth()
-            .height(306.dp)
-            .clip(GalaxScreenStyle.panelShape),
+            .height(438.dp)
+            .clip(GalaxScreenStyle.panelShape)
+            .background(
+                Brush.linearGradient(
+                    listOf(upper, middle, deep, GalaxVisualKit.night),
+                ),
+            ),
     ) {
+        val artSize = (maxWidth * .64f).coerceAtMost(255.dp)
+        Canvas(
+            modifier = Modifier.align(Alignment.TopEnd)
+                .padding(top = 8.dp, end = 8.dp)
+                .size(artSize + 52.dp),
+        ) {
+            val orbit = size.minDimension * .47f
+            drawCircle(
+                color = Color.White.copy(alpha = .13f),
+                radius = orbit,
+                center = center,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx()),
+            )
+            drawCircle(
+                color = scheme.primary.copy(alpha = .19f),
+                radius = orbit * .76f,
+                center = center,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx()),
+            )
+            drawCircle(
+                color = Color.White.copy(alpha = .56f),
+                radius = 1.7.dp.toPx(),
+                center = Offset(size.width * .12f, size.height * .28f),
+            )
+            drawCircle(
+                color = scheme.tertiary.copy(alpha = .66f),
+                radius = 1.6.dp.toPx(),
+                center = Offset(size.width * .87f, size.height * .78f),
+            )
+        }
         Box(
-            Modifier.matchParentSize().background(Brush.linearGradient(listOf(upper, base))),
+            modifier = Modifier.align(Alignment.TopEnd)
+                .padding(top = 31.dp, end = 22.dp)
+                .size(artSize)
+                .clip(GalaxVisualKit.imageShape)
+                .background(accent.copy(alpha = .4f)),
         ) {
             AsyncImage(
                 model = artwork,
@@ -93,54 +140,71 @@ fun GalaxFeaturedTrack(song: Song, isPlaying: Boolean, onClick: () -> Unit) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
             )
-            Box(
-                Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(
-                        0f to Color.Black.copy(alpha = .08f),
-                        .27f to upper.copy(alpha = .16f),
-                        .60f to base.copy(alpha = .61f),
-                        1f to Color.Black.copy(alpha = .88f),
-                    ),
-                ),
-            )
-            Box(
-                Modifier.fillMaxSize().background(
-                    Brush.horizontalGradient(
-                        0f to base.copy(alpha = .32f),
-                        .78f to Color.Transparent,
-                    ),
-                ),
-            )
         }
+        Box(
+            modifier = Modifier.fillMaxSize().drawWithCache {
+                val shadow = Brush.verticalGradient(
+                    0f to Color.Transparent,
+                    .31f to Color.Transparent,
+                    .59f to deep.copy(alpha = .72f),
+                    .73f to deep.copy(alpha = .97f),
+                    1f to GalaxVisualKit.night,
+                )
+                val vignette = Brush.horizontalGradient(
+                    0f to deep.copy(alpha = .24f),
+                    .38f to Color.Transparent,
+                    1f to Color.Transparent,
+                )
+                onDrawBehind {
+                    drawRect(shadow)
+                    drawRect(vignette)
+                }
+            },
+        )
         Column(
-            Modifier.fillMaxSize().clickable(onClick = onClick).padding(22.dp),
+            modifier = Modifier.fillMaxSize()
+                .clickable(onClick = onClick)
+                .padding(horizontal = 23.dp, vertical = 22.dp),
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(9.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Box(
-                    Modifier.size(7.dp).background(
-                        GalaxScreenStyle.blue,
-                        RoundedCornerShape(50),
-                    ),
+                    Modifier.size(6.dp).background(Color.White.copy(alpha = .95f), CircleShape),
                 )
                 Text(
                     text = stringResource(R.string.galax_discover_for_you).uppercase(),
+                    color = Color.White.copy(alpha = .88f),
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = .90f),
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 1.2.sp,
                 )
             }
-            Column(verticalArrangement = Arrangement.spacedBy(11.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "01",
+                        color = scheme.primary.copy(alpha = .95f),
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                    Text(
+                        text = "—  GALAXOT  /  FEATURED",
+                        color = Color.White.copy(alpha = .55f),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
                 Text(
                     text = song.song.title,
-                    style = MaterialTheme.typography.headlineMedium.copy(
+                    style = MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = (-.9).sp,
-                        lineHeight = 34.sp,
+                        letterSpacing = (-1.15).sp,
+                        lineHeight = 37.sp,
                     ),
                     color = Color.White,
                     maxLines = 2,
@@ -149,38 +213,37 @@ fun GalaxFeaturedTrack(song: Song, isPlaying: Boolean, onClick: () -> Unit) {
                 Text(
                     text = song.artists.joinToString { it.name },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = .82f),
+                    color = Color.White.copy(alpha = .78f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(8.dp))
                 Box(
-                    Modifier.clip(GalaxScreenStyle.pillShape)
-                        .background(Color.White.copy(alpha = .11f))
+                    modifier = Modifier.clip(GalaxScreenStyle.pillShape)
+                        .background(Color.White.copy(alpha = .14f))
                         .galaxLiquidChrome(GalaxScreenStyle.pillShape, emphasis = .78f)
                         .clickable(onClick = onClick),
                 ) {
                     Row(
-                        Modifier.padding(horizontal = 18.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 17.dp, vertical = 12.dp),
                         horizontalArrangement = Arrangement.spacedBy(11.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
-                            painterResource(if (isPlaying) R.drawable.pause else R.drawable.play),
+                            painter = painterResource(if (isPlaying) R.drawable.pause else R.drawable.play),
                             contentDescription = null,
-                            modifier = Modifier.size(19.dp),
                             tint = Color.White,
+                            modifier = Modifier.size(18.dp),
                         )
                         Text(
                             text = stringResource(
                                 if (isPlaying) R.string.player_a11y_pause else R.string.play,
                             ),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = Color.White,
+                            style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
+                            color = Color.White,
                         )
                     }
-
                 }
             }
         }
