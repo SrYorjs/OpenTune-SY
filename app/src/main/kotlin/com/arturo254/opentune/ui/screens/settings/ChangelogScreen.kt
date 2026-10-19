@@ -3,6 +3,10 @@ package com.arturo254.opentune.ui.screens.settings
 import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -190,13 +194,19 @@ fun ChangelogScreen(
                             .padding(horizontal = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        item { Spacer(modifier = Modifier.height(8.dp)) }
+                        item(key = "galax_changelog_nightly_hero") {
+                            GalaxChangelogHero(
+                                label = "NIGHTLY",
+                                title = stringResource(R.string.changelog),
+                                subtitle = nightlyInfo?.versionName.orEmpty(),
+                            )
+                        }
 
                         item {
                             NightlyChangelogCard(nightlyInfo = nightlyInfo!!)
                         }
 
-                        item { Spacer(modifier = Modifier.height(8.dp)) }
+                        item { Spacer(modifier = Modifier.height(12.dp)) }
                     }
                 }
 
@@ -217,13 +227,19 @@ fun ChangelogScreen(
                             .padding(horizontal = 16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        item { Spacer(modifier = Modifier.height(8.dp)) }
+                        item(key = "galax_changelog_stable_hero") {
+                            GalaxChangelogHero(
+                                label = "STABLE",
+                                title = stringResource(R.string.changelog),
+                                subtitle = "${releases.size} releases",
+                            )
+                        }
 
-                        items(releases) { release ->
+                        items(releases, key = { it.tagName }) { release ->
                             ReleaseCard(release = release)
                         }
 
-                        item { Spacer(modifier = Modifier.height(8.dp)) }
+                        item { Spacer(modifier = Modifier.height(12.dp)) }
                     }
                 }
             }
@@ -231,66 +247,54 @@ fun ChangelogScreen(
     }
 }
 
-@SuppressLint("NonObservableLocale")
+
 @Composable
-private fun NightlyChangelogCard(nightlyInfo: NightlyInfo) {
-
-    val inputDateFormat1 = SimpleDateFormat("dd-MM-yyyy", LocalLocale.current.platformLocale)
-    val inputDateFormat2 = SimpleDateFormat("yyyy-MM-dd", LocalLocale.current.platformLocale)
-    val displayDateFormat = SimpleDateFormat("MMMM d, yyyy", LocalLocale.current.platformLocale)
-
-    val formattedDate = remember(nightlyInfo.publishedAt) {
-        try {
-
-            val date = inputDateFormat1.parse(nightlyInfo.publishedAt)
-                ?: inputDateFormat2.parse(nightlyInfo.publishedAt)
-            date?.let { displayDateFormat.format(it) } ?: nightlyInfo.publishedAt
-        } catch (e: Exception) {
-            nightlyInfo.publishedAt
-        }
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-        )
+private fun GalaxChangelogHero(label: String, title: String, subtitle: String) {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(30.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        colors.primary.copy(alpha = .25f),
+                        colors.surfaceContainerHigh,
+                        colors.tertiary.copy(alpha = .12f),
+                    ),
+                ),
+            )
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Nightly ${nightlyInfo.versionName}",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = formattedDate,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (!nightlyInfo.changelog.isNullOrBlank()) {
-                MarkdownText(
-                    markdown = nightlyInfo.changelog,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            } else {
-                Text(
-                    text = "No changelog available for this nightly build.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+        Text(
+            text = "GALAXOS  /  $label",
+            style = MaterialTheme.typography.labelSmall,
+            color = colors.primary,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            color = colors.onSurface,
+        )
+        if (subtitle.isNotBlank()) {
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.onSurfaceVariant,
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            repeat(4) { index ->
+                Box(
+                    modifier = Modifier
+                        .size(width = if (index == 0) 34.dp else 9.dp, height = 3.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(
+                            if (index == 0) colors.primary else colors.primary.copy(alpha = .22f),
+                        ),
                 )
             }
         }
@@ -298,55 +302,125 @@ private fun NightlyChangelogCard(nightlyInfo: NightlyInfo) {
 }
 
 @Composable
-private fun ReleaseCard(release: ReleaseInfo) {
-    val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
-    val displayDateFormat = remember { SimpleDateFormat("MMMM d, yyyy", Locale.getDefault()) }
-
-    val formattedDate = remember(release.publishedAt) {
-        try {
-            val date = dateFormat.parse(release.publishedAt.substring(0, 10))
-            date?.let { displayDateFormat.format(it) } ?: release.publishedAt
-        } catch (e: Exception) {
-            release.publishedAt
-        }
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-        )
+private fun GalaxReleaseEntry(
+    eyebrow: String,
+    title: String,
+    date: String,
+    markdown: String?,
+) {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(26.dp))
+            .background(colors.surfaceContainerLow.copy(alpha = .94f))
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(13.dp),
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.Top,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(13.dp))
+                    .background(
+                        Brush.linearGradient(
+                            listOf(
+                                colors.primary.copy(alpha = .26f),
+                                colors.tertiary.copy(alpha = .16f),
+                            ),
+                        ),
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.music_note),
+                    contentDescription = null,
+                    tint = colors.primary,
+                    modifier = Modifier.size(19.dp),
+                )
+            }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
-                    text = release.name.ifBlank { release.tagName },
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    text = eyebrow,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = colors.primary,
+                    fontWeight = FontWeight.SemiBold,
                 )
                 Text(
-                    text = formattedDate,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = colors.onSurface,
+                    fontWeight = FontWeight.Bold,
                 )
-            }
-
-            if (!release.body.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                MarkdownText(
-                    markdown = release.body,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                Text(
+                    text = date,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.onSurfaceVariant,
                 )
             }
         }
+        HorizontalDivider(color = colors.outlineVariant.copy(alpha = .30f))
+        if (!markdown.isNullOrBlank()) {
+            MarkdownText(
+                markdown = markdown,
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.onSurface,
+            )
+        } else {
+            Text(
+                text = stringResource(R.string.no_releases),
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.onSurfaceVariant,
+            )
+        }
     }
+}
+
+@Composable
+private fun NightlyChangelogCard(nightlyInfo: NightlyInfo) {
+    val displayDate = remember(nightlyInfo.publishedAt) {
+        galaxReleaseDate(nightlyInfo.publishedAt)
+    }
+    GalaxReleaseEntry(
+        eyebrow = "NIGHTLY",
+        title = nightlyInfo.versionName,
+        date = displayDate,
+        markdown = nightlyInfo.changelog,
+    )
+}
+
+@Composable
+private fun ReleaseCard(release: ReleaseInfo) {
+    val displayDate = remember(release.publishedAt) {
+        galaxReleaseDate(release.publishedAt)
+    }
+    GalaxReleaseEntry(
+        eyebrow = "STABLE",
+        title = release.name.ifBlank { release.tagName },
+        date = displayDate,
+        markdown = release.body,
+    )
+}
+
+private fun galaxReleaseDate(raw: String): String {
+    val formats = listOf("yyyy-MM-dd", "dd-MM-yyyy")
+    for (pattern in formats) {
+        val result = runCatching {
+            val input = SimpleDateFormat(pattern, Locale.getDefault())
+            input.isLenient = false
+            val parsed = input.parse(raw.take(10))
+            parsed?.let {
+                SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(it)
+            }
+        }.getOrNull()
+        if (result != null) return result
+    }
+    return raw
 }
