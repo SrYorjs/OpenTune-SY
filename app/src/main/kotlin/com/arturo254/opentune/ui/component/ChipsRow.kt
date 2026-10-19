@@ -77,65 +77,21 @@ fun <E> ChipsRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp)
+            .padding(vertical = 9.dp)
             .horizontalScroll(rememberScrollState()),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Spacer(Modifier.width(14.dp))
-
+        Spacer(Modifier.width(20.dp))
         chips.forEach { (value, label) ->
-            val selected = currentValue == value
-            val iconRes = icons[value]
-
-            OpenTunePillChip(
+            com.arturo254.opentune.core.designsystem.component.GalaxFilterChip(
+                label = label,
+                selected = currentValue == value,
                 onClick = { onValueUpdate(value) },
-                selected = selected,
-                horizontalPadding = 14.dp,
-            ) {
-                AnimatedContent(
-                    targetState = selected,
-                    transitionSpec = {
-                        fadeIn(tween(90)) + slideInHorizontally { -it / 3 } togetherWith
-                            fadeOut(tween(70)) + slideOutHorizontally { it / 3 }
-                    },
-                    label = "chipIcon",
-                ) { isSelected ->
-                    when {
-                        isSelected ->
-                            Icon(
-                                painter = painterResource(R.drawable.done),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(16.dp),
-                            )
-
-                        iconRes != null ->
-                            Icon(
-                                painter = painterResource(iconRes),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(16.dp),
-                            )
-                    }
-                }
-
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelLarge,
-                    color =
-                        if (selected) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        },
-                    maxLines = 1,
-                )
-            }
-
-            Spacer(Modifier.width(8.dp))
+                icon = icons[value],
+            )
+            Spacer(Modifier.width(9.dp))
         }
-
-        Spacer(Modifier.width(6.dp))
+        Spacer(Modifier.width(11.dp))
     }
 }
 
