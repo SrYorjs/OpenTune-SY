@@ -7,11 +7,13 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +38,7 @@ import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidChrome
 import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 import com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle
+import com.arturo254.opentune.core.designsystem.theme.GalaxVisualKit
 
 @Composable
 fun GalaxHomeActions(
@@ -46,7 +49,7 @@ fun GalaxHomeActions(
 ) {
     Row(
         modifier = Modifier.fillMaxWidth()
-            .padding(horizontal = GalaxScreenStyle.pagePadding, vertical = 8.dp),
+            .padding(horizontal = GalaxScreenStyle.pagePadding, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         GalaxHomeAction(
@@ -56,7 +59,7 @@ fun GalaxHomeActions(
             enabled = canShuffle,
             loading = isShuffling,
             onClick = onShuffle,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1.15f),
         )
         GalaxHomeAction(
             text = stringResource(R.string.music_recognition),
@@ -64,7 +67,7 @@ fun GalaxHomeActions(
             primary = false,
             enabled = true,
             onClick = onRecognition,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(.85f),
         )
     }
 }
@@ -79,6 +82,8 @@ private fun GalaxHomeAction(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val scheme = MaterialTheme.colorScheme
+    val shape = GalaxVisualKit.tileShape
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val motion = OpenTuneDesignSystem.galaxMotion
@@ -87,26 +92,21 @@ private fun GalaxHomeAction(
         animationSpec = motion.pressSpec,
         label = "galaxHomeActionPress",
     )
-    val pill = GalaxScreenStyle.pillShape
-    val scheme = MaterialTheme.colorScheme
-    val background = Brush.horizontalGradient(
-        listOf(
-            scheme.primary,
-            if (primary) scheme.primary.copy(alpha = .76f) else scheme.surfaceContainerHigh,
-        ),
+    val background = Brush.linearGradient(
+        listOf(scheme.primary, scheme.primary.copy(alpha = .72f)),
     )
-    val fg = if (primary) scheme.onPrimary else scheme.onSurface
+    val foreground = if (primary) scheme.onPrimary else scheme.onSurface
     Box(
-        modifier.graphicsLayer {
+        modifier = modifier.graphicsLayer {
             scaleX = scale
             scaleY = scale
-            alpha = if (enabled) 1f else .48f
+            alpha = if (enabled) 1f else .42f
         }
-            .height(56.dp)
-            .clip(pill)
+            .height(94.dp)
+            .clip(shape)
             .then(
                 if (primary) Modifier.background(background)
-                else Modifier.galaxLiquidChrome(pill, emphasis = .74f),
+                else Modifier.galaxLiquidChrome(shape, emphasis = .68f),
             )
             .clickable(
                 enabled = enabled,
@@ -115,34 +115,43 @@ private fun GalaxHomeAction(
                 role = Role.Button,
                 onClick = onClick,
             ),
-        contentAlignment = Alignment.Center,
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(9.dp),
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(15.dp),
+            verticalArrangement = Arrangement.spacedBy(13.dp),
+            horizontalAlignment = Alignment.Start,
         ) {
-            if (loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(19.dp),
-                    color = fg,
-                    strokeWidth = 2.dp,
-                )
-            } else {
-                Icon(
-                    painter = painterResource(icon),
-                    contentDescription = null,
-                    modifier = Modifier.size(19.dp),
-                    tint = fg,
-                )
+            Box(
+                modifier = Modifier.size(29.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (primary) Color.White.copy(alpha = .17f)
+                        else scheme.primary.copy(alpha = .17f),
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(17.dp),
+                        color = foreground,
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Icon(
+                        painter = painterResource(icon),
+                        contentDescription = null,
+                        modifier = Modifier.size(17.dp),
+                        tint = foreground,
+                    )
+                }
             }
             Text(
                 text = text,
-                color = fg,
-                style = MaterialTheme.typography.labelMedium,
+                color = foreground,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                fontWeight = FontWeight.SemiBold,
             )
         }
     }
