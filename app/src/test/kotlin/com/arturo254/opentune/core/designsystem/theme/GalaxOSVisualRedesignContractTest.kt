@@ -34,8 +34,8 @@ class GalaxOSVisualRedesignContractTest {
         assertTrue(hero.contains("song.song.title"))
         assertTrue(hero.contains("Palette.from(bitmap)"))
         assertTrue(hero.contains(".size(96).allowHardware(false)"))
-        assertTrue(hero.contains(".layerBackdrop(backdrop)"))
-        assertTrue(hero.contains("GalaxLiquidSurface("))
+        assertTrue(hero.contains(".galaxLiquidChrome(GalaxScreenStyle.pillShape"))
+        assertFalse(hero.contains("rememberLayerBackdrop()"))
         assertTrue(home.contains("onRecognition ="))
         assertFalse(actions.contains(".blur("))
     }
