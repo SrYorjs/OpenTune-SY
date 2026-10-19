@@ -46,6 +46,7 @@ import com.arturo254.opentune.constants.ChipSortTypeKey
 import com.arturo254.opentune.constants.DarkModeKey
 import com.arturo254.opentune.constants.DefaultOpenTabKey
 import com.arturo254.opentune.constants.DynamicThemeKey
+import com.arturo254.opentune.constants.ArtworkReactiveThemeKey
 import com.arturo254.opentune.constants.GalaxReduceMotionKey
 import com.arturo254.opentune.constants.GridItemSize
 import com.arturo254.opentune.constants.GridItemsSizeKey
@@ -110,6 +111,7 @@ import com.arturo254.opentune.ui.component.PreferenceGroupTitle
 import com.arturo254.opentune.ui.component.SwitchPreference
 import com.arturo254.opentune.ui.component.ThumbnailCornerRadiusSelectorButton
 import com.arturo254.opentune.ui.player.StyledPlaybackSlider
+import com.arturo254.opentune.ui.player.preferences.GalaxPlayerStyleGallery
 import com.arturo254.opentune.ui.player.preferences.PlayerLayoutSelector
 import com.arturo254.opentune.ui.player.preferences.PlayerBackgroundSkinSelector
 import com.arturo254.opentune.ui.player.preferences.PlayerButtonsSkinSelector
@@ -128,6 +130,10 @@ fun AppearanceSettings(
     val (dynamicTheme, onDynamicThemeChange) = rememberPreference(
         DynamicThemeKey,
         defaultValue = false
+    )
+    val (artworkReactiveTheme, onArtworkReactiveThemeChange) = rememberPreference(
+        ArtworkReactiveThemeKey,
+        defaultValue = true,
     )
     val (randomThemeOnStartup, onRandomThemeOnStartupChange) = rememberPreference(
         RandomThemeOnStartupKey,
@@ -361,6 +367,13 @@ fun AppearanceSettings(
             checked = dynamicTheme,
             onCheckedChange = onDynamicThemeChange,
         )
+        SwitchPreference(
+            title = { Text("Colores de la canción en toda la app") },
+            description = "El tema, fondo, botones y pantallas siguen los tonos de la portada. Sin canción, se conserva el color elegido.",
+            icon = { Icon(painterResource(R.drawable.palette), null) },
+            checked = artworkReactiveTheme,
+            onCheckedChange = onArtworkReactiveThemeChange,
+        )
 
         SwitchPreference(
             title = { Text(stringResource(R.string.player_fullscreen)) },
@@ -460,6 +473,10 @@ fun AppearanceSettings(
         )
 
         PlayerLayoutSelector(
+            selected = playerDesignStyle,
+            onSelected = onPlayerDesignStyleChange,
+        )
+        GalaxPlayerStyleGallery(
             selected = playerDesignStyle,
             onSelected = onPlayerDesignStyleChange,
         )
