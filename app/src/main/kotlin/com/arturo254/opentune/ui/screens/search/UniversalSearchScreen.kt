@@ -451,6 +451,10 @@ private fun UnifiedTrackRow(
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(providers, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
+                if (recommended?.isCatalogOnly() == true) {
+                    Text(stringResource(R.string.universal_versions_catalog), style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 qualitySummary(recommended)?.let { quality ->
                     Text(quality, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                 }

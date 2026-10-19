@@ -1,10 +1,3 @@
-/*
- * ArchiveTune (2026)
- * © Rukamori — github.com/rukamori
- * GPL-3.0 License | Contributors: see git history
- * Do not remove or alter this notice. - Per GPL-3.0 Section 4 & Section 5
- */
-
 package com.arturo254.opentune.ui.screens.library
 
 import androidx.compose.foundation.layout.Arrangement
@@ -46,7 +39,7 @@ import com.arturo254.opentune.ui.component.SpotifyLibraryPlaylistListItem
 @Composable
 fun LibrarySpotifyPlaylistsScreen(
     navController: NavController,
-    filterContent: @Composable () -> Unit, // Recibe los chips desde el padre
+    filterContent: @Composable () -> Unit,
     viewModel: SpotifyLibraryViewModel = hiltViewModel(),
     accountViewModel: SpotifyAccountViewModel = hiltViewModel(),
 ) {
@@ -54,10 +47,6 @@ fun LibrarySpotifyPlaylistsScreen(
     val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
     val accountState by accountViewModel.uiState.collectAsStateWithLifecycle()
 
-    // ── Fix: esta pantalla puede quedarse en el back stack con un estado de
-    // cuenta "congelado" (creado antes de conectar Spotify). Al volver aquí
-    // desde Ajustes (donde sí ocurre el login), forzamos a releer la sesión
-    // guardada para que "Spotify no conectado" desaparezca de inmediato.
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, accountViewModel) {
         val observer =
@@ -81,21 +70,22 @@ fun LibrarySpotifyPlaylistsScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
-            // ── Filtros (chips) desde el padre ──────────────────────────────
+            item(key = "spotify_intro") {
+                com.arturo254.opentune.ui.screens.GalaxMediaHeader(
+                    title = stringResource(R.string.spotify_playlists),
+                    label = stringResource(R.string.spotify_account),
+                    artworkUrls = playlists.take(4).map { com.arturo254.opentune.spotify.SpotifyMapper.getPlaylistThumbnail(it) },
+                    facts = listOf(playlists.size.toString()),
+                )
+            }
+
             item(key = "spotify_filters") {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                 ) {
-                    Text(
-                        text = stringResource(R.string.spotify_playlists),
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        ),
-                        color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(bottom = 12.dp),
-                    )
+
                     filterContent()
                 }
             }

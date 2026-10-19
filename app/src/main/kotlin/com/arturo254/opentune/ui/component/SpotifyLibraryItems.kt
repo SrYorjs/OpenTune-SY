@@ -1,10 +1,3 @@
-/*
- * ArchiveTune (2026)
- * © Rukamori — github.com/rukamori
- * GPL-3.0 License | Contributors: see git history
- * Do not remove or alter this notice. - Per GPL-3.0 Section 4 & Section 5
- */
-
 package com.arturo254.opentune.ui.component
 
 import androidx.compose.foundation.clickable
@@ -58,6 +51,7 @@ fun SpotifyLibraryPlaylistListItem(
 
     LibraryPlaylistFeatureCard(
         playlist = libraryPlaylist,
+        trailingContent = trailing,
         modifier =
             modifier
                 .fillMaxWidth()

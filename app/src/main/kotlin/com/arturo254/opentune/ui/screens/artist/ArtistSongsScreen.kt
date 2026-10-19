@@ -88,6 +88,14 @@ fun ArtistSongsScreen(
             state = lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
         ) {
+            item(key = "artist_intro") {
+                com.arturo254.opentune.ui.screens.GalaxMediaHeader(
+                    title = artist?.artist?.name.orEmpty(),
+                    label = androidx.compose.ui.res.stringResource(R.string.songs),
+                    artworkUrls = songs.take(4).map { it.song.thumbnailUrl },
+                    facts = listOf(pluralStringResource(R.plurals.n_song, songs.size, songs.size)),
+                )
+            }
             item(
                 key = "header",
                 contentType = CONTENT_TYPE_HEADER,

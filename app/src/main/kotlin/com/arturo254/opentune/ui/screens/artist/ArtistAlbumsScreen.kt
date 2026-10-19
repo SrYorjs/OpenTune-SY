@@ -100,18 +100,12 @@ fun ArtistAlbumsScreen(
                 span = { GridItemSpan(maxLineSpan) },
                 contentType = CONTENT_TYPE_HEADER
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                ) {
-                    Spacer(Modifier.weight(1f))
-
-                    Text(
-                        text = pluralStringResource(R.plurals.n_album, albums.size, albums.size),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
+                com.arturo254.opentune.ui.screens.GalaxMediaHeader(
+                    title = artist?.artist?.name.orEmpty(),
+                    label = androidx.compose.ui.res.stringResource(R.string.albums),
+                    artworkUrls = albums.take(4).map { it.album.thumbnailUrl },
+                    facts = listOf(pluralStringResource(R.plurals.n_album, albums.size, albums.size)),
+                )
             }
 
             items(
