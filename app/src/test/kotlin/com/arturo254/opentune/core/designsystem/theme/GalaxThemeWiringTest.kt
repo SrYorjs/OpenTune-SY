@@ -31,7 +31,7 @@ class GalaxThemeWiringTest {
         val host = source("MainActivityThemeHost.kt")
         val settings = source("ui/screens/settings/AppearanceSettings.kt")
         assertTrue(host.contains("rememberPreference(DynamicThemeKey, defaultValue = false)"))
-        assertTrue(host.contains("useGalaxBrandPalette = !enableDynamicTheme && customThemeColorValue == \"default\""))
+        assertTrue(host.contains("useGalaxBrandPalette = !artworkThemeActive && !enableDynamicTheme && customThemeColorValue == \"default\""))
         assertTrue(host.contains("ThemeSeedPaletteCodec.decodeFromPreference("))
         assertTrue(host.contains("ThemePalettes"))
         assertTrue(host.contains("CustomThemeColorKey"))
