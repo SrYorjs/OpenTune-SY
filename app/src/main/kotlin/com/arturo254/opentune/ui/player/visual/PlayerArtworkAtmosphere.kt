@@ -65,46 +65,40 @@ fun PlayerArtworkAtmosphere(
         AnimatedContent(
             targetState = artworkUrl,
             transitionSpec = {
-                fadeIn(tween(if (reducedMotion) 0 else 240)) togetherWith fadeOut(tween(if (reducedMotion) 0 else 180))
+                fadeIn(tween(if (reducedMotion) 0 else 240)) togetherWith
+                    fadeOut(tween(if (reducedMotion) 0 else 180))
             },
             label = "immersiveAlbumChange",
-            modifier = Modifier.fillMaxSize(),
-        ) { cover ->
-            Box(Modifier.fillMaxSize()) {
-                if (!cover.isNullOrBlank()) {
-
-                    Box(
-                        Modifier.align(Alignment.TopCenter)
-                            .fillMaxWidth()
-                            .height(squareHeight)
-                            .graphicsLayer {
-                                compositingStrategy = CompositingStrategy.Offscreen
-                            }
-                            .drawWithCache {
-                                val mask = Brush.verticalGradient(
-                                    0f to Color.Black,
-                                    .55f to Color.Black,
-                                    .80f to Color.Black.copy(alpha = .86f),
-                                    1f to Color.Transparent,
-                                )
-                                onDrawWithContent {
-                                    drawContent()
-                                    drawRect(mask, blendMode = BlendMode.DstIn)
-                                }
-                            },
-                    ) {
-                        AsyncImage(
-                            model = cover,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                                .graphicsLayer {
-                                    scaleX = breathing
-                                    scaleY = breathing
-                                },
-                        )
-                    }
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .fillMaxWidth()
+                .height(squareHeight)
+                .graphicsLayer {
+                    compositingStrategy = CompositingStrategy.Offscreen
                 }
+                .drawWithCache {
+                    val mask = Brush.verticalGradient(
+                        0f to Color.Black,
+                        .55f to Color.Black,
+                        .80f to Color.Black.copy(alpha = .86f),
+                        1f to Color.Transparent,
+                    )
+                    onDrawWithContent {
+                        drawContent()
+                        drawRect(mask, blendMode = BlendMode.DstIn)
+                    }
+                },
+        ) { cover ->
+            if (!cover.isNullOrBlank()) {
+                AsyncImage(
+                    model = cover,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().graphicsLayer {
+                        scaleX = breathing
+                        scaleY = breathing
+                    },
+                )
             }
         }
 
