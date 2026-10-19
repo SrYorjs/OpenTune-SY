@@ -151,111 +151,49 @@ fun GlobalCatalogHomeSection(
     val isPlaying by playerConnection.isPlaying.collectAsState()
     val scope = rememberCoroutineScope()
     val queueTitle = stringResource(R.string.deezer_trending)
-    val visibleTracks = tracks.take(12)
-
+    val visibleTracks = remember(tracks) {
+        tracks.distinctBy { it.provider.value + ":" + it.sourceId }.take(12)
+    }
     if (visibleTracks.isEmpty()) return
-
-    Column(modifier = modifier.fillMaxWidth()) {
-        NavigationTitle(
-            label = stringResource(R.string.global_catalog),
-            title = stringResource(R.string.deezer_trending),
-        )
-
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 18.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            items(
-                items = visibleTracks,
-                key = { "global_catalog_" + it.provider.value + ":" + it.sourceId },
-            ) { track ->
-                val active =
-                    mediaMetadata?.title.equals(track.title, ignoreCase = true) &&
-                        track.artists.any { sourceArtist ->
-                            mediaMetadata?.artists
-                                ?.any { it.name.equals(sourceArtist, ignoreCase = true) } == true
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 19.dp, vertical = 7.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        items(
+            items = visibleTracks,
+            key = { "galax_source_" + it.provider.value + ":" + it.sourceId },
+        ) { track ->
+            val active = mediaMetadata?.title.equals(track.title, ignoreCase = true) &&
+                track.artists.any { sourceArtist ->
+                    mediaMetadata?.artists?.any {
+                        it.name.equals(sourceArtist, ignoreCase = true)
+                    } == true
+                }
+            GalaxSourceDiscoveryCard(
+                title = track.title,
+                artists = track.artists.joinToString(),
+                provider = track.provider.value,
+                selected = active,
+                isPlaying = isPlaying,
+                onClick = {
+                    if (active) {
+                        playerConnection.player.togglePlayPause()
+                    } else {
+                        scope.launch {
+                            onPlay(playerConnection, track, queueTitle)
                         }
-                val interaction = remember { MutableInteractionSource() }
-                val pressed by interaction.collectIsPressedAsState()
-                val scale by animateFloatAsState(
-                    targetValue = if (pressed) 0.955f else 1f,
-                    animationSpec = spring(
-                        dampingRatio = 0.86f,
-                        stiffness = 640f,
-                    ),
-                    label = "globalCatalogHomeCard",
-                )
-                val shape = RoundedCornerShape(26.dp)
-
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier =
-                        Modifier
-                            .width(160.dp)
-                            .graphicsLayer {
-                                scaleX = scale
-                                scaleY = scale
-                            }
-                            .combinedClickable(
-                                interactionSource = interaction,
-                                onClick = {
-                                    if (active) {
-                                        playerConnection.player.togglePlayPause()
-                                    } else {
-                                        scope.launch {
-                                            onPlay(playerConnection, track, queueTitle)
-                                        }
-                                    }
-                                },
-                                onLongClick = {},
-                            ),
-                ) {
+                    }
+                },
+                artwork = {
                     Artwork(
                         imageUrl = track.artworkUrl,
                         contentDescription = null,
-                        modifier = Modifier.size(160.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        overlay = {
-                            if (active) {
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxSize()
-                                            .background(Color.Black.copy(alpha = 0.24f))
-                                )
-                                Icon(
-                                    painter =
-                                        painterResource(
-                                            if (isPlaying) R.drawable.pause else R.drawable.play
-                                        ),
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(32.dp),
-                                )
-                            }
-                        },
+                        modifier = Modifier.fillMaxSize(),
+                        shape = RoundedCornerShape(18.dp),
                     )
-
-                    Text(
-                        text = track.title,
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                        color =
-                            if (active) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        text = track.artists.joinToString(),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
+                },
+            )
         }
     }
 }
