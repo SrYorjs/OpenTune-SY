@@ -1,24 +1,13 @@
 package com.arturo254.opentune.ui.screens
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
-import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -26,175 +15,56 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.arturo254.opentune.LocalPlayerAwareWindowInsets
 import com.arturo254.opentune.R
-import com.arturo254.opentune.constants.GridThumbnailHeight
-import com.arturo254.opentune.ui.component.ChipsRow
-import com.arturo254.opentune.ui.component.IconButton
-import com.arturo254.opentune.ui.component.LocalMenuState
-import com.arturo254.opentune.ui.component.YouTubeGridItem
-import com.arturo254.opentune.ui.component.shimmer.GridItemPlaceHolder
-import com.arturo254.opentune.ui.component.shimmer.ShimmerHost
-import com.arturo254.opentune.ui.menu.YouTubeAlbumMenu
-import com.arturo254.opentune.ui.menu.YouTubeArtistMenu
-import com.arturo254.opentune.ui.menu.YouTubePlaylistMenu
-import com.arturo254.opentune.ui.utils.backToMain
+import com.arturo254.opentune.core.designsystem.theme.GalaxScreenHeading
 import com.arturo254.opentune.viewmodels.AccountViewModel
 import com.arturo254.opentune.viewmodels.AccountContentType
+import com.arturo254.opentune.ui.component.ChipsRow
+import com.arturo254.opentune.innertube.models.YTItem
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AccountScreen(
-    navController: NavController,
-    scrollBehavior: TopAppBarScrollBehavior,
-    viewModel: AccountViewModel = hiltViewModel(),
-) {
-    val menuState = LocalMenuState.current
-    val haptic = LocalHapticFeedback.current
-
-    val coroutineScope = rememberCoroutineScope()
-
+fun AccountScreen(navController: NavController, scrollBehavior: TopAppBarScrollBehavior,
+    viewModel: AccountViewModel = hiltViewModel()) {
     val playlists by viewModel.playlists.collectAsState()
     val albums by viewModel.albums.collectAsState()
     val artists by viewModel.artists.collectAsState()
-    val selectedContentType by viewModel.selectedContentType.collectAsState()
-
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = GridThumbnailHeight + 24.dp),
-        contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
-    ) {
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            ChipsRow(
-                chips = listOf(
+    val selected by viewModel.selectedContentType.collectAsState()
+    val entries: List<YTItem>? = when (selected) {
+        AccountContentType.PLAYLISTS -> playlists
+        AccountContentType.ALBUMS -> albums
+        AccountContentType.ARTISTS -> artists
+    }
+    val title = stringResource(R.string.account)
+    val loading by viewModel.isLoading.collectAsState()
+    val failed by viewModel.failed.collectAsState()
+    GalaxScaffold(topBar = { GalaxTopAppBar(title = { Text(title) },
+        scrollBehavior = scrollBehavior, navigationIcon = {
+            IconButton(onClick = { navController.navigateUp() }) {
+                Icon(painterResource(R.drawable.arrow_back), stringResource(R.string.back_button_desc))
+            }
+        }) }) { padding ->
+        LazyVerticalGrid(columns = GridCells.Adaptive(160.dp), modifier = Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp,
+                bottom = LocalPlayerAwareWindowInsets.current.asPaddingValues().calculateBottomPadding()),
+            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            item("intro", span = { GridItemSpan(maxLineSpan) }) {
+                GalaxScreenHeading(title, stringResource(R.string.library))
+            }
+            item("filters", span = { GridItemSpan(maxLineSpan) }) {
+                ChipsRow(chips = listOf(
                     AccountContentType.PLAYLISTS to stringResource(R.string.filter_playlists),
                     AccountContentType.ALBUMS to stringResource(R.string.filter_albums),
-                    AccountContentType.ARTISTS to stringResource(R.string.filter_artists),
-                ),
-                currentValue = selectedContentType,
-                onValueUpdate = { viewModel.setSelectedContentType(it) },
-            )
-        }
-
-        when (selectedContentType) {
-            AccountContentType.PLAYLISTS -> {
-                items(
-                    items = playlists.orEmpty().distinctBy { it.id },
-                    key = { it.id },
-                ) { item ->
-                    YouTubeGridItem(
-                        item = item,
-                        fillMaxWidth = true,
-                        modifier = Modifier
-                            .combinedClickable(
-                                onClick = {
-                                    navController.navigate("online_playlist/${item.id}")
-                                },
-                                onLongClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    menuState.show {
-                                        YouTubePlaylistMenu(
-                                            playlist = item,
-                                            coroutineScope = coroutineScope,
-                                            onDismiss = menuState::dismiss,
-                                        )
-                                    }
-                                },
-                            ),
-                    )
-                }
-
-                if (playlists == null) {
-                    items(8) {
-                        ShimmerHost {
-                            GridItemPlaceHolder(fillMaxWidth = true)
-                        }
-                    }
-                }
+                    AccountContentType.ARTISTS to stringResource(R.string.filter_artists)),
+                    currentValue = selected, onValueUpdate = viewModel::setSelectedContentType)
             }
-
-            AccountContentType.ALBUMS -> {
-                items(
-                    items = albums.orEmpty().distinctBy { it.id },
-                    key = { it.id }
-                ) { item ->
-                    YouTubeGridItem(
-                        item = item,
-                        fillMaxWidth = true,
-                        modifier = Modifier
-                            .combinedClickable(
-                                onClick = {
-                                    navController.navigate("album/${item.id}")
-                                },
-                                onLongClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    menuState.show {
-                                        YouTubeAlbumMenu(
-                                            albumItem = item,
-                                            navController = navController,
-                                            onDismiss = menuState::dismiss
-                                        )
-                                    }
-                                }
-                            )
-                    )
-                }
-
-                if (albums == null) {
-                    items(8) {
-                        ShimmerHost {
-                            GridItemPlaceHolder(fillMaxWidth = true)
-                        }
-                    }
-                }
+            if (loading) item("loading", span = { GridItemSpan(maxLineSpan) }) { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+            if (failed) item("retry", span = { GridItemSpan(maxLineSpan) }) { GalaxRetryPanel(onRetry = viewModel::refresh) }
+            if (!loading && !failed && entries.isNullOrEmpty()) item("empty", span = { GridItemSpan(maxLineSpan) }) {
+                Text(stringResource(R.string.no_results_found), Modifier.padding(24.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-
-            AccountContentType.ARTISTS -> {
-                items(
-                    items = artists.orEmpty().distinctBy { it.id },
-                    key = { it.id }
-                ) { item ->
-                    YouTubeGridItem(
-                        item = item,
-                        fillMaxWidth = true,
-                        modifier = Modifier
-                            .combinedClickable(
-                                onClick = {
-                                    navController.navigate("artist/${item.id}")
-                                },
-                                onLongClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    menuState.show {
-                                        YouTubeArtistMenu(
-                                            artist = item,
-                                            onDismiss = menuState::dismiss
-                                        )
-                                    }
-                                }
-                            )
-                    )
-                }
-
-                if (artists == null) {
-                    items(8) {
-                        ShimmerHost {
-                            GridItemPlaceHolder(fillMaxWidth = true)
-                        }
-                    }
-                }
+            items(entries.orEmpty(), key = { it.id }, contentType = { it::class.simpleName }) { entry ->
+                GalaxRemoteItem(entry, navController, Modifier.fillMaxWidth())
             }
         }
     }
-
-    TopAppBar(
-        title = { Text(stringResource(R.string.account)) },
-        navigationIcon = {
-            IconButton(
-                onClick = navController::navigateUp,
-                onLongClick = navController::backToMain,
-            ) {
-                Icon(
-                    painterResource(R.drawable.arrow_back),
-                    contentDescription = null,
-                )
-            }
-        },
-    )
 }

@@ -27,6 +27,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -112,6 +113,10 @@ fun ArtistItemsScreen(
             state = lazyListState,
             contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
         ) {
+            item(key = "artist_section_intro") {
+                com.arturo254.opentune.core.designsystem.theme.GalaxScreenHeading(
+                    title, stringResource(R.string.songs))
+            }
             items(
                 items = itemsPage?.items.orEmpty().distinctBy { it.id },
                 key = { it.id },
@@ -211,6 +216,10 @@ fun ArtistItemsScreen(
             columns = GridCells.Adaptive(minSize = GridThumbnailHeight + 24.dp),
             contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues()
         ) {
+            item(key = "artist_section_intro", span = { androidx.compose.foundation.lazy.grid.GridItemSpan(maxLineSpan) }) {
+                com.arturo254.opentune.core.designsystem.theme.GalaxScreenHeading(
+                    title, stringResource(R.string.explore))
+            }
             items(
                 items = itemsPage?.items.orEmpty().distinctBy { it.id },
                 key = { it.id }

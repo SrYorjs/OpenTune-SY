@@ -195,6 +195,11 @@ fun HistoryScreen(
                 )
             )
         ) {
+            item(key = "history_intro") {
+                com.arturo254.opentune.core.designsystem.theme.GalaxScreenHeading(
+                    stringResource(R.string.history),
+                    stringResource(if (historySource == HistorySource.LOCAL) R.string.local_history else R.string.remote_history))
+            }
             item {
                 ChipsRow(
                     chips = if (isLoggedIn) listOf(
@@ -225,8 +230,8 @@ fun HistoryScreen(
                     }
 
                     items(
-                        items = section.songs,
-                        key = { "${section.title}_${it.id}_${section.songs.indexOf(it)}" }
+                        items = section.songs.distinctBy { it.id },
+                        key = { "${section.title}_${it.id}" }
                     ) { song ->
                         YouTubeListItem(
                             item = song,
