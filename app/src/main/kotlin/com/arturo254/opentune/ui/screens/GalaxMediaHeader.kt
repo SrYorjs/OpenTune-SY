@@ -1,6 +1,5 @@
 package com.arturo254.opentune.ui.screens
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +22,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -55,30 +55,33 @@ fun GalaxMediaHeader(
 ) {
     val backdrop = rememberLayerBackdrop()
     Box(modifier.fillMaxWidth()) {
-        Canvas(Modifier.matchParentSize().layerBackdrop(backdrop)) {
-            val radius = size.width.coerceAtLeast(1f) * 1.13f
-            drawCircle(
-                Brush.radialGradient(
-                    0f to accent.copy(alpha = .20f),
-                    .65f to accent.copy(alpha = .035f),
-                    1f to Color.Transparent,
-                    center = Offset(size.width * .78f, size.height * .22f),
-                    radius = radius,
-                ),
-                radius = radius,
-                center = Offset(size.width * .78f, size.height * .22f),
-            )
-            drawCircle(
-                Brush.radialGradient(
-                    0f to GalaxScreenStyle.violet.copy(alpha = .085f),
-                    1f to Color.Transparent,
-                    center = Offset(0f, size.height),
-                    radius = size.width * .9f,
-                ),
-                radius = size.width * .9f,
-                center = Offset(0f, size.height),
-            )
-        }
+        Box(
+            Modifier.matchParentSize()
+                .layerBackdrop(backdrop)
+                .drawWithCache {
+                    val radius = size.width.coerceAtLeast(1f) * 1.13f
+                    val accentCenter = Offset(size.width * .78f, size.height * .22f)
+                    val blue = Brush.radialGradient(
+                        0f to accent.copy(alpha = .20f),
+                        .65f to accent.copy(alpha = .035f),
+                        1f to Color.Transparent,
+                        center = accentCenter,
+                        radius = radius,
+                    )
+                    val purpleCenter = Offset(0f, size.height)
+                    val purpleRadius = size.width * .9f
+                    val purple = Brush.radialGradient(
+                        0f to GalaxScreenStyle.violet.copy(alpha = .085f),
+                        1f to Color.Transparent,
+                        center = purpleCenter,
+                        radius = purpleRadius,
+                    )
+                    onDrawBehind {
+                        drawCircle(blue, radius = radius, center = accentCenter)
+                        drawCircle(purple, radius = purpleRadius, center = purpleCenter)
+                    }
+                },
+        )
         CompositionLocalProvider(LocalGalaxLiquidBackdrop provides backdrop) {
             Column(
                 Modifier.fillMaxWidth().padding(
