@@ -25,10 +25,14 @@ class ControlsArchitectureTest {
     }
 
     @Test
-    fun existingChipsDelegateToNewPillWithoutChangingBehavior() {
+    fun existingChipsUseGalaxFilterAndPreserveSelectionBehavior() {
         val c = source("ui/component/ChipsRow.kt")
-        assertTrue(c.contains("OpenTunePillChip("))
+        assertTrue(c.contains("GalaxFilterChip("))
         assertTrue(c.contains("onValueUpdate(value)"))
-        assertTrue(c.contains("targetState = selected"))
+        assertTrue(c.contains("selected = currentValue == value"))
+        val chip = source("core/designsystem/component/GalaxFilterChip.kt")
+        assertTrue(chip.contains("onClick = onClick"))
+        assertTrue(chip.contains("enabled = enabled"))
+        assertTrue(chip.contains("LocalGalaxLiquidVariant.current"))
     }
 }
