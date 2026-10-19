@@ -131,6 +131,8 @@ import com.arturo254.opentune.ui.player.v5.v5OverlayGestures
 import com.arturo254.opentune.ui.player.layout.GalaxPlayerClassicScene
 import com.arturo254.opentune.ui.player.layout.GalaxPlayerLandscapeScene
 import com.arturo254.opentune.core.designsystem.component.GalaxOrbitField
+import com.arturo254.opentune.ui.player.v9.GalaxOriginalPlayerControls
+import com.arturo254.opentune.ui.player.v9.GalaxOriginalPlayerScene
 import com.arturo254.opentune.ui.player.layout.PlayerLayout
 import com.arturo254.opentune.ui.player.layout.resolvePlayerLayout
 import com.arturo254.opentune.ui.player.skin.rememberVisualSkin
@@ -696,9 +698,71 @@ fun BottomSheetPlayer(
             )
         }
 
+        val galaxOriginalControls: @Composable () -> Unit = {
+            GalaxOriginalPlayerControls(
+                style = playerDesignStyle,
+                state = playerState,
+                actions = playerActions,
+                accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
+                positionMs = position,
+                durationMs = duration,
+                pendingSeekMs = sliderPosition,
+                onSeek = updatedOnSliderValueChange,
+                onSeekFinished = updatedOnSliderValueChangeFinished,
+                onMenu = {
+                    enrichedMetadata?.let { metadata ->
+                        menuState.showPlayerPanelMenu(
+                            metadata = metadata,
+                            navController = navController,
+                            playerBottomSheetState = state,
+                            bottomSheetPageState = bottomSheetPageState,
+                        )
+                    }
+                },
+                onQueue = { queueSheetState.expandSoft() },
+                onLyrics = { lyricsSheetState.expandSoft() },
+            )
+        }
+
         PlayerLayout(
             style = playerDesignStyle,
             isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
+            galaxPortrait = {
+                GalaxOriginalPlayerScene(
+                    style = playerDesignStyle,
+                    isLandscape = false,
+                    isPlaying = isPlaying,
+                    colors = gradientColors,
+                    queuePeekHeight = queueSheetState.collapsedBound,
+                    artwork = {
+                        Thumbnail(
+                            sliderPositionProvider = { seekSession.pendingSeekMs },
+                            modifier = Modifier.fillMaxSize().nestedScroll(
+                                state.preUpPostDownNestedScrollConnection,
+                            ),
+                            isPlayerExpanded = state.isExpanded,
+                        )
+                    },
+                    controls = galaxOriginalControls,
+                )
+            },
+            galaxLandscape = {
+                GalaxOriginalPlayerScene(
+                    style = playerDesignStyle,
+                    isLandscape = true,
+                    isPlaying = isPlaying,
+                    colors = gradientColors,
+                    queuePeekHeight = queueSheetState.collapsedBound,
+                    artwork = {
+                        Thumbnail(
+                            sliderPositionProvider = { seekSession.pendingSeekMs },
+                            modifier = Modifier.fillMaxSize(),
+                            isPlayerExpanded = state.isExpanded,
+                        )
+                    },
+                    controls = galaxOriginalControls,
+                )
+            },
             compactLandscape = {
                     val littleBackground = MaterialTheme.colorScheme.primaryContainer
                     val littleTextColor = if (activePlayerGlass) Color.White
