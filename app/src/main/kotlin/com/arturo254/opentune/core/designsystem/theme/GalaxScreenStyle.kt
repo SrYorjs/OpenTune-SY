@@ -45,9 +45,9 @@ object GalaxScreenStyle {
 fun Modifier.galaxScreenBackground(pureBlack: Boolean = false): Modifier {
     val scheme = MaterialTheme.colorScheme
     val dark = scheme.background.luminance() < .45f
-    val ground = if (pureBlack) Color.Black else if (dark) GalaxScreenStyle.deepSpace else scheme.background
-    val blue = if (dark) GalaxScreenStyle.blue else scheme.primary
-    val violet = if (dark) GalaxScreenStyle.violet else scheme.tertiary
+    val ground = if (pureBlack) Color.Black else scheme.background
+    val blue = scheme.primary
+    val violet = scheme.tertiary
     return this.background(ground).drawWithCache {
         val span = size.width.coerceAtLeast(1f)
         val upper = Brush.radialGradient(
@@ -133,19 +133,19 @@ fun GalaxScreenHeading(title: String, subtitle: String, modifier: Modifier = Mod
 
 @Composable
 fun GalaxDestinationTheme(immersive: Boolean = false, content: @Composable () -> Unit) {
-    val original = if (immersive) galaxColorScheme(dark = true) else MaterialTheme.colorScheme
+    val original = MaterialTheme.colorScheme
     val reducedMotion = com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem.galaxMotion.reducedMotion
     val isDark = original.background.luminance() < .45f
     val scheme = if (isDark) original.copy(
-        background = if (original.background == Color.Black) Color.Black else GalaxScreenStyle.deepSpace,
-        surface = if (original.background == Color.Black) Color.Black else GalaxScreenStyle.midnight,
-        surfaceDim = Color(0xFF060912),
-        surfaceContainerLowest = Color(0xFF060912),
-        surfaceContainerLow = Color(0xFF0C1220),
-        surfaceContainer = Color(0xFF121A2A),
-        surfaceContainerHigh = Color(0xFF1B2537),
-        surfaceContainerHighest = Color(0xFF26334A),
-        outlineVariant = Color(0xFF354159),
+        background = original.background,
+        surface = original.surface,
+        surfaceDim = original.surfaceDim,
+        surfaceContainerLowest = original.surfaceContainerLowest,
+        surfaceContainerLow = original.surfaceContainerLow,
+        surfaceContainer = original.surfaceContainer,
+        surfaceContainerHigh = original.surfaceContainerHigh,
+        surfaceContainerHighest = original.surfaceContainerHighest,
+        outlineVariant = original.outlineVariant,
     ) else original
     MaterialTheme(
         colorScheme = scheme,
