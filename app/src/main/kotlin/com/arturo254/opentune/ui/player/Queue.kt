@@ -200,6 +200,39 @@ fun Queue(
         modifier = modifier,
         collapsedContent = {
             when (playerDesignStyle) {
+                PlayerDesignStyle.V9, PlayerDesignStyle.V10, PlayerDesignStyle.V11,
+                PlayerDesignStyle.V12, PlayerDesignStyle.V13, PlayerDesignStyle.V14,
+                PlayerDesignStyle.V15 -> {
+                    QueueCollapsedContentV2(
+                        showCodecOnPlayer = showCodecOnPlayer,
+                        currentFormat = currentFormat,
+                        textBackgroundColor = TextBackgroundColor,
+                        textButtonColor = textButtonColor,
+                        iconButtonColor = iconButtonColor,
+                        sleepTimerEnabled = sleepTimerEnabled,
+                        sleepTimerTimeLeft = sleepTimerTimeLeft,
+                        repeatMode = repeatMode,
+                        mediaMetadata = mediaMetadata,
+                        onExpandQueue = { state.expandSoft() },
+                        onSleepTimerClick = {
+                            if (sleepTimerEnabled) {
+                                playerConnection.service.sleepTimer.clear()
+                            } else {
+                                showSleepTimerDialog = true
+                            }
+                        },
+                        onShowLyrics = onShowLyrics,
+                        onRepeatModeClick = queueActions::toggleRepeat,
+                        onMenuClick = {
+                            menuState.showPlayerPanelMenu(
+                                metadata = mediaMetadata,
+                                navController = navController,
+                                playerBottomSheetState = playerBottomSheetState,
+                                bottomSheetPageState = bottomSheetPageState,
+                            )
+                        },
+                    )
+                }
                 PlayerDesignStyle.V2 -> {
                     QueueCollapsedContentV2(
                         showCodecOnPlayer = showCodecOnPlayer,
