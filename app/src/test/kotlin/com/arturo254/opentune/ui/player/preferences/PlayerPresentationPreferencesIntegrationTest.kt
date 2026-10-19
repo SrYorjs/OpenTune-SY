@@ -26,7 +26,8 @@ class PlayerPresentationPreferencesIntegrationTest {
         assertTrue(keys.contains("stringPreferencesKey(\"playerBackgroundStyle\")"))
         assertTrue(keys.contains("stringPreferencesKey(\"player_buttons_style\")"))
         assertTrue(keys.contains("stringPreferencesKey(\"sliderStyle\")"))
-        assertEquals(listOf("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"),
+        assertEquals(listOf("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8",
+            "V9", "V10", "V11", "V12", "V13", "V14", "V15"),
             PlayerDesignStyle.entries.map { it.name })
         assertEquals(PlayerDesignStyle.V8, PlayerPresentationDefaults.designStyle)
         assertEquals(PlayerBackgroundStyle.DEFAULT, PlayerPresentationDefaults.backgroundStyle)
