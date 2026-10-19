@@ -501,7 +501,7 @@ fun HomeScreen(
                 }
             }
 
-            if ((homePage?.sections?.size ?: 0) > 3) {
+            if ((homePage?.sections?.size ?: 0) > 3 || homePage?.continuation != null) {
                 item(key = "galax_home_more_discovery") {
                     GalaxHomeCatalogControl(
                         expanded = showAllRecommendations,
