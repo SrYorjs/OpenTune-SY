@@ -80,16 +80,14 @@ class HomeViewModel @Inject constructor(
                 val saved = withContext(Dispatchers.IO) {
                     database.allSongs().first()
                 }
-                val candidates = (
+                val candidates = galaxShufflePool(
                     quickPicks.value.orEmpty() +
-                    speedDialSongs.value +
-                    forgottenFavorites.value.orEmpty() +
-                    keepListening.value.orEmpty().filterIsInstance<Song>() +
-                    saved
-                ).filter { it.id.isNotBlank() }
-                    .distinctBy { it.id }
-                    .shuffled()
-                    .take(300)
+                        speedDialSongs.value +
+                        forgottenFavorites.value.orEmpty() +
+                        keepListening.value.orEmpty().filterIsInstance<Song>() +
+                        saved,
+                    key = { it.id },
+                )
                 if (candidates.isNotEmpty()) {
                     connection.playQueue(
                         ListQueue(
