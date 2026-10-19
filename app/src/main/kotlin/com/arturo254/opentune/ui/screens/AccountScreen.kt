@@ -62,7 +62,7 @@ fun AccountScreen(navController: NavController, scrollBehavior: TopAppBarScrollB
             if (!loading && !failed && entries.isNullOrEmpty()) item("empty", span = { GridItemSpan(maxLineSpan) }) {
                 Text(stringResource(R.string.no_results_found), Modifier.padding(24.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            items(entries.orEmpty(), key = { it.id }, contentType = { it::class.simpleName }) { entry ->
+            items(entries.orEmpty().distinctBy { it.id }, key = { it.id }, contentType = { it::class.simpleName }) { entry ->
                 GalaxRemoteItem(entry, navController, Modifier.fillMaxWidth())
             }
         }

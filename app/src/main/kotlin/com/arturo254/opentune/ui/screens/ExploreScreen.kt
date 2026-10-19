@@ -65,7 +65,7 @@ fun ExploreScreen(navController: NavController, exploreViewModel: ExploreViewMod
         explore?.moodAndGenres?.let { genres ->
             item("genres_title") { GalaxSectionHeading(stringResource(R.string.mood_and_genres),
                 onClick = { navController.navigate(Screens.MoodAndGenres.route) }) }
-            items(genres.chunked(2), key = { it.joinToString { genre -> genre.title } }, contentType = { "genres" }) { row ->
+            items(genres.distinctBy { it.endpoint.browseId to it.endpoint.params }.chunked(2), key = { it.joinToString { genre -> "${genre.endpoint.browseId}:${genre.endpoint.params}" } }, contentType = { "genres" }) { row ->
                 Row(Modifier.padding(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     row.forEach { genre -> MoodAndGenresButton(genre.title, genre.stripeColor,
                         { navController.navigate("youtube_browse/${genre.endpoint.browseId}?params=${Uri.encode(genre.endpoint.params.orEmpty())}") }, Modifier.weight(1f)) }

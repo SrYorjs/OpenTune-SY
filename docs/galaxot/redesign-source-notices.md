@@ -773,3 +773,36 @@ Original notices retained here for the Kotlin files delivered without inline com
  * Licensed Under GPL-3.0 | see git history for contributors
  */
 ```
+
+## app/src/main/kotlin/com/arturo254/opentune/ui/component/SpotifyLibraryItems.kt
+
+```text
+/*
+ * ArchiveTune (2026)
+ * © Rukamori — github.com/rukamori
+ * GPL-3.0 License | Contributors: see git history
+ * Do not remove or alter this notice. - Per GPL-3.0 Section 4 & Section 5
+ */
+```
+
+## app/src/main/kotlin/com/arturo254/opentune/ui/screens/library/LibrarySpotifyPlaylistsScreen.kt
+
+```text
+/*
+ * ArchiveTune (2026)
+ * © Rukamori — github.com/rukamori
+ * GPL-3.0 License | Contributors: see git history
+ * Do not remove or alter this notice. - Per GPL-3.0 Section 4 & Section 5
+ */
+```
+
+## app/src/main/kotlin/com/arturo254/opentune/ui/screens/playlist/SpotifyPlaylistScreen.kt
+
+```text
+/*
+ * ArchiveTune (2026)
+ * © Rukamori — github.com/rukamori
+ * GPL-3.0 License | Contributors: see git history
+ * Do not remove or alter this notice. - Per GPL-3.0 Section 4 & Section 5
+ */
+```
