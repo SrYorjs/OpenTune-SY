@@ -29,16 +29,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 object GalaxScreenStyle {
-    val pagePadding = 20.dp
-    val artworkShape = RoundedCornerShape(18.dp)
-    val panelShape = RoundedCornerShape(30.dp)
-    val pillShape = RoundedCornerShape(50)
-    val deepSpace = Color(0xFF05070D)
-    val midnight = Color(0xFF0B1120)
-    val elevated = Color(0xFF151B2B)
-    val violet = Color(0xFFA38AFF)
-    val blue = Color(0xFF75B9FF)
-    val ice = Color(0xFFE9F5FF)
+    val pagePadding = GalaxVisualKit.pageInset
+    val artworkShape = GalaxVisualKit.imageShape
+    val panelShape = GalaxVisualKit.panelShape
+    val pillShape = GalaxVisualKit.pillShape
+    val deepSpace = GalaxVisualKit.night
+    val midnight = GalaxVisualKit.abyss
+    val elevated = GalaxVisualKit.layer
+    val violet = GalaxVisualKit.ultraviolet
+    val blue = GalaxVisualKit.azurite
+    val ice = GalaxVisualKit.frost
 }
 
 @Composable
@@ -86,54 +86,48 @@ fun Modifier.galaxScreenBackground(pureBlack: Boolean = false): Modifier {
 
 @Composable
 fun GalaxScreenHeading(title: String, subtitle: String, modifier: Modifier = Modifier) {
-    Column(
-        modifier.fillMaxWidth().padding(horizontal = GalaxScreenStyle.pagePadding)
-            .padding(top = 18.dp, bottom = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(7.dp),
+    val colors = MaterialTheme.colorScheme
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = GalaxScreenStyle.pagePadding)
+            .padding(top = 23.dp, bottom = 19.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Box(
-                Modifier.size(6.dp).background(
-                    MaterialTheme.colorScheme.primary,
-                    RoundedCornerShape(50),
-                ),
-            )
-            Text(
-                text = "GALAXOS  /  MUSIC UNIVERSE",
-                color = MaterialTheme.colorScheme.primary.copy(alpha = .84f),
-                style = MaterialTheme.typography.labelSmall,
-                letterSpacing = 1.5.sp,
-                maxLines = 1,
-            )
-        }
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineLarge.copy(
-                fontWeight = FontWeight.Bold,
-                letterSpacing = (-1.1).sp,
-                lineHeight = 38.sp,
-            ),
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        if (subtitle.isNotBlank()) {
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Spacer(
-            Modifier.padding(top = 5.dp).fillMaxWidth(.24f).height(2.dp)
+        Box(
+            modifier = Modifier
+                .size(width = 4.dp, height = if (subtitle.isBlank()) 63.dp else 86.dp)
                 .background(
-                    Brush.horizontalGradient(
-                        0f to MaterialTheme.colorScheme.primary.copy(alpha = .68f),
-                        1f to Color.Transparent,
+                    Brush.verticalGradient(
+                        listOf(
+                            colors.primary,
+                            colors.tertiary.copy(alpha = .66f),
+                            Color.Transparent,
+                        ),
                     ),
+                    GalaxVisualKit.pillShape,
                 ),
         )
+        Column(
+            verticalArrangement = Arrangement.spacedBy(9.dp),
+        ) {
+            GalaxEyebrow("GALAXOT  /  MUSIC UNIVERSE")
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineLarge,
+                color = colors.onSurface,
+                maxLines = 2,
+            )
+            if (subtitle.isNotBlank()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                    maxLines = 2,
+                )
+            }
+        }
     }
 }
 
@@ -155,6 +149,16 @@ fun GalaxDestinationTheme(immersive: Boolean = false, content: @Composable () ->
     ) else original
     MaterialTheme(
         colorScheme = scheme,
+        typography = MaterialTheme.typography.copy(
+            headlineLarge = MaterialTheme.typography.headlineLarge.copy(
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-.85).sp,
+            ),
+            titleLarge = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = (-.4).sp,
+            ),
+        ),
         shapes = MaterialTheme.shapes.copy(
             extraSmall = RoundedCornerShape(9.dp),
             small = RoundedCornerShape(14.dp),
@@ -164,7 +168,7 @@ fun GalaxDestinationTheme(immersive: Boolean = false, content: @Composable () ->
         ),
     ) {
         ProvideOpenTuneDesignSystem(
-            artworkRadiusDp = 18f,
+            artworkRadiusDp = 20f,
             reduceMotion = reducedMotion,
         ) {
             Box(Modifier.fillMaxSize().galaxScreenBackground()) {
