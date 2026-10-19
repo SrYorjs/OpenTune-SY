@@ -50,8 +50,10 @@ class GalaxOSVisualRedesignContractTest {
         assertTrue(media.contains("GalaxMediaFacts(facts)"))
         assertTrue(media.contains("supporting()"))
         assertTrue(media.contains("actions()"))
-        assertTrue(discovery.contains(".galaxLiquidChrome(shape"))
-        assertTrue(discovery.contains(".clickable(onClick = onOpenSearch)"))
+        assertTrue(discovery.contains("GalaxDiscoverPortal("))
+        assertTrue(discovery.contains("onSearch = onOpenSearch"))
+        val portal = source("ui/screens/GalaxDiscoverExperience.kt")
+        assertTrue(portal.contains(".clickable(role = Role.Button, onClick = onSearch)"))
     }
 
     @Test
