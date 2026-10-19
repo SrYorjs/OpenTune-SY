@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,7 +25,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.geometry.Offset
+import com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 
@@ -69,10 +75,19 @@ fun BottomSheetMenu(
             dragHandle = {
                 Box(
                     modifier = Modifier
-                        .padding(vertical = 12.dp)
-                        .size(width = 40.dp, height = 4.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                        .padding(top = 15.dp, bottom = 13.dp)
+                        .width(48.dp)
+                        .height(5.dp)
+                        .clip(GalaxScreenStyle.pillShape)
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.primary.copy(alpha = .35f),
+                                    MaterialTheme.colorScheme.primary.copy(alpha = .92f),
+                                    GalaxScreenStyle.violet.copy(alpha = .62f),
+                                ),
+                            ),
+                        ),
                 )
             },
             modifier = modifier.fillMaxHeight()
@@ -80,9 +95,19 @@ fun BottomSheetMenu(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .galaxScreenBackground()
-                    .padding(horizontal = 16.dp)
                     .weight(1f, fill = false)
+                    .galaxScreenBackground()
+                    .drawWithCache {
+                        val halo = Brush.radialGradient(
+                            0f to GalaxScreenStyle.blue.copy(alpha = .11f),
+                            .7f to GalaxScreenStyle.violet.copy(alpha = .025f),
+                            1f to Color.Transparent,
+                            center = Offset(size.width * .82f, 0f),
+                            radius = size.width * .93f,
+                        )
+                        onDrawBehind { drawRect(halo) }
+                    }
+                    .padding(horizontal = 16.dp)
             ) {
                 state.content(this)
             }
