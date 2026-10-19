@@ -56,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -69,6 +70,8 @@ import androidx.compose.ui.unit.sp
 import androidx.media3.common.Player
 import coil3.compose.AsyncImage
 import com.arturo254.opentune.R
+import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidChrome
+import com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle
 import com.arturo254.opentune.db.entities.FormatEntity
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.ui.component.ActionPromptDialog
@@ -103,57 +106,157 @@ fun CurrentSongHeader(
     onInfiniteQueueClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier.fillMaxWidth().background(backgroundColor)
-        .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
-        .bottomSheetDraggable(sheetState).padding(horizontal = 24.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Box(Modifier.align(Alignment.CenterHorizontally).width(36.dp).height(4.dp)
-            .clip(RoundedCornerShape(50)).background(onBackgroundColor.copy(alpha = .25f)))
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+    Column(
+        modifier.fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    0f to backgroundColor,
+                    1f to backgroundColor.copy(alpha = .94f),
+                ),
+            )
+            .windowInsetsPadding(WindowInsets.systemBars.only(
+                WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
+            ))
+            .bottomSheetDraggable(sheetState)
+            .padding(horizontal = 22.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(17.dp),
+    ) {
+        Box(
+            Modifier.align(Alignment.CenterHorizontally)
+                .width(46.dp)
+                .height(4.dp)
+                .clip(GalaxScreenStyle.pillShape)
+                .background(onBackgroundColor.copy(alpha = .25f)),
+        )
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(stringResource(R.string.queue), style = MaterialTheme.typography.headlineMedium,
-                    color = onBackgroundColor, fontWeight = FontWeight.Bold)
-                Text(pluralStringResource(R.plurals.n_song, songCount, songCount) + " · " + makeTimeString(queueDuration * 1000L),
-                    style = MaterialTheme.typography.bodySmall, color = onBackgroundColor.copy(alpha = .6f))
+                Text(
+                    text = "GALAXOS  /  PLAYBACK",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = stringResource(R.string.queue),
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = onBackgroundColor,
+                )
+                Text(
+                    text = pluralStringResource(R.plurals.n_song, songCount, songCount) +
+                        "  ·  " + makeTimeString(queueDuration * 1000L),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = onBackgroundColor.copy(alpha = .64f),
+                )
             }
-            IconButton(onClick = onMenuClick) {
-                Icon(painterResource(R.drawable.more_vert), stringResource(R.string.more_options), tint = onBackgroundColor)
+            IconButton(
+                onClick = onMenuClick,
+                modifier = Modifier.galaxLiquidChrome(
+                    GalaxScreenStyle.pillShape, emphasis = .48f,
+                ),
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.more_vert),
+                    contentDescription = stringResource(R.string.more_options),
+                    tint = onBackgroundColor,
+                )
             }
         }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            com.arturo254.opentune.core.designsystem.component.Artwork(mediaMetadata?.thumbnailUrl,
-                Modifier.size(56.dp), shape = com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.artworkShape)
+        Row(
+            modifier = Modifier.fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(onBackgroundColor.copy(alpha = .075f))
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            com.arturo254.opentune.core.designsystem.component.Artwork(
+                mediaMetadata?.thumbnailUrl,
+                Modifier.size(64.dp),
+                shape = GalaxScreenStyle.artworkShape,
+            )
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text(mediaMetadata?.title.orEmpty(), style = MaterialTheme.typography.titleMedium, color = onBackgroundColor,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(mediaMetadata?.artists?.joinToString { it.name }.orEmpty(), style = MaterialTheme.typography.bodySmall,
-                    color = onBackgroundColor.copy(alpha = .6f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    text = mediaMetadata?.title.orEmpty(),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = onBackgroundColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = mediaMetadata?.artists?.joinToString { it.name }.orEmpty(),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = onBackgroundColor.copy(alpha = .68f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
             IconButton(onClick = onToggleLike) {
-                Icon(painterResource(if (mediaMetadata?.liked == true) R.drawable.favorite else R.drawable.favorite_border),
-                    stringResource(R.string.action_like), tint = if (mediaMetadata?.liked == true) MaterialTheme.colorScheme.primary else onBackgroundColor)
+                Icon(
+                    painter = painterResource(
+                        if (mediaMetadata?.liked == true) R.drawable.favorite
+                        else R.drawable.favorite_border,
+                    ),
+                    contentDescription = stringResource(R.string.action_like),
+                    tint = if (mediaMetadata?.liked == true)
+                        MaterialTheme.colorScheme.primary else onBackgroundColor,
+                )
             }
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            com.arturo254.opentune.ui.component.LiquidGlassIconButton(onClick = onShuffleClick, selected = shuffleModeEnabled,
-                accessibilityLabel = stringResource(R.string.shuffle)) {
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            com.arturo254.opentune.ui.component.LiquidGlassIconButton(
+                onClick = onShuffleClick,
+                selected = shuffleModeEnabled,
+                accessibilityLabel = stringResource(R.string.shuffle),
+            ) {
                 Icon(painterResource(R.drawable.shuffle), null, tint = onBackgroundColor)
             }
-            com.arturo254.opentune.ui.component.LiquidGlassIconButton(onClick = onRepeatClick,
-                selected = repeatMode != Player.REPEAT_MODE_OFF, accessibilityLabel = stringResource(R.string.player_a11y_repeat)) {
-                Icon(painterResource(if (repeatMode == Player.REPEAT_MODE_ONE) R.drawable.repeat_one else R.drawable.repeat), null, tint = onBackgroundColor)
+            com.arturo254.opentune.ui.component.LiquidGlassIconButton(
+                onClick = onRepeatClick,
+                selected = repeatMode != Player.REPEAT_MODE_OFF,
+                accessibilityLabel = stringResource(R.string.player_a11y_repeat),
+            ) {
+                Icon(
+                    painterResource(
+                        if (repeatMode == Player.REPEAT_MODE_ONE)
+                            R.drawable.repeat_one else R.drawable.repeat,
+                    ),
+                    null,
+                    tint = onBackgroundColor,
+                )
             }
-            com.arturo254.opentune.ui.component.LiquidGlassIconButton(onClick = onInfiniteQueueClick, selected = infiniteQueueEnabled,
-                accessibilityLabel = stringResource(R.string.similar_content)) {
+            com.arturo254.opentune.ui.component.LiquidGlassIconButton(
+                onClick = onInfiniteQueueClick,
+                selected = infiniteQueueEnabled,
+                accessibilityLabel = stringResource(R.string.similar_content),
+            ) {
                 Icon(painterResource(R.drawable.all_inclusive), null, tint = onBackgroundColor)
             }
-            com.arturo254.opentune.ui.component.LiquidGlassIconButton(onClick = onLockClick, selected = locked,
-                accessibilityLabel = stringResource(R.string.galax_queue_order)) {
-                Icon(painterResource(if (locked) R.drawable.lock else R.drawable.lock_open), null, tint = onBackgroundColor)
+            com.arturo254.opentune.ui.component.LiquidGlassIconButton(
+                onClick = onLockClick,
+                selected = locked,
+                accessibilityLabel = stringResource(R.string.galax_queue_order),
+            ) {
+                Icon(
+                    painterResource(if (locked) R.drawable.lock else R.drawable.lock_open),
+                    null,
+                    tint = onBackgroundColor,
+                )
             }
         }
-        if (infiniteQueueEnabled) Text(stringResource(R.string.queue_autoplaying_similar),
-            style = MaterialTheme.typography.bodySmall, color = onBackgroundColor.copy(alpha = .55f))
+        if (infiniteQueueEnabled) {
+            Text(
+                text = stringResource(R.string.queue_autoplaying_similar),
+                style = MaterialTheme.typography.bodySmall,
+                color = onBackgroundColor.copy(alpha = .62f),
+            )
+        }
     }
 }
 
