@@ -50,3 +50,27 @@ La implementación fuente está en:
 Para actualizar Android Studio sin perder modificaciones locales: `git status --short`, `git fetch origin`, `git switch opentune-rebuild-v1`, `git pull --ff-only`, `git log -1 --oneline`.
 
 Esta fase **no equivale a una reconstrucción literal completa**. Ninguna página pendiente se marcará como finalizada antes de reemplazar su composición, verificar funcionalidad y pasar la compilación.
+
+
+## Continuación — aleatorio y superficies secundarias
+
+- Inicio / Aleatorio: antes la acción solo consultaba `quickPicks` y `speedDialSongs` y se limitaba a iniciar radio desde una canción; ahora recupera canciones guardadas fuera del hilo principal, mezcla una cola `ListQueue` real, limita el número de pistas y elimina duplicados. Si la biblioteca está vacía, intenta una semilla de descubrimiento y, en último término, una variante del catálogo. El botón muestra estado de carga y feedback traducido en ausencia de música.
+- `viewmodels/GalaxShufflePool.kt`: algoritmo puro de mezcla limitada, con pruebas de identidad, límites, aleatoriedad y vacío.
+- `ui/component/BottomSheetMenu.kt`: nuevo tratamiento galáctico de menús, luz superior cacheada y asa más visible, manteniendo exactamente los callbacks.
+- `ui/player/panels/GalaxEqualizerCurve.kt`: visualización de espectro y bandas reales, con cuadrícula, relleno y brillo en caché, sin alterar el procesamiento del audio.
+- `ui/menu/PlayerMenu.kt`: encabezado Audio Lab y estado de activación. Importar, guardar, presets y control de bandas siguen disponibles.
+- `ui/player/QueueComponents.kt`: encabezado de cola reconstruido con canción actual, metadatos y controles Liquid Glass originales para repetición, shuffle, bloqueo y reproducción similar.
+
+### Estado de esta continuación
+
+| Alcance | Estado |
+| --- | --- |
+| Aleatorio de Inicio con fallback y cola real | Código y pruebas añadidos |
+| Menú de tres puntos | Contenedor compartido rediseñado; quedan variaciones internas por ruta |
+| Ecualizador | Curva y encabezado rediseñados; funcionalidad y preferencias preservadas |
+| Cola | Cabecera y controles rediseñados; lista/gestos internos conservados |
+| Biblioteca/Buscar | Continúa pendiente la reconstrucción completa del contenido interno |
+| Letras/temporizador/información/ajustes especializados | Pendientes de reconstrucción individual en esta fase |
+| Animaciones y rendimiento de reproductor a 60 FPS | Pendiente de perfilado en S24 FE |
+
+La migración no elimina `MusicService`, `Media3`, preferencias existentes, descargas ni su código de negocio. El motor Liquid Glass y la barra inferior no deben sufrir cambios dentro de este tramo.
