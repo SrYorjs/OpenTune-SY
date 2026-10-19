@@ -8,7 +8,7 @@ import org.junit.Test
 
 class PlayerLayoutTest {
     @Test
-    fun allEightPersistedVersionsHaveExactlyOneLayoutFamily() {
+    fun allFifteenPersistedVersionsHaveExactlyOneLayoutFamily() {
         val expected = mapOf(
             PlayerDesignStyle.V1 to PlayerLayoutFamily.CLASSIC,
             PlayerDesignStyle.V2 to PlayerLayoutFamily.V2,
@@ -18,6 +18,13 @@ class PlayerLayoutTest {
             PlayerDesignStyle.V6 to PlayerLayoutFamily.CLASSIC,
             PlayerDesignStyle.V7 to PlayerLayoutFamily.CINEMATIC,
             PlayerDesignStyle.V8 to PlayerLayoutFamily.IMMERSIVE,
+            PlayerDesignStyle.V9 to PlayerLayoutFamily.GALAX,
+            PlayerDesignStyle.V10 to PlayerLayoutFamily.GALAX,
+            PlayerDesignStyle.V11 to PlayerLayoutFamily.GALAX,
+            PlayerDesignStyle.V12 to PlayerLayoutFamily.GALAX,
+            PlayerDesignStyle.V13 to PlayerLayoutFamily.GALAX,
+            PlayerDesignStyle.V14 to PlayerLayoutFamily.GALAX,
+            PlayerDesignStyle.V15 to PlayerLayoutFamily.GALAX,
         )
         assertEquals(PlayerDesignStyle.entries.toSet(), expected.keys)
         expected.forEach { (style, family) ->
@@ -53,10 +60,13 @@ class PlayerLayoutTest {
     }
 
     @Test
-    fun existingSharedBackgroundRulesAreNotAltered() {
+    fun backgroundOwnershipIsolatedForSpecialAndGalaxStyles() {
         for (style in PlayerDesignStyle.entries) {
             for (landscape in listOf(true, false)) {
-                val expected = style != PlayerDesignStyle.V5 && style != PlayerDesignStyle.V7
+                val expected = style in setOf(
+                    PlayerDesignStyle.V1, PlayerDesignStyle.V2,
+                    PlayerDesignStyle.V3, PlayerDesignStyle.V4, PlayerDesignStyle.V6,
+                )
                 val route = resolvePlayerLayout(style, landscape)
                 assertEquals("shared backdrop for $style / landscape=$landscape",
                     expected, route.hasSharedBackdrop)
@@ -64,7 +74,7 @@ class PlayerLayoutTest {
         }
         assertFalse(resolvePlayerLayout(PlayerDesignStyle.V7, false).hasSharedBackdrop)
         assertFalse(resolvePlayerLayout(PlayerDesignStyle.V5, true).hasSharedBackdrop)
-        assertTrue(resolvePlayerLayout(PlayerDesignStyle.V8, true).hasSharedBackdrop)
+        assertFalse(resolvePlayerLayout(PlayerDesignStyle.V8, true).hasSharedBackdrop)
     }
 
     @Test
