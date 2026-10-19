@@ -757,6 +757,7 @@ fun ForgottenFavoritesSection(
     metadataMap: Map<String, ItemMetadata> = emptyMap(),
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val rows = min(4, forgottenFavorites.size)
     val distinctForgottenFavorites = remember(forgottenFavorites) { forgottenFavorites.distinctBy { it.id } }
 
@@ -809,7 +810,15 @@ fun ForgottenFavoritesSection(
                             if (song.id == mediaMetadata?.id) {
                                 playerConnection.player.togglePlayPause()
                             } else {
-                                playerConnection.playQueue(YouTubeQueue.radio(song.toMediaMetadata()))
+                                playerConnection.playQueue(
+                                    ListQueue(
+                                        title = context.getString(R.string.forgotten_favorites),
+                                        items = distinctForgottenFavorites.map { it.toMediaItem() },
+                                        startIndex = distinctForgottenFavorites.indexOfFirst {
+                                            it.id == song.id
+                                        }.coerceAtLeast(0),
+                                    ),
+                                )
                             }
                         },
                         onLongClick = {
