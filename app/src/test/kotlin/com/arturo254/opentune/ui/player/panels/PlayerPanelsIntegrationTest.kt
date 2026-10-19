@@ -20,10 +20,10 @@ class PlayerPanelsIntegrationTest {
         val panel = source("ui/player/panels/PlayerPanelMenus.kt")
         val menu = source("ui/menu/PlayerMenu.kt")
 
-        assertEquals(2, Regex("menuState\\.showPlayerPanelMenu\\(").findAll(player).count())
+        assertEquals(3, Regex("menuState\\.showPlayerPanelMenu\\(").findAll(player).count())
         assertEquals(5, Regex("menuState\\.showPlayerPanelMenu\\(").findAll(controls).count())
         assertEquals(1, Regex("menuState\\.showPlayerPanelMenu\\(").findAll(source("ui/player/v8/V8PlayerComponents.kt")).count())
-        assertEquals(5, Regex("menuState\\.showPlayerPanelMenu\\(").findAll(queue).count())
+        assertEquals(6, Regex("menuState\\.showPlayerPanelMenu\\(").findAll(queue).count())
         for (file in listOf(player, controls, queue)) {
             assertFalse(Regex("""menuState\.show\s*\{\s*PlayerMenu\(""").containsMatchIn(file))
             assertFalse(file.contains("PlayerMenu("))
