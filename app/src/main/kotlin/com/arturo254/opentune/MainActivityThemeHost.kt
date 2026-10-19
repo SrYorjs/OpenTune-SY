@@ -17,6 +17,7 @@ import coil3.imageLoader
 import coil3.request.ImageRequest
 import coil3.request.allowHardware
 import coil3.toBitmap
+import com.arturo254.opentune.constants.ArtworkReactiveThemeKey
 import com.arturo254.opentune.constants.AppFontKey
 import com.arturo254.opentune.constants.AppFontStyle
 import com.arturo254.opentune.constants.CustomThemeColorKey
@@ -56,6 +57,7 @@ internal fun MainActivityThemeHost(
     ) -> Unit,
 ) {
     val enableDynamicTheme by rememberPreference(DynamicThemeKey, defaultValue = false)
+    val artworkReactiveTheme by rememberPreference(ArtworkReactiveThemeKey, defaultValue = true)
     val customThemeColorValue by rememberPreference(CustomThemeColorKey, defaultValue = "default")
     val darkTheme by rememberEnumPreference(DarkModeKey, defaultValue = DarkMode.AUTO)
     val appFontStyle by rememberEnumPreference(AppFontKey, defaultValue = AppFontStyle.OPEN_TUNE)
@@ -119,9 +121,10 @@ internal fun MainActivityThemeHost(
     }
     var artworkThemeActive by remember { mutableStateOf(false) }
 
-    LaunchedEffect(playerConnection, customThemeColor) {
+    LaunchedEffect(playerConnection, customThemeColor, artworkReactiveTheme) {
         themeColor = customThemeColor
         artworkThemeActive = false
+        if (!artworkReactiveTheme) return@LaunchedEffect
         val connection = playerConnection ?: return@LaunchedEffect
         connection.service.currentMediaMetadata.collectLatest { song ->
             if (song == null) {
