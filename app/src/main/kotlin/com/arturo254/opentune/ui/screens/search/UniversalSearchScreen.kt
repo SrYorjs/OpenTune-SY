@@ -169,35 +169,24 @@ fun UniversalSearchScreen(
                 .liquidGlassScreenBackground(pureBlack = pureBlack),
     ) {
         item(key = "galax_search_heading") {
-            Column(Modifier.padding(horizontal = 12.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(query, style = MaterialTheme.typography.headlineLarge)
-                Text(stringResource(R.string.galax_search_results), style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+            GalaxSearchEditorialHero(
+                query = query,
+                count = state.result.tracks.size,
+                isLoading = state.isLoading,
+            )
         }
-        item(key = "universal_quality_mode") {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(designSpacing.qualityFilterGap),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-            ) {
-                Text(
-                    text = stringResource(R.string.universal_quality_title),
-                    style = MaterialTheme.typography.labelMedium,
-                    modifier = Modifier.padding(end = 3.dp),
+        item(key = "galax_quality_controls") {
+            GalaxSearchQualityBar(
+                mode = qualityMode,
+                onModeChange = { qualityMode = it },
+            )
+        }
+        if (state.result.tracks.isNotEmpty()) {
+            item(key = "galax_search_result_heading") {
+                GalaxSearchSectionHeading(
+                    title = "Resultados de tu universo",
+                    detail = "Toca para reproducir, elegir una versión o gestionar su copia offline.",
                 )
-                listOf(
-                    AudioSelectionMode.AUTOMATIC to R.string.universal_quality_auto,
-                    AudioSelectionMode.BEST_QUALITY to R.string.universal_quality_best,
-                    AudioSelectionMode.DATA_SAVER to R.string.universal_quality_saver,
-                ).forEach { (mode, label) ->
-                    com.arturo254.opentune.core.designsystem.component.OpenTunePillChip(
-                        selected = qualityMode == mode, onClick = { qualityMode = mode }, horizontalPadding = 14.dp,
-                    ) { Text(stringResource(label), style = MaterialTheme.typography.labelSmall, maxLines = 1) }
-                }
             }
         }
 
