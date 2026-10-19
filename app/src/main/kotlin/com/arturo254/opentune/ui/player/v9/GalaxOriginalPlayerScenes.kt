@@ -398,6 +398,24 @@ private fun GalaxOriginalBackdrop(
                         center = Offset(size.width * .8f, size.height * .64f),
                     )
                 }
+                PlayerDesignStyle.V10 -> {
+                    for (ring in 0..4) {
+                        val radius = size.width * (.29f + ring * .10f)
+                        drawArc(
+                            color = if (ring % 2 == 0) accent.copy(alpha = .43f)
+                                else secondary.copy(alpha = .33f),
+                            startAngle = -73f + ring * 37f,
+                            sweepAngle = 65f + ring * 9f,
+                            useCenter = false,
+                            topLeft = Offset(
+                                size.width * .51f - radius,
+                                size.height * .43f - radius,
+                            ),
+                            size = Size(radius * 2f, radius * 2f),
+                            style = Stroke(width = (1f + ring * .21f).dp.toPx()),
+                        )
+                    }
+                }
                 PlayerDesignStyle.V11 -> {
                     val gap = 24.dp.toPx()
                     var x = 0f
