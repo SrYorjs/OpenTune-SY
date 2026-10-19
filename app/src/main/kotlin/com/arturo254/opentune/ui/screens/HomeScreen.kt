@@ -201,15 +201,6 @@ fun HomeScreen(
                         avatarUrl = url,
                     )
                 }
-                featuredTrack?.let { featured ->
-                    item(key = "galax_featured_track") {
-                        val active = featured.id == mediaMetadata?.id
-                        GalaxFeaturedTrack(featured, active && isPlaying) {
-                            if (active) playerConnection.player.togglePlayPause()
-                            else playerConnection.playQueue(com.arturo254.opentune.playback.queues.YouTubeQueue.radio(featured.toMediaMetadata()))
-                        }
-                    }
-                }
                 item(key = "galax_home_actions") {
                     GalaxHomeActions(
                         canShuffle = !shufflePending,
@@ -233,6 +224,15 @@ fun HomeScreen(
                             navController.navigate(com.arturo254.opentune.ui.screens.musicrecognition.MusicRecognitionRoute)
                         },
                     )
+                }
+                featuredTrack?.let { featured ->
+                    item(key = "galax_featured_track") {
+                        val active = featured.id == mediaMetadata?.id
+                        GalaxFeaturedTrack(featured, active && isPlaying) {
+                            if (active) playerConnection.player.togglePlayPause()
+                            else playerConnection.playQueue(com.arturo254.opentune.playback.queues.YouTubeQueue.radio(featured.toMediaMetadata()))
+                        }
+                    }
                 }
                 if (orbitSongs.isNotEmpty()) {
                     item(key = "galax_orbit_intro") {
