@@ -21,7 +21,8 @@ class Player2CompatibilityContractTest {
     @Test
     fun allPersistedStylesRemainAvailableIncludingV4AndV6() {
         assertEquals(
-            listOf("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8"),
+            listOf("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8",
+                "V9", "V10", "V11", "V12", "V13", "V14", "V15"),
             PlayerDesignStyle.entries.map { it.name },
         )
         assertNotNull(PlayerBackgroundStyle.DEFAULT)
