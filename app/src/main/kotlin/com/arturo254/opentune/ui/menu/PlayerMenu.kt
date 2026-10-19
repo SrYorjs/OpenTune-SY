@@ -1230,6 +1230,41 @@ fun EqualizerDialog(onDismiss: () -> Unit, openSystemEqualizer: () -> Unit) {
                         return@Column
                     }
 
+                    Row(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(horizontal = 4.dp, vertical = 15.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            Text(
+                                text = "GALAXOS  /  AUDIO LAB",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                            Text(
+                                text = stringResource(R.string.eq_bands),
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                        Text(
+                            text = stringResource(
+                                if (eqEnabled) R.string.enabled else R.string.disabled,
+                            ),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(
+                                    MaterialTheme.colorScheme.primary.copy(alpha = .14f),
+                                )
+                                .padding(horizontal = 14.dp, vertical = 9.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                     com.arturo254.opentune.ui.player.panels.GalaxEqualizerCurve(
                         bandLevelsMb, minMb, maxMb, stringResource(R.string.eq_bands),
                     )
