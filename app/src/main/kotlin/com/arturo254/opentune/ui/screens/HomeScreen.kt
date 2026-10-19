@@ -61,6 +61,8 @@ import com.arturo254.opentune.ui.utils.SnapLayoutInfoProvider
 import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.models.toMediaMetadata
 import com.arturo254.opentune.db.entities.Song
+import com.arturo254.opentune.extensions.toMediaItem
+import com.arturo254.opentune.playback.queues.ListQueue
 import com.arturo254.opentune.ui.menu.SongMenu
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import com.arturo254.opentune.viewmodels.HomeViewModel
@@ -237,7 +239,20 @@ fun HomeScreen(
                         val active = featured.id == mediaMetadata?.id
                         GalaxFeaturedTrack(featured, active && isPlaying) {
                             if (active) playerConnection.player.togglePlayPause()
-                            else playerConnection.playQueue(com.arturo254.opentune.playback.queues.YouTubeQueue.radio(featured.toMediaMetadata()))
+                            else if (quickPicks.orEmpty().any { it.id == featured.id }) {
+                                playerConnection.playQueue(
+                                    com.arturo254.opentune.playback.queues.YouTubeQueue.radio(
+                                        featured.toMediaMetadata(),
+                                    ),
+                                )
+                            } else {
+                                playerConnection.playQueue(
+                                    ListQueue(
+                                        title = context.getString(R.string.galax_home_title),
+                                        items = listOf(featured.toMediaItem()),
+                                    ),
+                                )
+                            }
                         }
                     }
                 }
@@ -258,8 +273,11 @@ fun HomeScreen(
                                     playerConnection.player.togglePlayPause()
                                 } else {
                                     playerConnection.playQueue(
-                                        com.arturo254.opentune.playback.queues.YouTubeQueue.radio(
-                                            song.toMediaMetadata(),
+                                        ListQueue(
+                                            title = context.getString(R.string.galax_home_title),
+                                            items = orbitSongs.map { it.toMediaItem() },
+                                            startIndex = orbitSongs.indexOfFirst { it.id == song.id }
+                                                .coerceAtLeast(0),
                                         ),
                                     )
                                 }
