@@ -52,6 +52,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import timber.log.Timber
 import javax.inject.Inject
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
+import com.arturo254.opentune.innertube.models.SongItem
+import com.arturo254.opentune.playback.queues.YouTubeQueue
+import com.arturo254.opentune.playback.queues.ListQueue
+import com.arturo254.opentune.models.toMediaMetadata
+import com.arturo254.opentune.extensions.toMediaItem
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -62,6 +71,66 @@ class HomeViewModel @Inject constructor(
     private val deezerSource: DeezerMusicSource,
     private val sourcePlaybackCoordinator: SourcePlaybackCoordinator,
 ) : ViewModel() {
+    private var galaxShuffleJob: Job? = null
+
+    fun playGalaxShuffle(connection: PlayerConnection, onResult: (Boolean) -> Unit) {
+        if (galaxShuffleJob?.isActive == true) return
+        galaxShuffleJob = viewModelScope.launch {
+            val started = try {
+                val saved = withContext(Dispatchers.IO) {
+                    database.allSongs().first()
+                }
+                val candidates = (
+                    quickPicks.value.orEmpty() +
+                    speedDialSongs.value +
+                    forgottenFavorites.value.orEmpty() +
+                    keepListening.value.orEmpty().filterIsInstance<Song>() +
+                    saved
+                ).filter { it.id.isNotBlank() }
+                    .distinctBy { it.id }
+                    .shuffled()
+                    .take(300)
+                if (candidates.isNotEmpty()) {
+                    connection.playQueue(
+                        ListQueue(
+                            title = context.getString(com.arturo254.opentune.R.string.shuffle),
+                            items = candidates.map { it.toMediaItem() },
+                        ),
+                    )
+                    true
+                } else {
+                    val discovery = (
+                        similarRecommendations.value.orEmpty().flatMap { it.items } +
+                        homePage.value?.sections.orEmpty().flatMap { it.items }
+                    ).filterIsInstance<SongItem>()
+                        .distinctBy { it.id }
+                        .randomOrNull()
+                    when {
+                        discovery != null -> {
+                            connection.playQueue(YouTubeQueue.radio(discovery.toMediaMetadata()))
+                            true
+                        }
+                        globalCatalogTrending.value.isNotEmpty() -> {
+                            val randomSource = globalCatalogTrending.value.random()
+                            playSourceVariant(
+                                connection,
+                                randomSource,
+                                context.getString(com.arturo254.opentune.R.string.shuffle),
+                            )
+                        }
+                        else -> false
+                    }
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                reportException(error)
+                false
+            }
+            onResult(started)
+        }
+    }
+
     val isRefreshing = MutableStateFlow(false)
     val isLoading = MutableStateFlow(false)
     private val isInitialLoadComplete = MutableStateFlow(false)
