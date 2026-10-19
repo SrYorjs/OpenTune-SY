@@ -176,22 +176,19 @@ fun HomeScreen(
                     }
                 }
                 item(key = "galax_home_actions") {
-                    androidx.compose.foundation.layout.Row(
-                        Modifier.fillMaxWidth().padding(horizontal = 20.dp),
-                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
-                    ) {
-                        androidx.compose.material3.Button(
-                            onClick = { (quickPicks.orEmpty() + speedDialSongs).randomOrNull()?.let { song ->
-                                playerConnection.playQueue(com.arturo254.opentune.playback.queues.YouTubeQueue.radio(song.toMediaMetadata()))
-                            } },
-                            enabled = !quickPicks.isNullOrEmpty() || speedDialSongs.isNotEmpty(),
-                            modifier = Modifier.weight(1f),
-                        ) { androidx.compose.material3.Text(stringResource(R.string.shuffle)) }
-                        androidx.compose.material3.FilledTonalButton(
-                            onClick = { navController.navigate(com.arturo254.opentune.ui.screens.musicrecognition.MusicRecognitionRoute) },
-                            modifier = Modifier.weight(1f),
-                        ) { androidx.compose.material3.Text(stringResource(R.string.music_recognition), maxLines = 2) }
-                    }
+                    GalaxHomeActions(
+                        canShuffle = !quickPicks.isNullOrEmpty() || speedDialSongs.isNotEmpty(),
+                        onShuffle = {
+                            (quickPicks.orEmpty() + speedDialSongs).randomOrNull()?.let { song ->
+                                playerConnection.playQueue(
+                                    com.arturo254.opentune.playback.queues.YouTubeQueue.radio(song.toMediaMetadata()),
+                                )
+                            }
+                        },
+                        onRecognition = {
+                            navController.navigate(com.arturo254.opentune.ui.screens.musicrecognition.MusicRecognitionRoute)
+                        },
+                    )
                 }
                 if (showHomeCategoryChips) {
                     item {
