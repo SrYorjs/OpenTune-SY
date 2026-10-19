@@ -48,7 +48,7 @@ fun AccountScreen(navController: NavController, scrollBehavior: TopAppBarScrollB
                 bottom = LocalPlayerAwareWindowInsets.current.asPaddingValues().calculateBottomPadding()),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item("intro", span = { GridItemSpan(maxLineSpan) }) {
-                GalaxScreenHeading(title, stringResource(R.string.library))
+                GalaxScreenHeading(title, stringResource(R.string.galax_library_subtitle))
             }
             item("filters", span = { GridItemSpan(maxLineSpan) }) {
                 ChipsRow(chips = listOf(
