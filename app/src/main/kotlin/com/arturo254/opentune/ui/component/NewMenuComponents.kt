@@ -10,6 +10,15 @@ import androidx.compose.foundation.LocalIndication
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.painterResource
+import com.arturo254.opentune.R
+import com.arturo254.opentune.core.designsystem.theme.GalaxEyebrow
+import com.arturo254.opentune.core.designsystem.theme.GalaxGlyphFrame
+import com.arturo254.opentune.core.designsystem.theme.GalaxVisualKit
+import com.arturo254.opentune.core.designsystem.theme.galaxNebulaSurface
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -57,69 +66,69 @@ fun NewActionButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
-    contentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant
+    contentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
 ) {
-    val animatedBackground by animateColorAsState(
-        targetValue = if (enabled) backgroundColor else backgroundColor.copy(alpha = 0.5f),
-        animationSpec = tween(200),
-        label = "background"
+    val activeGlass = LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED
+    val shape = GalaxVisualKit.tileShape
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val motion = com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem.galaxMotion
+    val scale by animateFloatAsState(
+        targetValue = if (pressed && enabled) motion.pressScale else 1f,
+        animationSpec = motion.pressSpec,
+        label = "galaxActionTilePress",
     )
-
-    val animatedContent by animateColorAsState(
-        targetValue = if (enabled) contentColor else contentColor.copy(alpha = 0.5f),
-        animationSpec = tween(200),
-        label = "content"
-    )
-
-    val liquid = LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED
-    val shape = RoundedCornerShape(20.dp)
-    val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val pressScale by animateFloatAsState(
-        targetValue = if (liquid && pressed && enabled) .962f else 1f,
-        animationSpec = spring(dampingRatio = .68f, stiffness = 480f),
-        label = "liquidActionPress",
-    )
-    Card(
+    val accent = MaterialTheme.colorScheme.primary
+    Box(
         modifier = modifier
-            .graphicsLayer { scaleX = pressScale; scaleY = pressScale }
-            .then(if (liquid) Modifier.galaxLiquidChrome(shape, emphasis = .85f) else Modifier)
-            .clickable(enabled = enabled, interactionSource = interactionSource,
-                indication = LocalIndication.current, onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = if (liquid) Color.Transparent else animatedBackground
-        ),
-        shape = shape,
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (liquid) 0.dp else 2.dp
-        )
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                alpha = if (enabled) 1f else .46f
+            }
+            .clip(shape)
+            .then(
+                if (activeGlass) Modifier.galaxLiquidChrome(shape, emphasis = .82f)
+                else Modifier.galaxNebulaSurface(shape, accent = backgroundColor, intensity = .85f),
+            )
+            .clickable(
+                enabled = enabled,
+                interactionSource = interaction,
+                indication = LocalIndication.current,
+                onClick = onClick,
+            ),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .padding(horizontal = 15.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.spacedBy(19.dp),
         ) {
-            Box(
-                modifier = Modifier.size(28.dp),
-                contentAlignment = Alignment.Center
+            GalaxGlyphFrame(
+                size = 46.dp,
+                accent = accent,
             ) {
-                icon()
+                Box(Modifier.size(25.dp), contentAlignment = Alignment.Center) {
+                    icon()
+                }
             }
-
-            Spacer(modifier = Modifier.height(6.dp))
-
             Text(
                 text = text,
-                style = MaterialTheme.typography.labelMedium,
-                color = animatedContent,
-                textAlign = TextAlign.Center,
+                color = if (activeGlass) MaterialTheme.colorScheme.onSurface else contentColor,
+                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.basicMarquee()
+                minLines = 1,
             )
         }
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 20.dp, end = 18.dp)
+                .size(6.dp)
+                .background(accent.copy(alpha = .75f), CircleShape),
+        )
     }
 }
 
@@ -131,53 +140,104 @@ fun NewMenuItem(
     supportingContent: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
     enabled: Boolean = true,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val motion = com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem.galaxMotion
+    val scheme = MaterialTheme.colorScheme
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (pressed && enabled) motion.pressScale else 1f,
-        animationSpec = motion.pressSpec, label = "menuRowPress")
+    val scale by animateFloatAsState(
+        targetValue = if (pressed && enabled) motion.pressScale else 1f,
+        animationSpec = motion.pressSpec,
+        label = "galaxMenuRowPress",
+    )
     Row(
-        modifier.graphicsLayer { scaleX = scale; scaleY = scale; alpha = if (enabled) 1f else .45f }
-            .clip(RoundedCornerShape(18.dp))
-            .clickable(enabled = enabled && onClick != null, interactionSource = interaction,
-                indication = LocalIndication.current) { onClick?.invoke() }
-            .heightIn(min = 60.dp).padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        leadingContent?.let { leading ->
-            Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = .09f)) {
-                Box(Modifier.size(38.dp), contentAlignment = Alignment.Center) { leading() }
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                alpha = if (enabled) 1f else .45f
             }
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(
+                enabled = enabled && onClick != null,
+                interactionSource = interaction,
+                indication = LocalIndication.current,
+            ) { onClick?.invoke() }
+            .heightIn(min = 70.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(15.dp),
+    ) {
+        if (leadingContent != null) {
+            GalaxGlyphFrame(size = 46.dp, accent = scheme.primary) {
+                leadingContent()
+            }
+        } else {
+            Box(
+                Modifier
+                    .width(3.dp)
+                    .height(30.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                scheme.primary.copy(alpha = .85f),
+                                scheme.tertiary.copy(alpha = .16f),
+                            ),
+                        ),
+                    ),
+            )
         }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.bodyLarge) { headlineContent() }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            androidx.compose.material3.ProvideTextStyle(
+                MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+            ) { headlineContent() }
             supportingContent?.let { supporting ->
                 androidx.compose.runtime.CompositionLocalProvider(
-                    androidx.compose.material3.LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant,
-                ) { androidx.compose.material3.ProvideTextStyle(MaterialTheme.typography.bodySmall) { supporting() } }
+                    androidx.compose.material3.LocalContentColor provides scheme.onSurfaceVariant,
+                ) {
+                    androidx.compose.material3.ProvideTextStyle(
+                        MaterialTheme.typography.bodySmall,
+                    ) { supporting() }
+                }
             }
         }
-        trailingContent?.invoke()
+        if (trailingContent != null) {
+            trailingContent()
+        } else if (onClick != null) {
+            Icon(
+                painter = painterResource(R.drawable.arrow_forward),
+                contentDescription = null,
+                tint = scheme.onSurfaceVariant.copy(alpha = .65f),
+                modifier = Modifier.size(17.dp),
+            )
+        }
     }
 }
 
 @Composable
 fun NewMenuSectionHeader(
     text: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium.copy(
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 16.sp
-        ),
-        color = MaterialTheme.colorScheme.primary,
-        modifier = modifier.padding(horizontal = 20.dp, vertical = 12.dp)
-    )
+    Column(
+        modifier = modifier.padding(horizontal = 20.dp, vertical = 15.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        GalaxEyebrow(text = "GALAXOT  /  OPTIONS")
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-.4).sp,
+            ),
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
 }
 
 @Composable
@@ -326,16 +386,24 @@ fun MenuSurfaceSection(
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Surface(
-        shape = RoundedCornerShape(24.dp),
-        color = if (LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED)
-            Color.Transparent else MaterialTheme.colorScheme.surfaceContainerLow,
-        modifier = modifier.fillMaxWidth().then(
-            if (LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED)
-                Modifier.galaxLiquidChrome(RoundedCornerShape(24.dp))
-            else Modifier
-        ),
+    val shape = GalaxVisualKit.panelShape
+    val useGlass = LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .then(
+                if (useGlass) {
+                    Modifier.galaxLiquidChrome(shape, emphasis = .72f)
+                } else {
+                    Modifier.galaxNebulaSurface(shape, intensity = .62f)
+                },
+            ),
     ) {
-        Column(content = content)
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 7.dp),
+            content = content,
+        )
     }
 }
+
