@@ -129,6 +129,7 @@ import com.arturo254.opentune.ui.player.v5.V5PlayerContent
 import com.arturo254.opentune.ui.player.v5.V5LandscapeLikeBox
 import com.arturo254.opentune.ui.player.v5.v5OverlayGestures
 import com.arturo254.opentune.ui.player.layout.GalaxPlayerClassicScene
+import com.arturo254.opentune.core.designsystem.component.GalaxOrbitField
 import com.arturo254.opentune.ui.player.layout.PlayerLayout
 import com.arturo254.opentune.ui.player.layout.resolvePlayerLayout
 import com.arturo254.opentune.ui.player.skin.rememberVisualSkin
@@ -720,6 +721,12 @@ fun BottomSheetPlayer(
                                 modifier = playerSourceModifier,
                             )
                         }
+                        GalaxOrbitField(
+                            modifier = Modifier.fillMaxSize(),
+                            active = isPlaying,
+                            intensity = .27f,
+                            accent = MaterialTheme.colorScheme.primary,
+                        )
                         Box(
                             modifier =
                                 Modifier
@@ -872,6 +879,12 @@ fun BottomSheetPlayer(
                                 modifier = playerSourceModifier,
                             )
                         }
+                        GalaxOrbitField(
+                            modifier = Modifier.fillMaxSize(),
+                            active = isPlaying,
+                            intensity = .27f,
+                            accent = MaterialTheme.colorScheme.primary,
+                        )
                         Box(
                             modifier =
                                 Modifier
