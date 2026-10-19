@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.Composable
+import com.arturo254.opentune.ui.player.visual.GalaxPlayerSceneOverlay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -58,6 +59,14 @@ fun V7PlayerScene(
                 label = if (isLandscape) "v7BackdropLandscape" else "v7BackdropPortrait",
             )
         }
+
+        GalaxPlayerSceneOverlay(
+            index = "07",
+            subtitle = "CINEMATIC",
+            isPlaying = isPlaying,
+            landscape = isLandscape,
+            accent = gradientColors.firstOrNull() ?: androidx.compose.material3.MaterialTheme.colorScheme.primary,
+        )
 
 
         Column(
