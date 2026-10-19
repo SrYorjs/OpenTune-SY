@@ -96,13 +96,20 @@ fun HomeScreen(
             ?: keepListening?.filterIsInstance<Song>()?.firstOrNull()
     }
 
-    val orbitSongs = remember(quickPicks, speedDialSongs, keepListening, forgottenFavorites) {
+    val orbitSongs = remember(quickPicks, speedDialSongs, keepListening, forgottenFavorites, featuredTrack) {
         (
             quickPicks.orEmpty() +
                 speedDialSongs +
                 keepListening.orEmpty().filterIsInstance<Song>() +
                 forgottenFavorites.orEmpty()
-        ).distinctBy { it.id }.take(4)
+        ).distinctBy { it.id }
+            .filterNot { it.id == featuredTrack?.id }
+            .take(4)
+    }
+    val highlightedIds = remember(orbitSongs, featuredTrack) {
+        orbitSongs.mapTo(mutableSetOf()) { it.id }.apply {
+            featuredTrack?.let { add(it.id) }
+        }
     }
 
     val selectedChip by viewModel.selectedChip.collectAsState()
@@ -284,7 +291,7 @@ fun HomeScreen(
                     }
                 }
 
-                quickPicks?.drop(4)?.takeIf { it.isNotEmpty() }?.let { picks ->
+                quickPicks?.filterNot { it.id in highlightedIds }?.takeIf { it.isNotEmpty() }?.let { picks ->
                 item {
                     NavigationTitle(
                         title = stringResource(R.string.quick_picks),
@@ -306,7 +313,7 @@ fun HomeScreen(
                 }
             }
 
-            speedDialSongs.drop(4).takeIf { it.isNotEmpty() }?.let { songs ->
+            speedDialSongs.filterNot { it.id in highlightedIds }.takeIf { it.isNotEmpty() }?.let { songs ->
                 item {
                     NavigationTitle(
                         title = stringResource(R.string.speed_dial),
