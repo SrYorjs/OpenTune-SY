@@ -128,6 +128,7 @@ import com.arturo254.opentune.ui.player.v8.V8PlayerControlsContent
 import com.arturo254.opentune.ui.player.v5.V5PlayerContent
 import com.arturo254.opentune.ui.player.v5.V5LandscapeLikeBox
 import com.arturo254.opentune.ui.player.v5.v5OverlayGestures
+import com.arturo254.opentune.ui.player.layout.GalaxPlayerClassicScene
 import com.arturo254.opentune.ui.player.layout.PlayerLayout
 import com.arturo254.opentune.ui.player.layout.resolvePlayerLayout
 import com.arturo254.opentune.ui.player.skin.rememberVisualSkin
@@ -961,35 +962,23 @@ fun BottomSheetPlayer(
                     }
             },
             classicPortrait = {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier =
-                            Modifier
-                                .windowInsetsPadding(
-                                    WindowInsets.systemBars.only(
-                                        WindowInsetsSides.Horizontal
-                                    )
-                                )
-                                .padding(bottom = queueSheetState.collapsedBound),
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Thumbnail(
-                                sliderPositionProvider = { seekSession.pendingSeekMs },
-                                modifier = Modifier.nestedScroll(state.preUpPostDownNestedScrollConnection),
-                                isPlayerExpanded = state.isExpanded
-                            )
-                        }
-
-                        enrichedMetadata?.let {
-                            controlsContent(it)
-                        }
-
-                        Spacer(Modifier.height(30.dp))
-                    }
-
+                GalaxPlayerClassicScene(
+                    isPlaying = isPlaying,
+                    accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
+                    queuePeekHeight = queueSheetState.collapsedBound,
+                    artwork = {
+                        Thumbnail(
+                            sliderPositionProvider = { seekSession.pendingSeekMs },
+                            modifier = Modifier.nestedScroll(
+                                state.preUpPostDownNestedScrollConnection,
+                            ),
+                            isPlayerExpanded = state.isExpanded,
+                        )
+                    },
+                    controls = {
+                        enrichedMetadata?.let { controlsContent(it) }
+                    },
+                )
             },
         )
 
