@@ -16,7 +16,8 @@ enum class PlayerLayoutFamily {
     V2,         // V2: routed to its extracted visual components (4.13)
     COMPACT,    // V5
     CINEMATIC,  // V7
-    IMMERSIVE,  // V8
+    IMMERSIVE,
+    GALAX,
 }
 
 enum class PlayerLayoutOrientation { PORTRAIT, LANDSCAPE }
@@ -29,7 +30,7 @@ data class PlayerLayoutRoute(
 ) {
     /** Exactly the original shared background guard (not V5, not V7). */
     val hasSharedBackdrop: Boolean
-        get() = family != PlayerLayoutFamily.COMPACT && family != PlayerLayoutFamily.CINEMATIC
+        get() = family == PlayerLayoutFamily.CLASSIC || family == PlayerLayoutFamily.V2
 }
 
 fun resolvePlayerLayout(style: PlayerDesignStyle, isLandscape: Boolean): PlayerLayoutRoute {
@@ -42,6 +43,9 @@ fun resolvePlayerLayout(style: PlayerDesignStyle, isLandscape: Boolean): PlayerL
         PlayerDesignStyle.V5 -> PlayerLayoutFamily.COMPACT
         PlayerDesignStyle.V7 -> PlayerLayoutFamily.CINEMATIC
         PlayerDesignStyle.V8 -> PlayerLayoutFamily.IMMERSIVE
+        PlayerDesignStyle.V9, PlayerDesignStyle.V10, PlayerDesignStyle.V11,
+        PlayerDesignStyle.V12, PlayerDesignStyle.V13, PlayerDesignStyle.V14,
+        PlayerDesignStyle.V15 -> PlayerLayoutFamily.GALAX
     }
     return PlayerLayoutRoute(
         style = style,
@@ -75,6 +79,8 @@ fun PlayerLayout(
     // top actions now have dedicated visual components. No extra wrapper.
     v2Portrait: @Composable () -> Unit = classicPortrait,
     v2Landscape: @Composable () -> Unit = classicLandscape,
+    galaxPortrait: @Composable () -> Unit = classicPortrait,
+    galaxLandscape: @Composable () -> Unit = classicLandscape,
 ) {
     val route = remember(style, isLandscape) { resolvePlayerLayout(style, isLandscape) }
     when (route.orientation) {
@@ -85,6 +91,7 @@ fun PlayerLayout(
                 PlayerLayoutFamily.COMPACT -> compactPortrait()
                 PlayerLayoutFamily.CINEMATIC -> cinematicPortrait()
                 PlayerLayoutFamily.IMMERSIVE -> immersivePortrait()
+                PlayerLayoutFamily.GALAX -> galaxPortrait()
             }
         PlayerLayoutOrientation.LANDSCAPE ->
             when (route.family) {
@@ -93,6 +100,7 @@ fun PlayerLayout(
                 PlayerLayoutFamily.COMPACT -> compactLandscape()
                 PlayerLayoutFamily.CINEMATIC -> cinematicLandscape()
                 PlayerLayoutFamily.IMMERSIVE -> immersiveLandscape()
+                PlayerLayoutFamily.GALAX -> galaxLandscape()
             }
     }
 }
