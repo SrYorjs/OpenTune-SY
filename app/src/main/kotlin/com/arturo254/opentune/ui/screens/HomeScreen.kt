@@ -61,6 +61,8 @@ import com.arturo254.opentune.ui.utils.SnapLayoutInfoProvider
 import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.models.toMediaMetadata
 import com.arturo254.opentune.db.entities.Song
+import com.arturo254.opentune.ui.menu.SongMenu
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import com.arturo254.opentune.viewmodels.HomeViewModel
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -92,6 +94,15 @@ fun HomeScreen(
             ?: speedDialSongs.firstOrNull()
             ?: forgottenFavorites?.firstOrNull()
             ?: keepListening?.filterIsInstance<Song>()?.firstOrNull()
+    }
+
+    val orbitSongs = remember(quickPicks, speedDialSongs, keepListening, forgottenFavorites) {
+        (
+            quickPicks.orEmpty() +
+                speedDialSongs +
+                keepListening.orEmpty().filterIsInstance<Song>() +
+                forgottenFavorites.orEmpty()
+        ).distinctBy { it.id }.take(4)
     }
 
     val selectedChip by viewModel.selectedChip.collectAsState()
@@ -182,8 +193,13 @@ fun HomeScreen(
                 state = lazylistState,
                 contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues()
             ) {
-                item(key = "galax_home_portal") {
-                    GalaxPortal(stringResource(R.string.galax_home_title), stringResource(R.string.galax_home_subtitle))
+                item(key = "galax_home_identity") {
+                    GalaxHomeIdentity(
+                        title = stringResource(R.string.galax_home_title),
+                        subtitle = stringResource(R.string.galax_home_subtitle),
+                        accountName = accountName,
+                        avatarUrl = url,
+                    )
                 }
                 featuredTrack?.let { featured ->
                     item(key = "galax_featured_track") {
@@ -218,6 +234,44 @@ fun HomeScreen(
                         },
                     )
                 }
+                if (orbitSongs.isNotEmpty()) {
+                    item(key = "galax_orbit_intro") {
+                        GalaxHomeSectionIntro(
+                            title = stringResource(R.string.speed_dial),
+                            subtitle = stringResource(R.string.galax_discover_for_you),
+                        )
+                    }
+                    item(key = "galax_orbit_mosaic") {
+                        GalaxHomeMixBoard(
+                            songs = orbitSongs,
+                            activeId = mediaMetadata?.id,
+                            isPlaying = isPlaying,
+                            onPlay = { song ->
+                                if (song.id == mediaMetadata?.id) {
+                                    playerConnection.player.togglePlayPause()
+                                } else {
+                                    playerConnection.playQueue(
+                                        com.arturo254.opentune.playback.queues.YouTubeQueue.radio(
+                                            song.toMediaMetadata(),
+                                        ),
+                                    )
+                                }
+                            },
+                            onLongPress = { song ->
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                menuState.show {
+                                    SongMenu(
+                                        originalSong = song,
+                                        navController = navController,
+                                        metadata = allItemsMetadata[song.id],
+                                        onDismiss = menuState::dismiss,
+                                    )
+                                }
+                            },
+                        )
+                    }
+                }
+
                 if (showHomeCategoryChips) {
                     item {
                         ChipsRow(
@@ -230,7 +284,7 @@ fun HomeScreen(
                     }
                 }
 
-                quickPicks?.takeIf { it.isNotEmpty() }?.let { picks ->
+                quickPicks?.drop(4)?.takeIf { it.isNotEmpty() }?.let { picks ->
                 item {
                     NavigationTitle(
                         title = stringResource(R.string.quick_picks),
@@ -252,7 +306,7 @@ fun HomeScreen(
                 }
             }
 
-            speedDialSongs.takeIf { it.isNotEmpty() }?.let { songs ->
+            speedDialSongs.drop(4).takeIf { it.isNotEmpty() }?.let { songs ->
                 item {
                     NavigationTitle(
                         title = stringResource(R.string.speed_dial),
