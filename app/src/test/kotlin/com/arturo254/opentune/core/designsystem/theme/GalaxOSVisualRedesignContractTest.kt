@@ -36,7 +36,7 @@ class GalaxOSVisualRedesignContractTest {
         assertTrue(hero.contains(".size(96).allowHardware(false)"))
         assertTrue(hero.contains(".layerBackdrop(backdrop)"))
         assertTrue(hero.contains("GalaxLiquidSurface("))
-        assertTrue(actions.contains("onRecognition ="))
+        assertTrue(home.contains("onRecognition ="))
         assertFalse(actions.contains(".blur("))
     }
 
