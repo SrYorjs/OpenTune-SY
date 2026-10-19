@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.Composable
+import com.arturo254.opentune.ui.player.visual.GalaxPlayerSceneOverlay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -77,6 +78,14 @@ fun V8PlayerScene(
             )
             }
         }
+
+        GalaxPlayerSceneOverlay(
+            index = "08",
+            subtitle = "IMMERSIVE",
+            isPlaying = isPlaying,
+            landscape = isLandscape,
+            accent = gradientColors.firstOrNull() ?: androidx.compose.material3.MaterialTheme.colorScheme.primary,
+        )
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
