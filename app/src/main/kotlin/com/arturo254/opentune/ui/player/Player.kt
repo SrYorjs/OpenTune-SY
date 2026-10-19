@@ -129,6 +129,7 @@ import com.arturo254.opentune.ui.player.v5.V5PlayerContent
 import com.arturo254.opentune.ui.player.v5.V5LandscapeLikeBox
 import com.arturo254.opentune.ui.player.v5.v5OverlayGestures
 import com.arturo254.opentune.ui.player.layout.GalaxPlayerClassicScene
+import com.arturo254.opentune.ui.player.layout.GalaxPlayerLandscapeScene
 import com.arturo254.opentune.core.designsystem.component.GalaxOrbitField
 import com.arturo254.opentune.ui.player.layout.PlayerLayout
 import com.arturo254.opentune.ui.player.layout.resolvePlayerLayout
@@ -815,45 +816,23 @@ fun BottomSheetPlayer(
                     }
             },
             classicLandscape = {
-                    Row(
-                        modifier =
-                            Modifier
-                                .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
-                                .padding(bottom = queueSheetState.collapsedBound + 48.dp),
-                    ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            val screenWidth = LocalConfiguration.current.screenWidthDp
-                            val thumbnailSize = (screenWidth * 0.4).dp
-                            Thumbnail(
-                                sliderPositionProvider = { seekSession.pendingSeekMs },
-                                modifier = Modifier.size(thumbnailSize),
-                                isPlayerExpanded = state.isExpanded
-                            )
-                        }
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier =
-                                Modifier
-                                    .weight(1f)
-                                    .windowInsetsPadding(
-                                        WindowInsets.systemBars.only(
-                                            WindowInsetsSides.Top
-                                        )
-                                    ),
-                        ) {
-                            Spacer(Modifier.weight(1f))
-
-                            enrichedMetadata?.let {
-                                controlsContent(it)
-                            }
-
-                            Spacer(Modifier.weight(1f))
-                        }
-                    }
-
+                GalaxPlayerLandscapeScene(
+                    accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
+                    isPlaying = isPlaying,
+                    bottomInset = queueSheetState.collapsedBound + 48.dp,
+                    artwork = {
+                        val screenWidth = LocalConfiguration.current.screenWidthDp
+                        val thumbnailSize = (screenWidth * .4f).dp
+                        Thumbnail(
+                            sliderPositionProvider = { seekSession.pendingSeekMs },
+                            modifier = Modifier.size(thumbnailSize),
+                            isPlayerExpanded = state.isExpanded,
+                        )
+                    },
+                    controls = {
+                        enrichedMetadata?.let { controlsContent(it) }
+                    },
+                )
             },
             compactPortrait = {
                     val littleBackground = MaterialTheme.colorScheme.primaryContainer
