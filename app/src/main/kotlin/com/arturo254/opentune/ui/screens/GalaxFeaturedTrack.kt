@@ -40,11 +40,9 @@ import coil3.request.ImageRequest
 import coil3.request.allowHardware
 import coil3.toBitmap
 import com.arturo254.opentune.R
-import com.arturo254.opentune.core.designsystem.liquid.GalaxLiquidSurface
+import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidChrome
 import com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle
 import com.arturo254.opentune.db.entities.Song
-import com.kyant.backdrop.backdrops.layerBackdrop
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -54,7 +52,6 @@ fun GalaxFeaturedTrack(song: Song, isPlaying: Boolean, onClick: () -> Unit) {
     val context = LocalContext.current
     val fallback = MaterialTheme.colorScheme.primary
     val artwork = song.song.thumbnailUrl
-    val backdrop = rememberLayerBackdrop()
     val accent by produceState(fallback, artwork, context) {
         value = fallback
         if (!artwork.isNullOrBlank()) {
@@ -88,8 +85,7 @@ fun GalaxFeaturedTrack(song: Song, isPlaying: Boolean, onClick: () -> Unit) {
             .clip(GalaxScreenStyle.panelShape),
     ) {
         Box(
-            Modifier.matchParentSize().layerBackdrop(backdrop)
-                .background(Brush.linearGradient(listOf(upper, base))),
+            Modifier.matchParentSize().background(Brush.linearGradient(listOf(upper, base))),
         ) {
             AsyncImage(
                 model = artwork,
@@ -158,10 +154,10 @@ fun GalaxFeaturedTrack(song: Song, isPlaying: Boolean, onClick: () -> Unit) {
                     overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(Modifier.height(4.dp))
-                GalaxLiquidSurface(
-                    backdrop = backdrop,
-                    shapeOverride = GalaxScreenStyle.pillShape,
-                    modifier = Modifier.clip(GalaxScreenStyle.pillShape)
+                Box(
+                    Modifier.clip(GalaxScreenStyle.pillShape)
+                        .background(Color.White.copy(alpha = .11f))
+                        .galaxLiquidChrome(GalaxScreenStyle.pillShape, emphasis = .78f)
                         .clickable(onClick = onClick),
                 ) {
                     Row(
@@ -184,6 +180,7 @@ fun GalaxFeaturedTrack(song: Song, isPlaying: Boolean, onClick: () -> Unit) {
                             fontWeight = FontWeight.SemiBold,
                         )
                     }
+
                 }
             }
         }
