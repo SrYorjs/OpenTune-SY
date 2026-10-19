@@ -3,6 +3,12 @@ package com.arturo254.opentune.ui.screens
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.IntOffset
+import com.arturo254.opentune.core.designsystem.component.GalaxOrbitField
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -176,29 +182,78 @@ fun GalaxHomeMixBoard(
     modifier: Modifier = Modifier,
 ) {
     val tracks = remember(songs) { songs.distinctBy { it.id }.take(4) }
-    Column(
-        modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+    val colors = MaterialTheme.colorScheme
+    Box(
+        modifier = modifier.fillMaxWidth()
+            .padding(horizontal = 12.dp)
+            .clip(RoundedCornerShape(34.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        colors.surfaceContainerLow.copy(alpha = .96f),
+                        GalaxVisualKit.abyss.copy(alpha = .98f),
+                    ),
+                ),
+            ),
     ) {
-        tracks.chunked(2).forEach { group ->
+        GalaxOrbitField(
+            modifier = Modifier.fillMaxSize(),
+            active = isPlaying,
+            intensity = .86f,
+        )
+        Column(
+            modifier = Modifier.fillMaxWidth()
+                .padding(horizontal = 9.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(11.dp),
+        ) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 9.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                group.forEachIndexed { index, song ->
-                    GalaxHomeMixTile(
-                        song = song,
-                        accentIndex = index + tracks.indexOf(song),
-                        active = song.id == activeId,
-                        isPlaying = isPlaying,
-                        onPlay = { onPlay(song) },
-                        onLongPress = { onLongPress(song) },
-                        modifier = Modifier.weight(1f),
-                    )
+                Text(
+                    text = "GALAXOT  /  PERSONAL ORBIT",
+                    color = colors.primary,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.1.sp,
+                )
+                Text(
+                    text = "●   ${tracks.size}",
+                    color = colors.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall,
+                )
+            }
+            tracks.chunked(2).forEach { group ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(11.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    group.forEach { song ->
+                        GalaxHomeMixTile(
+                            song = song,
+                            accentIndex = tracks.indexOf(song),
+                            active = song.id == activeId,
+                            isPlaying = isPlaying,
+                            onPlay = { onPlay(song) },
+                            onLongPress = { onLongPress(song) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    if (group.size < 2) {
+                        Spacer(Modifier.weight(1f))
+                    }
                 }
-                if (group.size < 2) {
-                    Spacer(Modifier.weight(1f))
-                }
+            }
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 4.dp),
+            ) {
+                Text(
+                    text = "✦   UN UNIVERSO HECHO CON TUS CANCIONES",
+                    color = colors.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall,
+                    letterSpacing = .65.sp,
+                )
             }
         }
     }
@@ -227,7 +282,7 @@ private fun GalaxHomeMixTile(
     val accent = if (accentIndex % 2 == 0) scheme.primary else scheme.tertiary
     Box(
         modifier = modifier
-            .height(173.dp)
+            .height(184.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
@@ -240,6 +295,12 @@ private fun GalaxHomeMixTile(
                 onLongClick = onLongPress,
             ),
     ) {
+        GalaxOrbitField(
+            modifier = Modifier.fillMaxSize(),
+            active = active && isPlaying,
+            intensity = if (active) .42f else .22f,
+            accent = accent,
+        )
         Column(
             modifier = Modifier.fillMaxSize().padding(14.dp),
             verticalArrangement = Arrangement.SpaceBetween,
@@ -281,6 +342,13 @@ private fun GalaxHomeMixTile(
                 }
             }
             Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text(
+                    text = if (active) "●  AHORA SUENA" else "◌  EN TU ÓRBITA",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = accent,
+                    letterSpacing = 1.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
                 Text(
                     text = song.song.title,
                     style = MaterialTheme.typography.titleSmall,
