@@ -196,7 +196,7 @@ fun AboutScreen(
         ) {
 
             item(key = "hero") {
-                HeroCardExpressive(shimmerBrush = shimmerEffect())
+                GalaxAboutHero()
             }
 
             item(key = "social") {
@@ -323,159 +323,105 @@ private fun SectionHeaderExpressive(
 }
 
 @Composable
-private fun HeroCardExpressive(shimmerBrush: Brush) {
-    var isExpanded by remember { mutableStateOf(false) }
-    val scale = remember { Animatable(1f) }
-    val rotation = remember { Animatable(0f) }
-    val elevation = remember { Animatable(2f) }
-
-    LaunchedEffect(isExpanded) {
-        if (isExpanded) {
-            scale.animateTo(1.02f, spring(stiffness = Spring.StiffnessLow))
-            rotation.animateTo(1f, spring(stiffness = Spring.StiffnessVeryLow))
-            elevation.animateTo(8f, spring(stiffness = Spring.StiffnessLow))
-        } else {
-            scale.animateTo(1f, spring(stiffness = Spring.StiffnessLow))
-            rotation.animateTo(0f, spring(stiffness = Spring.StiffnessVeryLow))
-            elevation.animateTo(2f, spring(stiffness = Spring.StiffnessLow))
-        }
-    }
-
+private fun GalaxAboutHero() {
+    val colors = MaterialTheme.colorScheme
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = if (isExpanded) 8.dp else 0.dp),
-        contentAlignment = Alignment.TopCenter
+            .clip(RoundedCornerShape(30.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        colors.primary.copy(alpha = .23f),
+                        colors.surfaceContainerHigh.copy(alpha = .97f),
+                        colors.tertiary.copy(alpha = .12f),
+                    ),
+                ),
+            ),
     ) {
-        ElevatedCard(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .graphicsLayer {
-                    scaleX = scale.value
-                    scaleY = scale.value
-                    rotationZ = rotation.value * 2f
-                }
-                .clickable { isExpanded = !isExpanded },
-            shape = RoundedCornerShape(32.dp),
-            colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            ),
-            elevation = CardDefaults.elevatedCardElevation(
-            ),
+                .align(Alignment.TopEnd)
+                .padding(top = 20.dp, end = 20.dp)
+                .size(92.dp)
+                .clip(CircleShape)
+                .background(
+                    Brush.radialGradient(
+                        listOf(
+                            colors.primary.copy(alpha = .24f),
+                            Color.Transparent,
+                        ),
+                    ),
+                ),
+        )
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-
                 Surface(
-                    shape = if (isExpanded) CircleShape else RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(if (isExpanded) 100.dp else 84.dp),
-                    shadowElevation = if (isExpanded) 12.dp else 4.dp,
+                    shape = RoundedCornerShape(22.dp),
+                    color = colors.primaryContainer.copy(alpha = .78f),
+                    modifier = Modifier.size(74.dp),
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Image(
                             painter = painterResource(R.drawable.opentune_monochrome),
                             contentDescription = null,
                             colorFilter = ColorFilter.tint(
-                                MaterialTheme.colorScheme.onPrimaryContainer,
+                                colors.onPrimaryContainer,
                                 BlendMode.SrcIn,
                             ),
-                            modifier = Modifier
-                                .size(if (isExpanded) 68.dp else 56.dp)
-                                .clip(RoundedCornerShape(if (isExpanded) 24.dp else 16.dp)),
+                            modifier = Modifier.size(49.dp),
                         )
-
-                        if (!isExpanded) {
-                            Box(
-                                modifier = Modifier
-                                    .matchParentSize()
-                                    .background(shimmerBrush),
-                            )
-                        }
                     }
                 }
-
-                AnimatedVisibility(
-                    visible = isExpanded,
-                    enter = fadeIn(animationSpec = tween(300)) + scaleIn(
-                        initialScale = 0.7f,
-                        animationSpec = spring(stiffness = Spring.StiffnessLow)
-                    ),
-                    exit = fadeOut(animationSpec = tween(150)) + scaleOut(
-                        targetScale = 0.7f,
-                        animationSpec = spring(stiffness = Spring.StiffnessLow)
-                    )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(5.dp),
                 ) {
+                    Text(
+                        text = "GALACTIC MUSIC EXPERIENCE",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colors.primary,
+                    )
                     Text(
                         text = stringResource(R.string.app_name),
                         style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.primary,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-
-                if (!isExpanded) {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = colors.onSurface,
+                        maxLines = 1,
                     )
-                }
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    VersionBadgeExpressive(
-                        text = "v${BuildConfig.VERSION_NAME}",
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    )
-                    VersionBadgeExpressive(
-                        text = "#${BuildConfig.VERSION_CODE}",
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    )
-                    if (BuildConfig.DEBUG) {
-                        VersionBadgeExpressive(
-                            text = "DEBUG",
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                        )
-                    }
-                }
-
-                HorizontalDivider(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                )
-
-                DeveloperInfoExpressive()
-
-                AnimatedVisibility(
-                    visible = isExpanded,
-                    enter = fadeIn(animationSpec = tween(300, delayMillis = 100)) + scaleIn(
-                        initialScale = 0.9f,
-                        animationSpec = spring(stiffness = Spring.StiffnessLow)
-                    ),
-                    exit = fadeOut(animationSpec = tween(150))
-                ) {
                     Text(
-                        text = "Jesus Christ loves you",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 8.dp)
+                        text = "v${BuildConfig.VERSION_NAME}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.onSurfaceVariant,
                     )
                 }
             }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                VersionBadgeExpressive(
+                    text = "#${BuildConfig.VERSION_CODE}",
+                    containerColor = colors.primaryContainer,
+                    contentColor = colors.onPrimaryContainer,
+                )
+                if (BuildConfig.DEBUG) {
+                    VersionBadgeExpressive(
+                        text = "DEBUG",
+                        containerColor = colors.errorContainer,
+                        contentColor = colors.onErrorContainer,
+                    )
+                }
+            }
+            HorizontalDivider(color = colors.onSurface.copy(alpha = .10f))
+            DeveloperInfoExpressive()
         }
     }
 }
