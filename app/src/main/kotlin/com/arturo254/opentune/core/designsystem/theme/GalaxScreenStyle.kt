@@ -1,5 +1,7 @@
 package com.arturo254.opentune.core.designsystem.theme
 
+import com.arturo254.opentune.core.designsystem.motion.galaxMotion
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
