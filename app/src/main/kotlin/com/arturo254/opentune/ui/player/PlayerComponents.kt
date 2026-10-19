@@ -273,6 +273,9 @@ fun PlayerTopActions(
 ) {
     val playerActions = rememberPlayerActions(playerConnection)
     when (playerDesignStyle) {
+        PlayerDesignStyle.V9, PlayerDesignStyle.V10, PlayerDesignStyle.V11,
+        PlayerDesignStyle.V12, PlayerDesignStyle.V13, PlayerDesignStyle.V14,
+        PlayerDesignStyle.V15 -> Unit
         PlayerDesignStyle.V2 -> {
             V2PlayerTopActions(
                 liked = currentSongLiked,
