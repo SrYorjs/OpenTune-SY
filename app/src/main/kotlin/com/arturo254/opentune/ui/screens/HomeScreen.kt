@@ -60,6 +60,7 @@ import com.arturo254.opentune.ui.component.liquidGlassScreenBackground
 import com.arturo254.opentune.ui.utils.SnapLayoutInfoProvider
 import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.models.toMediaMetadata
+import com.arturo254.opentune.db.entities.Song
 import com.arturo254.opentune.viewmodels.HomeViewModel
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -85,6 +86,13 @@ fun HomeScreen(
     val homePage by viewModel.homePage.collectAsState()
     val globalCatalogTrending by viewModel.globalCatalogTrending.collectAsState()
     val allItemsMetadata by viewModel.allItemsMetadata.collectAsState()
+
+    val featuredTrack = remember(quickPicks, speedDialSongs, forgottenFavorites, keepListening) {
+        quickPicks?.firstOrNull()
+            ?: speedDialSongs.firstOrNull()
+            ?: forgottenFavorites?.firstOrNull()
+            ?: keepListening?.filterIsInstance<Song>()?.firstOrNull()
+    }
 
     val selectedChip by viewModel.selectedChip.collectAsState()
 
@@ -121,8 +129,9 @@ fun HomeScreen(
         snapshotFlow { lazylistState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
             .collect { lastVisibleIndex ->
                 val len = lazylistState.layoutInfo.totalItemsCount
-                if (lastVisibleIndex != null && lastVisibleIndex >= len - 3) {
-                    viewModel.loadMoreYouTubeItems(latestHomePage?.continuation)
+                val continuation = latestHomePage?.continuation
+                if (lastVisibleIndex != null && continuation != null && lastVisibleIndex >= len - 3) {
+                    viewModel.loadMoreYouTubeItems(continuation)
                 }
             }
     }
@@ -176,7 +185,7 @@ fun HomeScreen(
                 item(key = "galax_home_portal") {
                     GalaxPortal(stringResource(R.string.galax_home_title), stringResource(R.string.galax_home_subtitle))
                 }
-                quickPicks?.firstOrNull()?.let { featured ->
+                featuredTrack?.let { featured ->
                     item(key = "galax_featured_track") {
                         val active = featured.id == mediaMetadata?.id
                         GalaxFeaturedTrack(featured, active && isPlaying) {
