@@ -17,6 +17,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.Composable
 import com.arturo254.opentune.ui.player.visual.GalaxPlayerSceneOverlay
+import com.arturo254.opentune.ui.player.layout.GalaxPlayerControlDock
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -82,7 +83,17 @@ fun V7PlayerScene(
                 )
                 .nestedScroll(nestedScrollConnection),
         ) {
-            controls()
+            if (isLandscape) {
+                controls()
+            } else {
+                GalaxPlayerControlDock(
+                    accent = gradientColors.firstOrNull()
+                        ?: androidx.compose.material3.MaterialTheme.colorScheme.primary,
+                    isPlaying = isPlaying,
+                ) {
+                    controls()
+                }
+            }
             Spacer(Modifier.height(if (isLandscape) 16.dp else 24.dp))
         }
     }
