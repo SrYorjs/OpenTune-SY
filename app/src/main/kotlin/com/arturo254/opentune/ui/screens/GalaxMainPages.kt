@@ -85,37 +85,19 @@ fun GalaxDiscoverScreen(navController: NavController, onOpenSearch: () -> Unit,
     LazyColumn(Modifier.fillMaxSize().galaxScreenBackground(), contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item("discover_header") {
-            GalaxPortal(stringResource(R.string.galax_discover_title), stringResource(R.string.galax_discover_subtitle))
+            GalaxDiscoverPortal(
+                title = stringResource(R.string.galax_discover_title),
+                subtitle = stringResource(R.string.galax_discover_subtitle),
+                searchHint = stringResource(R.string.galax_search_hint),
+                onSearch = onOpenSearch,
+            )
         }
-        item("search_field") {
-            val shape = com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.pillShape
-            Box(
-                Modifier.padding(horizontal = com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.pagePadding)
-                    .fillMaxWidth()
-                    .heightIn(min = 64.dp)
-                    .clip(shape)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .galaxLiquidChrome(shape, emphasis = .57f)
-                    .clickable(onClick = onOpenSearch),
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                Row(
-                    Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.search),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                        text = stringResource(R.string.galax_search_hint),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
+        item("featured_genres_heading") {
+            GalaxDiscoverEditorialHeading(
+                title = stringResource(R.string.mood_and_genres),
+                subtitle = "Escoge un universo musical para empezar.",
+                number = "01",
+            )
         }
         item("featured_genres") {
             Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -124,20 +106,26 @@ fun GalaxDiscoverScreen(navController: NavController, onOpenSearch: () -> Unit,
 
                     listOf("Pop", "Rock", "Hip-hop", "Electrónica").chunked(2).forEach { row ->
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            row.forEachIndexed { index, title -> MoodAndGenresButton(title, if (index == 0) 0xFF4064AD else 0xFF7554A4,
+                            row.forEachIndexed { index, title -> GalaxGenreSurface(title, if (index == 0) 0xFF4064AD else 0xFF7554A4,
                                 { navController.navigate("search/${Uri.encode(title)}") }, Modifier.weight(1f)) }
                         }
                     }
                 } else featured.chunked(2).forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        row.forEach { genre -> MoodAndGenresButton(genre.title, genre.stripeColor,
+                        row.forEach { genre -> GalaxGenreSurface(genre.title, genre.stripeColor,
                             { navController.navigate("youtube_browse/${genre.endpoint.browseId}?params=${Uri.encode(genre.endpoint.params.orEmpty())}") }, Modifier.weight(1f)) }
                         if (row.size == 1) Spacer(Modifier.weight(1f))
                     }
                 }
             }
         }
-        item("for_you") { Text(stringResource(R.string.galax_discover_for_you), Modifier.padding(horizontal = 24.dp), style = MaterialTheme.typography.titleLarge) }
+        item("for_you") {
+            GalaxDiscoverEditorialHeading(
+                title = stringResource(R.string.galax_discover_for_you),
+                subtitle = "Señales musicales elegidas para tu próxima escucha.",
+                number = "02",
+            )
+        }
         if (recommendations.isNullOrEmpty() && discoveries.isEmpty()) {
             item("start_listening") { Text(stringResource(R.string.galax_discover_empty), Modifier.padding(horizontal = 24.dp), color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
@@ -152,7 +140,13 @@ fun GalaxDiscoverScreen(navController: NavController, onOpenSearch: () -> Unit,
                 player?.playQueue(YouTubeQueue.radio(song.toMediaMetadata()))
             })
         }
-        item("all_genres") { Text(stringResource(R.string.mood_and_genres), Modifier.padding(horizontal = 24.dp), style = MaterialTheme.typography.titleLarge) }
+        item("all_genres") {
+            GalaxDiscoverEditorialHeading(
+                title = "Más constelaciones",
+                subtitle = "Explora todas las categorías y descubre nuevos artistas.",
+                number = "03",
+            )
+        }
         if (genresLoading) item("genres_loading") {
             LinearProgressIndicator(Modifier.padding(horizontal = 24.dp).fillMaxWidth())
         }
@@ -163,7 +157,7 @@ fun GalaxDiscoverScreen(navController: NavController, onOpenSearch: () -> Unit,
         }
         items(genres.orEmpty().drop(4).chunked(2)) { row ->
             Row(Modifier.padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                row.forEach { genre -> MoodAndGenresButton(genre.title, genre.stripeColor,
+                row.forEach { genre -> GalaxGenreSurface(genre.title, genre.stripeColor,
                     { navController.navigate("youtube_browse/${genre.endpoint.browseId}?params=${Uri.encode(genre.endpoint.params.orEmpty())}") }, Modifier.weight(1f)) }
                 if (row.size == 1) Spacer(Modifier.weight(1f))
             }
