@@ -101,7 +101,8 @@ fun GalaxHomeCatalogControl(
             )
             Text(
                 text = if (expanded) "Volver a la selección principal"
-                else "$hiddenCount colecciones adicionales para descubrir",
+                else if (hiddenCount > 0) "$hiddenCount colecciones adicionales para descubrir"
+                else "Una galaxia de recomendaciones por explorar",
                 style = MaterialTheme.typography.bodySmall,
                 color = scheme.onSurfaceVariant,
                 maxLines = 2,
