@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -39,6 +40,7 @@ import com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle
 @Composable
 fun GalaxHomeActions(
     canShuffle: Boolean,
+    isShuffling: Boolean = false,
     onShuffle: () -> Unit,
     onRecognition: () -> Unit,
 ) {
@@ -52,6 +54,7 @@ fun GalaxHomeActions(
             icon = R.drawable.shuffle,
             primary = true,
             enabled = canShuffle,
+            loading = isShuffling,
             onClick = onShuffle,
             modifier = Modifier.weight(1f),
         )
@@ -72,6 +75,7 @@ private fun GalaxHomeAction(
     icon: Int,
     primary: Boolean,
     enabled: Boolean,
+    loading: Boolean = false,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -118,12 +122,20 @@ private fun GalaxHomeAction(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(9.dp),
         ) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = null,
-                modifier = Modifier.size(19.dp),
-                tint = fg,
-            )
+            if (loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(19.dp),
+                    color = fg,
+                    strokeWidth = 2.dp,
+                )
+            } else {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    modifier = Modifier.size(19.dp),
+                    tint = fg,
+                )
+            }
             Text(
                 text = text,
                 color = fg,
