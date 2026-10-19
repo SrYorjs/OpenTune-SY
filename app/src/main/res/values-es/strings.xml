@@ -749,4 +749,5 @@
     <string name="player_a11y_like">Añadir a favoritos</string>
     <string name="player_a11y_unlike">Quitar de favoritos</string>
     <string name="player_a11y_repeat">Cambiar modo de repetición</string>
+    <string name="galax_shuffle_unavailable">Aún no hay canciones disponibles. Escucha música o añade canciones a tu biblioteca.</string>
 </resources>
