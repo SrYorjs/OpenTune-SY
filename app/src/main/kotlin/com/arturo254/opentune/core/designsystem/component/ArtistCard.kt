@@ -1,25 +1,32 @@
 package com.arturo254.opentune.core.designsystem.component
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
-import com.arturo254.opentune.core.designsystem.theme.spacing
-import com.arturo254.opentune.core.designsystem.theme.typography
+import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 
-/** Artist grid tile; display model and click action come from the caller. */
 @Composable
 fun ArtistCard(
     name: String,
@@ -28,12 +35,25 @@ fun ArtistCard(
     subtitle: String? = null,
     onClick: (() -> Unit)? = null,
 ) {
-    val typography = OpenTuneDesignSystem.typography
-    val spacing = OpenTuneDesignSystem.spacing
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val motion = OpenTuneDesignSystem.galaxMotion
+    val scale by animateFloatAsState(
+        targetValue = if (pressed && onClick != null) motion.pressScale else 1f,
+        animationSpec = motion.pressSpec,
+        label = "galaxArtistPress",
+    )
     Column(
-        modifier = modifier
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+        modifier = modifier.graphicsLayer {
+            scaleX = scale
+            scaleY = scale
+        }.clickable(
+            enabled = onClick != null,
+            interactionSource = interaction,
+            indication = LocalIndication.current,
+        ) { onClick?.invoke() },
         horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Artwork(
             imageUrl = artworkUrl,
@@ -41,10 +61,11 @@ fun ArtistCard(
             placeholderIcon = R.drawable.artist,
             modifier = Modifier.fillMaxWidth().aspectRatio(1f),
         )
-        Spacer(Modifier.height(spacing.sm))
         Text(
             text = name,
-            style = typography.songTitle,
+            modifier = Modifier.padding(horizontal = 2.dp),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
             maxLines = 2,
@@ -53,7 +74,7 @@ fun ArtistCard(
         if (!subtitle.isNullOrBlank()) {
             Text(
                 text = subtitle,
-                style = typography.songSubtitle,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
