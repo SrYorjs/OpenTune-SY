@@ -1,7 +1,7 @@
 package com.arturo254.opentune.ui.player.layout
 
 import com.arturo254.opentune.constants.PlayerDesignStyle
-import com.arturo254.opentune.ui.player.v9.originalPlayerStyleConfig
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.originalPlayerStyleConfig
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -24,8 +24,10 @@ class GalaxSeventeenSceneContractTest {
         for (design in PlayerDesignStyle.entries) {
             for (landscape in listOf(false, true)) {
                 val route = resolvePlayerLayout(design, landscape)
-                assertFalse(
-                    "Shared album wallpaper is still enabled for $design",
+                assertEquals(
+                    "Classic background ownership for $design",
+                    design in setOf(PlayerDesignStyle.V1, PlayerDesignStyle.V2,
+                        PlayerDesignStyle.V3, PlayerDesignStyle.V4, PlayerDesignStyle.V6),
                     route.hasSharedBackdrop,
                 )
                 assertEquals(design, route.style)
@@ -52,18 +54,19 @@ class GalaxSeventeenSceneContractTest {
         val routing = source("ui/player/layout/PlayerLayout.kt")
         assertTrue(player.contains("immersivePortrait = {"))
         assertTrue(player.contains("immersiveLandscape = {"))
-        assertTrue(player.contains("V8PlayerScene("))
-        assertTrue(routing.contains("PlayerLayoutFamily.GALAX_THEME -> immersivePortrait()"))
-        assertTrue(routing.contains("PlayerLayoutFamily.GALAX_THEME -> immersiveLandscape()"))
-        assertTrue(routing.contains("PlayerLayoutFamily.APPLE_MUSIC -> applePortrait()"))
-        assertTrue(routing.contains("PlayerLayoutFamily.VINJAX -> vinylPortrait()"))
+        assertTrue(player.contains("StudioThemeV16("))
+        assertTrue(routing.contains("PlayerLayoutFamily.GALAX_THEME -> immersivePortrait"))
+        assertTrue(routing.contains("PlayerLayoutFamily.GALAX_THEME -> immersiveLandscape"))
+        assertTrue(routing.contains("PlayerLayoutFamily.APPLE_MUSIC -> applePortrait"))
+        assertTrue(routing.contains("PlayerLayoutFamily.VINJAX -> vinylPortrait"))
     }
 
     @Test
     fun rebuiltAppleMusicContainsItsOwnLayoutAndControls() {
-        val apple = source("ui/player/v8/AppleMusicPlayerScene.kt")
+        val apple = source("ui/player/GalaxStudioPlayer/StudioThemeV8Apple.kt")
         assertTrue(apple.contains("fun AppleMusicPlayerScene("))
-        assertTrue(apple.contains("AppleMusicArtwork("))
+        assertTrue(apple.contains("V8PlayerScene("))
+        assertTrue(apple.contains("bareControls = true"))
         assertTrue(apple.contains("AppleMusicControls("))
         assertTrue(apple.contains("onVolumeChange"))
         assertTrue(apple.contains("actions::playPause"))
@@ -77,33 +80,31 @@ class GalaxSeventeenSceneContractTest {
 
     @Test
     fun vinJaxIsARealTurntableRatherThanAnArtworkBadge() {
-        val vinyl = source("ui/player/v17/VinJaxPlayerScene.kt")
+        val vinyl = source("ui/player/GalaxStudioPlayer/StudioThemeV17VinJax.kt")
         assertTrue(vinyl.contains("fun VinJaxTurntable("))
         assertTrue(vinyl.contains("artwork: @Composable BoxScope.() -> Unit"))
         assertTrue(vinyl.contains(".clip(CircleShape)"))
-        assertTrue(vinyl.contains("discRotation.animateTo("))
+        assertTrue(vinyl.contains("rotation.animateTo("))
         assertTrue(vinyl.contains("isPlaying && !reducedMotion"))
-        assertTrue(vinyl.contains("val fraction = progress.coerceIn(0f, 1f)"))
-        assertTrue(vinyl.contains("val pivot = Offset("))
-        assertTrue(vinyl.contains("val needle = Offset("))
-        assertTrue(vinyl.contains("val arm = Path().apply"))
-        assertTrue(vinyl.contains("drawPath(arm"))
+        assertTrue(vinyl.contains("progress.coerceIn(0f,1f)"))
+        assertTrue(vinyl.contains("val pivot=Offset("))
+        assertTrue(vinyl.contains("val needle=Offset("))
+        assertTrue(vinyl.contains("val path=Path().apply"))
+        assertTrue(vinyl.contains("drawPath(path"))
     }
 
     @Test
     fun classicModernMinimalCinemaExpressiveHaveDistinctLooks() {
-        val legacy = source("ui/player/layout/GalaxLegacyStyleScene.kt")
-        for (value in listOf(
-            "CLÁSICO", "MODERNO", "MÍNIMO", "CINEMA", "EXPRESIVO",
-        )) assertTrue(legacy.contains(value))
-        assertTrue(legacy.contains("LegacyArtworkFrame("))
-        assertTrue(legacy.contains("LegacyControlPanel("))
-        assertTrue(legacy.contains("GalaxLegacyBackdrop("))
-        assertTrue(legacy.contains("PlayerDesignStyle.V1 ->"))
-        assertTrue(legacy.contains("PlayerDesignStyle.V2 ->"))
-        assertTrue(legacy.contains("PlayerDesignStyle.V3 ->"))
-        assertTrue(legacy.contains("PlayerDesignStyle.V4 ->"))
-        assertTrue(legacy.contains("PlayerDesignStyle.V6 ->"))
+        val player = source("ui/player/Player.kt")
+        val routing = source("ui/player/layout/PlayerLayout.kt")
+        assertTrue(player.contains("GalaxPlayerClassicScene("))
+        assertTrue(player.contains("GalaxPlayerLandscapeScene("))
+        for (version in 1..7) {
+            val path = "ui/player/GalaxStudioPlayer/StudioThemeV$version.kt"
+            val scene = source(path)
+            assertTrue(scene.contains("fun StudioThemeV$version("))
+            assertTrue(routing.contains("StudioThemeV$version(content)"))
+        }
     }
 
     @Test
