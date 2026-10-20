@@ -31,11 +31,11 @@ class GalaxFifteenStylesTest {
     )
 
     @Test
-    fun fifteenStylesRemainPersistableEnumValues() {
-        assertEquals(15, PlayerDesignStyle.entries.size)
+    fun seventeenStylesRemainPersistableEnumValues() {
+        assertEquals(17, PlayerDesignStyle.entries.size)
         assertEquals(8, originals.size)
         assertEquals(7, newStyles.size)
-        assertEquals(PlayerDesignStyle.entries, originals + newStyles)
+        assertEquals(PlayerDesignStyle.entries, originals + newStyles + listOf(PlayerDesignStyle.V16, PlayerDesignStyle.V17))
         assertEquals(PlayerDesignStyle.V8, PlayerDesignStyle.valueOf("V8"))
         assertEquals(PlayerDesignStyle.V15, PlayerDesignStyle.valueOf("V15"))
     }
@@ -81,19 +81,15 @@ class GalaxFifteenStylesTest {
         assertEquals(PlayerLayoutFamily.COMPACT, resolvePlayerLayout(PlayerDesignStyle.V5, false).family)
         assertEquals(PlayerLayoutFamily.CLASSIC, resolvePlayerLayout(PlayerDesignStyle.V6, false).family)
         assertEquals(PlayerLayoutFamily.CINEMATIC, resolvePlayerLayout(PlayerDesignStyle.V7, false).family)
-        assertEquals(PlayerLayoutFamily.IMMERSIVE, resolvePlayerLayout(PlayerDesignStyle.V8, false).family)
+        assertEquals(PlayerLayoutFamily.APPLE_MUSIC, resolvePlayerLayout(PlayerDesignStyle.V8, false).family)
+        assertEquals(PlayerLayoutFamily.GALAX_THEME, resolvePlayerLayout(PlayerDesignStyle.V16, false).family)
+        assertEquals(PlayerLayoutFamily.VINJAX, resolvePlayerLayout(PlayerDesignStyle.V17, false).family)
     }
 
     @Test
-    fun onlyClassicAndV2DrawSharedBackdrops() {
+    fun allSeventeenDesignsDrawTheirOwnBackdrops() {
         for (style in PlayerDesignStyle.entries) {
-            val needsShared = style in setOf(
-                PlayerDesignStyle.V1,
-                PlayerDesignStyle.V2,
-                PlayerDesignStyle.V3,
-                PlayerDesignStyle.V4,
-                PlayerDesignStyle.V6,
-            )
+            val needsShared = false
             assertEquals(
                 "Shared background leak for $style",
                 needsShared,
