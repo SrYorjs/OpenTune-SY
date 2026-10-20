@@ -33,7 +33,7 @@ data class PlayerLayoutRoute(
 ) {
     /** Exactly the original shared background guard (not V5, not V7). */
     val hasSharedBackdrop: Boolean
-        get() = false
+        get() = family == PlayerLayoutFamily.CLASSIC || family == PlayerLayoutFamily.V2
 }
 
 fun resolvePlayerLayout(style: PlayerDesignStyle, isLandscape: Boolean): PlayerLayoutRoute {
