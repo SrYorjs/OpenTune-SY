@@ -933,4 +933,8 @@ GalaxOT will only extract your token, and everything else is stored locally.</st
     <string name="galax_settings_storage_subtitle">Downloads, cache and local space</string>
     <string name="galax_settings_privacy_subtitle">History, permissions and data controls</string>
     <string name="galax_settings_integrations_subtitle">Connected services and listening activity</string>
+    <string name="galax_settings_creative_tools">Appearance shortcuts</string>
+    <string name="galax_settings_studio_shortcut">Player Studio</string>
+    <string name="galax_settings_glass_shortcut">Liquid Glass</string>
+    <string name="galax_settings_palette_shortcut">Color palette</string>
 </resources>
