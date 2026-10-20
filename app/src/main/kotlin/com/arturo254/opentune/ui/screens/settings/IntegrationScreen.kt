@@ -59,6 +59,12 @@ fun IntegrationScreen(
             )
         )
 
+        GalaxSettingsSectionHero(
+            title = stringResource(R.string.integration),
+            description = stringResource(R.string.galax_settings_integrations_subtitle),
+            area = GalaxSettingsArea.INTEGRATIONS,
+        )
+
         PreferenceGroupTitle(
                 title = stringResource(R.string.general),
             )
