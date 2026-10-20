@@ -142,6 +142,12 @@ fun PrivacySettings(
             )
         )
 
+        GalaxSettingsSectionHero(
+            title = stringResource(R.string.privacy),
+            description = stringResource(R.string.galax_settings_privacy_subtitle),
+            area = GalaxSettingsArea.PRIVACY,
+        )
+
         PreferenceGroupTitle(
             title = stringResource(R.string.listen_history)
         )
