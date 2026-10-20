@@ -346,13 +346,6 @@ fun ColumnScope.PlayerMenu(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = stringResource(R.string.now_playing),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                        Text(
                             text = nowPlayingTitle,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
