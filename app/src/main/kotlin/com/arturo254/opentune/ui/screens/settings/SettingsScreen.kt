@@ -168,6 +168,9 @@ fun SettingsScreen(
             }
         },
         onUpdateClick = { navController.navigate("settings/update") },
+        onPlayerStudioClick = { navController.navigate("settings/appearance/player_studio") },
+        onLiquidGlassClick = { navController.navigate("settings/appearance/galax_liquid") },
+        onPaletteClick = { navController.navigate("settings/appearance/palette_picker") },
     )
 
     Scaffold(
