@@ -258,6 +258,12 @@ fun PlayerSettings(
             )
         )
 
+        GalaxSettingsSectionHero(
+            title = stringResource(R.string.player_and_audio),
+            description = stringResource(R.string.galax_settings_player_subtitle),
+            area = GalaxSettingsArea.PLAYER,
+        )
+
         PreferenceGroupTitle(
             title = stringResource(R.string.player)
         )
