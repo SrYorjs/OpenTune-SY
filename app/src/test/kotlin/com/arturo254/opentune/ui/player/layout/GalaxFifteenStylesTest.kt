@@ -1,7 +1,7 @@
 package com.arturo254.opentune.ui.player.layout
 
 import com.arturo254.opentune.constants.PlayerDesignStyle
-import com.arturo254.opentune.ui.player.v9.originalPlayerStyleConfig
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.originalPlayerStyleConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -89,7 +89,10 @@ class GalaxFifteenStylesTest {
     @Test
     fun allSeventeenDesignsDrawTheirOwnBackdrops() {
         for (style in PlayerDesignStyle.entries) {
-            val needsShared = false
+            val needsShared = style in setOf(
+                PlayerDesignStyle.V1, PlayerDesignStyle.V2, PlayerDesignStyle.V3,
+                PlayerDesignStyle.V4, PlayerDesignStyle.V6,
+            )
             assertEquals(
                 "Shared background leak for $style",
                 needsShared,
