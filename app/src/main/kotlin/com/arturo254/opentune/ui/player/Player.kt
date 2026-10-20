@@ -1002,20 +1002,22 @@ fun BottomSheetPlayer(
                     }
             },
             classicLandscape = {
-                GalaxLegacyStyleScene(
-                    style = playerDesignStyle,
-                    isLandscape = true,
-                    isPlaying = isPlaying,
+                GalaxPlayerLandscapeScene(
                     accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
-                    queuePeekHeight = queueSheetState.collapsedBound,
+                    isPlaying = isPlaying,
+                    bottomInset = queueSheetState.collapsedBound + 48.dp,
                     artwork = {
+                        val screenWidth = LocalConfiguration.current.screenWidthDp
+                        val thumbnailSize = (screenWidth * .4f).dp
                         Thumbnail(
                             sliderPositionProvider = { seekSession.pendingSeekMs },
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier.size(thumbnailSize),
                             isPlayerExpanded = state.isExpanded,
                         )
                     },
-                    controls = { enrichedMetadata?.let { controlsContent(it) } },
+                    controls = {
+                        enrichedMetadata?.let { controlsContent(it) }
+                    },
                 )
             },
             compactPortrait = {
