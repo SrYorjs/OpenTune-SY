@@ -61,15 +61,6 @@ fun V7PlayerScene(
             )
         }
 
-        GalaxPlayerSceneOverlay(
-            index = "07",
-            subtitle = "CINEMATIC",
-            isPlaying = isPlaying,
-            landscape = isLandscape,
-            accent = gradientColors.firstOrNull() ?: androidx.compose.material3.MaterialTheme.colorScheme.primary,
-        )
-
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
