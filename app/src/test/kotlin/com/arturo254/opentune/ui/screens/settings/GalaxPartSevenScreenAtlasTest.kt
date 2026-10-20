@@ -67,4 +67,23 @@ class GalaxPartSevenScreenAtlasTest {
         assertTrue(layout.contains("SettingsGroupCard("))
         assertTrue(source("core/designsystem/liquid/GalaxLiquidModel.kt").contains("LocalGalaxLiquidVariant"))
     }
+    @Test
+    fun creativeShortcutsReachExistingSettingsScreens() {
+        val layout = source("ui/screens/settings/SettingsLayout.kt")
+        val settings = source("ui/screens/settings/SettingsScreen.kt")
+        val shortcuts = source("ui/screens/settings/GalaxSettingsCreativeShortcuts.kt")
+        val nav = source("ui/screens/NavigationBuilder.kt")
+        assertTrue(layout.contains("GalaxSettingsCreativeShortcuts("))
+        assertTrue(layout.contains("state.onPlayerStudioClick"))
+        assertTrue(layout.contains("state.onLiquidGlassClick"))
+        assertTrue(layout.contains("state.onPaletteClick"))
+        assertTrue(settings.contains("settings/appearance/player_studio"))
+        assertTrue(settings.contains("settings/appearance/galax_liquid"))
+        assertTrue(settings.contains("settings/appearance/palette_picker"))
+        assertTrue(shortcuts.contains("onClick = onPlayerStudio"))
+        assertTrue(shortcuts.contains("onClick = onLiquidGlass"))
+        assertTrue(shortcuts.contains("onClick = onPalette"))
+        assertTrue(nav.contains("settings/appearance/player_studio"))
+    }
+
 }
