@@ -75,7 +75,7 @@ fun VinJaxPlayerScene(
                 Brush.verticalGradient(
                     listOf(
                         Color(0xFF090F19),
-                        scheme.primary.copy(alpha = .29f).compositeOver(Color(0xFF0E0C0C)),
+                        androidx.compose.ui.graphics.lerp(scheme.primary, Color(0xFF0E0C0C), .76f),
                         Color(0xFF150E0C),
                         Color(0xFF070709),
                     ),
