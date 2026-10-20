@@ -448,7 +448,7 @@ fun BottomSheetPlayer(
 
     val activePlayerGlass = LocalEnableLiquidGlass.current && !state.isCollapsed
     val liveCanvasGlass = activePlayerGlass &&
-        playerDesignStyle == PlayerDesignStyle.V8 &&
+        playerDesignStyle == PlayerDesignStyle.V16 &&
         !canvasArtwork?.preferredAnimationUrl.isNullOrBlank()
     val inheritedBackdrop = LocalGalaxLiquidBackdrop.current
     val playerArtworkBackdrop = rememberLayerBackdrop()
