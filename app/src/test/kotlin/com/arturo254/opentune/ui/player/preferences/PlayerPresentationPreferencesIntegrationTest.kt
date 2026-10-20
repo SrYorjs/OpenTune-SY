@@ -27,7 +27,7 @@ class PlayerPresentationPreferencesIntegrationTest {
         assertTrue(keys.contains("stringPreferencesKey(\"player_buttons_style\")"))
         assertTrue(keys.contains("stringPreferencesKey(\"sliderStyle\")"))
         assertEquals(listOf("V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8",
-            "V9", "V10", "V11", "V12", "V13", "V14", "V15"),
+            "V9", "V10", "V11", "V12", "V13", "V14", "V15", "V16", "V17"),
             PlayerDesignStyle.entries.map { it.name })
         assertEquals(PlayerDesignStyle.V8, PlayerPresentationDefaults.designStyle)
         assertEquals(PlayerBackgroundStyle.DEFAULT, PlayerPresentationDefaults.backgroundStyle)
@@ -45,10 +45,11 @@ class PlayerPresentationPreferencesIntegrationTest {
         val settings = source("ui/screens/settings/AppearanceSettings.kt")
         val selectors = source("ui/player/preferences/PlayerPresentationSelectors.kt")
         val player = source("ui/player/Player.kt")
-        assertTrue(settings.contains("PlayerLayoutSelector("))
+        assertTrue(settings.contains("settings/appearance/player_studio"))
+        assertTrue(source("ui/screens/settings/GalaxPlayerStyleStudioScreen.kt").contains("onSelected(style)"))
         assertTrue(settings.contains("PlayerBackgroundSkinSelector("))
         assertTrue(settings.contains("PlayerButtonsSkinSelector("))
-        assertTrue(settings.contains("onSelected = onPlayerDesignStyleChange"))
+        assertTrue(source("ui/screens/settings/GalaxPlayerStyleStudioScreen.kt").contains("PlayerDesignStyleKey"))
         assertTrue(settings.contains("onSelected = onPlayerBackgroundChange"))
         assertTrue(settings.contains("onSelected = onPlayerButtonsStyleChange"))
         assertTrue(selectors.contains("selectedValue = selected"))
@@ -72,7 +73,7 @@ class PlayerPresentationPreferencesIntegrationTest {
                 val route = resolvePlayerLayout(style, landscape)
                 assertEquals(style, route.style)
                 assertEquals(PlayerLayoutFamily.CLASSIC, route.family)
-                assertTrue(route.hasSharedBackdrop)
+                assertFalse(route.hasSharedBackdrop)
             }
         }
         assertTrue(c.contains("PlayerDesignStyle.V1 -> {"))
