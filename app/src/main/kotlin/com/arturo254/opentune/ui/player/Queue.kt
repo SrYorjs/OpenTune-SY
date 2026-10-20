@@ -603,6 +603,10 @@ fun Queue(
                     title = context.getString(R.string.queue),
                     detail = queuePlaybackState.itemCount.toString(),
                 )
+                com.arturo254.opentune.ui.player.panels.GalaxQueueJourneyRail(
+                    currentIndex = queuePlaybackState.currentIndex,
+                    itemCount = queuePlaybackState.itemCount,
+                )
 
                 LazyColumn(
                     state = lazyListState,
