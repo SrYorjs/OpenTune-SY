@@ -81,6 +81,11 @@ fun V8PlayerScene(
             }
         }
 
+        V8ImmersiveGradientFloor(
+            artworkUrl = artworkUrl,
+            palette = gradientColors,
+        )
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
