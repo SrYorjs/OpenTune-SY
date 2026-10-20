@@ -776,4 +776,8 @@
     <string name="galax_settings_storage_subtitle">Descargas, caché y espacio local</string>
     <string name="galax_settings_privacy_subtitle">Historial, permisos y control de datos</string>
     <string name="galax_settings_integrations_subtitle">Servicios conectados y actividad musical</string>
+    <string name="galax_settings_creative_tools">Accesos de apariencia</string>
+    <string name="galax_settings_studio_shortcut">Estudio de reproductores</string>
+    <string name="galax_settings_glass_shortcut">Liquid Glass</string>
+    <string name="galax_settings_palette_shortcut">Paleta de colores</string>
 </resources>
