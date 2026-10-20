@@ -29,7 +29,10 @@ class PlayerLayoutIntegrationTest {
             assertTrue("slot missing in shared router: $slot", router.contains("$slot: @Composable () -> Unit"))
             assertTrue("slot missing in Player usage: $slot", fullPlayer.contains("$slot = {"))
         }
-        assertTrue(fullPlayer.contains("resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop"))
+        assertFalse(fullPlayer.contains("resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop"))
+        assertTrue(fullPlayer.contains("GalaxLegacyStyleScene("))
+        assertTrue(fullPlayer.contains("AppleMusicPlayerScene("))
+        assertTrue(fullPlayer.contains("VinJaxPlayerScene("))
         assertEquals(
             1,
             Regex("""(?m)^\s*PlayerLayout\(""").findAll(fullPlayer).count(),
