@@ -357,6 +357,12 @@ fun AppearanceSettings(
             .windowInsetsPadding(LocalPlayerAwareWindowInsets.current)
             .verticalScroll(rememberScrollState()),
     ) {
+        GalaxSettingsSectionHero(
+            title = stringResource(R.string.appearance),
+            description = stringResource(R.string.galax_settings_appearance_subtitle),
+            area = GalaxSettingsArea.APPEARANCE,
+        )
+
         PreferenceGroupTitle(
             title = stringResource(R.string.theme),
         )
