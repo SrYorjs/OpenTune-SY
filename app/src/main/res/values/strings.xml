@@ -927,4 +927,10 @@ GalaxOT will only extract your token, and everything else is stored locally.</st
     <string name="galax_eq_profile_status">Active audio profile</string>
     <string name="galax_quality_selection">Playback quality</string>
     <string name="galax_quality_versions">%1$d versions · %2$d sources</string>
+    <string name="galax_settings_appearance_subtitle">Colors, motion, typography and immersive presentation</string>
+    <string name="galax_settings_player_subtitle">Audio processing, playback and connections</string>
+    <string name="galax_settings_content_subtitle">Music sources, language and discovery</string>
+    <string name="galax_settings_storage_subtitle">Downloads, cache and local space</string>
+    <string name="galax_settings_privacy_subtitle">History, permissions and data controls</string>
+    <string name="galax_settings_integrations_subtitle">Connected services and listening activity</string>
 </resources>
