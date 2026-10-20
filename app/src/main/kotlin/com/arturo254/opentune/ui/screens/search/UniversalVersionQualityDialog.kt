@@ -60,6 +60,11 @@ internal fun UniversalVersionQualityDialog(
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                GalaxQualitySelectionHeader(
+                    versionCount = recordings.size,
+                    providerCount = recordings.flatMap { it.variants }.map { it.provider }.distinct().size,
+                    manualSelected = manualVariant != null,
+                )
                 Text(
                     text = stringResource(R.string.universal_quality_title),
                     fontWeight = FontWeight.SemiBold,
