@@ -333,7 +333,7 @@ private fun AppleMusicControls(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Icon(
-                painterResource(R.drawable.volume_down),
+                painterResource(R.drawable.volume_off),
                 contentDescription = "Volumen bajo",
                 tint = white.copy(alpha = .68f),
                 modifier = Modifier.size(17.dp),
