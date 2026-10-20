@@ -164,26 +164,6 @@ fun V8PlayerBackdrop(
             }
         }
 
-        // Apple Music-like lower fade: the artwork stays visible up top while
-        // controls sit on a deep, slightly tinted cinematic floor.
-        val accent = MaterialTheme.colorScheme.primary
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colorStops = arrayOf(
-                            0f to Color.Black.copy(alpha = if (liquidCanvas) .02f else .08f),
-                            .30f to Color.Transparent,
-                            .52f to Color.Black.copy(alpha = if (liquidCanvas) .04f else .12f),
-                            .70f to accent.copy(alpha = if (liquidCanvas) .045f else .055f),
-                            .82f to Color.Black.copy(alpha = if (liquidCanvas) .10f else .62f),
-                            1f to Color.Black.copy(alpha = if (liquidCanvas) .20f else .94f),
-                        )
-                    )
-                ),
-        )
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
