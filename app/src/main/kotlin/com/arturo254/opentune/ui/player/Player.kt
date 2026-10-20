@@ -133,6 +133,9 @@ import com.arturo254.opentune.ui.player.layout.GalaxPlayerLandscapeScene
 import com.arturo254.opentune.core.designsystem.component.GalaxOrbitField
 import com.arturo254.opentune.ui.player.v9.GalaxOriginalPlayerControls
 import com.arturo254.opentune.ui.player.v9.GalaxOriginalPlayerScene
+import com.arturo254.opentune.ui.player.layout.GalaxLegacyStyleScene
+import com.arturo254.opentune.ui.player.v8.AppleMusicPlayerScene
+import com.arturo254.opentune.ui.player.v17.VinJaxPlayerScene
 import com.arturo254.opentune.ui.player.layout.PlayerLayout
 import com.arturo254.opentune.ui.player.layout.resolvePlayerLayout
 import com.arturo254.opentune.ui.player.skin.rememberVisualSkin
@@ -726,6 +729,111 @@ fun BottomSheetPlayer(
 
         PlayerLayout(
             style = playerDesignStyle,
+            applePortrait = {
+                AppleMusicPlayerScene(
+                    isLandscape = false,
+                    queuePeekHeight = queueSheetState.collapsedBound,
+                    palette = gradientColors,
+                    playback = playerState,
+                    actions = playerActions,
+                    positionMs = position,
+                    durationMs = duration,
+                    pendingSeekMs = sliderPosition,
+                    onSeek = updatedOnSliderValueChange,
+                    onSeekFinished = updatedOnSliderValueChangeFinished,
+                    volume = playerVolume.value,
+                    onVolumeChange = { playerConnection.service.playerVolume.value = it },
+                    onLyrics = { lyricsSheetState.expandSoft() },
+                    onQueue = { queueSheetState.expandSoft() },
+                    onMenu = {
+                        enrichedMetadata?.let { metadata ->
+                            menuState.showPlayerPanelMenu(
+                                metadata = metadata,
+                                navController = navController,
+                                playerBottomSheetState = state,
+                                bottomSheetPageState = bottomSheetPageState,
+                            )
+                        }
+                    },
+                    artwork = {
+                        Thumbnail(
+                            sliderPositionProvider = { seekSession.pendingSeekMs },
+                            modifier = Modifier.fillMaxSize(),
+                            isPlayerExpanded = state.isExpanded,
+                        )
+                    },
+                )
+            },
+            appleLandscape = {
+                AppleMusicPlayerScene(
+                    isLandscape = true,
+                    queuePeekHeight = queueSheetState.collapsedBound,
+                    palette = gradientColors,
+                    playback = playerState,
+                    actions = playerActions,
+                    positionMs = position,
+                    durationMs = duration,
+                    pendingSeekMs = sliderPosition,
+                    onSeek = updatedOnSliderValueChange,
+                    onSeekFinished = updatedOnSliderValueChangeFinished,
+                    volume = playerVolume.value,
+                    onVolumeChange = { playerConnection.service.playerVolume.value = it },
+                    onLyrics = { lyricsSheetState.expandSoft() },
+                    onQueue = { queueSheetState.expandSoft() },
+                    onMenu = {
+                        enrichedMetadata?.let { metadata ->
+                            menuState.showPlayerPanelMenu(
+                                metadata = metadata,
+                                navController = navController,
+                                playerBottomSheetState = state,
+                                bottomSheetPageState = bottomSheetPageState,
+                            )
+                        }
+                    },
+                    artwork = {
+                        Thumbnail(
+                            sliderPositionProvider = { seekSession.pendingSeekMs },
+                            modifier = Modifier.fillMaxSize(),
+                            isPlayerExpanded = state.isExpanded,
+                        )
+                    },
+                )
+            },
+            vinylPortrait = {
+                VinJaxPlayerScene(
+                    isLandscape = false,
+                    isPlaying = isPlaying,
+                    progress = playerState.progressFraction,
+                    accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
+                    queuePeekHeight = queueSheetState.collapsedBound,
+                    artwork = {
+                        Thumbnail(
+                            sliderPositionProvider = { seekSession.pendingSeekMs },
+                            modifier = Modifier.fillMaxSize(),
+                            isPlayerExpanded = state.isExpanded,
+                        )
+                    },
+                    controls = galaxOriginalControls,
+                )
+            },
+            vinylLandscape = {
+                VinJaxPlayerScene(
+                    isLandscape = true,
+                    isPlaying = isPlaying,
+                    progress = playerState.progressFraction,
+                    accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
+                    queuePeekHeight = queueSheetState.collapsedBound,
+                    artwork = {
+                        Thumbnail(
+                            sliderPositionProvider = { seekSession.pendingSeekMs },
+                            modifier = Modifier.fillMaxSize(),
+                            isPlayerExpanded = state.isExpanded,
+                        )
+                    },
+                    controls = galaxOriginalControls,
+                )
+            },
+
             isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
             galaxPortrait = {
                 GalaxOriginalPlayerScene(
@@ -880,22 +988,20 @@ fun BottomSheetPlayer(
                     }
             },
             classicLandscape = {
-                GalaxPlayerLandscapeScene(
-                    accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
+                GalaxLegacyStyleScene(
+                    style = playerDesignStyle,
+                    isLandscape = true,
                     isPlaying = isPlaying,
-                    bottomInset = queueSheetState.collapsedBound + 48.dp,
+                    accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
+                    queuePeekHeight = queueSheetState.collapsedBound,
                     artwork = {
-                        val screenWidth = LocalConfiguration.current.screenWidthDp
-                        val thumbnailSize = (screenWidth * .4f).dp
                         Thumbnail(
                             sliderPositionProvider = { seekSession.pendingSeekMs },
-                            modifier = Modifier.size(thumbnailSize),
+                            modifier = Modifier.fillMaxSize(),
                             isPlayerExpanded = state.isExpanded,
                         )
                     },
-                    controls = {
-                        enrichedMetadata?.let { controlsContent(it) }
-                    },
+                    controls = { enrichedMetadata?.let { controlsContent(it) } },
                 )
             },
             compactPortrait = {
@@ -1018,7 +1124,9 @@ fun BottomSheetPlayer(
                     }
             },
             classicPortrait = {
-                GalaxPlayerClassicScene(
+                GalaxLegacyStyleScene(
+                    style = playerDesignStyle,
+                    isLandscape = false,
                     isPlaying = isPlaying,
                     accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
                     queuePeekHeight = queueSheetState.collapsedBound,
@@ -1031,9 +1139,7 @@ fun BottomSheetPlayer(
                             isPlayerExpanded = state.isExpanded,
                         )
                     },
-                    controls = {
-                        enrichedMetadata?.let { controlsContent(it) }
-                    },
+                    controls = { enrichedMetadata?.let { controlsContent(it) } },
                 )
             },
         )
