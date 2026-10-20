@@ -18,6 +18,9 @@ enum class PlayerLayoutFamily {
     CINEMATIC,  // V7
     IMMERSIVE,
     GALAX,
+    APPLE_MUSIC,
+    GALAX_THEME,
+    VINJAX,
 }
 
 enum class PlayerLayoutOrientation { PORTRAIT, LANDSCAPE }
@@ -30,7 +33,7 @@ data class PlayerLayoutRoute(
 ) {
     /** Exactly the original shared background guard (not V5, not V7). */
     val hasSharedBackdrop: Boolean
-        get() = family == PlayerLayoutFamily.CLASSIC || family == PlayerLayoutFamily.V2
+        get() = false
 }
 
 fun resolvePlayerLayout(style: PlayerDesignStyle, isLandscape: Boolean): PlayerLayoutRoute {
@@ -42,10 +45,12 @@ fun resolvePlayerLayout(style: PlayerDesignStyle, isLandscape: Boolean): PlayerL
         PlayerDesignStyle.V2 -> PlayerLayoutFamily.V2
         PlayerDesignStyle.V5 -> PlayerLayoutFamily.COMPACT
         PlayerDesignStyle.V7 -> PlayerLayoutFamily.CINEMATIC
-        PlayerDesignStyle.V8 -> PlayerLayoutFamily.IMMERSIVE
+        PlayerDesignStyle.V8 -> PlayerLayoutFamily.APPLE_MUSIC
         PlayerDesignStyle.V9, PlayerDesignStyle.V10, PlayerDesignStyle.V11,
         PlayerDesignStyle.V12, PlayerDesignStyle.V13, PlayerDesignStyle.V14,
         PlayerDesignStyle.V15 -> PlayerLayoutFamily.GALAX
+        PlayerDesignStyle.V16 -> PlayerLayoutFamily.GALAX_THEME
+        PlayerDesignStyle.V17 -> PlayerLayoutFamily.VINJAX
     }
     return PlayerLayoutRoute(
         style = style,
@@ -81,6 +86,10 @@ fun PlayerLayout(
     v2Landscape: @Composable () -> Unit = classicLandscape,
     galaxPortrait: @Composable () -> Unit = classicPortrait,
     galaxLandscape: @Composable () -> Unit = classicLandscape,
+    applePortrait: @Composable () -> Unit = immersivePortrait,
+    appleLandscape: @Composable () -> Unit = immersiveLandscape,
+    vinylPortrait: @Composable () -> Unit = galaxPortrait,
+    vinylLandscape: @Composable () -> Unit = galaxLandscape,
 ) {
     val route = remember(style, isLandscape) { resolvePlayerLayout(style, isLandscape) }
     when (route.orientation) {
@@ -92,6 +101,9 @@ fun PlayerLayout(
                 PlayerLayoutFamily.CINEMATIC -> cinematicPortrait()
                 PlayerLayoutFamily.IMMERSIVE -> immersivePortrait()
                 PlayerLayoutFamily.GALAX -> galaxPortrait()
+                PlayerLayoutFamily.APPLE_MUSIC -> applePortrait()
+                PlayerLayoutFamily.GALAX_THEME -> immersivePortrait()
+                PlayerLayoutFamily.VINJAX -> vinylPortrait()
             }
         PlayerLayoutOrientation.LANDSCAPE ->
             when (route.family) {
@@ -101,6 +113,9 @@ fun PlayerLayout(
                 PlayerLayoutFamily.CINEMATIC -> cinematicLandscape()
                 PlayerLayoutFamily.IMMERSIVE -> immersiveLandscape()
                 PlayerLayoutFamily.GALAX -> galaxLandscape()
+                PlayerLayoutFamily.APPLE_MUSIC -> appleLandscape()
+                PlayerLayoutFamily.GALAX_THEME -> immersiveLandscape()
+                PlayerLayoutFamily.VINJAX -> vinylLandscape()
             }
     }
 }
