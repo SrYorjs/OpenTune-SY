@@ -51,23 +51,26 @@ fun StudioThemeV14(
             .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal+WindowInsetsSides.Top)),
     ) {
         Canvas(Modifier.fillMaxSize()) {
-            for (i in 0..8) {
-                val x=size.width*(.06f+i*.11f)
-                drawLine(Color.White.copy(alpha=.052f),
-                    Offset(x,0f),Offset(x,size.height),1.dp.toPx())
+            for(i in 0..10) {
+                val xx=size.width*(.07f+i*.088f)
+                drawLine(Color.White.copy(alpha=.053f),
+                    Offset(xx,0f),Offset(xx,size.height),.8.dp.toPx())
             }
-            for (i in 0..4) {
-                val y=size.height*(.09f+i*.21f)
-                drawLine(Color.White.copy(alpha=.08f),
-                    Offset(size.width*.06f,y),
-                    Offset(size.width*.94f,y),.8.dp.toPx())
+            for(i in 0..6) {
+                val yy=size.height*(.07f+i*.145f)
+                drawLine(Color.White.copy(alpha=.071f),
+                    Offset(0f,yy),Offset(size.width,yy),.8.dp.toPx())
             }
-            drawRect(state.primary.copy(alpha=.65f),
-                Offset(size.width*.06f,size.height*.13f),
-                Size(2.dp.toPx(),size.height*.28f))
-            drawRect(Color.White.copy(alpha=.024f),
-                Offset(size.width*.84f,size.height*.11f),
-                Size(size.width*.07f,size.height*.75f))
+            drawRect(
+                color=state.primary.copy(alpha=.77f),
+                topLeft=Offset(size.width*.09f,size.height*.11f),
+                size=Size(3.dp.toPx(),size.height*.34f),
+            )
+            drawRect(
+                color=Color.White.copy(alpha=.035f),
+                topLeft=Offset(size.width*.83f,size.height*.09f),
+                size=Size(size.width*.07f,size.height*.73f),
+            )
         }
         if(state.isLandscape) {
             Row(
