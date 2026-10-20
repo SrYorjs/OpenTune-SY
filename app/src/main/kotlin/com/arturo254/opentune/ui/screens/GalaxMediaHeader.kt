@@ -88,9 +88,9 @@ fun GalaxMediaHeader(
             Column(
                 Modifier.fillMaxWidth().padding(
                     horizontal = GalaxScreenStyle.pagePadding,
-                    vertical = 22.dp,
+                    vertical = 30.dp,
                 ),
-                verticalArrangement = Arrangement.spacedBy(17.dp),
+                verticalArrangement = Arrangement.spacedBy(23.dp),
             ) {
                 BoxWithConstraints(Modifier.fillMaxWidth()) {
                     val wide = maxWidth >= 560.dp
@@ -112,38 +112,24 @@ fun GalaxMediaHeader(
                     } else {
                         Column(
                             Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
+                            horizontalAlignment = Alignment.Start,
                             verticalArrangement = Arrangement.spacedBy(18.dp),
                         ) {
-                            GalaxMediaCoverStage(artworkUrls, artist, Modifier.size(cover))
-                            Column(
-                                Modifier.fillMaxWidth(),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(9.dp),
+                            GalaxMediaTitle(label, title, centered = false)
+                            Box(
+                                modifier = Modifier.fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                contentAlignment = Alignment.Center,
                             ) {
-                                GalaxMediaTitle(label, title, centered = true)
-                                details()
+                                GalaxMediaCoverStage(
+                                    artworkUrls,
+                                    artist,
+                                    Modifier.size((maxWidth * .76f).coerceIn(210.dp, 326.dp)),
+                                )
                             }
+                            details()
                         }
                     }
-                }
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = if (artist) "GALAXOT  /  CONSTELLATION" else "GALAXOT  /  COLLECTION",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 1.3.sp,
-                        color = accent,
-                    )
-                    Text(
-                        text = "✦  AUDIO UNIVERSE",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
                 }
                 GalaxMediaFacts(facts)
                 supporting()
