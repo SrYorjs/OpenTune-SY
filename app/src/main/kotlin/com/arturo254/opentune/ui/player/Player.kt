@@ -131,10 +131,10 @@ import com.arturo254.opentune.ui.player.v5.v5OverlayGestures
 import com.arturo254.opentune.ui.player.layout.GalaxPlayerClassicScene
 import com.arturo254.opentune.ui.player.layout.GalaxPlayerLandscapeScene
 import com.arturo254.opentune.core.designsystem.component.GalaxOrbitField
-import com.arturo254.opentune.ui.player.v9.GalaxOriginalPlayerControls
-import com.arturo254.opentune.ui.player.v9.GalaxOriginalPlayerScene
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.GalaxOriginalPlayerControls
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioVisualScene
 import com.arturo254.opentune.ui.player.layout.GalaxLegacyStyleScene
-import com.arturo254.opentune.ui.player.v8.AppleMusicPlayerScene
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.AppleMusicPlayerScene
 import com.arturo254.opentune.ui.player.v17.VinJaxPlayerScene
 import com.arturo254.opentune.ui.player.layout.PlayerLayout
 import com.arturo254.opentune.ui.player.layout.resolvePlayerLayout
@@ -755,6 +755,12 @@ fun BottomSheetPlayer(
                             )
                         }
                     },
+                    artworkUrl = playerVisuals.artworkUrl,
+                    canvasArtwork = canvasArtwork,
+                    disableBlur = disableBlur,
+                    immersiveGlass = activePlayerGlass,
+                    playerBackdrop = if (activePlayerGlass) playerArtworkBackdrop else null,
+                    nestedScrollConnection = state.preUpPostDownNestedScrollConnection,
                     artwork = {
                         Thumbnail(
                             sliderPositionProvider = { seekSession.pendingSeekMs },
@@ -790,6 +796,12 @@ fun BottomSheetPlayer(
                             )
                         }
                     },
+                    artworkUrl = playerVisuals.artworkUrl,
+                    canvasArtwork = canvasArtwork,
+                    disableBlur = disableBlur,
+                    immersiveGlass = activePlayerGlass,
+                    playerBackdrop = if (activePlayerGlass) playerArtworkBackdrop else null,
+                    nestedScrollConnection = state.preUpPostDownNestedScrollConnection,
                     artwork = {
                         Thumbnail(
                             sliderPositionProvider = { seekSession.pendingSeekMs },
@@ -836,12 +848,13 @@ fun BottomSheetPlayer(
 
             isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
             galaxPortrait = {
-                GalaxOriginalPlayerScene(
+                StudioVisualScene(
                     style = playerDesignStyle,
                     isLandscape = false,
                     isPlaying = isPlaying,
                     colors = gradientColors,
                     queuePeekHeight = queueSheetState.collapsedBound,
+                    progress = playerState.progressFraction,
                     artwork = {
                         Thumbnail(
                             sliderPositionProvider = { seekSession.pendingSeekMs },
@@ -855,12 +868,13 @@ fun BottomSheetPlayer(
                 )
             },
             galaxLandscape = {
-                GalaxOriginalPlayerScene(
+                StudioVisualScene(
                     style = playerDesignStyle,
                     isLandscape = true,
                     isPlaying = isPlaying,
                     colors = gradientColors,
                     queuePeekHeight = queueSheetState.collapsedBound,
+                    progress = playerState.progressFraction,
                     artwork = {
                         Thumbnail(
                             sliderPositionProvider = { seekSession.pendingSeekMs },
