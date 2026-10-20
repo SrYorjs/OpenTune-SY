@@ -19,8 +19,10 @@ class V8PlayerMigrationIntegrationTest {
     @Test fun bothOrientationsUseOneImmersiveSceneAndOneControlSlot() {
         val player = source("ui/player/Player.kt")
         val scene = source("ui/player/v8/V8PlayerScene.kt")
-        assertEquals(PlayerLayoutFamily.IMMERSIVE, resolvePlayerLayout(PlayerDesignStyle.V8, false).family)
-        assertEquals(PlayerLayoutFamily.IMMERSIVE, resolvePlayerLayout(PlayerDesignStyle.V8, true).family)
+        assertEquals(PlayerLayoutFamily.GALAX_THEME, resolvePlayerLayout(PlayerDesignStyle.V16, false).family)
+        assertEquals(PlayerLayoutFamily.APPLE_MUSIC, resolvePlayerLayout(PlayerDesignStyle.V8, false).family)
+        assertEquals(PlayerLayoutFamily.GALAX_THEME, resolvePlayerLayout(PlayerDesignStyle.V16, true).family)
+        assertEquals(PlayerLayoutFamily.APPLE_MUSIC, resolvePlayerLayout(PlayerDesignStyle.V8, true).family)
         assertEquals(2, Regex("""V8PlayerScene\(""").findAll(player).count())
         assertEquals(1, Regex("""V8PlayerControlsContent\(""").findAll(player).count())
         assertTrue(player.contains("val v8ControlsContent: @Composable ColumnScope.(MediaMetadata) -> Unit"))
