@@ -472,13 +472,9 @@ fun AppearanceSettings(
             title = stringResource(R.string.player),
         )
 
-        PlayerLayoutSelector(
-            selected = playerDesignStyle,
-            onSelected = onPlayerDesignStyleChange,
-        )
         PreferenceEntry(
-            title = { Text("Estudio de reproductores") },
-            description = "Explora 17 identidades visuales, descubre VinJax y GalaxTheme.",
+            title = { Text(stringResource(R.string.player_design_style)) },
+            description = "Estudio de reproductores · 17 estilos · " + playerDesignStyle.name,
             icon = { Icon(painterResource(R.drawable.palette), null) },
             onClick = { navController.navigate("settings/appearance/player_studio") },
         )
