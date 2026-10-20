@@ -133,7 +133,6 @@ import com.arturo254.opentune.ui.player.layout.GalaxPlayerLandscapeScene
 import com.arturo254.opentune.core.designsystem.component.GalaxOrbitField
 import com.arturo254.opentune.ui.player.GalaxStudioPlayer.GalaxOriginalPlayerControls
 import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioVisualScene
-import com.arturo254.opentune.ui.player.layout.GalaxLegacyStyleScene
 import com.arturo254.opentune.ui.player.GalaxStudioPlayer.AppleMusicPlayerScene
 import com.arturo254.opentune.ui.player.GalaxStudioPlayer.VinJaxPlayerScene
 import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioThemeV16
