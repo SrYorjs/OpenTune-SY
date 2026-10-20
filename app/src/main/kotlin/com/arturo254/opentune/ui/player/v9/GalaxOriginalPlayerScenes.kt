@@ -170,13 +170,15 @@ fun GalaxOriginalPlayerScene(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(3.dp),
             ) {
-                GalaxOriginalMasthead(
-                    style = style,
-                    config = config,
-                    accent = accent,
-                    isPlaying = isPlaying,
-                    horizontal = false,
-                )
+                if (style != PlayerDesignStyle.V11 && style != PlayerDesignStyle.V13) {
+                    GalaxOriginalMasthead(
+                        style = style,
+                        config = config,
+                        accent = accent,
+                        isPlaying = isPlaying,
+                        horizontal = false,
+                    )
+                }
                 BoxWithConstraints(
                     modifier = Modifier.fillMaxWidth().weight(1f),
                     contentAlignment = Alignment.Center,
@@ -190,6 +192,15 @@ fun GalaxOriginalPlayerScene(
                         isPlaying = isPlaying,
                         modifier = Modifier.size(artSize),
                         artwork = artwork,
+                    )
+                }
+                if (style == PlayerDesignStyle.V11 || style == PlayerDesignStyle.V13) {
+                    GalaxOriginalMasthead(
+                        style = style,
+                        config = config,
+                        accent = accent,
+                        isPlaying = isPlaying,
+                        horizontal = false,
                     )
                 }
                 GalaxOriginalControlSurface(
@@ -335,12 +346,77 @@ private fun GalaxOriginalControlSurface(
             .clip(shape)
             .background(
                 Brush.verticalGradient(
-                    listOf(
-                        accent.copy(alpha = if (style == PlayerDesignStyle.V15) .21f else .12f),
-                        Color.Black.copy(alpha = .67f),
-                    ),
+                    when (style) {
+                        PlayerDesignStyle.V9 -> listOf(
+                            accent.copy(alpha = .25f),
+                            Color(0xFF121020).copy(alpha = .82f),
+                        )
+                        PlayerDesignStyle.V10 -> listOf(
+                            Color.White.copy(alpha = .13f),
+                            accent.copy(alpha = .17f),
+                            Color.Black.copy(alpha = .57f),
+                        )
+                        PlayerDesignStyle.V11 -> listOf(
+                            accent.copy(alpha = .11f),
+                            Color(0xFF020F14).copy(alpha = .94f),
+                        )
+                        PlayerDesignStyle.V12 -> listOf(
+                            Color(0xFF34261D).copy(alpha = .91f),
+                            Color.Black.copy(alpha = .69f),
+                        )
+                        PlayerDesignStyle.V13 -> listOf(
+                            accent.copy(alpha = .30f),
+                            Color(0xFF031A21).copy(alpha = .75f),
+                        )
+                        PlayerDesignStyle.V14 -> listOf(
+                            Color(0xFF242427),
+                            Color(0xFF080809),
+                        )
+                        PlayerDesignStyle.V15 -> listOf(
+                            accent.copy(alpha = .30f),
+                            Color(0xFF080B20).copy(alpha = .80f),
+                        )
+                        else -> listOf(accent.copy(alpha = .11f), Color.Black.copy(alpha = .66f))
+                    },
                 ),
             )
+            .drawWithCache {
+                onDrawBehind {
+                    when (style) {
+                        PlayerDesignStyle.V11 -> {
+                            drawLine(
+                                accent.copy(alpha = .81f),
+                                Offset(0f, 0f), Offset(size.width, 0f),
+                                2.dp.toPx(),
+                            )
+                            drawLine(
+                                accent.copy(alpha = .43f),
+                                Offset(0f, 0f), Offset(0f, size.height),
+                                1.dp.toPx(),
+                            )
+                        }
+                        PlayerDesignStyle.V14 -> {
+                            drawRect(
+                                Color.White.copy(alpha = .22f),
+                                Offset(0f, 0f),
+                                Size(size.width, 1.dp.toPx()),
+                            )
+                        }
+                        PlayerDesignStyle.V15 -> {
+                            drawCircle(
+                                Brush.radialGradient(
+                                    listOf(accent.copy(alpha = .14f), Color.Transparent),
+                                    center = Offset(size.width*.5f, 0f),
+                                    radius = size.width*.80f,
+                                ),
+                                radius = size.width*.80f,
+                                center = Offset(size.width*.5f,0f),
+                            )
+                        }
+                        else -> Unit
+                    }
+                }
+            }
             .padding(top = 12.dp, bottom = 14.dp),
     ) {
         content()
