@@ -67,8 +67,8 @@ class GalaxThemeAndDiscoveryContractTest {
     @Test
     fun newLayoutsPreservePlaybackSeekLyricsAndQueue() {
         val player = source("ui/player/Player.kt")
-        val controls = source("ui/player/v9/GalaxOriginalPlayerControls.kt")
-        assertTrue(player.contains("GalaxOriginalPlayerScene("))
+        val controls = source("ui/player/GalaxStudioPlayer/StudioTransport.kt")
+        assertTrue(player.contains("StudioVisualScene("))
         assertTrue(player.contains("GalaxOriginalPlayerControls("))
         assertTrue(player.contains("onSeek = updatedOnSliderValueChange"))
         assertTrue(player.contains("onSeekFinished = updatedOnSliderValueChangeFinished"))
@@ -84,25 +84,23 @@ class GalaxThemeAndDiscoveryContractTest {
 
     @Test
     fun sevenOriginalScenesHaveDifferentArtworkAndBackgroundTreatments() {
-        val scenes = source("ui/player/v9/GalaxOriginalPlayerScenes.kt")
         val names = listOf(
-            "NEBULA DRIFT",
-            "STELLAR RINGS",
-            "CYBERGRID",
-            "VINYL ORBIT",
-            "AURORA FLOW",
-            "MONOLITH",
-            "QUANTUM PULSE",
+            "NEBULA GARDEN", "EVENT HORIZON", "CIRCUIT BREAK",
+            "MAGNETIC TAPE", "POLAR SILK", "WHITE NOISE", "ION REACTOR",
         )
-        names.forEach { name -> assertTrue(scenes.contains(name)) }
-        assertTrue(scenes.contains("RoundedCornerShape(0.dp)"))
-        assertTrue(scenes.contains("CircleShape"))
-        assertTrue(scenes.contains("drawArc("))
-        assertTrue(scenes.contains("drawCircle("))
-        assertTrue(scenes.contains("GalaxOrbitField("))
-        assertTrue(scenes.contains("GalaxOriginalControlSurface("))
-        assertFalse(scenes.contains(".cloudy("))
-        assertFalse(scenes.contains(".blur("))
+        val catalog = source("ui/player/GalaxStudioPlayer/StudioStyleCatalog.kt")
+        names.forEach { name -> assertTrue(catalog.contains(name)) }
+        for (version in 9..15) {
+            val scene = source("ui/player/GalaxStudioPlayer/StudioThemeV$version.kt")
+            assertTrue(scene.contains("fun StudioThemeV$version("))
+            assertTrue(scene.contains("Canvas("))
+            assertTrue(scene.contains("controls()"))
+            assertFalse(scene.contains(".cloudy("))
+            assertFalse(scene.contains("GALAXOT  /"))
+        }
+        val dispatch = source("ui/player/GalaxStudioPlayer/StudioVisualScene.kt")
+        assertTrue(dispatch.contains("StudioThemeV15("))
+        assertTrue(dispatch.contains("StudioThemeV9("))
     }
 
     @Test
