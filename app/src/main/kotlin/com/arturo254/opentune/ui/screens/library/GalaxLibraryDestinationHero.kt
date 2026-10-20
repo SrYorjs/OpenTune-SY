@@ -7,24 +7,31 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.arturo254.opentune.R
 
 enum class GalaxLibraryDestination {
     ALBUMS,
@@ -39,144 +46,200 @@ fun GalaxLibraryDestinationHero(
     count: Int,
     modifier: Modifier = Modifier,
 ) {
-    val scheme = MaterialTheme.colorScheme
-    val (chapter, caption, description) = when (destination) {
-        GalaxLibraryDestination.ALBUMS ->
-            Triple("01", "DISCOGRAFÍA", "Cada portada es una puerta a otro universo.")
-        GalaxLibraryDestination.ARTISTS ->
-            Triple("02", "CONSTELACIONES", "Las voces y creadores que forman tu galaxia.")
-        GalaxLibraryDestination.PLAYLISTS ->
-            Triple("03", "COLECCIONES", "Historias y recuerdos reunidos en listas.")
+    val palette = MaterialTheme.colorScheme
+    val mainColor = when(destination) {
+        GalaxLibraryDestination.ALBUMS -> palette.primary
+        GalaxLibraryDestination.ARTISTS -> palette.tertiary
+        GalaxLibraryDestination.PLAYLISTS -> palette.secondary
+    }
+    val icon = when(destination) {
+        GalaxLibraryDestination.ALBUMS -> R.drawable.album
+        GalaxLibraryDestination.ARTISTS -> R.drawable.person
+        GalaxLibraryDestination.PLAYLISTS -> R.drawable.queue_music
+    }
+    val number = when(destination) {
+        GalaxLibraryDestination.ALBUMS -> "01"
+        GalaxLibraryDestination.ARTISTS -> "02"
+        GalaxLibraryDestination.PLAYLISTS -> "03"
     }
     Box(
         modifier = modifier.fillMaxWidth()
-            .padding(horizontal = 15.dp, vertical = 14.dp)
-            .clip(RoundedCornerShape(33.dp))
+            .padding(horizontal=14.dp,vertical=13.dp)
+            .clip(RoundedCornerShape(32.dp))
             .background(
                 Brush.linearGradient(
-                    when (destination) {
-                        GalaxLibraryDestination.ALBUMS -> listOf(
-                            scheme.primary.copy(alpha = .22f),
-                            scheme.surfaceContainerLow,
-                            scheme.tertiary.copy(alpha = .10f),
-                        )
-                        GalaxLibraryDestination.ARTISTS -> listOf(
-                            scheme.tertiary.copy(alpha = .21f),
-                            scheme.surfaceContainerLow,
-                            scheme.primary.copy(alpha = .13f),
-                        )
-                        GalaxLibraryDestination.PLAYLISTS -> listOf(
-                            scheme.secondary.copy(alpha = .21f),
-                            scheme.surfaceContainerLow,
-                            scheme.primary.copy(alpha = .17f),
-                        )
-                    },
+                    listOf(
+                        mainColor.copy(alpha=.20f),
+                        palette.surfaceContainerLow,
+                        palette.surfaceContainerLow,
+                    ),
                 ),
             ),
     ) {
         Canvas(Modifier.matchParentSize()) {
-            val center = Offset(size.width * .90f, size.height * .19f)
-            val r = size.width * .35f
-            when (destination) {
+            val right=Offset(size.width*.86f,size.height*.22f)
+            when(destination) {
                 GalaxLibraryDestination.ALBUMS -> {
-                    for (i in 0..7) {
+                    for (i in 0..10) {
+                        val r=size.width*(.12f+i*.043f)
                         drawCircle(
-                            scheme.primary.copy(alpha = .085f),
-                            r * (.41f + i * .15f),
-                            center,
-                            style = Stroke(width = 1.dp.toPx()),
+                            if(i%2==0)mainColor.copy(alpha=.18f)
+                            else palette.tertiary.copy(alpha=.12f),
+                            radius=r,center=right,
+                            style=Stroke(width=1.dp.toPx()),
                         )
                     }
-                    drawCircle(scheme.tertiary.copy(alpha = .29f), r*.46f, center)
+                    val r=size.width*.28f
+                    drawArc(
+                        mainColor.copy(alpha=.63f),
+                        startAngle=-78f,sweepAngle=97f,useCenter=false,
+                        topLeft=Offset(right.x-r,right.y-r),
+                        size=Size(r*2,r*2),
+                        style=Stroke(width=2.dp.toPx()),
+                    )
+                    drawCircle(
+                        Brush.radialGradient(
+                            listOf(mainColor.copy(alpha=.19f),Color.Transparent),
+                            center=right,radius=size.width*.47f,
+                        ),
+                        radius=size.width*.47f,center=right,
+                    )
                 }
                 GalaxLibraryDestination.ARTISTS -> {
-                    for (i in 0..7) {
-                        val x = size.width * (.54f + i*.06f)
-                        val y = size.height * (.10f + (i%3)*.21f)
+                    val nodes=listOf(
+                        Offset(size.width*.60f,size.height*.17f),
+                        Offset(size.width*.87f,size.height*.10f),
+                        Offset(size.width*.94f,size.height*.39f),
+                        Offset(size.width*.72f,size.height*.59f),
+                        Offset(size.width*.55f,size.height*.43f),
+                        Offset(size.width*.87f,size.height*.76f),
+                    )
+                    for(i in nodes.indices) {
+                        val next=nodes[(i+1)%nodes.size]
+                        drawLine(mainColor.copy(alpha=.28f),
+                            nodes[i],next,1.dp.toPx())
                         drawCircle(
-                            scheme.primary.copy(alpha = .47f),
-                            radius = (2+i%3).dp.toPx(),
-                            center = Offset(x,y),
+                            Color.White.copy(alpha=.51f),
+                            radius=(2f+(i%3)).dp.toPx(),
+                            center=nodes[i],
                         )
-                        if (i>0) {
-                            drawLine(
-                                scheme.tertiary.copy(alpha = .16f),
-                                Offset(size.width*(.54f+(i-1)*.06f), size.height*(.10f+((i-1)%3)*.21f)),
-                                Offset(x,y), 1.dp.toPx(),
-                            )
-                        }
+                        drawCircle(
+                            mainColor.copy(alpha=.11f),
+                            radius=(9+i%2*5).dp.toPx(),
+                            center=nodes[i],
+                        )
+                    }
+                    for(i in 0..28) {
+                        val c=Offset(
+                            (i*37%41)/41f*size.width,
+                            (i*17%31)/31f*size.height,
+                        )
+                        drawCircle(
+                            Color.White.copy(alpha=.13f),
+                            radius=.65.dp.toPx(),center=c,
+                        )
                     }
                 }
                 GalaxLibraryDestination.PLAYLISTS -> {
-                    for (i in 0..4) {
+                    for(i in 0..4) {
+                        val x=size.width*(.55f+i*.047f)
+                        val y=size.height*(.12f+i*.085f)
                         drawRoundRect(
-                            scheme.primary.copy(alpha = .08f + i * .018f),
-                            topLeft = Offset(
-                                size.width*(.63f+i*.035f), size.height*(.10f+i*.09f),
-                            ),
-                            size = Size(size.width*.29f,size.height*.56f),
-                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(13.dp.toPx()),
-                            style = Stroke(width = 1.2.dp.toPx()),
+                            mainColor.copy(alpha=.09f+i*.035f),
+                            topLeft=Offset(x,y),
+                            size=Size(size.width*.29f,size.height*.52f),
+                            cornerRadius=CornerRadius(16.dp.toPx()),
+                            style=Stroke(width=1.dp.toPx()),
                         )
                     }
+                    for(i in 0..6) {
+                        val x=size.width*(.69f+i*.048f)
+                        val y=size.height*(.14f+(i%4)*.14f)
+                        drawLine(palette.tertiary.copy(alpha=.21f),
+                            Offset(x,y),Offset(x,y+size.height*.12f),
+                            2.dp.toPx())
+                    }
+                    drawArc(
+                        mainColor.copy(alpha=.54f),
+                        startAngle=190f,sweepAngle=103f,useCenter=false,
+                        topLeft=Offset(right.x-size.width*.25f,right.y-size.width*.25f),
+                        size=Size(size.width*.50f,size.width*.50f),
+                        style=Stroke(width=2.dp.toPx()),
+                    )
                 }
             }
         }
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 23.dp, vertical = 23.dp),
-            verticalArrangement = Arrangement.spacedBy(13.dp),
+            modifier = Modifier.fillMaxWidth()
+                .padding(horizontal=23.dp,vertical=23.dp),
+            verticalArrangement=Arrangement.spacedBy(15.dp),
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(9.dp),
+                verticalAlignment=Alignment.CenterVertically,
+                horizontalArrangement=Arrangement.spacedBy(12.dp),
             ) {
-                Box(Modifier.size(6.dp).background(scheme.primary, CircleShape))
+                Box(
+                    Modifier.size(43.dp)
+                        .clip(CircleShape)
+                        .background(mainColor.copy(alpha=.19f)),
+                    contentAlignment=Alignment.Center,
+                ) {
+                    Icon(painterResource(icon),contentDescription=null,
+                        tint=mainColor,modifier=Modifier.size(23.dp))
+                }
                 Text(
-                    text = "GALAXOT  /  BIBLIOTECA  $chapter",
-                    color = scheme.primary,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.3.sp,
+                    "GALAXOT  /  $number",
+                    style=MaterialTheme.typography.labelSmall,
+                    color=mainColor,
+                    fontWeight=FontWeight.Bold,
+                    letterSpacing=1.4.sp,
                 )
             }
             Text(
-                text = title,
-                color = scheme.onSurface,
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Black,
-                maxLines = 2,
-                letterSpacing = (-.8).sp,
+                text=title,
+                style=MaterialTheme.typography.headlineLarge,
+                color=palette.onSurface,
+                fontWeight=FontWeight.Black,
+                maxLines=2,
+                letterSpacing=(-.95).sp,
+                overflow=TextOverflow.Ellipsis,
             )
-            Text(
-                text = description,
-                color = scheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 2,
+            Box(
+                Modifier.fillMaxWidth(.23f)
+                    .height(2.dp)
+                    .background(mainColor.copy(alpha=.73f),CircleShape),
             )
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier=Modifier.fillMaxWidth(),
+                verticalAlignment=Alignment.CenterVertically,
+                horizontalArrangement=Arrangement.SpaceBetween,
             ) {
                 Box(
-                    Modifier.clip(RoundedCornerShape(18.dp))
-                        .background(scheme.primary.copy(alpha = .16f))
-                        .padding(horizontal = 12.dp, vertical = 7.dp),
+                    Modifier.clip(RoundedCornerShape(19.dp))
+                        .background(mainColor.copy(alpha=.15f))
+                        .padding(horizontal=14.dp,vertical=9.dp),
                 ) {
                     Text(
-                        text = "$count ELEMENTOS",
-                        color = scheme.primary,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.labelSmall,
+                        count.toString(),
+                        style=MaterialTheme.typography.titleMedium,
+                        fontWeight=FontWeight.Bold,
+                        color=mainColor,
                     )
                 }
-                Text(
-                    caption,
-                    color = scheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.1.sp,
-                    style = MaterialTheme.typography.labelSmall,
-                )
+                Row(
+                    horizontalArrangement=Arrangement.spacedBy(7.dp),
+                    verticalAlignment=Alignment.CenterVertically,
+                ) {
+                    for(i in 0..3) {
+                        Box(
+                            Modifier.size(if(i==0)7.dp else 4.dp)
+                                .background(
+                                    mainColor.copy(alpha=if(i==0).77f else .32f),
+                                    CircleShape,
+                                ),
+                        )
+                    }
+                }
             }
         }
     }
