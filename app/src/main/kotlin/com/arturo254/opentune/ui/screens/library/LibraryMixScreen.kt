@@ -390,8 +390,10 @@ fun LibraryMixScreen(
 
             if (showSpotifyPlaylists && spotifyPlaylists.isNotEmpty()) {
                 item(key = "spotify_playlists_header") {
-                    com.arturo254.opentune.ui.screens.GalaxSectionHeading(
-                        stringResource(R.string.spotify_playlists), onClick = { onTabSelected(LibraryFilter.SPOTIFY) },
+                    GalaxLibraryChapter(
+                        number = "00",
+                        title = stringResource(R.string.spotify_playlists),
+                        onOpen = { onTabSelected(LibraryFilter.SPOTIFY) },
                     )
                 }
 
@@ -420,8 +422,10 @@ fun LibraryMixScreen(
 
             if (sortedAlbums.isNotEmpty()) {
                 item(key = "albums_header") {
-                    com.arturo254.opentune.ui.screens.GalaxSectionHeading(
-                        stringResource(R.string.your_albums), onClick = { onTabSelected(LibraryFilter.ALBUMS) },
+                    GalaxLibraryChapter(
+                        number = "01",
+                        title = stringResource(R.string.your_albums),
+                        onOpen = { onTabSelected(LibraryFilter.ALBUMS) },
                     )
                 }
 
@@ -476,8 +480,10 @@ fun LibraryMixScreen(
 
             if (sortedArtists.isNotEmpty()) {
                 item(key = "artists_header") {
-                    com.arturo254.opentune.ui.screens.GalaxSectionHeading(
-                        stringResource(R.string.your_artists), onClick = { onTabSelected(LibraryFilter.ARTISTS) },
+                    GalaxLibraryChapter(
+                        number = "02",
+                        title = stringResource(R.string.your_artists),
+                        onOpen = { onTabSelected(LibraryFilter.ARTISTS) },
                     )
                 }
 
