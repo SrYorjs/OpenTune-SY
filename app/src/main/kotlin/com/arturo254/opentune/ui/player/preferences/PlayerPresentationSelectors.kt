@@ -75,6 +75,8 @@ fun playerLayoutLabel(style: PlayerDesignStyle): String = when (style) {
     PlayerDesignStyle.V13 -> "Galax Aurora Flow"
     PlayerDesignStyle.V14 -> "Galax Monolith"
     PlayerDesignStyle.V15 -> "Galax Quantum Pulse"
+    PlayerDesignStyle.V16 -> "GalaxTheme"
+    PlayerDesignStyle.V17 -> "VinJax"
 }
 
 @Composable
