@@ -202,7 +202,7 @@ fun Queue(
             when (playerDesignStyle) {
                 PlayerDesignStyle.V9, PlayerDesignStyle.V10, PlayerDesignStyle.V11,
                 PlayerDesignStyle.V12, PlayerDesignStyle.V13, PlayerDesignStyle.V14,
-                PlayerDesignStyle.V15, PlayerDesignStyle.V16, PlayerDesignStyle.V17 -> {
+                PlayerDesignStyle.V15, PlayerDesignStyle.V17 -> {
                     QueueCollapsedContentV2(
                         showCodecOnPlayer = showCodecOnPlayer,
                         currentFormat = currentFormat,
@@ -404,7 +404,7 @@ fun Queue(
                     )
                 }
 
-                PlayerDesignStyle.V8 -> {
+                PlayerDesignStyle.V8, PlayerDesignStyle.V16 -> {
                     QueueCollapsedContentV8(
                         textBackgroundColor = TextBackgroundColor,
                         onShowLyrics = onShowLyrics,
