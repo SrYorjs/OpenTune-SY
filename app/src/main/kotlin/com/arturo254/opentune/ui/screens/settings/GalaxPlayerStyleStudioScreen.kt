@@ -43,7 +43,7 @@ import com.arturo254.opentune.constants.PlayerDesignStyleKey
 import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import com.arturo254.opentune.ui.player.preferences.GalaxPlayerStyleGallery
 import com.arturo254.opentune.ui.player.preferences.playerLayoutLabel
-import com.arturo254.opentune.ui.player.v9.originalPlayerStyleConfig
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.originalPlayerStyleConfig
 import com.arturo254.opentune.utils.rememberEnumPreference
 
 private data class StudioIdentity(val category: String, val description: String, val emblem: String)
@@ -139,8 +139,7 @@ fun GalaxPlayerStyleStudioScreen(navController: NavController) {
                     Text("Un universo. Diecisiete identidades.",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Black, color = scheme.onSurface)
-                    Text("Cada diseño conserva tus canciones, descargas y controles. Cambia el estilo cuando quieras.",
-                        style = MaterialTheme.typography.bodyMedium, color = scheme.onSurfaceVariant)
+
                     Box(Modifier.clip(RoundedCornerShape(17.dp))
                         .background(scheme.primary.copy(alpha = .17f))
                         .padding(horizontal = 13.dp, vertical = 9.dp)) {
@@ -235,13 +234,6 @@ private fun StudioStyleCard(
             minLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
-        Text(
-            identity.description,
-            color = colors.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall,
-            minLines = 3,
-            maxLines = 4,
-            overflow = TextOverflow.Ellipsis,
-        )
+
     }
 }
