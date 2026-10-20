@@ -93,6 +93,10 @@ fun originalPlayerStyleConfig(style: PlayerDesignStyle): GalaxOriginalStyleConfi
         "QUANTUM PULSE", "ENERGY CORE", "Ondas de energía sincronizadas con la reproducción",
         23f, true, .75f, "PULSE  /  15",
     )
+    PlayerDesignStyle.V17 -> GalaxOriginalStyleConfig(
+        "VINJAX", "33⅓ RPM", "Tocadiscos analógico con aguja móvil",
+        40f, true, .73f, "VINJAX  /  17",
+    )
     else -> GalaxOriginalStyleConfig(
         "GALAXOT", "MUSIC UNIVERSE", "Tu música sin límites", 24f, true, .72f, "GALAXOT",
     )
