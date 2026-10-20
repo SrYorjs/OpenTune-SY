@@ -220,9 +220,10 @@ fun LibraryArtistsScreen(
                     contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
                 ) {
                     item(key = "galax_page_intro") {
-                        com.arturo254.opentune.core.designsystem.theme.GalaxScreenHeading(
-                            stringResource(R.string.artists),
-                            "${artists.size} ${stringResource(R.string.artists)}",
+                        GalaxLibraryDestinationHero(
+                            destination = GalaxLibraryDestination.ARTISTS,
+                            title = stringResource(R.string.artists),
+                            count = artists.size,
                         )
                     }
 
@@ -277,9 +278,10 @@ fun LibraryArtistsScreen(
                     contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
                 ) {
                     item(key = "galax_page_intro", span = { GridItemSpan(maxLineSpan) }) {
-                        com.arturo254.opentune.core.designsystem.theme.GalaxScreenHeading(
-                            stringResource(R.string.artists),
-                            "${artists.size} ${stringResource(R.string.artists)}",
+                        GalaxLibraryDestinationHero(
+                            destination = GalaxLibraryDestination.ARTISTS,
+                            title = stringResource(R.string.artists),
+                            count = artists.size,
                         )
                     }
 
