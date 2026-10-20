@@ -750,6 +750,7 @@
     <string name="player_a11y_unlike">Quitar de favoritos</string>
     <string name="player_a11y_repeat">Cambiar modo de repetición</string>
     <string name="galax_shuffle_unavailable">Aún no hay canciones disponibles. Escucha música o añade canciones a tu biblioteca.</string>
+    <string name="galax_downloads_back">Volver</string>
     <string name="galax_downloads_collection">GALAXOT / DESCARGAS</string>
     <string name="galax_downloads_queue">Descargas en curso</string>
     <string name="galax_downloads_running">Cola preparada</string>
