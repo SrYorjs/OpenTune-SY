@@ -116,8 +116,8 @@ class GalaxSeventeenSceneContractTest {
         assertTrue(studio.contains("PlayerDesignStyleKey"))
         assertTrue(studio.contains("PlayerDesignStyle.entries"))
         assertTrue(studio.contains("onSelected(style)"))
-        assertTrue(studio.contains("VinJax"))
-        assertTrue(studio.contains("GalaxTheme"))
+        assertTrue(studio.contains("VINJAX"))
+        assertTrue(studio.contains("GALAXTHEME"))
     }
 
     @Test
