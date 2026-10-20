@@ -43,7 +43,7 @@ class PlayerLayoutTest {
         for (isLandscape in listOf(false, true)) {
             val route = resolvePlayerLayout(PlayerDesignStyle.V2, isLandscape)
             assertEquals(PlayerLayoutFamily.V2, route.family)
-            assertFalse(route.hasSharedBackdrop)
+            assertTrue(route.hasSharedBackdrop)
         }
         assertEquals(PlayerLayoutFamily.CLASSIC, resolvePlayerLayout(PlayerDesignStyle.V1, false).family)
         assertEquals(PlayerLayoutFamily.CLASSIC, resolvePlayerLayout(PlayerDesignStyle.V3, true).family)
@@ -65,7 +65,10 @@ class PlayerLayoutTest {
     fun backgroundOwnershipIsolatedForSpecialAndGalaxStyles() {
         for (style in PlayerDesignStyle.entries) {
             for (landscape in listOf(true, false)) {
-                val expected = false
+                val expected = style in setOf(
+                    PlayerDesignStyle.V1, PlayerDesignStyle.V2, PlayerDesignStyle.V3,
+                    PlayerDesignStyle.V4, PlayerDesignStyle.V6,
+                )
                 val route = resolvePlayerLayout(style, landscape)
                 assertEquals("shared backdrop for $style / landscape=$landscape",
                     expected, route.hasSharedBackdrop)
