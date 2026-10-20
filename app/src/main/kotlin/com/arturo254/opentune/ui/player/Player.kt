@@ -135,6 +135,7 @@ import com.arturo254.opentune.ui.player.GalaxStudioPlayer.GalaxOriginalPlayerCon
 import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioVisualScene
 import com.arturo254.opentune.ui.player.GalaxStudioPlayer.AppleMusicPlayerScene
 import com.arturo254.opentune.ui.player.GalaxStudioPlayer.VinJaxPlayerScene
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioVinJaxArtwork
 import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioThemeV16
 import com.arturo254.opentune.ui.player.layout.PlayerLayout
 import com.arturo254.opentune.ui.player.layout.resolvePlayerLayout
@@ -819,10 +820,11 @@ fun BottomSheetPlayer(
                     accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
                     queuePeekHeight = queueSheetState.collapsedBound,
                     artwork = {
-                        Thumbnail(
-                            sliderPositionProvider = { seekSession.pendingSeekMs },
+                        StudioVinJaxArtwork(
+                            artworkUrl = playerVisuals.artworkUrl,
+                            canvasArtwork = canvasArtwork,
+                            isPlaying = isPlaying,
                             modifier = Modifier.fillMaxSize(),
-                            isPlayerExpanded = state.isExpanded,
                         )
                     },
                     controls = galaxOriginalControls,
@@ -836,10 +838,11 @@ fun BottomSheetPlayer(
                     accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
                     queuePeekHeight = queueSheetState.collapsedBound,
                     artwork = {
-                        Thumbnail(
-                            sliderPositionProvider = { seekSession.pendingSeekMs },
+                        StudioVinJaxArtwork(
+                            artworkUrl = playerVisuals.artworkUrl,
+                            canvasArtwork = canvasArtwork,
+                            isPlaying = isPlaying,
                             modifier = Modifier.fillMaxSize(),
-                            isPlayerExpanded = state.isExpanded,
                         )
                     },
                     controls = galaxOriginalControls,
