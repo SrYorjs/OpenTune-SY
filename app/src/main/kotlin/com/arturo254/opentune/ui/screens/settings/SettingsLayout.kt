@@ -69,6 +69,9 @@ data class SettingsContentState(
     val hasSearchResults: Boolean,
     val onRequestPermission: () -> Unit,
     val onUpdateClick: () -> Unit,
+    val onPlayerStudioClick: () -> Unit,
+    val onLiquidGlassClick: () -> Unit,
+    val onPaletteClick: () -> Unit,
 )
 
 @Composable
@@ -92,6 +95,13 @@ fun AdaptiveSettingsLayout(
         ) {
             if (!state.isSearchActive) {
                 item(key = "profile", contentType = "profile") { SettingsProfileHeader() }
+                item(key = "galaxCreativeShortcuts", contentType = "actions") {
+                    GalaxSettingsCreativeShortcuts(
+                        onPlayerStudio = state.onPlayerStudioClick,
+                        onLiquidGlass = state.onLiquidGlassClick,
+                        onPalette = state.onPaletteClick,
+                    )
+                }
                 if (state.showPermissionBanner) item(key = "permission", contentType = "banner") {
                     SettingsPermissionBanner(onRequestPermission = state.onRequestPermission)
                 }
