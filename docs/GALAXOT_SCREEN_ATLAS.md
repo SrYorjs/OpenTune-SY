@@ -2,7 +2,7 @@
 
 Rama: `opentune-rebuild-v1` · Inventario verificado: 20 de octubre de 2026.
 
-El catálogo contiene **los 97 archivos Kotlin de `ui/screens/`**, tanto pantallas navegables como subcomponentes. Un guion significa que el archivo no tiene una ruta propia en `NavigationBuilder.kt`; puede ser visible a través de una pantalla principal. No todos los `Screen.kt` son entradas independientes.
+El catálogo contiene **los 98 archivos Kotlin de `ui/screens/`**, tanto pantallas navegables como subcomponentes. Un guion significa que el archivo no tiene una ruta propia en `NavigationBuilder.kt`; puede ser visible a través de una pantalla principal. No todos los `Screen.kt` son entradas independientes.
 
 ## Encuentra rápidamente la pantalla que quieres editar
 
@@ -115,7 +115,7 @@ El catálogo contiene **los 97 archivos Kotlin de `ui/screens/`**, tanto pantall
 | `search/UniversalSearchScreen.kt` | Resultados universales multiproveedor | `search/{query}` |
 | `search/UniversalVersionQualityDialog.kt` | Diálogo de versiones y calidad | `diálogo interno` |
 
-## Ajustes, apariencia y pantallas secundarias (38)
+## Ajustes, apariencia y pantallas secundarias (39)
 
 | Archivo relativo | Qué controla | Ruta en la app |
 | --- | --- | --- |
@@ -135,6 +135,7 @@ El catálogo contiene **los 97 archivos Kotlin de `ui/screens/`**, tanto pantall
 | `settings/DiscordSettings.kt` | Discord Settings | `settings/discord` |
 | `settings/GalaxLiquidSettingsScreen.kt` | Controles de los cinco modos Liquid Glass | `settings/appearance/galax_liquid` |
 | `settings/GalaxPlayerStyleStudioScreen.kt` | Estudio de 17 diseños de reproductor | `settings/appearance/player_studio` |
+| `settings/GalaxSettingsCreativeShortcuts.kt` | Atajos a Estudio, Liquid Glass y Paleta desde Ajustes | `settings` (tarjetas integradas) |
 | `settings/GalaxSettingsSectionHero.kt` | Cabeceras editoriales de seis secciones de Ajustes | `cabecera reutilizable` |
 | `settings/IntegrationScreen.kt` | Conexiones y scrobbling | `settings/integration` |
 | `settings/LastFMSettings.kt` | Last FMSettings | `settings/lastfm` |
