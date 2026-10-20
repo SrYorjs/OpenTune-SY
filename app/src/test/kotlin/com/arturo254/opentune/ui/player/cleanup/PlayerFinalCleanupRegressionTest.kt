@@ -40,7 +40,9 @@ class PlayerFinalCleanupRegressionTest {
             PlayerDesignStyle.V5 to PlayerLayoutFamily.COMPACT,
             PlayerDesignStyle.V6 to PlayerLayoutFamily.CLASSIC,
             PlayerDesignStyle.V7 to PlayerLayoutFamily.CINEMATIC,
-            PlayerDesignStyle.V8 to PlayerLayoutFamily.IMMERSIVE,
+            PlayerDesignStyle.V8 to PlayerLayoutFamily.APPLE_MUSIC,
+            PlayerDesignStyle.V16 to PlayerLayoutFamily.GALAX_THEME,
+            PlayerDesignStyle.V17 to PlayerLayoutFamily.VINJAX,
         )
         cases.forEach { (style, family) ->
             for (landscape in listOf(false, true)) {
