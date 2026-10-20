@@ -53,7 +53,7 @@ fun GalaxPlayerStyleGallery(
                 letterSpacing = 1.3.sp,
             )
             Text(
-                text = "15 universos musicales",
+                text = "17 universos musicales",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
             )
@@ -166,7 +166,7 @@ private fun GalaxStylePreview(
             )
         }
         Text(
-            text = if (style.ordinal >= 8) originalPlayerStyleConfig(style).name
+            text = if (style.ordinal in 8..14 || style == PlayerDesignStyle.V17) originalPlayerStyleConfig(style).name
                 else playerLayoutLabel(style),
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
@@ -175,7 +175,7 @@ private fun GalaxStylePreview(
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            text = if (style.ordinal >= 8) "ORIGINAL GALAXOT" else "ESTILO CLÁSICO",
+            text = if (style.ordinal >= 8) "ORIGINAL GALAXOT" else if (style == PlayerDesignStyle.V16) "GALAXTHEME" else if (style == PlayerDesignStyle.V17) "VINJAX" else "ESTILO CLÁSICO",
             color = if (isSelected) primary else MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.labelSmall,
             letterSpacing = .6.sp,
