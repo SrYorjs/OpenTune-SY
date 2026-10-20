@@ -476,9 +476,11 @@ fun AppearanceSettings(
             selected = playerDesignStyle,
             onSelected = onPlayerDesignStyleChange,
         )
-        GalaxPlayerStyleGallery(
-            selected = playerDesignStyle,
-            onSelected = onPlayerDesignStyleChange,
+        PreferenceEntry(
+            title = { Text("Estudio de reproductores") },
+            description = "Explora 17 identidades visuales, descubre VinJax y GalaxTheme.",
+            icon = { Icon(painterResource(R.drawable.palette), null) },
+            onClick = { navController.navigate("settings/appearance/player_studio") },
         )
 
         SwitchPreference(
