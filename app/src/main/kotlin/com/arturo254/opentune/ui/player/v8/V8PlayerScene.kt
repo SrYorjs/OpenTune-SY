@@ -81,8 +81,8 @@ fun V8PlayerScene(
         }
 
         GalaxPlayerSceneOverlay(
-            index = "08",
-            subtitle = "IMMERSIVE",
+            index = "16",
+            subtitle = "GALAXTHEME",
             isPlaying = isPlaying,
             landscape = isLandscape,
             accent = gradientColors.firstOrNull() ?: androidx.compose.material3.MaterialTheme.colorScheme.primary,
