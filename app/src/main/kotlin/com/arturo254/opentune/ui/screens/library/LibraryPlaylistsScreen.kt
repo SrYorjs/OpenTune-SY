@@ -294,9 +294,10 @@ fun LibraryPlaylistsScreen(
             contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
         ) {
                     item(key = "galax_page_intro") {
-                        com.arturo254.opentune.core.designsystem.theme.GalaxScreenHeading(
-                            stringResource(R.string.playlists),
-                            "${visiblePlaylists.size} ${stringResource(R.string.playlists)}",
+                        GalaxLibraryDestinationHero(
+                            destination = GalaxLibraryDestination.PLAYLISTS,
+                            title = stringResource(R.string.playlists),
+                            count = visiblePlaylists.size,
                         )
                     }
 
