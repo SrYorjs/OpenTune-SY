@@ -95,6 +95,7 @@ fun GalaxMediaHeader(
                 BoxWithConstraints(Modifier.fillMaxWidth()) {
                     val wide = maxWidth >= 560.dp
                     val cover = if (wide) 220.dp else (maxWidth * .65f).coerceIn(178.dp, 292.dp)
+                    val portraitCover = (maxWidth * .76f).coerceIn(210.dp, 326.dp)
                     if (wide) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -124,7 +125,7 @@ fun GalaxMediaHeader(
                                 GalaxMediaCoverStage(
                                     artworkUrls,
                                     artist,
-                                    Modifier.size((maxWidth * .76f).coerceIn(210.dp, 326.dp)),
+                                    Modifier.size(portraitCover),
                                 )
                             }
                             details()
