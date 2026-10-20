@@ -45,7 +45,7 @@ class GalaxOSVisualRedesignContractTest {
         val media = source("ui/screens/GalaxMediaHeader.kt")
         val discovery = source("ui/screens/GalaxMainPages.kt")
         assertTrue(media.contains("val wide = maxWidth >= 560.dp"))
-        assertTrue(media.contains("GalaxCoverMosaic(artworkUrls, artist"))
+        assertTrue(media.contains("GalaxMediaCoverStage(artworkUrls, artist") && media.contains("GalaxCoverMosaic("))
         assertTrue(media.contains("if (artist) CircleShape"))
         assertTrue(media.contains("GalaxMediaFacts(facts)"))
         assertTrue(media.contains("supporting()"))
