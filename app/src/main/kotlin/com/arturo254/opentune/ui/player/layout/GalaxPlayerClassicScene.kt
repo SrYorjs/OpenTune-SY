@@ -62,10 +62,6 @@ fun GalaxPlayerClassicScene(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(0.dp),
     ) {
-        GalaxPlayerSceneMasthead(
-            accent = accent,
-            active = isPlaying,
-        )
         Box(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             contentAlignment = Alignment.Center,
