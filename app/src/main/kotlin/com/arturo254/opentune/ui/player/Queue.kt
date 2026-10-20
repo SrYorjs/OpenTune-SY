@@ -599,6 +599,11 @@ fun Queue(
                     }
                 )
 
+                com.arturo254.opentune.ui.player.panels.GalaxPanelTimelineHeader(
+                    title = context.getString(R.string.queue),
+                    detail = queuePlaybackState.itemCount.toString(),
+                )
+
                 LazyColumn(
                     state = lazyListState,
                     contentPadding =
