@@ -38,7 +38,8 @@ class GalaxOSSecondarySurfacesTest {
         assertTrue(audio.contains("drawPath("))
         assertTrue(audio.contains("strokeBrush"))
         assertTrue(audio.contains("drawWithCache"))
-        assertTrue(playerMenu.contains("GALAXOS  /  AUDIO LAB"))
+        assertTrue(playerMenu.contains("GalaxEqStudioHeader("))
+        assertTrue(playerMenu.contains("levels = bandLevelsMb"))
         assertTrue(playerMenu.contains("previewEqBandLevels("))
         assertTrue(playerMenu.contains("applySystemEqPreset("))
     }
