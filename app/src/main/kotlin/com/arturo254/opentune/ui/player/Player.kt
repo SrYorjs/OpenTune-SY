@@ -135,7 +135,8 @@ import com.arturo254.opentune.ui.player.GalaxStudioPlayer.GalaxOriginalPlayerCon
 import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioVisualScene
 import com.arturo254.opentune.ui.player.layout.GalaxLegacyStyleScene
 import com.arturo254.opentune.ui.player.GalaxStudioPlayer.AppleMusicPlayerScene
-import com.arturo254.opentune.ui.player.v17.VinJaxPlayerScene
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.VinJaxPlayerScene
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioThemeV16
 import com.arturo254.opentune.ui.player.layout.PlayerLayout
 import com.arturo254.opentune.ui.player.layout.resolvePlayerLayout
 import com.arturo254.opentune.ui.player.skin.rememberVisualSkin
@@ -448,7 +449,7 @@ fun BottomSheetPlayer(
 
     val activePlayerGlass = LocalEnableLiquidGlass.current && !state.isCollapsed
     val liveCanvasGlass = activePlayerGlass &&
-        playerDesignStyle == PlayerDesignStyle.V16 &&
+        (playerDesignStyle == PlayerDesignStyle.V16 || playerDesignStyle == PlayerDesignStyle.V8) &&
         !canvasArtwork?.preferredAnimationUrl.isNullOrBlank()
     val inheritedBackdrop = LocalGalaxLiquidBackdrop.current
     val playerArtworkBackdrop = rememberLayerBackdrop()
@@ -986,7 +987,7 @@ fun BottomSheetPlayer(
             },
 
             immersiveLandscape = {
-                    V8PlayerScene(
+                    StudioThemeV16(
                         isLandscape = true,
                         artworkUrl = playerVisuals.artworkUrl,
                         canvasArtwork = canvasArtwork,
@@ -1124,7 +1125,7 @@ fun BottomSheetPlayer(
             },
 
             immersivePortrait = {
-                    V8PlayerScene(
+                    StudioThemeV16(
                         isLandscape = false,
                         artworkUrl = playerVisuals.artworkUrl,
                         canvasArtwork = canvasArtwork,
