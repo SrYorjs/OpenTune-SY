@@ -750,4 +750,23 @@
     <string name="player_a11y_unlike">Quitar de favoritos</string>
     <string name="player_a11y_repeat">Cambiar modo de repetición</string>
     <string name="galax_shuffle_unavailable">Aún no hay canciones disponibles. Escucha música o añade canciones a tu biblioteca.</string>
+    <string name="galax_downloads_collection">GALAXOT / DESCARGAS</string>
+    <string name="galax_downloads_queue">Descargas en curso</string>
+    <string name="galax_downloads_running">Cola preparada</string>
+    <string name="galax_downloads_paused">En pausa</string>
+    <string name="galax_downloads_active">Activas</string>
+    <string name="galax_downloads_failed">Fallidas</string>
+    <string name="galax_downloads_all">Todas</string>
+    <string name="galax_downloads_known_progress">%1$d%% de promedio entre las descargas con progreso conocido</string>
+    <string name="galax_downloads_clear_confirm">¿Eliminar todas las descargas pendientes?</string>
+    <string name="galax_downloads_clear_detail">Se eliminarán todas las descargas pendientes de la cola.</string>
+    <string name="galax_downloads_resume">Reanudar descargas</string>
+    <string name="galax_downloads_pause">Pausar descargas</string>
+    <string name="galax_downloads_clear">Vaciar cola de descargas</string>
+    <string name="galax_downloads_filter_empty">No hay descargas en este filtro.</string>
+    <string name="galax_eq_response_title">Respuesta de frecuencia</string>
+    <string name="galax_eq_response_hint">Niveles actuales de banda · dB</string>
+    <string name="galax_eq_profile_status">Perfil de audio activo</string>
+    <string name="galax_quality_selection">Calidad de reproducción</string>
+    <string name="galax_quality_versions">%1$d versiones · %2$d fuentes</string>
 </resources>
