@@ -73,7 +73,7 @@ class PlayerPresentationPreferencesIntegrationTest {
                 val route = resolvePlayerLayout(style, landscape)
                 assertEquals(style, route.style)
                 assertEquals(PlayerLayoutFamily.CLASSIC, route.family)
-                assertFalse(route.hasSharedBackdrop)
+                assertTrue(route.hasSharedBackdrop)
             }
         }
         assertTrue(c.contains("PlayerDesignStyle.V1 -> {"))
