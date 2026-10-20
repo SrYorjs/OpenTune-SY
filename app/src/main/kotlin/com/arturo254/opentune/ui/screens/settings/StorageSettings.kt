@@ -203,6 +203,12 @@ fun StorageSettings(
             )
         )
 
+        GalaxSettingsSectionHero(
+            title = stringResource(R.string.storage),
+            description = stringResource(R.string.galax_settings_storage_subtitle),
+            area = GalaxSettingsArea.STORAGE,
+        )
+
         SwitchPreference(
             title = { Text(stringResource(R.string.smart_trimmer)) },
             description = stringResource(R.string.smart_trimmer_description),
