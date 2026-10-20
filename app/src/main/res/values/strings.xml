@@ -907,6 +907,7 @@ GalaxOT will only extract your token, and everything else is stored locally.</st
     <string name="player_a11y_unlike">Remove from favorites</string>
     <string name="player_a11y_repeat">Change repeat mode</string>
     <string name="galax_shuffle_unavailable">No music is available yet. Play a song or add some tracks to your library.</string>
+    <string name="galax_downloads_back">Back</string>
     <string name="galax_downloads_collection">GALAXOT / DOWNLOADS</string>
     <string name="galax_downloads_queue">Downloads in progress</string>
     <string name="galax_downloads_running">Queue ready</string>
