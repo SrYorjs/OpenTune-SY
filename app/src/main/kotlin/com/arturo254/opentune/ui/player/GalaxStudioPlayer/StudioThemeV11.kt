@@ -51,20 +51,30 @@ fun StudioThemeV11(
             .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal+WindowInsetsSides.Top)),
     ) {
         Canvas(Modifier.fillMaxSize()) {
-            for(i in 0..7) {
-                val c=Offset(size.width*(.14f+i*.125f),size.height*(.16f+(i%3)*.21f))
-                drawCircle(
-                    Brush.radialGradient(
-                        listOf(if(i%2==0)state.primary.copy(alpha=.26f)else state.secondary.copy(alpha=.24f),Color.Transparent),
-                        center=c,radius=size.width*.55f,
-                    ),
-                    radius=size.width*.55f,center=c,
-                )
+            val spacing=24.dp.toPx()
+            var x=0f
+            while(x<size.width) {
+                drawLine(state.primary.copy(alpha=.18f),
+                    Offset(x,0f),Offset(x,size.height),1.dp.toPx())
+                x+=spacing
             }
-            for(i in 0..67) {
-                val at=Offset((i*73%101)/101f*size.width,(i*37%97)/97f*size.height)
-                drawCircle(Color.White.copy(alpha=.13f+(i%4)*.05f),
-                    radius=(.5f+(i%3)*.3f).dp.toPx(),center=at)
+            var y=0f
+            while(y<size.height) {
+                drawLine(state.secondary.copy(alpha=.14f),
+                    Offset(0f,y),Offset(size.width,y),.8.dp.toPx())
+                y+=spacing
+            }
+            for(i in 0..9) {
+                val yy=size.height*(.13f+i*.066f)
+                drawLine(state.primary.copy(alpha=.24f),
+                    Offset(0f,yy),Offset(size.width*.18f,yy),1.dp.toPx())
+                drawLine(state.primary.copy(alpha=.18f),
+                    Offset(size.width*.18f,yy),
+                    Offset(size.width*.25f,yy+size.height*.05f),
+                    1.dp.toPx())
+                drawCircle(state.primary.copy(alpha=.63f),
+                    radius=2.dp.toPx(),
+                    center=Offset(size.width*.25f,yy+size.height*.05f))
             }
         }
         if(state.isLandscape) {
