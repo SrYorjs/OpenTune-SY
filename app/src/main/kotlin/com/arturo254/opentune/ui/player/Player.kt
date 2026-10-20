@@ -320,7 +320,10 @@ fun BottomSheetPlayer(
         downloadRevision = download?.state,
         offlineArtworkUrl = offlineCoverUri,
         offlineAnimationLookup = downloadUtil::getOfflineAnimationUri,
-        usesArtworkPalette = visualSkin.usesArtworkPalette || LocalEnableLiquidGlass.current,
+        usesArtworkPalette = visualSkin.usesArtworkPalette ||
+            LocalEnableLiquidGlass.current ||
+            playerDesignStyle == PlayerDesignStyle.V8 ||
+            playerDesignStyle == PlayerDesignStyle.V16,
     )
     val canvasArtwork = playerVisuals.canvasArtwork
     val gradientColors = playerVisuals.gradientColors
