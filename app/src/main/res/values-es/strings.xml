@@ -770,4 +770,10 @@
     <string name="galax_eq_profile_status">Perfil de audio activo</string>
     <string name="galax_quality_selection">Calidad de reproducción</string>
     <string name="galax_quality_versions">%1$d versiones · %2$d fuentes</string>
+    <string name="galax_settings_appearance_subtitle">Colores, animaciones, tipografía y presentación inmersiva</string>
+    <string name="galax_settings_player_subtitle">Audio, reproducción y conexiones</string>
+    <string name="galax_settings_content_subtitle">Proveedores musicales, idioma y descubrimiento</string>
+    <string name="galax_settings_storage_subtitle">Descargas, caché y espacio local</string>
+    <string name="galax_settings_privacy_subtitle">Historial, permisos y control de datos</string>
+    <string name="galax_settings_integrations_subtitle">Servicios conectados y actividad musical</string>
 </resources>
