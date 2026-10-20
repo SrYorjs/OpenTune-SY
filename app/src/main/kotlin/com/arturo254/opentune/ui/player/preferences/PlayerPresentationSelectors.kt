@@ -68,13 +68,13 @@ fun playerLayoutLabel(style: PlayerDesignStyle): String = when (style) {
     PlayerDesignStyle.V6 -> stringResource(R.string.player_design_v6)
     PlayerDesignStyle.V7 -> stringResource(R.string.player_design_v7)
     PlayerDesignStyle.V8 -> stringResource(R.string.Apple_Music)
-    PlayerDesignStyle.V9 -> "Galax Nebula Drift"
-    PlayerDesignStyle.V10 -> "Galax Stellar Rings"
-    PlayerDesignStyle.V11 -> "Galax Cybergrid"
-    PlayerDesignStyle.V12 -> "Galax Vinyl Orbit"
-    PlayerDesignStyle.V13 -> "Galax Aurora Flow"
-    PlayerDesignStyle.V14 -> "Galax Monolith"
-    PlayerDesignStyle.V15 -> "Galax Quantum Pulse"
+    PlayerDesignStyle.V9 -> "Nebula Garden"
+    PlayerDesignStyle.V10 -> "Event Horizon"
+    PlayerDesignStyle.V11 -> "Circuit Break"
+    PlayerDesignStyle.V12 -> "Magnetic Tape"
+    PlayerDesignStyle.V13 -> "Polar Silk"
+    PlayerDesignStyle.V14 -> "White Noise"
+    PlayerDesignStyle.V15 -> "Ion Reactor"
     PlayerDesignStyle.V16 -> "GalaxTheme"
     PlayerDesignStyle.V17 -> "VinJax"
 }
