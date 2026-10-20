@@ -56,18 +56,18 @@ class GalaxHomePlayerRedesignTest {
     @Test
     fun playerStylesUseNewScenesWithoutReplacingPlaybackEngine() {
         val player = source("ui/player/Player.kt")
-        val classic = source("ui/player/layout/GalaxLegacyStyleScene.kt")
+        val classic = source("ui/player/layout/GalaxPlayerClassicScene.kt")
         val v7 = source("ui/player/v7/V7PlayerScene.kt")
         val v8 = source("ui/player/v8/V8PlayerScene.kt")
         val overlay = source("ui/player/visual/GalaxPlayerSceneOverlay.kt")
-        assertTrue(player.contains("GalaxLegacyStyleScene("))
+        assertTrue(player.contains("GalaxPlayerClassicScene("))
         assertTrue(player.contains("PlayerLayout("))
         assertTrue(player.contains("queueSheetState"))
         assertTrue(player.contains("rememberPlayerSeekSession"))
         assertTrue(classic.contains("controls: @Composable ColumnScope.() -> Unit"))
         assertTrue(classic.contains("artwork: @Composable BoxScope.() -> Unit"))
-        assertTrue(v7.contains("GalaxPlayerSceneOverlay("))
-        assertTrue(v8.contains("GalaxPlayerSceneOverlay("))
+        assertTrue(v7.contains("V7PlayerBackdrop("))
+        assertTrue(v8.contains("V8PlayerBackdrop("))
         assertTrue(overlay.contains("GalaxOrbitField("))
     }
 
