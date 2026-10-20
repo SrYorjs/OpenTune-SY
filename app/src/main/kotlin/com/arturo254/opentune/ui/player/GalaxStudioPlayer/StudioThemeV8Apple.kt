@@ -79,6 +79,7 @@ fun AppleMusicPlayerScene(
     onLyrics: () -> Unit,
     onQueue: () -> Unit,
     onMenu: () -> Unit,
+    artwork: @Composable BoxScope.() -> Unit,
     artworkUrl: String?,
     canvasArtwork: CanvasArtwork?,
     disableBlur: Boolean,
