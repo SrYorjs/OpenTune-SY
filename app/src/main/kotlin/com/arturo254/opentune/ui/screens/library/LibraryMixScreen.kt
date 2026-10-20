@@ -317,6 +317,14 @@ fun LibraryMixScreen(
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 )
             }
+            item(key = "galax_library_orbits", contentType = "navigation") {
+                GalaxLibraryOrbitNavigator(
+                    playlists = visiblePlaylists.size,
+                    albums = sortedAlbums.size,
+                    artists = sortedArtists.size,
+                    onOpen = onTabSelected,
+                )
+            }
             item(key = "filter") {
                 filterContent()
             }
