@@ -25,7 +25,7 @@ class PlayerImmersiveGlassIntegrationTest {
         assertTrue(player.contains("compactPortrait = {"))
         assertTrue(player.contains("if (activePlayerGlass) Color.White"))
         assertTrue(player.split("PlayerArtworkAtmosphere(").size >= 3)
-        assertFalse(player.contains("resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop"))
+        assertTrue(player.contains("resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop"))
 
     }
 
