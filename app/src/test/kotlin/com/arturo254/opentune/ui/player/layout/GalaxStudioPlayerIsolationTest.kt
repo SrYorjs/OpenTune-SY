@@ -128,4 +128,24 @@ class GalaxStudioPlayerIsolationTest {
         assertTrue(media.contains("actions()"))
         assertTrue(media.contains("supporting()"))
     }
+
+    @Test
+    fun studioSelectionPersistsAndLegacyDesignValuesRemainReadable() {
+        val navigation=source("ui/screens/NavigationBuilder.kt")
+        val appearance=source("ui/screens/settings/AppearanceSettings.kt")
+        val studio=source("ui/screens/settings/GalaxPlayerStyleStudioScreen.kt")
+        val preferences=source("constants/PreferenceKeys.kt")
+        assertTrue(navigation.contains("settings/appearance/player_studio"))
+        assertTrue(appearance.contains("settings/appearance/player_studio"))
+        assertTrue(studio.contains("PlayerDesignStyleKey"))
+        assertTrue(studio.contains("PlayerDesignStyle.entries"))
+        assertTrue(preferences.contains("playerDesignStyle"))
+        assertTrue(preferences.contains("V16"))
+        assertTrue(preferences.contains("V17"))
+        assertTrue(source("ui/player/GalaxStudioPlayer/StudioTransport.kt")
+            .contains("actions::playPause"))
+        assertTrue(source("ui/player/GalaxStudioPlayer/StudioTransport.kt")
+            .contains("actions::toggleFavorite"))
+        assertTrue(source("ui/player/Player.kt").contains("rememberPlayerPresentationPreferences()"))
+    }
 }
