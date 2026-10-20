@@ -64,7 +64,7 @@ class GalaxHomePlayerRedesignTest {
         assertTrue(player.contains("PlayerLayout("))
         assertTrue(player.contains("queueSheetState"))
         assertTrue(player.contains("rememberPlayerSeekSession"))
-        assertTrue(classic.contains("controls: @Composable () -> Unit"))
+        assertTrue(classic.contains("controls: @Composable ColumnScope.() -> Unit"))
         assertTrue(classic.contains("artwork: @Composable BoxScope.() -> Unit"))
         assertTrue(v7.contains("GalaxPlayerSceneOverlay("))
         assertTrue(v8.contains("GalaxPlayerSceneOverlay("))
