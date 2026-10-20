@@ -108,7 +108,42 @@ private fun GalaxStylePreview(
             Canvas(Modifier.fillMaxSize()) {
                 val center = Offset(size.width * .5f, size.height * .43f)
                 val r = size.width * .31f
-                if (style == PlayerDesignStyle.V10 || style == PlayerDesignStyle.V12) {
+                if (style == PlayerDesignStyle.V17) {
+                    drawCircle(Color.Black.copy(alpha=.88f),radius=r*1.2f,center=center)
+                    for(i in 1..14) {
+                        drawCircle(
+                            Color.White.copy(alpha=.11f),
+                            radius=r*(.34f+i*.059f),
+                            center=center,
+                            style=Stroke(width=.7.dp.toPx()),
+                        )
+                    }
+                    drawCircle(primary.copy(alpha=.76f),radius=r*.34f,center=center)
+                    val pivot=Offset(size.width*.91f,size.height*.11f)
+                    val tip=Offset(center.x+r*.53f,center.y-r*.22f)
+                    drawLine(Color.Black,pivot,tip,7.dp.toPx())
+                    drawLine(Color(0xFFD0D3DB),pivot,tip,3.dp.toPx())
+                    drawCircle(Color(0xFFE6E7EC),radius=6.dp.toPx(),center=pivot)
+                    drawCircle(Color.White,radius=2.dp.toPx(),center=tip)
+                } else if (style == PlayerDesignStyle.V12) {
+                    drawRect(
+                        Color(0xFFC29462).copy(alpha=.28f),
+                        Offset(size.width*.12f,size.height*.18f),
+                        Size(size.width*.76f,size.height*.5f),
+                        style=Stroke(width=2.dp.toPx()),
+                    )
+                    for(i in 0..1) {
+                        val center2=Offset(size.width*(if(i==0).33f else .67f),size.height*.43f)
+                        for(j in 0..6) {
+                            drawCircle(
+                                Color(0xFFD8B48B).copy(alpha=.22f),
+                                radius=r*(.20f+j*.095f),
+                                center=center2,
+                                style=Stroke(width=1.dp.toPx()),
+                            )
+                        }
+                    }
+                } else if (style == PlayerDesignStyle.V10) {
                     for (i in 0..8) {
                         drawCircle(
                             color = if (i % 2 == 0) primary.copy(alpha = .43f) else secondary.copy(alpha = .35f),
