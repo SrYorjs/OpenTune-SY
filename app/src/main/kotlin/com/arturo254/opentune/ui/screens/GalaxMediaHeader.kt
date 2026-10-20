@@ -55,6 +55,7 @@ fun GalaxMediaHeader(
     actions: @Composable ColumnScope.() -> Unit = {},
 ) {
     val backdrop = rememberLayerBackdrop()
+    val scheme = MaterialTheme.colorScheme
     Box(modifier.fillMaxWidth()) {
         Box(
             Modifier.matchParentSize()
@@ -72,7 +73,7 @@ fun GalaxMediaHeader(
                     val purpleCenter = Offset(0f, size.height)
                     val purpleRadius = size.width * .9f
                     val purple = Brush.radialGradient(
-                        0f to MaterialTheme.colorScheme.tertiary.copy(alpha = .13f),
+                        0f to scheme.tertiary.copy(alpha = .13f),
                         1f to Color.Transparent,
                         center = purpleCenter,
                         radius = purpleRadius,
