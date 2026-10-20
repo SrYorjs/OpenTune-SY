@@ -4,6 +4,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import com.arturo254.opentune.constants.PlayerDesignStyle
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioThemeV1
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioThemeV2
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioThemeV3
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioThemeV4
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioThemeV5
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioThemeV6
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.StudioThemeV7
 
 /**
  * Player 2.0 central layout choice: style is the persisted V1–V8 preference;
@@ -92,30 +99,38 @@ fun PlayerLayout(
     vinylLandscape: @Composable () -> Unit = galaxLandscape,
 ) {
     val route = remember(style, isLandscape) { resolvePlayerLayout(style, isLandscape) }
-    when (route.orientation) {
-        PlayerLayoutOrientation.PORTRAIT ->
-            when (route.family) {
-                PlayerLayoutFamily.CLASSIC -> classicPortrait()
-                PlayerLayoutFamily.V2 -> v2Portrait()
-                PlayerLayoutFamily.COMPACT -> compactPortrait()
-                PlayerLayoutFamily.CINEMATIC -> cinematicPortrait()
-                PlayerLayoutFamily.IMMERSIVE -> immersivePortrait()
-                PlayerLayoutFamily.GALAX -> galaxPortrait()
-                PlayerLayoutFamily.APPLE_MUSIC -> applePortrait()
-                PlayerLayoutFamily.GALAX_THEME -> immersivePortrait()
-                PlayerLayoutFamily.VINJAX -> vinylPortrait()
-            }
-        PlayerLayoutOrientation.LANDSCAPE ->
-            when (route.family) {
-                PlayerLayoutFamily.CLASSIC -> classicLandscape()
-                PlayerLayoutFamily.V2 -> v2Landscape()
-                PlayerLayoutFamily.COMPACT -> compactLandscape()
-                PlayerLayoutFamily.CINEMATIC -> cinematicLandscape()
-                PlayerLayoutFamily.IMMERSIVE -> immersiveLandscape()
-                PlayerLayoutFamily.GALAX -> galaxLandscape()
-                PlayerLayoutFamily.APPLE_MUSIC -> appleLandscape()
-                PlayerLayoutFamily.GALAX_THEME -> immersiveLandscape()
-                PlayerLayoutFamily.VINJAX -> vinylLandscape()
-            }
+    val content: @Composable () -> Unit = when (route.orientation) {
+        PlayerLayoutOrientation.PORTRAIT -> when (route.family) {
+            PlayerLayoutFamily.CLASSIC -> classicPortrait
+            PlayerLayoutFamily.V2 -> v2Portrait
+            PlayerLayoutFamily.COMPACT -> compactPortrait
+            PlayerLayoutFamily.CINEMATIC -> cinematicPortrait
+            PlayerLayoutFamily.IMMERSIVE -> immersivePortrait
+            PlayerLayoutFamily.GALAX -> galaxPortrait
+            PlayerLayoutFamily.APPLE_MUSIC -> applePortrait
+            PlayerLayoutFamily.GALAX_THEME -> immersivePortrait
+            PlayerLayoutFamily.VINJAX -> vinylPortrait
+        }
+        PlayerLayoutOrientation.LANDSCAPE -> when (route.family) {
+            PlayerLayoutFamily.CLASSIC -> classicLandscape
+            PlayerLayoutFamily.V2 -> v2Landscape
+            PlayerLayoutFamily.COMPACT -> compactLandscape
+            PlayerLayoutFamily.CINEMATIC -> cinematicLandscape
+            PlayerLayoutFamily.IMMERSIVE -> immersiveLandscape
+            PlayerLayoutFamily.GALAX -> galaxLandscape
+            PlayerLayoutFamily.APPLE_MUSIC -> appleLandscape
+            PlayerLayoutFamily.GALAX_THEME -> immersiveLandscape
+            PlayerLayoutFamily.VINJAX -> vinylLandscape
+        }
+    }
+    when (style) {
+        PlayerDesignStyle.V1 -> StudioThemeV1(content)
+        PlayerDesignStyle.V2 -> StudioThemeV2(content)
+        PlayerDesignStyle.V3 -> StudioThemeV3(content)
+        PlayerDesignStyle.V4 -> StudioThemeV4(content)
+        PlayerDesignStyle.V5 -> StudioThemeV5(content)
+        PlayerDesignStyle.V6 -> StudioThemeV6(content)
+        PlayerDesignStyle.V7 -> StudioThemeV7(content)
+        else -> content()
     }
 }
