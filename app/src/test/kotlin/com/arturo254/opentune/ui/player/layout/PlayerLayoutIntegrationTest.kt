@@ -29,8 +29,8 @@ class PlayerLayoutIntegrationTest {
             assertTrue("slot missing in shared router: $slot", router.contains("$slot: @Composable () -> Unit"))
             assertTrue("slot missing in Player usage: $slot", fullPlayer.contains("$slot = {"))
         }
-        assertFalse(fullPlayer.contains("resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop"))
-        assertTrue(fullPlayer.contains("GalaxLegacyStyleScene("))
+        assertTrue(fullPlayer.contains("resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop"))
+        assertTrue(fullPlayer.contains("GalaxPlayerClassicScene("))
         assertTrue(fullPlayer.contains("AppleMusicPlayerScene("))
         assertTrue(fullPlayer.contains("VinJaxPlayerScene("))
         assertEquals(
@@ -45,7 +45,7 @@ class PlayerLayoutIntegrationTest {
         val router = source("ui/player/layout/PlayerLayout.kt")
         assertTrue(player.contains("V7PlayerScene("))
         assertTrue(source("ui/player/v7/V7PlayerScene.kt").contains("V7PlayerBackdrop("))
-        assertTrue(player.contains("V8PlayerScene("))
+        assertTrue(player.contains("StudioThemeV16("))
         assertTrue(source("ui/player/v8/V8PlayerScene.kt").contains("V8PlayerBackdrop("))
         assertTrue(player.contains("V8PlayerControlsContent("))
         assertTrue(player.contains("V5PlayerContent("))
