@@ -1138,9 +1138,7 @@ fun BottomSheetPlayer(
                     }
             },
             classicPortrait = {
-                GalaxLegacyStyleScene(
-                    style = playerDesignStyle,
-                    isLandscape = false,
+                GalaxPlayerClassicScene(
                     isPlaying = isPlaying,
                     accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
                     queuePeekHeight = queueSheetState.collapsedBound,
@@ -1153,7 +1151,9 @@ fun BottomSheetPlayer(
                             isPlayerExpanded = state.isExpanded,
                         )
                     },
-                    controls = { enrichedMetadata?.let { controlsContent(it) } },
+                    controls = {
+                        enrichedMetadata?.let { controlsContent(it) }
+                    },
                 )
             },
         )
