@@ -40,6 +40,7 @@ fun V8PlayerScene(
     nestedScrollConnection: NestedScrollConnection,
     playerBackdrop: com.kyant.backdrop.backdrops.LayerBackdrop? = null,
     immersiveGlass: Boolean = false,
+    bareControls: Boolean = false,
     gradientColors: List<androidx.compose.ui.graphics.Color> = emptyList(),
     controls: @Composable ColumnScope.() -> Unit,
 ) {
@@ -80,14 +81,6 @@ fun V8PlayerScene(
             }
         }
 
-        GalaxPlayerSceneOverlay(
-            index = "16",
-            subtitle = "GALAXTHEME",
-            isPlaying = isPlaying,
-            landscape = isLandscape,
-            accent = gradientColors.firstOrNull() ?: androidx.compose.material3.MaterialTheme.colorScheme.primary,
-        )
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
@@ -100,7 +93,7 @@ fun V8PlayerScene(
                 )
                 .nestedScroll(nestedScrollConnection),
         ) {
-            if (isLandscape) {
+            if (isLandscape || bareControls) {
                 controls()
             } else {
                 GalaxPlayerControlDock(
