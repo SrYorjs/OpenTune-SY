@@ -92,10 +92,10 @@ fun DownloadQueueScreen(
             GalaxTopAppBar(
                 title = { Text(stringResource(R.string.download_queue)) },
                 navigationIcon = {
-                    IconButton(onClick = navController::popBackStack) {
+                    IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             painterResource(R.drawable.arrow_back),
-                            contentDescription = stringResource(R.string.back),
+                            contentDescription = stringResource(R.string.galax_downloads_back),
                         )
                     }
                 },
