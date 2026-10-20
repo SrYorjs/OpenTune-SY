@@ -907,4 +907,23 @@ GalaxOT will only extract your token, and everything else is stored locally.</st
     <string name="player_a11y_unlike">Remove from favorites</string>
     <string name="player_a11y_repeat">Change repeat mode</string>
     <string name="galax_shuffle_unavailable">No music is available yet. Play a song or add some tracks to your library.</string>
+    <string name="galax_downloads_collection">GALAXOT / DOWNLOADS</string>
+    <string name="galax_downloads_queue">Downloads in progress</string>
+    <string name="galax_downloads_running">Queue ready</string>
+    <string name="galax_downloads_paused">Paused</string>
+    <string name="galax_downloads_active">Active</string>
+    <string name="galax_downloads_failed">Failed</string>
+    <string name="galax_downloads_all">All</string>
+    <string name="galax_downloads_known_progress">%1$d%% average of downloads with known progress</string>
+    <string name="galax_downloads_clear_confirm">Remove all pending downloads?</string>
+    <string name="galax_downloads_clear_detail">This will remove every pending download from the queue.</string>
+    <string name="galax_downloads_resume">Resume downloads</string>
+    <string name="galax_downloads_pause">Pause downloads</string>
+    <string name="galax_downloads_clear">Clear download queue</string>
+    <string name="galax_downloads_filter_empty">No downloads match this filter.</string>
+    <string name="galax_eq_response_title">Frequency response</string>
+    <string name="galax_eq_response_hint">Current band levels · dB</string>
+    <string name="galax_eq_profile_status">Active audio profile</string>
+    <string name="galax_quality_selection">Playback quality</string>
+    <string name="galax_quality_versions">%1$d versions · %2$d sources</string>
 </resources>
