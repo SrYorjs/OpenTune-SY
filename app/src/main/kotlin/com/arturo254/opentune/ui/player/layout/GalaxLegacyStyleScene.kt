@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -87,7 +88,7 @@ fun GalaxLegacyStyleScene(
     accent: Color,
     queuePeekHeight: Dp,
     artwork: @Composable BoxScope.() -> Unit,
-    controls: @Composable () -> Unit,
+    controls: @Composable ColumnScope.() -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -248,7 +249,7 @@ private fun LegacyControlPanel(
     style: PlayerDesignStyle,
     identity: LegacyPlayerIdentity,
     accent: Color,
-    controls: @Composable () -> Unit,
+    controls: @Composable ColumnScope.() -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
     val container = when (style) {
@@ -267,7 +268,11 @@ private fun LegacyControlPanel(
             .padding(top = 8.dp, bottom = 7.dp),
         contentAlignment = Alignment.Center,
     ) {
-        controls()
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            content = controls,
+        )
     }
 }
 
