@@ -166,7 +166,7 @@ fun GalaxPlayerStyleStudioScreen(navController: NavController) {
                     color = scheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             }
         }
-        items(PlayerDesignStyle.entries.chunked(2).size, key = { "studio_row_$" + it }) { rowIndex ->
+        items(PlayerDesignStyle.entries.chunked(2).size, key = { "studio_row_" + it }) { rowIndex ->
             val styles = PlayerDesignStyle.entries.chunked(2)[rowIndex]
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 18.dp),
