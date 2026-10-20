@@ -35,7 +35,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arturo254.opentune.constants.PlayerDesignStyle
-import com.arturo254.opentune.ui.player.v9.originalPlayerStyleConfig
+import com.arturo254.opentune.ui.player.GalaxStudioPlayer.originalPlayerStyleConfig
 
 @Composable
 fun GalaxPlayerStyleGallery(
