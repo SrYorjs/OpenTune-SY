@@ -643,30 +643,6 @@ fun BottomSheetPlayer(
             )
         }
 
-        if (!state.isCollapsed && resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop) {
-            if (activePlayerGlass) {
-                PlayerArtworkAtmosphere(
-                    artworkUrl = playerVisuals.artworkUrl,
-                    gradientColors = gradientColors,
-                    isPlaying = isPlaying,
-                    disableBlur = disableBlur,
-                    modifier = playerSourceModifier,
-                )
-            } else {
-                PlayerBackground(
-                    playerBackground = playerBackground,
-                    mediaMetadata = mediaMetadata,
-                    gradientColors = gradientColors,
-                    disableBlur = disableBlur,
-                    blurRadius = blurRadius,
-                    playerCustomImageUri = playerCustomImageUri,
-                    playerCustomBlur = playerCustomBlur,
-                    playerCustomContrast = playerCustomContrast,
-                    playerCustomBrightness = playerCustomBrightness
-                )
-            }
-        }
-
         val v8ControlsContent: @Composable ColumnScope.(MediaMetadata) -> Unit = { metadata ->
             V8PlayerControlsContent(
 
