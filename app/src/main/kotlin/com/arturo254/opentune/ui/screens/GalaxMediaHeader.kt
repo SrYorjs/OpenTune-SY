@@ -71,7 +71,7 @@ fun GalaxMediaHeader(
                     val purpleCenter = Offset(0f, size.height)
                     val purpleRadius = size.width * .9f
                     val purple = Brush.radialGradient(
-                        0f to GalaxScreenStyle.violet.copy(alpha = .085f),
+                        0f to MaterialTheme.colorScheme.tertiary.copy(alpha = .13f),
                         1f to Color.Transparent,
                         center = purpleCenter,
                         radius = purpleRadius,
@@ -98,7 +98,7 @@ fun GalaxMediaHeader(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(26.dp),
                         ) {
-                            GalaxCoverMosaic(artworkUrls, artist, Modifier.size(cover))
+                            GalaxMediaCoverStage(artworkUrls, artist, Modifier.size(cover))
                             Column(
                                 Modifier.weight(1f),
                                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -113,7 +113,7 @@ fun GalaxMediaHeader(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(18.dp),
                         ) {
-                            GalaxCoverMosaic(artworkUrls, artist, Modifier.size(cover))
+                            GalaxMediaCoverStage(artworkUrls, artist, Modifier.size(cover))
                             Column(
                                 Modifier.fillMaxWidth(),
                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -125,11 +125,73 @@ fun GalaxMediaHeader(
                         }
                     }
                 }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = if (artist) "GALAXOT  /  CONSTELLATION" else "GALAXOT  /  COLLECTION",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.3.sp,
+                        color = accent,
+                    )
+                    Text(
+                        text = "✦  AUDIO UNIVERSE",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 GalaxMediaFacts(facts)
                 supporting()
                 actions()
             }
         }
+    }
+}
+
+@Composable
+private fun GalaxMediaCoverStage(
+    artworkUrls: List<String?>,
+    artist: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val scheme = MaterialTheme.colorScheme
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            Modifier.matchParentSize()
+                .drawWithCache {
+                    val center = Offset(size.width * .51f, size.height * .48f)
+                    val radial = Brush.radialGradient(
+                        0f to scheme.primary.copy(alpha = .28f),
+                        .64f to scheme.tertiary.copy(alpha = .14f),
+                        1f to Color.Transparent,
+                        center = center,
+                        radius = size.width * .85f,
+                    )
+                    onDrawBehind {
+                        drawCircle(radial, radius = size.width * .75f, center = center)
+                        for (i in 1..4) {
+                            drawCircle(
+                                scheme.primary.copy(alpha = .085f),
+                                radius = size.width * (.30f + i * .085f),
+                                center = center,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.dp.toPx()),
+                            )
+                        }
+                    }
+                },
+        )
+        GalaxCoverMosaic(
+            artworkUrls, artist,
+            Modifier.fillMaxWidth(.89f).clip(
+                if (artist) CircleShape else GalaxScreenStyle.artworkShape,
+            ),
+        )
     }
 }
 
