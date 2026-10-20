@@ -97,7 +97,8 @@ class Player2CompatibilityContractTest {
         assertTrue(host.contains("fun BottomSheetPlayer("))
         assertTrue(host.contains("V7PlayerScene("))
         assertTrue(source("ui/player/v7/V7PlayerScene.kt").contains("V7PlayerBackdrop("))
-        assertTrue(host.contains("V8PlayerScene("))
+        assertTrue(host.contains("StudioThemeV16("))
+        assertTrue(source("ui/player/GalaxStudioPlayer/StudioThemeV16.kt").contains("V8PlayerScene("))
         assertTrue(source("ui/player/v8/V8PlayerComponents.kt").contains("fun V8PlayerBackdrop("))
         // Phase 4.7: the Canvas model is now owned by the visual engine,
         // while Player keeps consuming its current Canvas snapshot.
