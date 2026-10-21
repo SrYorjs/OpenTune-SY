@@ -223,7 +223,7 @@ fun GalaxDiscoverScreen(
             if (categories.isNotEmpty()) {
                 itemsIndexed(
                     items = categories.chunked(2),
-                    key = { index, _ -> "genre_pair_$" + "index" },
+                    key = { index, _ -> galaxDiscoveryGenreRowKey(index, fallback = false) },
                     contentType = { _, _ -> "genre_pair" },
                 ) { _, pair ->
                     Row(
@@ -248,7 +248,7 @@ fun GalaxDiscoverScreen(
             } else if (!genresLoading) {
                 itemsIndexed(
                     items = fallbackCategories.chunked(2),
-                    key = { index, _ -> "fallback_pair_$" + "index" },
+                    key = { index, _ -> galaxDiscoveryGenreRowKey(index, fallback = true) },
                 ) { _, pair ->
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
@@ -412,3 +412,6 @@ fun GalaxCollectionTile(
         }
     }
 }
+
+internal fun galaxDiscoveryGenreRowKey(index: Int, fallback: Boolean): String =
+    (if (fallback) "discovery-fallback:" else "discovery-genre:") + index

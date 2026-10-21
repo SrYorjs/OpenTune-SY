@@ -361,7 +361,7 @@ fun HomeScreen(
                     GalaxEditorialHeading("Descubre")
                 }
                 homePage?.sections.orEmpty().forEachIndexed { index, section ->
-                    item(key = "section_title_$" + "index") {
+                    item(key = galaxHomeSectionRowKey(index, true)) {
                         GalaxEditorialReveal {
                             HomePageSectionTitle(
                                 section = section,
@@ -369,7 +369,7 @@ fun HomeScreen(
                             )
                         }
                     }
-                    item(key = "section_content_$" + "index") {
+                    item(key = galaxHomeSectionRowKey(index, false)) {
                         HomePageSectionContent(
                             section = section,
                             mediaMetadata = nowPlaying,
@@ -412,3 +412,6 @@ fun HomeScreen(
         )
     }
 }
+
+internal fun galaxHomeSectionRowKey(index: Int, heading: Boolean): String =
+    (if (heading) "home-section-title:" else "home-section-content:") + index

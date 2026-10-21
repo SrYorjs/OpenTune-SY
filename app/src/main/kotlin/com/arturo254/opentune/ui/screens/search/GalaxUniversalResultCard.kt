@@ -307,7 +307,7 @@ fun GalaxUniversalSearchProgress(
         Text(
             text = if (loading) "Cargando"
                 else if (count == 1) "1 resultado"
-                else "$" + "count resultados",
+                else count.toString() + " resultados",
             style = MaterialTheme.typography.labelMedium,
             color = scheme.onSurfaceVariant,
         )

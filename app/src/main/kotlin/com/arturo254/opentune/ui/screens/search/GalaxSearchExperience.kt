@@ -99,7 +99,7 @@ fun GalaxSearchEditorialHero(
                 Text(
                     text = if (isLoading && count == 0) "Buscando"
                         else if (count == 1) "1 canción"
-                        else "$" + "count canciones",
+                        else count.toString() + " canciones",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.White.copy(alpha = .76f),
                 )

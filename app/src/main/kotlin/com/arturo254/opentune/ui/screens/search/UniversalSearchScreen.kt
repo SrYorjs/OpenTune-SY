@@ -226,7 +226,7 @@ fun UniversalSearchScreen(
 
         itemsIndexed(
             items = state.result.tracks,
-            key = { index, result -> "universal_result_$" + "index:" + result.stableResultKey() },
+            key = { index, result -> universalResultRowKey(index, result.stableResultKey()) },
             contentType = { _, _ -> "universal_track" },
         ) { _, result ->
             val variantKeys =
@@ -507,3 +507,6 @@ private fun qualitySummary(variant: SourceVariant?): String? {
 
     return parts.takeIf { it.isNotEmpty() }?.joinToString(" • ")
 }
+
+internal fun universalResultRowKey(index: Int, identity: String): String =
+    "universal-result:" + index + ":" + identity
