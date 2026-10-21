@@ -352,7 +352,7 @@ fun HomeScreen(
                     AetherSectionTitle(title = "Tendencias", eyebrow = "05 / ACTUALIDAD")
                 }
                 item(key = "aether_trending_catalog") {
-                    GlobalCatalogHomeSection(
+                    AetherTrendingShelf(
                         tracks = trending,
                         playerConnection = player,
                         onPlay = viewModel::playSourceVariant,

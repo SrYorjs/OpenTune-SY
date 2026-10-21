@@ -48,7 +48,7 @@ class GalaxHomePlayerRedesignTest {
         assertTrue(home.contains("viewModel.playGalaxShuffle(player)"))
         assertTrue(home.contains("SongMenu("))
         assertTrue(home.contains("onDismiss = menu::dismiss"))
-        assertTrue(home.contains("GlobalCatalogHomeSection("))
+        assertTrue(home.contains("AetherTrendingShelf("))
         assertTrue(home.contains("AetherCatalogShelf("))
     }
 

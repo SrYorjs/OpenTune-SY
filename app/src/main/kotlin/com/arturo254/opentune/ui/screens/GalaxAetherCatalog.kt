@@ -28,6 +28,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.res.stringResource
+import com.arturo254.opentune.core.model.SourceVariant
+import com.arturo254.opentune.playback.PlayerConnection
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -320,6 +324,123 @@ internal fun AetherCatalogEmpty(
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.align(Alignment.CenterEnd).padding(end = 20.dp).size(24.dp),
+        )
+    }
+}
+
+@Composable
+internal fun AetherTrendingShelf(
+    tracks: List<SourceVariant>,
+    playerConnection: PlayerConnection,
+    onPlay: suspend (PlayerConnection, SourceVariant, String) -> Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val current by playerConnection.mediaMetadata.collectAsState()
+    val playing by playerConnection.isPlaying.collectAsState()
+    val scope = rememberCoroutineScope()
+    val label = stringResource(R.string.deezer_trending)
+    val entries = remember(tracks) {
+        tracks.distinctBy { it.provider.value + ":" + it.sourceId }.take(12)
+    }
+    LazyRow(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 22.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        itemsIndexed(
+            items = entries,
+            key = { index, item ->
+                "aether_global:" + index + ":" + item.provider.value + ":" + item.sourceId
+            },
+            contentType = { _, _ -> "aether_global" },
+        ) { _, track ->
+            val selected = current?.title.equals(track.title, ignoreCase = true) &&
+                track.artists.any { artist ->
+                    current?.artists?.any { it.name.equals(artist, ignoreCase = true) } == true
+                }
+            AetherTrendingTile(
+                track = track,
+                selected = selected,
+                playing = playing,
+                onTap = {
+                    if (selected) {
+                        playerConnection.player.togglePlayPause()
+                    } else {
+                        scope.launch {
+                            onPlay(playerConnection, track, label)
+                        }
+                    }
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun AetherTrendingTile(
+    track: SourceVariant,
+    selected: Boolean,
+    playing: Boolean,
+    onTap: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.width(166.dp).clickable(onClick = onTap),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box(
+            modifier = Modifier.size(166.dp)
+                .clip(RoundedCornerShape(25.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        ) {
+            AsyncImage(
+                model = track.artworkUrl,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop,
+            )
+            AetherGlassPlate(
+                modifier = Modifier.align(Alignment.TopStart).padding(9.dp).height(30.dp),
+                radius = 11.dp,
+                emphasis = .68f,
+            ) {
+                Text(
+                    text = track.provider.value,
+                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Box(
+                modifier = Modifier.align(Alignment.BottomEnd).padding(9.dp)
+                    .size(35.dp).clip(CircleShape)
+                    .background(Color.Black.copy(alpha = .65f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(
+                        if (selected && playing) R.drawable.pause else R.drawable.play
+                    ),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+        }
+        Text(
+            text = track.title,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = track.artists.joinToString(),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
