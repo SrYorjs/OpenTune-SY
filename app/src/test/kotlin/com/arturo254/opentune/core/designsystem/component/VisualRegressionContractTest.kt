@@ -37,7 +37,7 @@ class VisualRegressionContractTest {
         val settings = source("ui/screens/settings/SettingsComponents.kt")
         assertTrue(home.contains("OpenTuneShimmerState("))
         assertTrue(home.contains("Artwork("))
-        assertTrue(search.contains("OpenTuneLoadingState("))
+        assertTrue(search.contains("AtlasResultsSkeleton("))
         assertTrue(search.contains("GalaxUniversalNoResults("))
         assertTrue(albums.contains("OpenTuneEmptyState("))
         assertTrue(artists.contains("OpenTuneEmptyState("))

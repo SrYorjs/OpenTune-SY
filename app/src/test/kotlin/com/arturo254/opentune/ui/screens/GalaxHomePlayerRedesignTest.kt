@@ -49,7 +49,7 @@ class GalaxHomePlayerRedesignTest {
         assertTrue(home.contains("SongMenu("))
         assertTrue(home.contains("onDismiss = menu::dismiss"))
         assertTrue(home.contains("GlobalCatalogHomeSection("))
-        assertTrue(home.contains("HomePageSectionContent("))
+        assertTrue(home.contains("AetherCatalogShelf("))
     }
 
     @Test

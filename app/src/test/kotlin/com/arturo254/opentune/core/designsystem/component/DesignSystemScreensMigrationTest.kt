@@ -21,7 +21,7 @@ class DesignSystemScreensMigrationTest {
     @Test
     fun searchUsesCanonicalLoadingAndEmptyStatesWithoutChangingPaging() {
         val s = source("ui/screens/search/UniversalSearchScreen.kt")
-        assertTrue(s.contains("OpenTuneLoadingState("))
+        assertTrue(s.contains("AtlasResultsSkeleton("))
         assertTrue(s.contains("GalaxUniversalNoResults("))
         assertTrue(s.contains("viewModel.loadMore()"))
         assertTrue(s.contains("UniversalVersionQualityDialog("))

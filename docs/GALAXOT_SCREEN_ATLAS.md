@@ -48,6 +48,9 @@ El catálogo contiene **los 98 archivos Kotlin de `ui/screens/`**, tanto pantall
 | `GalaxAetherVisuals.kt` | Estrellas, ondas, cristal y movimiento | `home` |
 | `GalaxAtlasDiscovery.kt` | Componentes propios del atlas musical | `search` |
 | `GalaxAtlasScreen.kt` | Nueva pestaña de descubrimiento y géneros | `search` |
+| `GalaxAetherCatalog.kt` | Nuevas colecciones editoriales con navegación y menús de YouTube Music | `home` |
+| `GalaxCollectionTileCompat.kt` | API conservada para pantallas secundarias de la colección | `—` |
+| `search/GalaxAtlasResultsFrame.kt` | Carga, avisos y métricas visuales de resultados | `search/{query}` |
 | `GalaxMainPages.kt` | Contenedor de tres pestañas | `home · search · library` |
 | `GalaxMediaHeader.kt` | Cabecera de álbum/artista/playlist | `—` |
 | `GalaxRemoteShelf.kt` | Estantes remotos | `—` |
