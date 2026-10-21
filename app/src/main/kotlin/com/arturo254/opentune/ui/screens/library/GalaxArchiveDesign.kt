@@ -709,3 +709,82 @@ internal fun ArchiveSpotifyCard(
         )
     }
 }
+
+@Composable
+internal fun ArchiveCollectionRow(
+    title: String,
+    subtitle: String,
+    imageUrl: String?,
+    kind: ArchiveSection,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val scheme = MaterialTheme.colorScheme
+    val shape = RoundedCornerShape(21.dp)
+    Row(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 19.dp)
+            .clip(shape)
+            .background(scheme.surfaceContainerLow.copy(alpha = .50f))
+            .clickable(onClick = onClick)
+            .padding(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(15.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier.size(72.dp)
+                .clip(
+                    if (kind == ArchiveSection.ARTISTS) CircleShape
+                    else RoundedCornerShape(17.dp)
+                )
+                .background(scheme.surfaceContainerHigh),
+        ) {
+            if (!imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                Icon(
+                    painter = painterResource(
+                        when (kind) {
+                            ArchiveSection.PLAYLISTS -> R.drawable.queue_music
+                            ArchiveSection.ARTISTS -> R.drawable.person
+                            else -> R.drawable.album
+                        }
+                    ),
+                    contentDescription = null,
+                    tint = scheme.primary,
+                    modifier = Modifier.align(Alignment.Center).size(28.dp),
+                )
+            }
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = scheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Icon(
+            painter = painterResource(R.drawable.arrow_forward),
+            contentDescription = null,
+            tint = scheme.primary,
+            modifier = Modifier.size(19.dp),
+        )
+        Spacer(Modifier.width(3.dp))
+    }
+}

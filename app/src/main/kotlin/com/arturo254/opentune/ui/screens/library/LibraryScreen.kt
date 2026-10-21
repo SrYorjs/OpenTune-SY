@@ -355,13 +355,12 @@ fun LibraryScreen(
                             key = { index, _ -> "archive_playlist_row:" + index },
                             contentType = { _, _ -> "archive_playlist" },
                         ) { _, playlist ->
-                            ArchivePlaylistCard(
-                                playlist = playlist,
-                                modifier = Modifier.padding(start = 21.dp),
+                            ArchiveCollectionRow(
+                                title = playlist.title,
+                                subtitle = playlist.songCount.toString() + " canciones",
+                                imageUrl = playlist.thumbnails.firstOrNull(),
+                                kind = ArchiveSection.PLAYLISTS,
                                 onClick = {
-                                    navController.navigate("local_playlist/${playlist.id}")
-                                },
-                                onLongClick = {
                                     navController.navigate("local_playlist/${playlist.id}")
                                 },
                             )
@@ -426,11 +425,12 @@ fun LibraryScreen(
                             key = { index, _ -> "archive_album_row:" + index },
                             contentType = { _, _ -> "archive_album" },
                         ) { _, album ->
-                            ArchiveAlbumCard(
-                                album = album,
-                                modifier = Modifier.padding(start = 21.dp),
+                            ArchiveCollectionRow(
+                                title = album.title,
+                                subtitle = album.artists.joinToString { it.name },
+                                imageUrl = album.thumbnailUrl,
+                                kind = ArchiveSection.ALBUMS,
                                 onClick = { navController.navigate("album/${album.id}") },
-                                onLongClick = { showAlbumMenu(album) },
                             )
                         }
                     }
@@ -467,9 +467,11 @@ fun LibraryScreen(
                             key = { index, _ -> "archive_artist_row:" + index },
                             contentType = { _, _ -> "archive_artist" },
                         ) { _, artist ->
-                            ArchiveArtistCard(
-                                artist = artist,
-                                modifier = Modifier.padding(start = 21.dp),
+                            ArchiveCollectionRow(
+                                title = artist.title,
+                                subtitle = artist.songCount.toString() + " canciones",
+                                imageUrl = artist.thumbnailUrl,
+                                kind = ArchiveSection.ARTISTS,
                                 onClick = { navController.navigate("artist/${artist.id}") },
                             )
                         }
