@@ -27,9 +27,7 @@ fun V8ImmersiveGradientFloor(
     val scheme = MaterialTheme.colorScheme
     var settledPalette by remember { mutableStateOf<List<Color>>(emptyList()) }
     LaunchedEffect(artworkUrl, palette) {
-        if (artworkUrl.isNullOrBlank()) {
-            settledPalette = emptyList()
-        } else if (palette.isNotEmpty()) {
+        if (!artworkUrl.isNullOrBlank() && palette.isNotEmpty()) {
             settledPalette = palette
         }
     }

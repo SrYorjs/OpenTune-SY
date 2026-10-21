@@ -2,6 +2,7 @@ package com.arturo254.opentune.ui.player.layout
 
 import com.arturo254.opentune.constants.PlayerDesignStyle
 import com.arturo254.opentune.ui.player.GalaxStudioPlayer.originalPlayerStyleConfig
+import com.arturo254.opentune.ui.player.preferences.playerStyleCategoryLabel
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -138,6 +139,17 @@ class GalaxSeventeenSceneContractTest {
         assertTrue(artists.contains("GalaxLibraryDestinationHero("))
         assertTrue(playlists.contains("GalaxLibraryDestinationHero("))
         assertTrue(library.contains("GalaxMediaHeader("))
+    }
+
+
+    @Test
+    fun galleryIdentifiesGalaxThemeAndVinJaxWithoutGenericOverrides() {
+        assertEquals("GALAXTHEME", playerStyleCategoryLabel(PlayerDesignStyle.V16))
+        assertEquals("VINJAX", playerStyleCategoryLabel(PlayerDesignStyle.V17))
+        (9..15).forEach { version ->
+            assertEquals("ORIGINAL GALAXOT", playerStyleCategoryLabel(PlayerDesignStyle.valueOf("V$version")))
+        }
+        assertEquals("ESTILO CLÁSICO", playerStyleCategoryLabel(PlayerDesignStyle.V8))
     }
 
     @Test

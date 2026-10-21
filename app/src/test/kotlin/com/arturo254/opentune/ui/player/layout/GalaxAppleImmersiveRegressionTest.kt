@@ -21,6 +21,8 @@ class GalaxAppleImmersiveRegressionTest {
         assertTrue(floor.contains("remember { mutableStateOf<List<Color>>(emptyList()) }"))
         assertTrue(floor.contains("artworkUrl, palette"))
         assertTrue(floor.contains("settledPalette = palette"))
+        assertTrue(floor.contains("!artworkUrl.isNullOrBlank() && palette.isNotEmpty()"))
+        assertFalse(floor.contains("settledPalette = emptyList()"))
         assertTrue(floor.contains("palette.firstOrNull()"))
         assertTrue(floor.contains("animateColorAsState("))
         assertTrue(visual.contains("remember(trackId, artworkUrl, usesArtworkPalette"))

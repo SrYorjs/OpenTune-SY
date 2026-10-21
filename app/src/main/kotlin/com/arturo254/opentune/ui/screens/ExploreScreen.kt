@@ -42,7 +42,7 @@ fun ExploreScreen(navController: NavController, exploreViewModel: ExploreViewMod
         item("shortcuts") {
             Row(Modifier.padding(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 GalaxCollectionTile(stringResource(R.string.charts), R.drawable.trending_up,
-                    MaterialTheme.colorScheme.primary, Modifier.weight(1f)) { navController.navigate("charts") }
+                    MaterialTheme.colorScheme.primary, Modifier.weight(1f)) { navController.navigate("charts_screen") }
                 GalaxCollectionTile(stringResource(R.string.new_release_albums), R.drawable.album,
                     MaterialTheme.colorScheme.tertiary, Modifier.weight(1f)) { navController.navigate("new_release") }
             }
@@ -51,7 +51,7 @@ fun ExploreScreen(navController: NavController, exploreViewModel: ExploreViewMod
         if (failed) item("retry") { GalaxRetryPanel(onRetry = exploreViewModel::refresh) }
         charts?.sections?.filter { it.items.isNotEmpty() }?.take(2)?.forEachIndexed { index, section ->
             item("chart_title_$index") { GalaxSectionHeading(if (section.title == "Trending") stringResource(R.string.trending) else section.title,
-                onClick = { navController.navigate("charts") }) }
+                onClick = { navController.navigate("charts_screen") }) }
             item("chart_shelf_$index") { GalaxRemoteShelf(section.items.take(12), navController) }
         }
         explore?.newReleaseAlbums?.takeIf { it.isNotEmpty() }?.let { albums ->

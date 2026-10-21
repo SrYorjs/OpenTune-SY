@@ -1,6 +1,7 @@
 package com.arturo254.opentune.ui.screens.settings
 
 import java.io.File
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -67,6 +68,16 @@ class GalaxPartSevenScreenAtlasTest {
         assertTrue(layout.contains("SettingsGroupCard("))
         assertTrue(source("core/designsystem/liquid/GalaxLiquidModel.kt").contains("LocalGalaxLiquidVariant"))
     }
+
+    @Test
+    fun exploreAlternativeNavigatesOnlyToRegisteredChartsRoute() {
+        val explore = source("ui/screens/ExploreScreen.kt")
+        val navigation = source("ui/screens/NavigationBuilder.kt")
+        assertTrue(navigation.contains("composable(\"charts_screen\")"))
+        assertTrue(explore.contains("navController.navigate(\"charts_screen\")"))
+        assertFalse(explore.contains("navController.navigate(\"charts\")"))
+    }
+
     @Test
     fun creativeShortcutsReachExistingSettingsScreens() {
         val layout = source("ui/screens/settings/SettingsLayout.kt")

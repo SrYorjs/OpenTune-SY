@@ -37,6 +37,19 @@ import androidx.compose.ui.unit.sp
 import com.arturo254.opentune.constants.PlayerDesignStyle
 import com.arturo254.opentune.ui.player.GalaxStudioPlayer.originalPlayerStyleConfig
 
+internal fun playerStyleCategoryLabel(style: PlayerDesignStyle): String = when (style) {
+    PlayerDesignStyle.V16 -> "GALAXTHEME"
+    PlayerDesignStyle.V17 -> "VINJAX"
+    PlayerDesignStyle.V9,
+    PlayerDesignStyle.V10,
+    PlayerDesignStyle.V11,
+    PlayerDesignStyle.V12,
+    PlayerDesignStyle.V13,
+    PlayerDesignStyle.V14,
+    PlayerDesignStyle.V15 -> "ORIGINAL GALAXOT"
+    else -> "ESTILO CLÁSICO"
+}
+
 @Composable
 fun GalaxPlayerStyleGallery(
     selected: PlayerDesignStyle,
@@ -210,7 +223,7 @@ private fun GalaxStylePreview(
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            text = if (style.ordinal >= 8) "ORIGINAL GALAXOT" else if (style == PlayerDesignStyle.V16) "GALAXTHEME" else if (style == PlayerDesignStyle.V17) "VINJAX" else "ESTILO CLÁSICO",
+            text = playerStyleCategoryLabel(style),
             color = if (isSelected) primary else MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.labelSmall,
             letterSpacing = .6.sp,
