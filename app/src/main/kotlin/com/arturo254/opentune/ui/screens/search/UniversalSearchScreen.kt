@@ -1,6 +1,7 @@
 package com.arturo254.opentune.ui.screens.search
 
 import android.widget.Toast
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -76,6 +77,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun UniversalSearchScreen(
     query: String,
@@ -193,31 +195,24 @@ fun UniversalSearchScreen(
         }
         if (state.result.tracks.isNotEmpty()) {
             item(key = "galax_search_result_heading") {
-                GalaxSearchSectionHeading(
+                AtlasResultsHeader(
                     title = "Canciones",
-                    detail = "",
+                    count = state.result.tracks.size,
                 )
             }
         }
 
         if (state.result.failedSourceCount > 0) {
             item(key = "source_warning") {
-                Text(
-                    text = stringResource(R.string.some_sources_unavailable),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                AtlasResultsWarning(
+                    title = stringResource(R.string.some_sources_unavailable),
                 )
             }
         }
 
         if (state.isLoading && state.result.tracks.isEmpty()) {
             item(key = "loading") {
-                OpenTuneLoadingState(
-                    modifier = Modifier.fillMaxWidth(),
-                    indicatorSize = designSizes.searchLoadingIndicator,
-                    verticalPadding = 28.dp,
-                )
+                AtlasResultsSkeleton()
             }
         }
 
@@ -304,6 +299,7 @@ fun UniversalSearchScreen(
                     }
 
             UnifiedTrackRow(
+                modifier = Modifier.animateItem(),
                 result = result,
                 preferredDisplayVariant = playable,
                 onVersionsClick = { selectionDialogKey = resultKey },
@@ -364,11 +360,7 @@ fun UniversalSearchScreen(
 
         if (state.isLoadingMore) {
             item(key = "loading_more") {
-                OpenTuneLoadingState(
-                    modifier = Modifier.fillMaxWidth(),
-                    indicatorSize = 24.dp,
-                    verticalPadding = 16.dp,
-                )
+                AtlasResultsLoadIndicator(loading = true)
             }
         }
     }
@@ -413,6 +405,7 @@ private fun UnifiedTrackRow(
     onDownload: (() -> Unit)?,
     onVersionsClick: () -> Unit,
     onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
 ) {
     val selected = preferredDisplayVariant ?: result.recommendedVariant
     val cover = selected?.artworkUrl
@@ -423,6 +416,7 @@ private fun UnifiedTrackRow(
             .joinToString(" · ") { providerName(it.provider) }
     }
     GalaxUniversalResultCard(
+        modifier = modifier,
         title = result.identity.title,
         artist = result.identity.artists.joinToString { it.name },
         artwork = cover,
