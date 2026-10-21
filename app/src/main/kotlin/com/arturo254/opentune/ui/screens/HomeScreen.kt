@@ -89,6 +89,8 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     navController: NavController,
     viewModel: HomeViewModel = hiltViewModel(),
+    onOpenSearchTab: () -> Unit = { navController.navigate(Screens.Search.route) },
+    onOpenLibraryTab: () -> Unit = { navController.navigate(Screens.Library.route) },
 ) {
     val connection = LocalPlayerConnection.current ?: return
     val context = LocalContext.current
@@ -207,6 +209,20 @@ fun HomeScreen(
                         }
                     }
                     Box(
+                        Modifier.padding(end = 9.dp).size(46.dp).clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                            .galaxLiquidChrome(CircleShape)
+                            .clickable {
+                                navController.navigate(
+                                    com.arturo254.opentune.ui.screens.musicrecognition.MusicRecognitionRoute
+                                )
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(painterResource(R.drawable.graphic_eq), null,
+                            tint = MaterialTheme.colorScheme.primary)
+                    }
+                    Box(
                         Modifier.size(46.dp).clip(CircleShape)
                             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                             .galaxLiquidChrome(CircleShape)
@@ -255,12 +271,12 @@ fun HomeScreen(
                         title = stringResource(R.string.search),
                         icon = R.drawable.search,
                         modifier = Modifier.weight(1f),
-                    ) { navController.navigate(Screens.Search.route) }
+                    ) { onOpenSearchTab() }
                     GalaxHomeActionPill(
                         title = stringResource(R.string.galax_your_library),
                         icon = R.drawable.library_outlined,
                         modifier = Modifier.weight(1f),
-                    ) { navController.navigate(Screens.Library.route) }
+                    ) { onOpenLibraryTab() }
                 }
             }
             if (showChips && homePage?.chips?.isNotEmpty() == true) {
@@ -377,7 +393,7 @@ private fun GalaxHomeCover(song: Song, isPlaying: Boolean, onPlay: () -> Unit, o
                     MaterialTheme.colorScheme.primary.copy(alpha = .35f), Color(0xFF070E1E)))
             ).combinedClickable(onClick = onPlay, onLongClick = onLongClick),
     ) {
-        GalaxOrbitField(Modifier.fillMaxSize(), active = isPlaying, intensity = .44f)
+        GalaxOrbitField(Modifier.fillMaxSize(), active = true, intensity = .44f)
         AsyncImage(
             model = song.thumbnailUrl, contentDescription = null,
             modifier = Modifier.align(Alignment.CenterEnd).padding(end = 21.dp)

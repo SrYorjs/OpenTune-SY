@@ -55,7 +55,11 @@ fun GalaxMainPages(navController: NavController, pager: PagerState, onOpenSearch
     Box(Modifier.fillMaxSize()) {
     HorizontalPager(state = pager, key = { Screens.MainScreens[it].route }, modifier = Modifier.fillMaxSize()) { page ->
         when (page) {
-            0 -> HomeScreen(navController)
+            0 -> HomeScreen(
+                navController,
+                onOpenSearchTab = { scope.launch { pager.animateScrollToPage(1) } },
+                onOpenLibraryTab = { scope.launch { pager.animateScrollToPage(2) } },
+            )
             1 -> GalaxDiscoverScreen(navController, onOpenSearch)
             2 -> LibraryScreen(navController)
         }
