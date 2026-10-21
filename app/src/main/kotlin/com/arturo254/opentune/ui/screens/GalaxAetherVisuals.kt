@@ -153,7 +153,7 @@ internal fun AetherAmbient(
                 ),
             )
             stars.forEachIndexed { index, particle ->
-                val cycle = (time * particle.depth + index * .117f) * PI * 2
+                val cycle = (time * particle.depth + index * .117f).toDouble() * PI * 2
                 val alpha = (.19f + .09f * cos(cycle).toFloat()) * intensity
                 drawCircle(
                     color = if (particle.tint > .53f) palette.onBackground.copy(alpha = alpha)

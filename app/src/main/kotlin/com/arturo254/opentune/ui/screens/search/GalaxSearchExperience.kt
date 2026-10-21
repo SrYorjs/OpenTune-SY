@@ -137,7 +137,7 @@ private fun SearchFrequencySpectrum(
             val p = i / 28f
             val x = right + gap * i
             val envelope = sin(p * PI).toFloat().coerceAtLeast(0f)
-            val modulation = sin(i * 1.38 + phase * PI * 2).toFloat()
+            val modulation = sin(i * 1.38 + phase.toDouble() * PI * 2).toFloat()
             val amplitude = size.height * (.08f + envelope * (.28f + .13f * modulation))
             drawLine(
                 color = if (i % 3 == 0) AetherInk.cyan.copy(alpha = .49f)

@@ -201,7 +201,7 @@ internal fun AtlasMesh(
             )
         }
         for (beam in 0..7) {
-            val angle = (beam / 8f * PI * 2).toFloat() + phase * (PI * 2).toFloat()
+            val angle = (beam / 8.0 * PI * 2).toFloat() + phase * (PI * 2).toFloat()
             val vector = Offset(
                 center.x + cos(angle) * radius * 1.4f,
                 center.y + sin(angle) * radius * 1.4f,
