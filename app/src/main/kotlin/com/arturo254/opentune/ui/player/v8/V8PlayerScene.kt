@@ -109,7 +109,9 @@ fun V8PlayerScene(
                 )
                 .nestedScroll(nestedScrollConnection),
         ) {
-            if (legacyMain || isLandscape || bareControls) {
+            if (legacyMain) {
+                controls()
+            } else if (isLandscape || bareControls) {
                 controls()
             } else {
                 GalaxPlayerControlDock(
