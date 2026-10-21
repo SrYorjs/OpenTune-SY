@@ -218,7 +218,9 @@ fun LibraryScreen(
         section = next
         scope.launch { listState.animateScrollToItem(0) }
     }
-    BackHandler(enabled = section != ArchiveSection.ALL || searchVisible) {
+    BackHandler(
+        enabled = ambientActive && (section != ArchiveSection.ALL || searchVisible),
+    ) {
         when {
             searchVisible -> {
                 searchVisible = false
