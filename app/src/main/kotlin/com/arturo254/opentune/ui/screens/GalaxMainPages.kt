@@ -90,7 +90,10 @@ fun GalaxMainPages(
                     onOpenSearch = onOpenSearch,
                     ambientActive = pager.currentPage == 1,
                 )
-                2 -> LibraryScreen(navController)
+                2 -> LibraryScreen(
+                    navController = navController,
+                    ambientActive = pager.currentPage == 2,
+                )
             }
         }
         val backdrop = MaterialTheme.colorScheme.background

@@ -41,6 +41,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import androidx.compose.runtime.remember
+import com.arturo254.opentune.spotify.SpotifyMapper
+import com.arturo254.opentune.spotify.models.SpotifyPlaylist
 import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidChrome
 import com.arturo254.opentune.db.entities.Album
@@ -661,5 +664,48 @@ private fun ArchiveShortcut(
                 overflow = TextOverflow.Ellipsis,
             )
         }
+    }
+}
+
+@Composable
+internal fun ArchiveSpotifyCard(
+    playlist: SpotifyPlaylist,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val thumbnail = remember(playlist) { SpotifyMapper.getPlaylistThumbnail(playlist) }
+    Column(
+        modifier = modifier.width(162.dp).clickable(onClick = onClick),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box(Modifier.size(162.dp)) {
+            ArchiveArtwork(thumbnail, Modifier.fillMaxSize())
+            Box(
+                modifier = Modifier.align(Alignment.BottomEnd)
+                    .padding(9.dp).size(29.dp).clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.spotify_icon),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+        Text(
+            text = playlist.name,
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = (playlist.tracks?.total ?: 0).toString() + " canciones",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+        )
     }
 }

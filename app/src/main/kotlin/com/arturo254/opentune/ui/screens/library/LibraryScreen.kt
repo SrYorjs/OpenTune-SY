@@ -81,6 +81,8 @@ import kotlinx.coroutines.launch
 fun LibraryScreen(
     navController: NavController,
     viewModel: LibraryMixViewModel = hiltViewModel(),
+    spotifyViewModel: com.arturo254.opentune.spotify.SpotifyLibraryViewModel = hiltViewModel(),
+    ambientActive: Boolean = true,
 ) {
     val database = LocalDatabase.current
     val player = LocalPlayerConnection.current
@@ -93,6 +95,11 @@ fun LibraryScreen(
     val albums by viewModel.albums.collectAsState()
     val artists by viewModel.artists.collectAsState()
     val playlists by viewModel.playlists.collectAsState()
+    val spotifyPlaylists by spotifyViewModel.playlists.collectAsState()
+    val (showSpotifyPlaylists) = com.arturo254.opentune.utils.rememberPreference(
+        com.arturo254.opentune.constants.ShowSpotifyPlaylistsKey,
+        false,
+    )
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     val metadata = player?.mediaMetadata?.collectAsState()?.value
     val isPlaying = player?.isPlaying?.collectAsState()?.value == true
@@ -232,7 +239,7 @@ fun LibraryScreen(
     Box(Modifier.fillMaxSize().galaxScreenBackground()) {
         ArchiveBackdrop(
             modifier = Modifier.fillMaxSize(),
-            active = section == ArchiveSection.ALL,
+            active = ambientActive && section == ArchiveSection.ALL,
         )
         LazyColumn(
             state = listState,
@@ -269,7 +276,7 @@ fun LibraryScreen(
                         ArchiveHero(
                             counters = counters,
                             imageUrls = heroArt,
-                            active = true,
+                            active = ambientActive,
                             onPlay = onShuffle,
                         )
                     }
@@ -356,6 +363,31 @@ fun LibraryScreen(
                                 },
                                 onLongClick = {
                                     navController.navigate("local_playlist/${playlist.id}")
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+            if ((section == ArchiveSection.ALL || section == ArchiveSection.PLAYLISTS) &&
+                showSpotifyPlaylists && spotifyPlaylists.isNotEmpty()
+            ) {
+                item(key = "archive_spotify_heading") {
+                    ArchiveChapter("Spotify")
+                }
+                item(key = "archive_spotify_row") {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 21.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    ) {
+                        items(
+                            spotifyPlaylists.distinctBy { it.id }.take(15),
+                            key = { "archive_spotify:" + it.id },
+                        ) { playlist ->
+                            ArchiveSpotifyCard(
+                                playlist = playlist,
+                                onClick = {
+                                    navController.navigate("spotify_playlist/${playlist.id}")
                                 },
                             )
                         }
