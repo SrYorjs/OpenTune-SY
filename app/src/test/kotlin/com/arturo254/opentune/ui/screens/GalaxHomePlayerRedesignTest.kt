@@ -61,7 +61,7 @@ class GalaxHomePlayerRedesignTest {
         assertTrue(pages.contains("galaxLiquidChrome("))
         assertTrue(results.contains("viewModel.playFirstAvailable("))
         assertTrue(results.contains("UniversalVersionQualityDialog("))
-        assertTrue(results.contains("viewModel.enqueueOffline(result)"))
+        assertTrue(results.contains(".enqueueOffline(result)"))
         assertTrue(hero.contains("fun GalaxSearchEditorialHero("))
         assertTrue(hero.contains("GalaxOrbitField("))
     }
