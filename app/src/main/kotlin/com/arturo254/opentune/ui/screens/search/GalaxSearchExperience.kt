@@ -41,97 +41,50 @@ fun GalaxSearchEditorialHero(
     isLoading: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    val scheme = MaterialTheme.colorScheme
-    val shape = RoundedCornerShape(33.dp)
+    val shape = RoundedCornerShape(27.dp)
     Box(
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth().height(176.dp)
             .clip(shape)
             .background(
                 Brush.linearGradient(
                     listOf(
-                        scheme.primary.copy(alpha = .16f),
-                        scheme.surfaceContainerLow,
-                        scheme.tertiary.copy(alpha = .08f),
+                        Color(0xFF0D1D35),
+                        MaterialTheme.colorScheme.primary.copy(alpha = .30f),
+                        Color(0xFF0B1121),
                     ),
                 ),
             ),
     ) {
-        Canvas(Modifier.matchParentSize()) {
-            val r = size.width * .44f
-            val cx = size.width * .85f
-            val cy = size.height * .2f
-            for (i in 0..3) {
-                val radius = r * (.28f + i * .34f)
-                drawCircle(
-                    scheme.primary.copy(alpha = .09f + i * .022f),
-                    radius = radius,
-                    center = Offset(cx, cy),
-                    style = Stroke(width = 1.dp.toPx()),
-                )
-            }
-            drawArc(
-                scheme.tertiary.copy(alpha = .65f),
-                startAngle = -75f,
-                sweepAngle = 94f,
-                useCenter = false,
-                topLeft = Offset(cx - r, cy - r),
-                size = Size(r * 2f, r * 2f),
-                style = Stroke(width = 2.dp.toPx()),
-            )
-        }
+        com.arturo254.opentune.core.designsystem.component.GalaxOrbitField(
+            modifier = Modifier.fillMaxSize(),
+            active = isLoading,
+            intensity = .34f,
+        )
         Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 23.dp),
-            verticalArrangement = Arrangement.spacedBy(11.dp),
+            Modifier.align(Alignment.BottomStart).padding(21.dp),
+            verticalArrangement = Arrangement.spacedBy(9.dp),
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(9.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(Modifier.size(6.dp).background(scheme.primary, CircleShape))
-                Text(
-                    text = "GALAXOT  /  BÚSQUEDA UNIVERSAL",
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = scheme.primary,
-                    letterSpacing = 1.6.sp,
-                )
-            }
             Text(
-                text = query,
-                style = MaterialTheme.typography.headlineMedium,
+                "RESULTADOS",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 1.9.sp,
+                color = Color.White.copy(alpha = .66f),
+            )
+            Text(
+                query,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = scheme.onSurface,
+                color = Color.White,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
-                letterSpacing = (-.8).sp,
             )
             Text(
-                text = "MÚSICA DE TODOS TUS PROVEEDORES",
+                if (isLoading && count == 0) "Buscando"
+                else "$"+"count canciones",
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = .7.sp,
-                color = scheme.onSurfaceVariant,
+                color = Color.White.copy(alpha = .72f),
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = if (isLoading) "Explorando fuentes..." else "$count resultados encontrados",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = scheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f),
-                )
-                Box(
-                    Modifier.clip(GalaxVisualKit.pillShape)
-                        .background(scheme.primary.copy(alpha = .16f))
-                        .padding(horizontal = 11.dp, vertical = 6.dp),
-                ) {
-                    Text(
-                        text = "TODOS",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = scheme.primary,
-                    )
-                }
-            }
         }
     }
 }

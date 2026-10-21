@@ -183,9 +183,11 @@ fun UniversalSearchScreen(
         }
         if (state.result.tracks.isNotEmpty()) {
             item(key = "galax_search_result_heading") {
-                GalaxSearchSectionHeading(
-                    title = "Resultados de tu universo",
-                    detail = "Toca para reproducir, elegir una versión o gestionar su copia offline.",
+                Text(
+                    text = "Canciones",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                    modifier = Modifier.padding(start = 6.dp, top = 7.dp, bottom = 5.dp),
                 )
             }
         }
@@ -410,12 +412,12 @@ private fun UnifiedTrackRow(
         (result.variants + listOfNotNull(preferredDisplayVariant)).distinctBy { it.provider }
             .joinToString(" · ") { providerName(it.provider) }
     }
-    Column(Modifier.fillMaxWidth().clip(com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.panelShape)
-        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = .035f))
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(21.dp))
+        .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = .58f))
         .clickable(enabled = onClick != null && !isResolving) { onClick?.invoke() }
-        .padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        .padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Artwork(artwork, Modifier.size(64.dp),
+            Artwork(artwork, Modifier.size(58.dp),
                 shape = com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.artworkShape,
                 overlay = {
                     if (isActive || isResolving) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .3f)),
