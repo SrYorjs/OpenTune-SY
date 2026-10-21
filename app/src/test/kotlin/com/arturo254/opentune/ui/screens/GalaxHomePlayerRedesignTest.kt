@@ -26,31 +26,44 @@ class GalaxHomePlayerRedesignTest {
     }
 
     @Test
-    fun homeHasActualEditorialChaptersAndExpandableDiscovery() {
+    fun rebuiltHomeUsesMinimalSectionsAndPreservesContinuation() {
         val home = source("ui/screens/HomeScreen.kt")
-        val chapters = source("ui/screens/GalaxHomeZones.kt")
-        val control = source("ui/screens/GalaxHomeCatalogControl.kt")
-        assertTrue(home.contains("GalaxHomeOrbitHeading("))
-        assertTrue(home.contains("GalaxHomeChapterDivider("))
-        assertTrue(home.contains("GalaxHomeZoneHeader("))
-        assertTrue(home.contains("GalaxHomeCatalogControl("))
+        assertTrue(home.contains("fun GalaxHomeCover("))
+        assertTrue(home.contains("fun GalaxHomeAlbumCard("))
+        assertTrue(home.contains("fun GalaxHomeTrackRow("))
         assertTrue(home.contains("showAllRecommendations by rememberSaveable"))
-        assertTrue(home.contains("homePage?.continuation != null"))
+        assertTrue(home.contains("currentPage?.continuation"))
+        assertTrue(home.contains("viewModel.loadMoreYouTubeItems(continuation)"))
         assertTrue(home.contains("if (showAllRecommendations) Int.MAX_VALUE else 3"))
-        assertTrue(chapters.contains("enum class GalaxHomeZone"))
-        assertTrue(control.contains("onClick = onToggle"))
+        assertFalse(home.contains("GalaxHomeChapterDivider("))
     }
 
     @Test
-    fun listeningOrbitRetainsRealPlaybackAndContextMenu() {
+    fun rebuiltHomePreservesPlaybackShuffleAndContextMenu() {
         val home = source("ui/screens/HomeScreen.kt")
-        val mosaic = source("ui/screens/GalaxHomeExperience.kt")
-        assertTrue(mosaic.contains("GalaxOrbitField("))
-        assertTrue(mosaic.contains("onPlay(song)"))
-        assertTrue(mosaic.contains("onLongPress(song)"))
         assertTrue(home.contains("ListQueue("))
-        assertTrue(home.contains("orbitSongs.map { it.toMediaItem() }"))
+        assertTrue(home.contains("queue.map { it.toMediaItem() }"))
+        assertTrue(home.contains("viewModel.playGalaxShuffle("))
+        assertTrue(home.contains("SongMenu("))
         assertTrue(home.contains("onDismiss = menuState::dismiss"))
+        assertTrue(home.contains("GlobalCatalogHomeSection("))
+        assertTrue(home.contains("HomePageSectionContent("))
+    }
+
+    @Test
+    fun discoveryTabAndUniversalSearchKeepTheirPlaybackContracts() {
+        val pages = source("ui/screens/GalaxMainPages.kt")
+        val results = source("ui/screens/search/UniversalSearchScreen.kt")
+        val hero = source("ui/screens/search/GalaxSearchExperience.kt")
+        assertTrue(pages.contains("fun GalaxDiscoverScreen("))
+        assertTrue(pages.contains("GalaxDiscoverGenreTile("))
+        assertTrue(pages.contains("onOpenSearch"))
+        assertTrue(pages.contains("galaxLiquidChrome("))
+        assertTrue(results.contains("viewModel.playFirstAvailable("))
+        assertTrue(results.contains("UniversalVersionQualityDialog("))
+        assertTrue(results.contains("viewModel.enqueueOffline(result)"))
+        assertTrue(hero.contains("fun GalaxSearchEditorialHero("))
+        assertTrue(hero.contains("GalaxOrbitField("))
     }
 
     @Test
