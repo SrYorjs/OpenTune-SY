@@ -16,11 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
 import androidx.compose.material3.pulltorefresh.pullToRefresh
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -76,40 +76,43 @@ fun HomeScreen(
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
-    val listState = rememberLazyListState()
-    val refreshState = rememberPullToRefreshState()
+    val list = rememberLazyListState()
+    val refresh = rememberPullToRefreshState()
+
     val quickPicks by viewModel.quickPicks.collectAsState()
     val speedDial by viewModel.speedDialSongs.collectAsState()
     val forgotten by viewModel.forgottenFavorites.collectAsState()
     val keepListening by viewModel.keepListening.collectAsState()
     val homePage by viewModel.homePage.collectAsState()
     val selectedChip by viewModel.selectedChip.collectAsState()
-    val accountName by viewModel.accountName.collectAsState()
     val accountImage by viewModel.accountImageUrl.collectAsState()
     val metadataMap by viewModel.allItemsMetadata.collectAsState()
     val trending by viewModel.globalCatalogTrending.collectAsState()
-    val isRefreshing by viewModel.isRefreshing.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val nowPlaying by player.mediaMetadata.collectAsState()
+    val loading by viewModel.isLoading.collectAsState()
+    val refreshing by viewModel.isRefreshing.collectAsState()
+    val now by player.mediaMetadata.collectAsState()
     val playing by player.isPlaying.collectAsState()
     val (showChips) = rememberPreference(ShowHomeCategoryChipsKey, true)
     var shuffling by remember { mutableStateOf(false) }
 
     val recent = remember(keepListening) {
         keepListening.orEmpty().filterIsInstance<Song>()
-            .distinctBy { it.id }.take(12)
+            .distinctBy { it.id }.take(15)
     }
     val picks = remember(quickPicks) {
-        quickPicks.orEmpty().distinctBy { it.id }.take(18)
+        quickPicks.orEmpty().distinctBy { it.id }.take(24)
     }
     val dial = remember(speedDial) {
-        speedDial.distinctBy { it.id }.take(12)
+        speedDial.distinctBy { it.id }.take(14)
     }
-    val remembered = remember(forgotten) {
-        forgotten.orEmpty().distinctBy { it.id }.take(12)
+    val rediscover = remember(forgotten) {
+        forgotten.orEmpty().distinctBy { it.id }.take(16)
     }
-    val featured = remember(picks, recent, dial, remembered) {
-        (picks + recent + dial + remembered).firstOrNull()
+    val spotlight = remember(picks, recent, dial, rediscover) {
+        (recent + picks + dial + rediscover).distinctBy { it.id }.firstOrNull()
+    }
+    val stageQueue = remember(spotlight, picks, recent, dial) {
+        (listOfNotNull(spotlight) + picks + recent + dial).distinctBy { it.id }
     }
     val currentHome by rememberUpdatedState(homePage)
     val backStack by navController.currentBackStackEntryAsState()
@@ -118,33 +121,34 @@ fun HomeScreen(
 
     LaunchedEffect(scrollTop?.value) {
         if (scrollTop?.value == true) {
-            listState.animateScrollToItem(0)
+            list.animateScrollToItem(0)
             backStack?.savedStateHandle?.set("scrollToTop", false)
         }
     }
-
-    LaunchedEffect(listState) {
+    LaunchedEffect(list, homePage?.continuation, ambientActive) {
+        if (!ambientActive) return@LaunchedEffect
         snapshotFlow {
-            val layout = listState.layoutInfo
-            val last = layout.visibleItemsInfo.lastOrNull()?.index ?: -1
-            layout.totalItemsCount > 0 && last >= layout.totalItemsCount - 5
+            val info = list.layoutInfo
+            val last = info.visibleItemsInfo.lastOrNull()?.index ?: -1
+            val more = currentHome?.continuation
+            more to (info.totalItemsCount > 0 && last >= info.totalItemsCount - 5)
         }
             .distinctUntilChanged()
-            .filter { it }
-            .collect {
-                viewModel.loadMoreYouTubeItems(currentHome?.continuation)
+            .filter { (continuation, nearEnd) -> continuation != null && nearEnd }
+            .collect { (continuation, _) ->
+                viewModel.loadMoreYouTubeItems(continuation)
             }
     }
 
-    BackHandler(enabled = selectedChip != null) {
+    BackHandler(enabled = ambientActive && selectedChip != null) {
         viewModel.toggleChip(selectedChip)
     }
     LaunchedEffect(showChips, selectedChip) {
         if (!showChips && selectedChip != null) viewModel.toggleChip(selectedChip)
     }
 
-    val playQueue: (Song, List<Song>) -> Unit = { song, songs ->
-        if (nowPlaying?.id == song.id) {
+    val playSong: (Song, List<Song>) -> Unit = { song, songs ->
+        if (now?.id == song.id) {
             player.player.togglePlayPause()
         } else {
             player.playQueue(
@@ -156,8 +160,7 @@ fun HomeScreen(
             )
         }
     }
-
-    val showMenu: (Song) -> Unit = { song ->
+    val showSongMenu: (Song) -> Unit = { song ->
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         menu.show {
             SongMenu(
@@ -168,8 +171,7 @@ fun HomeScreen(
             )
         }
     }
-
-    val startShuffle = {
+    val shuffle = {
         if (!shuffling) {
             shuffling = true
             viewModel.playGalaxShuffle(player) { started ->
@@ -185,170 +187,171 @@ fun HomeScreen(
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize().galaxScreenBackground(),
-    ) {
-        GalaxEditorialBackdrop(
+    Box(Modifier.fillMaxSize().galaxScreenBackground()) {
+        AetherAmbient(
             modifier = Modifier.fillMaxSize(),
             active = ambientActive,
-            density = 33,
-            intensity = .62f,
+            variant = 0,
+            intensity = .70f,
         )
         LazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize()
-                .pullToRefresh(
-                    state = refreshState,
-                    isRefreshing = isRefreshing,
-                    onRefresh = viewModel::refresh,
-                ),
+            state = list,
+            modifier = Modifier.fillMaxSize().pullToRefresh(
+                state = refresh,
+                isRefreshing = refreshing,
+                onRefresh = viewModel::refresh,
+            ),
             contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
-            verticalArrangement = Arrangement.spacedBy(22.dp),
+            verticalArrangement = Arrangement.spacedBy(21.dp),
         ) {
-            item(key = "editorial_header") {
-                GalaxHomeEditorialTopBar(
-                    accountName = accountName,
+            item(key = "aether_masthead") {
+                AetherHomeMasthead(
                     accountImage = accountImage,
-                    onProfile = { navController.navigate("account") },
-                    onRecognition = {
+                    onAccount = { navController.navigate("account") },
+                    onSearch = onOpenSearchTab,
+                    onRecognize = {
                         navController.navigate(
                             com.arturo254.opentune.ui.screens.musicrecognition.MusicRecognitionRoute
                         )
                     },
-                    onSearch = onOpenSearchTab,
                 )
             }
-            if (featured != null) {
-                item(key = "editorial_feature") {
-                    GalaxEditorialReveal {
-                        GalaxHomeImmersiveFeature(
-                            song = featured,
-                            active = nowPlaying?.id == featured.id,
-                            isPlaying = playing,
-                            animationsActive = ambientActive,
-                            onPlay = {
-                                playQueue(
-                                    featured,
-                                    listOf(featured) + (picks + recent + dial)
-                                        .distinctBy { it.id }
-                                        .filterNot { it.id == featured.id },
-                                )
-                            },
-                            onLongPress = { showMenu(featured) },
+            if (spotlight != null) {
+                item(key = "aether_spotlight") {
+                    AetherReveal(key = spotlight.id) {
+                        AetherOpeningStage(
+                            song = spotlight,
+                            selected = now?.id == spotlight.id,
+                            playing = playing,
+                            active = ambientActive,
+                            onClick = { playSong(spotlight, stageQueue) },
+                            onMenu = { showSongMenu(spotlight) },
                         )
                     }
                 }
             }
-            item(key = "editorial_actions") {
-                GalaxHomeNavigationRow(
-                    onShuffle = startShuffle,
+            item(key = "aether_actions") {
+                AetherDuetActions(
+                    busy = shuffling,
+                    onShuffle = shuffle,
                     onLibrary = onOpenLibraryTab,
-                    shuffling = shuffling,
                 )
             }
-            if (nowPlaying != null) {
-                item(key = "current_track") {
-                    GalaxHomeCurrentStrip(
-                        current = nowPlaying,
-                        isPlaying = playing,
-                        onClick = { player.player.togglePlayPause() },
+            if (now != null) {
+                item(key = "aether_current") {
+                    AetherListeningRail(
+                        metadata = now!!,
+                        playing = playing,
+                        onTap = { player.player.togglePlayPause() },
                     )
                 }
             }
-            if (showChips && !homePage?.chips.isNullOrEmpty()) {
-                item(key = "editorial_filters") {
+            if (showChips && homePage?.chips?.isNotEmpty() == true) {
+                item(key = "aether_filters") {
                     ChipsRow(
                         chips = homePage?.chips.orEmpty().map { it to it.title },
                         currentValue = selectedChip,
-                        onValueUpdate = { viewModel.toggleChip(it) },
+                        onValueUpdate = viewModel::toggleChip,
                     )
                 }
             }
             if (recent.isNotEmpty()) {
-                item(key = "recent_title") {
-                    GalaxEditorialReveal {
-                        GalaxEditorialHeading(stringResource(R.string.keep_listening))
-                    }
+                item(key = "aether_recents_header") {
+                    AetherSectionTitle(
+                        title = stringResource(R.string.keep_listening),
+                        eyebrow = "01 / ESCUCHA",
+                    )
                 }
-                item(key = "recent_shelf") {
+                item(key = "aether_recents_shelf") {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 22.dp),
-                        horizontalArrangement = Arrangement.spacedBy(13.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
-                        items(recent, key = { "recent:" + it.id }) { song ->
-                            GalaxHomePoster(
+                        items(recent, key = { "aether_recent:" + it.id }) { song ->
+                            AetherCoverTile(
                                 song = song,
-                                isActive = nowPlaying?.id == song.id,
+                                active = now?.id == song.id,
                                 playing = playing,
-                                onClick = { playQueue(song, recent) },
-                                onLongPress = { showMenu(song) },
+                                onPlay = { playSong(song, recent) },
+                                onMenu = { showSongMenu(song) },
                             )
                         }
                     }
                 }
             }
             if (picks.isNotEmpty()) {
-                item(key = "picks_title") {
-                    GalaxEditorialHeading("Para ti")
+                item(key = "aether_picks_title") {
+                    AetherSectionTitle(title = "Hecho para ti", eyebrow = "02 / SELECCIÓN")
                 }
-                items(picks.take(9), key = { "pick:" + it.id }) { song ->
-                    GalaxHomeCompactTrack(
+                itemsIndexed(
+                    picks.take(12),
+                    key = { index, _ -> "aether_pick:" + index },
+                    contentType = { _, _ -> "aether_song" },
+                ) { index, song ->
+                    AetherMusicLine(
                         song = song,
-                        active = nowPlaying?.id == song.id,
-                        isPlaying = playing,
+                        index = index,
+                        active = now?.id == song.id,
+                        playing = playing,
                         modifier = Modifier.animateItem(),
-                        onClick = { playQueue(song, picks) },
-                        onLongPress = { showMenu(song) },
+                        onPlay = { playSong(song, picks) },
+                        onMenu = { showSongMenu(song) },
                     )
                 }
             }
             if (dial.isNotEmpty()) {
-                item(key = "dial_title") {
-                    GalaxEditorialHeading(stringResource(R.string.speed_dial))
+                item(key = "aether_dial_title") {
+                    AetherSectionTitle(
+                        title = stringResource(R.string.speed_dial),
+                        eyebrow = "03 / EN ROTACIÓN",
+                    )
                 }
-                item(key = "dial_shelf") {
+                item(key = "aether_dial_row") {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 22.dp),
-                        horizontalArrangement = Arrangement.spacedBy(13.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
-                        items(dial, key = { "dial:" + it.id }) { song ->
-                            GalaxHomePoster(
+                        items(dial, key = { "aether_dial:" + it.id }) { song ->
+                            AetherCoverTile(
                                 song = song,
-                                isActive = nowPlaying?.id == song.id,
+                                active = now?.id == song.id,
                                 playing = playing,
-                                onClick = { playQueue(song, dial) },
-                                onLongPress = { showMenu(song) },
+                                onPlay = { playSong(song, dial) },
+                                onMenu = { showSongMenu(song) },
                             )
                         }
                     }
                 }
             }
-            if (remembered.isNotEmpty()) {
-                item(key = "remembered_title") {
-                    GalaxEditorialHeading(stringResource(R.string.forgotten_favorites))
+            if (rediscover.isNotEmpty()) {
+                item(key = "aether_rediscover_title") {
+                    AetherSectionTitle(
+                        title = stringResource(R.string.forgotten_favorites),
+                        eyebrow = "04 / REDESCUBRIR",
+                    )
                 }
-                item(key = "remembered_shelf") {
+                item(key = "aether_rediscover_shelf") {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 22.dp),
-                        horizontalArrangement = Arrangement.spacedBy(13.dp),
+                        horizontalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
-                        items(remembered, key = { "remembered:" + it.id }) { song ->
-                            GalaxHomePoster(
+                        items(rediscover, key = { "aether_forgotten:" + it.id }) { song ->
+                            AetherCoverTile(
                                 song = song,
-                                isActive = nowPlaying?.id == song.id,
+                                active = now?.id == song.id,
                                 playing = playing,
-                                onClick = { playQueue(song, remembered) },
-                                onLongPress = { showMenu(song) },
+                                onPlay = { playSong(song, rediscover) },
+                                onMenu = { showSongMenu(song) },
                             )
                         }
                     }
                 }
             }
-            if (selectedChip == null && trending.isNotEmpty()) {
-                item(key = "trending_title") {
-                    GalaxEditorialHeading("Tendencias")
+            if (trending.isNotEmpty() && selectedChip == null) {
+                item(key = "aether_trending_header") {
+                    AetherSectionTitle(title = "Tendencias", eyebrow = "05 / ACTUALIDAD")
                 }
-                item(key = "trending_shelf") {
+                item(key = "aether_trending_catalog") {
                     GlobalCatalogHomeSection(
                         tracks = trending,
                         playerConnection = player,
@@ -357,12 +360,12 @@ fun HomeScreen(
                 }
             }
             if (homePage?.sections?.isNotEmpty() == true) {
-                item(key = "discover_title") {
-                    GalaxEditorialHeading("Descubre")
+                item(key = "aether_catalog_title") {
+                    AetherSectionTitle(title = "En tu universo", eyebrow = "06 / CATÁLOGO")
                 }
                 homePage?.sections.orEmpty().forEachIndexed { index, section ->
                     item(key = galaxHomeSectionRowKey(index, true)) {
-                        GalaxEditorialReveal {
+                        AetherReveal(key = index) {
                             HomePageSectionTitle(
                                 section = section,
                                 navController = navController,
@@ -372,7 +375,7 @@ fun HomeScreen(
                     item(key = galaxHomeSectionRowKey(index, false)) {
                         HomePageSectionContent(
                             section = section,
-                            mediaMetadata = nowPlaying,
+                            mediaMetadata = now,
                             isPlaying = playing,
                             navController = navController,
                             playerConnection = player,
@@ -384,29 +387,29 @@ fun HomeScreen(
                     }
                 }
             }
-            if (isLoading) {
-                item(key = "editorial_loading") {
+            if (loading) {
+                item(key = "aether_loading") {
                     Box(
-                        Modifier.fillMaxWidth().padding(20.dp),
+                        modifier = Modifier.fillMaxWidth().padding(24.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         CircularProgressIndicator(
-                            modifier = Modifier.height(25.dp),
+                            modifier = Modifier.height(26.dp),
                             strokeWidth = 2.dp,
                         )
                     }
                 }
             }
-            item(key = "discovery_link") {
-                GalaxHomeDiscoveryBridge(onOpenSearch = onOpenSearchTab)
+            item(key = "aether_invitation") {
+                AetherCrossfadeInvitation(onSearch = onOpenSearchTab)
             }
-            item(key = "editorial_bottom") {
+            item(key = "aether_bottom") {
                 Spacer(Modifier.height(30.dp))
             }
         }
         Indicator(
-            isRefreshing = isRefreshing,
-            state = refreshState,
+            isRefreshing = refreshing,
+            state = refresh,
             modifier = Modifier.align(Alignment.TopCenter)
                 .padding(LocalPlayerAwareWindowInsets.current.asPaddingValues()),
         )
