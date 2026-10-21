@@ -700,7 +700,8 @@ fun BottomSheetPlayer(
                                     playerVolume = playerVolume.value,
                                     onVolumeChange = { newVolume ->
                                         playerConnection.service.playerVolume.value = newVolume
-                                    }
+                                    },
+                                    legacyMain = playerDesignStyle == PlayerDesignStyle.V8,
 
             )
         }

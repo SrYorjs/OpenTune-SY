@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.Icon
@@ -207,6 +208,7 @@ fun V8PlayerControlsContent(
     onExpandQueue: () -> Unit = {},
     playerVolume: Float,
     onVolumeChange: (Float) -> Unit,
+    legacyMain: Boolean = false,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -293,6 +295,42 @@ fun V8PlayerControlsContent(
             Spacer(modifier = Modifier.width(12.dp))
 
             // Top actions share the same transparent Liquid Glass language as the bars.
+            if (legacyMain) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier.size(48.dp).clip(CircleShape)
+                            .background(if (liked) textBackgroundColor.copy(alpha = .2f) else Color.Transparent)
+                            .clickable { playerActions.toggleFavorite() },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            painter = painterResource(if (liked) R.drawable.favorite_filled else R.drawable.favorite_outline),
+                            contentDescription = null,
+                            tint = textBackgroundColor.copy(alpha = if (liked) 1f else .7f),
+                            modifier = Modifier.size(30.dp),
+                        )
+                    }
+                    Box(
+                        modifier = Modifier.size(38.dp).clip(CircleShape)
+                            .clickable {
+                                menuState.showPlayerPanelMenu(
+                                    metadata = mediaMetadata,
+                                    navController = navController,
+                                    playerBottomSheetState = state,
+                                    bottomSheetPageState = bottomSheetPageState,
+                                )
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.more_horiz),
+                            contentDescription = null,
+                            tint = textBackgroundColor.copy(alpha = .7f),
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
+                }
+            } else {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -333,8 +371,8 @@ fun V8PlayerControlsContent(
                     )
                 }
             }
+            }
         }
-
         Spacer(Modifier.height(10.dp))
 
         val progress = calculatePlayerProgress(position, duration, sliderPosition)
@@ -452,6 +490,7 @@ fun V8PlayerControlsContent(
             onNext = playerActions::next,
             onToggleShuffle = playerActions::toggleShuffle,
             onToggleRepeat = playerActions::toggleRepeat,
+            legacyMain = legacyMain,
         )
 
         Spacer(Modifier.height(14.dp))
@@ -531,7 +570,45 @@ fun V8PlaybackControls(
     onNext: () -> Unit,
     onToggleShuffle: () -> Unit,
     onToggleRepeat: () -> Unit,
+    legacyMain: Boolean = false,
 ) {
+    if (legacyMain) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = PlayerHorizontalPadding),
+        ) {
+            Surface(onClick = onPrevious, enabled = canSkipPrevious, shape = CircleShape,
+                color = Color.Transparent, modifier = Modifier.size(56.dp)) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(painter = painterResource(R.drawable.skip_previous),
+                        contentDescription = null,
+                        tint = textBackgroundColor.copy(alpha = if (canSkipPrevious) 1f else .4f),
+                        modifier = Modifier.size(38.dp))
+                }
+            }
+            Surface(onClick = onPlayPause, shape = CircleShape,
+                color = Color.Transparent, modifier = Modifier.size(72.dp)) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    if (isLoading) {
+                        CircularWavyProgressIndicator(modifier = Modifier.size(36.dp), color = textBackgroundColor)
+                    } else {
+                        Icon(painter = painterResource(playerPlaybackIconRes(playbackState, isPlaying)),
+                            contentDescription = null, tint = textBackgroundColor, modifier = Modifier.size(48.dp))
+                    }
+                }
+            }
+            Surface(onClick = onNext, enabled = canSkipNext, shape = CircleShape,
+                color = Color.Transparent, modifier = Modifier.size(56.dp)) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(painter = painterResource(R.drawable.skip_next),
+                        contentDescription = null,
+                        tint = textBackgroundColor.copy(alpha = if (canSkipNext) 1f else .4f),
+                        modifier = Modifier.size(38.dp))
+                }
+            }
+        }
+    } else {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -645,6 +722,7 @@ fun V8PlaybackControls(
                 )
             }
         }
+    }
     }
 }
 

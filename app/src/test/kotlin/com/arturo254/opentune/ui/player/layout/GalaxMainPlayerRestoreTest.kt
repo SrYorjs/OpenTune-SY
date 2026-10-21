@@ -35,6 +35,16 @@ class GalaxMainPlayerRestoreTest {
     }
 
     @Test
+    fun originalV8TransportIsIndependentFromV16Controls() {
+        val player = source("ui/player/Player.kt")
+        val components = source("ui/player/v8/V8PlayerComponents.kt")
+        assertTrue(player.contains("legacyMain = playerDesignStyle == PlayerDesignStyle.V8"))
+        assertTrue(components.contains("modifier = Modifier.size(56.dp)"))
+        assertTrue(components.contains("color = Color.Transparent"))
+        assertTrue(components.contains("legacyMain = legacyMain"))
+    }
+
+    @Test
     fun mainV8HasItsOwnBackdropWithoutChangingV16() {
         val player = source("ui/player/Player.kt")
         val scene = source("ui/player/v8/V8PlayerScene.kt")
