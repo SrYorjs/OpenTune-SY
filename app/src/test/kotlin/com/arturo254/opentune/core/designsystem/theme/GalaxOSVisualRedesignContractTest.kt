@@ -27,12 +27,12 @@ class GalaxOSVisualRedesignContractTest {
     @Test
     fun editorialHomeHasRealPlaybackAndNoFullscreenBlur() {
         val home = source("ui/screens/HomeScreen.kt")
-        val composition = source("ui/screens/GalaxHomeEditorial.kt")
-        val atmosphere = source("ui/screens/GalaxEditorialAtmosphere.kt")
-        assertTrue(home.contains("GalaxHomeImmersiveFeature("))
+        val composition = source("ui/screens/GalaxAetherHome.kt")
+        val atmosphere = source("ui/screens/GalaxAetherVisuals.kt")
+        assertTrue(home.contains("AetherOpeningStage("))
         assertTrue(home.contains("viewModel.playGalaxShuffle(player)"))
         assertTrue(composition.contains("song.thumbnailUrl"))
-        assertTrue(composition.contains("GalaxEditorialSurface("))
+        assertTrue(composition.contains("AetherGlassPlate("))
         assertTrue(atmosphere.contains("galaxMotion.reducedMotion"))
         assertTrue(atmosphere.contains("galaxLiquidChrome("))
         assertFalse(atmosphere.contains(".blur("))
@@ -41,17 +41,17 @@ class GalaxOSVisualRedesignContractTest {
     @Test
     fun musicCollectionsKeepTheirFunctionalRoutesWhileReceivingNewHeader() {
         val media = source("ui/screens/GalaxMediaHeader.kt")
-        val discovery = source("ui/screens/GalaxMainPages.kt")
+        val discovery = source("ui/screens/GalaxAtlasScreen.kt")
         assertTrue(media.contains("val wide = maxWidth >= 560.dp"))
         assertTrue(media.contains("GalaxMediaCoverStage(artworkUrls, artist") && media.contains("GalaxCoverMosaic("))
         assertTrue(media.contains("if (artist) CircleShape"))
         assertTrue(media.contains("GalaxMediaFacts(facts)"))
         assertTrue(media.contains("supporting()"))
         assertTrue(media.contains("actions()"))
-        assertTrue(discovery.contains("GalaxDiscoveryHero("))
+        assertTrue(discovery.contains("AtlasLaunchStage("))
         assertTrue(discovery.contains("onSearch = onOpenSearch"))
-        val portal = source("ui/screens/GalaxDiscoverEditorial.kt")
-        assertTrue(portal.contains(".clickable(onClick = onSearch)"))
+        val portal = source("ui/screens/GalaxAtlasDiscovery.kt")
+        assertTrue(portal.contains("onClick = onSearch"))
         assertTrue(discovery.contains("galaxDiscoveryGenreRowKey("))
     }
 

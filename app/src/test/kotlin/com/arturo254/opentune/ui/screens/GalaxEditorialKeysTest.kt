@@ -68,7 +68,7 @@ class GalaxEditorialKeysTest {
 
     @Test
     fun sourceListsAreBoundToUniqueRowKeyFactories() {
-        val discover = source("ui/screens/GalaxMainPages.kt")
+        val discover = source("ui/screens/GalaxAtlasScreen.kt")
         val home = source("ui/screens/HomeScreen.kt")
         val results = source("ui/screens/search/UniversalSearchScreen.kt")
         assertTrue(discover.contains("key = { index, _ -> galaxDiscoveryGenreRowKey("))
@@ -84,8 +84,8 @@ class GalaxEditorialKeysTest {
         val home = source("ui/screens/HomeScreen.kt")
         assertTrue(home.contains("snapshotFlow {"))
         assertTrue(home.contains(".distinctUntilChanged()"))
-        assertTrue(home.contains(".filter { it }"))
-        assertTrue(home.contains("loadMoreYouTubeItems(currentHome?.continuation)"))
+        assertTrue(home.contains(".filter { (continuation, nearEnd) -> continuation != null && nearEnd }"))
+        assertTrue(home.contains("loadMoreYouTubeItems(continuation)"))
         assertFalse(home.contains("Ver más"))
         assertFalse(home.contains("Ver menos"))
         assertFalse(home.contains("showAllRecommendations"))
@@ -93,14 +93,14 @@ class GalaxEditorialKeysTest {
 
     @Test
     fun newScreenMaterialsReuseOriginalLiquidEngine() {
-        val visuals = source("ui/screens/GalaxEditorialAtmosphere.kt")
-        val home = source("ui/screens/GalaxHomeEditorial.kt")
-        val discover = source("ui/screens/GalaxDiscoverEditorial.kt")
+        val visuals = source("ui/screens/GalaxAetherVisuals.kt")
+        val home = source("ui/screens/GalaxAetherHome.kt")
+        val discover = source("ui/screens/GalaxAtlasDiscovery.kt")
         val search = source("ui/screens/search/GalaxUniversalResultCard.kt")
         assertTrue(visuals.contains("galaxLiquidChrome("))
-        assertTrue(home.contains("GalaxEditorialSurface("))
-        assertTrue(discover.contains("GalaxEditorialSurface("))
-        assertTrue(search.contains("GalaxEditorialSurface("))
+        assertTrue(home.contains("AetherGlassPlate("))
+        assertTrue(discover.contains("AetherGlassPlate("))
+        assertTrue(search.contains("galaxLiquidChrome("))
         assertFalse(visuals.contains("rememberLayerBackdrop("))
     }
 

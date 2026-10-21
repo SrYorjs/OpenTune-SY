@@ -44,6 +44,10 @@ El catálogo contiene **los 98 archivos Kotlin de `ui/screens/`**, tanto pantall
 | `GalaxHomeEditorial.kt` | Nueva composición editorial de Inicio | `home` |
 | `library/GalaxArchiveDesign.kt` | Nueva biblioteca: portada, tarjetas y listas | `library` |
 | `search/GalaxUniversalResultCard.kt` | Nueva tarjeta de resultados multiproveedor | `search/{query}` |
+| `GalaxAetherHome.kt` | Portadas, disco y filas de Inicio | `home` |
+| `GalaxAetherVisuals.kt` | Estrellas, ondas, cristal y movimiento | `home` |
+| `GalaxAtlasDiscovery.kt` | Componentes propios del atlas musical | `search` |
+| `GalaxAtlasScreen.kt` | Nueva pestaña de descubrimiento y géneros | `search` |
 | `GalaxMainPages.kt` | Contenedor de tres pestañas | `home · search · library` |
 | `GalaxMediaHeader.kt` | Cabecera de álbum/artista/playlist | `—` |
 | `GalaxRemoteShelf.kt` | Estantes remotos | `—` |

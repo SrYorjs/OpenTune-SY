@@ -121,15 +121,15 @@ class GalaxThemeAndDiscoveryContractTest {
 
     @Test
     fun discoveryRetainsGenreNavigationAndSearchLaunch() {
-        val main = source("ui/screens/GalaxMainPages.kt")
-        val experience = source("ui/screens/GalaxDiscoverExperience.kt")
-        assertTrue(main.contains("GalaxDiscoveryHero("))
-        assertTrue(main.contains("GalaxDiscoveryCategory("))
+        val main = source("ui/screens/GalaxAtlasScreen.kt")
+        val experience = source("ui/screens/GalaxAtlasDiscovery.kt")
+        assertTrue(main.contains("AtlasLaunchStage("))
+        assertTrue(main.contains("AtlasGenreTile("))
         assertTrue(main.contains("onSearch = onOpenSearch"))
         assertTrue(main.contains("youtube_browse/"))
         assertTrue(main.contains("itemsIndexed("))
         assertTrue(main.contains("galaxDiscoveryGenreRowKey("))
-        assertTrue(experience.contains("fun GalaxGenreSurface("))
+        assertTrue(experience.contains("fun AtlasGenreTile("))
     }
 
     @Test

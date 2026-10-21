@@ -28,16 +28,16 @@ class GalaxHomePlayerRedesignTest {
     @Test
     fun homeStreamsAllSectionsWithoutManualExpansion() {
         val home = source("ui/screens/HomeScreen.kt")
-        val cards = source("ui/screens/GalaxHomeEditorial.kt")
-        assertTrue(home.contains("GalaxHomeEditorialTopBar("))
-        assertTrue(home.contains("GalaxHomeImmersiveFeature("))
-        assertTrue(home.contains("GalaxHomePoster("))
-        assertTrue(home.contains("GalaxHomeCompactTrack("))
-        assertTrue(home.contains("viewModel.loadMoreYouTubeItems(currentHome?.continuation)"))
+        val cards = source("ui/screens/GalaxAetherHome.kt")
+        assertTrue(home.contains("AetherHomeMasthead("))
+        assertTrue(home.contains("AetherOpeningStage("))
+        assertTrue(home.contains("AetherCoverTile("))
+        assertTrue(home.contains("AetherMusicLine("))
+        assertTrue(home.contains("viewModel.loadMoreYouTubeItems(continuation)"))
         assertTrue(home.contains("homePage?.sections.orEmpty().forEachIndexed"))
         assertFalse(home.contains("Ver más"))
         assertFalse(home.contains("Ver menos"))
-        assertTrue(cards.contains("GalaxEditorialSurface("))
+        assertTrue(cards.contains("AetherGlassPlate("))
     }
 
     @Test
@@ -54,11 +54,11 @@ class GalaxHomePlayerRedesignTest {
 
     @Test
     fun searchTabUsesUniqueGenreKeysAndPreservesUniversalPlayback() {
-        val pages = source("ui/screens/GalaxMainPages.kt")
+        val pages = source("ui/screens/GalaxAtlasScreen.kt")
         val results = source("ui/screens/search/UniversalSearchScreen.kt")
         val hero = source("ui/screens/search/GalaxSearchExperience.kt")
-        assertTrue(pages.contains("GalaxDiscoveryHero("))
-        assertTrue(pages.contains("GalaxDiscoveryCategory("))
+        assertTrue(pages.contains("AtlasLaunchStage("))
+        assertTrue(pages.contains("AtlasGenreTile("))
         assertTrue(pages.contains("itemsIndexed("))
         assertTrue(pages.contains("galaxDiscoveryGenreRowKey("))
         assertTrue(pages.contains("distinctBy { it.endpoint.browseId +"))
@@ -67,7 +67,7 @@ class GalaxHomePlayerRedesignTest {
         assertTrue(results.contains(".enqueueOffline(result)"))
         assertTrue(results.contains("itemsIndexed("))
         assertTrue(hero.contains("GalaxSearchEditorialHero("))
-        assertTrue(hero.contains("GalaxEditorialBackdrop("))
+        assertTrue(hero.contains("SearchFrequencySpectrum("))
     }
 
     @Test
