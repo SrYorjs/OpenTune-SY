@@ -83,6 +83,7 @@ fun LibraryScreen(
     viewModel: LibraryMixViewModel = hiltViewModel(),
     spotifyViewModel: com.arturo254.opentune.spotify.SpotifyLibraryViewModel = hiltViewModel(),
     ambientActive: Boolean = true,
+    onOpenSearchTab: () -> Unit = { navController.navigate(Screens.Search.route) },
 ) {
     val database = LocalDatabase.current
     val player = LocalPlayerConnection.current
@@ -517,9 +518,7 @@ fun LibraryScreen(
                         title = if (searchText.isBlank()) "Tu música empieza aquí" else "Sin resultados",
                         subtitle = if (searchText.isBlank()) "Descubre y guarda lo que quieras escuchar."
                             else "Prueba con otra búsqueda.",
-                        onExplore = {
-                            navController.navigate(Screens.Search.route)
-                        },
+                        onExplore = onOpenSearchTab,
                     )
                 }
             }

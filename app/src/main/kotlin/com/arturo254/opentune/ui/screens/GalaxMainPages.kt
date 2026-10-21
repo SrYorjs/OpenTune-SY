@@ -93,6 +93,9 @@ fun GalaxMainPages(
                 2 -> LibraryScreen(
                     navController = navController,
                     ambientActive = pager.currentPage == 2,
+                    onOpenSearchTab = {
+                        scope.launch { pager.animateScrollToPage(1) }
+                    },
                 )
             }
         }
