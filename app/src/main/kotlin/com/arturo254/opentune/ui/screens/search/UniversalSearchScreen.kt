@@ -154,6 +154,12 @@ fun UniversalSearchScreen(
             }
     }
 
+    Box(
+        modifier = Modifier.fillMaxSize()
+            .background(
+                if (pureBlack) Color.Black else MaterialTheme.colorScheme.background,
+            ),
+    ) {
     LazyColumn(
         state = lazyListState,
         contentPadding =
@@ -167,6 +173,9 @@ fun UniversalSearchScreen(
         modifier =
             Modifier
                 .fillMaxSize()
+                .background(
+                    if (pureBlack) Color.Black else MaterialTheme.colorScheme.background,
+                )
                 .liquidGlassScreenBackground(pureBlack = pureBlack),
     ) {
         item(key = "galax_search_heading") {
@@ -362,6 +371,7 @@ fun UniversalSearchScreen(
                 )
             }
         }
+    }
     }
 
     val selectedRecording =
