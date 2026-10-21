@@ -77,9 +77,9 @@ internal fun AetherCatalogHeading(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(5.dp),
         ) {
-            if (section.label.isNotBlank()) {
+            if (!section.label.isNullOrBlank()) {
                 Text(
-                    text = section.label.uppercase(),
+                    text = section.label.orEmpty().uppercase(),
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.labelSmall,
                     letterSpacing = 1.2.sp,
@@ -128,7 +128,7 @@ internal fun AetherCatalogShelf(
     modifier: Modifier = Modifier,
 ) {
     val entries = remember(section) {
-        section.items.distinctBy { it::class.simpleName.toString() + "/" + it.id }
+        section.items.distinctBy { it.javaClass.simpleName + "/" + it.id }
     }
     if (entries.isEmpty()) return
     LazyRow(
@@ -139,7 +139,7 @@ internal fun AetherCatalogShelf(
         itemsIndexed(
             entries,
             key = { index, item -> "aether_catalog:" + index + ":" + item.id },
-            contentType = { _, item -> item::class.simpleName.orEmpty() },
+            contentType = { _, item -> item.javaClass.simpleName },
         ) { index, item ->
             AetherCatalogItem(
                 item = item,

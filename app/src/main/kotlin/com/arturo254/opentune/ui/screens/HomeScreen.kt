@@ -366,23 +366,16 @@ fun HomeScreen(
                 homePage?.sections.orEmpty().forEachIndexed { index, section ->
                     item(key = galaxHomeSectionRowKey(index, true)) {
                         AetherReveal(key = index) {
-                            HomePageSectionTitle(
+                            AetherCatalogHeading(
                                 section = section,
                                 navController = navController,
                             )
                         }
                     }
                     item(key = galaxHomeSectionRowKey(index, false)) {
-                        HomePageSectionContent(
+                        AetherCatalogShelf(
                             section = section,
-                            mediaMetadata = now,
-                            isPlaying = playing,
                             navController = navController,
-                            playerConnection = player,
-                            menuState = menu,
-                            haptic = haptic,
-                            scope = scope,
-                            metadataMap = metadataMap,
                         )
                     }
                 }
