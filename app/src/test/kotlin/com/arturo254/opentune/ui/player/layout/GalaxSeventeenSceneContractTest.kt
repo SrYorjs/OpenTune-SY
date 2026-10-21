@@ -138,7 +138,7 @@ class GalaxSeventeenSceneContractTest {
         assertTrue(albums.contains("GalaxLibraryDestinationHero("))
         assertTrue(artists.contains("GalaxLibraryDestinationHero("))
         assertTrue(playlists.contains("GalaxLibraryDestinationHero("))
-        assertTrue(library.contains("GalaxMediaHeader("))
+        assertTrue(library.contains("LibraryScreen("))
     }
 
 

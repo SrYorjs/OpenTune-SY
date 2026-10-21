@@ -30,7 +30,7 @@ class OverlayComponentsTest {
         val home = source("ui/screens/HomeScreen.kt")
         assertTrue(nav.contains("onItemClick(screen, selected)"))
         assertTrue(home.contains("MusicRecognitionRoute"))
-        assertTrue(home.contains("player.playQueue("))
+        assertTrue(home.contains("player?.playQueue("))
         listOf("fun OpenTuneSheet(", "fun OpenTuneDialog(", "fun OpenTuneMenu(",
             "fun OpenTuneContextMenu(", "fun OpenTuneMenuItem(").forEach { assertTrue(components.contains(it)) }
         assertTrue(!components.contains("MusicService"))

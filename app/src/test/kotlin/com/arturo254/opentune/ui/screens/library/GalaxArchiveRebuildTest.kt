@@ -5,92 +5,64 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+/** Regression contracts for the replacement collection browser. */
 class GalaxArchiveRebuildTest {
-    private val sourceRoot = listOf(File("src/main/kotlin"), File("app/src/main/kotlin"))
+    private val root = listOf(File("src/main/kotlin"), File("app/src/main/kotlin"))
         .firstOrNull(File::isDirectory) ?: error("Source files not found")
+    private fun read(path: String) = File(root, "com/arturo254/opentune/$path").readText()
 
-    private fun read(path: String): String =
-        File(sourceRoot, "com/arturo254/opentune/$path").readText()
-
-    @Test
-    fun libraryReplacesOldScreensRatherThanRenderingThemInsideAWrapper() {
+    @Test fun libraryDoesNotMountAnyRetiredPresentation() {
         val screen = read("ui/screens/library/LibraryScreen.kt")
-        for (oldScreen in listOf(
-            "LibraryMixScreen(",
-            "LibrarySongsScreen(",
-            "LibraryAlbumsScreen(",
-            "LibraryArtistsScreen(",
-            "LibraryPlaylistsScreen(",
-            "LibrarySpotifyPlaylistsScreen(",
-        )) {
-            assertFalse("Old presentation still rendered: $oldScreen", screen.contains(oldScreen))
+        listOf("ArchiveHero(", "ArchiveHeader(", "ArchiveSectionTabs(", "LibraryMixScreen(",
+            "LibrarySongsScreen(", "LibraryAlbumsScreen(", "LibraryArtistsScreen(").forEach {
+            assertFalse("Retired presentation still mounted: $it", screen.contains(it))
         }
-        assertTrue(screen.contains("ArchiveHeader("))
-        assertTrue(screen.contains("ArchiveHero("))
-        assertTrue(screen.contains("ArchiveSectionTabs("))
-        assertTrue(screen.contains("ArchiveCollectionRow("))
+        assertTrue(screen.contains("CollectionMasthead("))
+        assertTrue(screen.contains("CollectionTabs("))
+        assertTrue(read("ui/screens/library/LibraryMixScreen.kt").contains("LibraryScreen("))
     }
 
-    @Test
-    fun libraryUsesCurrentMusicDatabaseAndExistingPlayback() {
+    @Test fun libraryStillUsesTheDatabasePlaybackAndContextMenus() {
         val screen = read("ui/screens/library/LibraryScreen.kt")
-        assertTrue(screen.contains("database.allSongs().collectAsState("))
-        assertTrue(screen.contains("viewModel.albums.collectAsState()"))
-        assertTrue(screen.contains("viewModel.artists.collectAsState()"))
-        assertTrue(screen.contains("viewModel.playlists.collectAsState()"))
-        assertTrue(screen.contains("ListQueue("))
-        assertTrue(screen.contains("player?.playQueue("))
-        assertTrue(screen.contains("SongMenu("))
-        assertTrue(screen.contains("AlbumMenu("))
-        assertTrue(screen.contains("navController.navigate("))
+        listOf("database.allSongs()", "viewModel.albums", "viewModel.artists", "viewModel.playlists",
+            "ListQueue(", "SongMenu(", "AlbumMenu(", "ArtistMenu(", "PlaylistMenu(", "CreatePlaylistDialog(").forEach {
+            assertTrue("Lost integration: $it", screen.contains(it))
+        }
     }
 
-    @Test
-    fun libraryHasRealFilteringSearchAndSynchronisation() {
+    @Test fun filtersOfflineAndSynchronizationRemainAvailable() {
         val screen = read("ui/screens/library/LibraryScreen.kt")
-        assertTrue(screen.contains("OutlinedTextField("))
-        assertTrue(screen.contains("searchText.isBlank()"))
-        assertTrue(screen.contains("ignoreCase = true"))
-        assertTrue(screen.contains("onRefresh = viewModel::syncAllLibrary"))
-        assertTrue(screen.contains("ArchiveSection.SONGS"))
-        assertTrue(screen.contains("ArchiveSection.ALBUMS"))
-        assertTrue(screen.contains("ArchiveSection.ARTISTS"))
-        assertTrue(screen.contains("ArchiveSection.PLAYLISTS"))
-        assertTrue(screen.contains("SpotifyLibraryViewModel"))
+        listOf("OutlinedTextField(", "query.trim()", "LibraryFilter.SONGS", "LibraryFilter.ALBUMS",
+            "LibraryFilter.ARTISTS", "LibraryFilter.PLAYLISTS", "LibraryFilter.SPOTIFY", "playlistIdsByTags(",
+            "onRefresh = viewModel::syncAllLibrary", "auto_playlist/downloaded", "cache_playlist/cached").forEach {
+            assertTrue("Lost library action: $it", screen.contains(it))
+        }
     }
 
-    @Test
-    fun visualSystemReusesSelectedLiquidGlassWithoutEditingTheEngine() {
-        val design = read("ui/screens/library/GalaxArchiveDesign.kt")
+    @Test fun reorderingCannotWriteAFilteredPlaylistSubset() {
         val screen = read("ui/screens/library/LibraryScreen.kt")
-        val main = read("ui/screens/GalaxMainPages.kt")
-        assertTrue(design.contains("galaxLiquidChrome("))
-        assertTrue(design.contains("GalaxEditorialBackdrop("))
-        assertTrue(design.contains("GalaxEditorialOrb("))
-        assertTrue(design.contains("ArchiveSpotifyCard("))
-        assertTrue(screen.contains("ambientActive"))
-        assertTrue(main.contains("ambientActive = pager.currentPage == 2"))
-        assertFalse(design.contains(".blur("))
-        assertFalse(design.contains("rememberLayerBackdrop("))
+        assertTrue(screen.contains("query.isBlank() && tags.isEmpty()"))
+        assertTrue(screen.contains("playlistSort == PlaylistSortType.CUSTOM"))
+        assertTrue(screen.contains("moveLibraryEntry("))
+        assertTrue(screen.contains("setPlaylistCustomOrder("))
+        assertTrue(screen.contains("!reorderState.isAnyItemDragging"))
     }
 
-    @Test
-    fun searchHasOpaqueBackingBelowContentAndMiniPlayerCapture() {
-        val search = read("ui/screens/search/UniversalSearchScreen.kt")
-        assertTrue(search.contains("Box("))
-        assertTrue(search.contains("if (pureBlack) Color.Black else MaterialTheme.colorScheme.background"))
-        assertTrue(search.contains(".liquidGlassScreenBackground(pureBlack = pureBlack)"))
-        assertTrue(search.contains("viewModel.playFirstAvailable("))
-        assertTrue(search.contains("UniversalVersionQualityDialog("))
+    @Test fun searchRootsAreOpaqueAndKeepUniversalPlayback() {
+        val screen = read("ui/screens/search/UniversalSearchScreen.kt")
+        assertTrue(screen.contains("if (pureBlack) Color.Black else MaterialTheme.colorScheme.background"))
+        assertTrue(screen.contains("viewModel.playFirstAvailable("))
+        assertTrue(screen.contains("UniversalVersionQualityDialog("))
+        val pages = read("ui/screens/GalaxMainPages.kt")
+        assertTrue(pages.contains("modifier.background(base)"))
+        assertTrue(pages.contains("Lifecycle.State.RESUMED"))
     }
 
-    @Test
-    fun noAutoLibraryCollectionHasDuplicateLazyKeys() {
-        val lib = read("ui/screens/library/LibraryScreen.kt")
-        assertTrue(lib.contains("key = { index, _ -> \"archive_song:\" + index }"))
-        assertTrue(lib.contains("key = { index, _ -> \"archive_album_row:\" + index }"))
-        assertTrue(lib.contains("key = { index, _ -> \"archive_artist_row:\" + index }"))
-        assertTrue(lib.contains("key = { index, _ -> \"archive_playlist_row:\" + index }"))
-        assertTrue(lib.contains("distinctBy { it.id }"))
+    @Test fun libraryKeysUseUniqueEntitiesRatherThanChangingPositions() {
+        val screen = read("ui/screens/library/LibraryScreen.kt")
+        assertTrue(screen.contains("distinctBy { it.id }"))
+        listOf("collection/song/", "collection/artist/", "collection/albums/", "collection/playlists/").forEach {
+            assertTrue(screen.contains(it))
+        }
     }
 }

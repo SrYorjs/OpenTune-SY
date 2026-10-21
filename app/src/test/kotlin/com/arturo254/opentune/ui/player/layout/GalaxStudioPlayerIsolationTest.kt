@@ -113,13 +113,13 @@ class GalaxStudioPlayerIsolationTest {
 
     @Test
     fun newCollectionNavigationPreservesOldFilteringAndMusicRoutes() {
-        val library = source("ui/screens/library/LibraryMixScreen.kt")
+        val library = source("ui/screens/library/LibraryScreen.kt")
         val portal = source("ui/screens/library/GalaxLibraryOrbitNavigator.kt")
         val media = source("ui/screens/GalaxMediaHeader.kt")
-        assertTrue(library.contains("GalaxLibraryOrbitNavigator("))
+        assertTrue(library.contains("CollectionTabs("))
         assertTrue(library.contains("filterContent()"))
-        assertTrue(library.contains("LibraryControlCard("))
-        assertTrue(library.contains("LibraryPlaylistListItem("))
+        assertTrue(library.contains("DropdownMenu("))
+        assertTrue(library.contains("PlaylistMenu("))
         assertTrue(portal.contains("LibraryFilter.PLAYLISTS"))
         assertTrue(portal.contains("LibraryFilter.ALBUMS"))
         assertTrue(portal.contains("LibraryFilter.ARTISTS"))

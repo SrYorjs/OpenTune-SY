@@ -68,14 +68,14 @@ class GalaxEditorialKeysTest {
 
     @Test
     fun sourceListsAreBoundToUniqueRowKeyFactories() {
-        val discover = source("ui/screens/GalaxAtlasScreen.kt")
+        val discover = source("ui/screens/GalaxDiscoverExperience.kt")
         val home = source("ui/screens/HomeScreen.kt")
         val results = source("ui/screens/search/UniversalSearchScreen.kt")
         assertTrue(discover.contains("key = { index, _ -> galaxDiscoveryGenreRowKey("))
         assertTrue(discover.contains("distinctBy { it.endpoint.browseId +"))
         assertTrue(results.contains("key = { index, result -> universalResultRowKey("))
-        assertTrue(home.contains("item(key = galaxHomeSectionRowKey(index, true))"))
-        assertTrue(home.contains("item(key = galaxHomeSectionRowKey(index, false))"))
+        assertTrue(home.contains("item(galaxHomeSectionRowKey(index, true))"))
+        assertTrue(home.contains("item(galaxHomeSectionRowKey(index, false))"))
         assertFalse(discover.contains("joinToString(\":\") { it.endpoint.browseId }"))
     }
 
@@ -84,8 +84,8 @@ class GalaxEditorialKeysTest {
         val home = source("ui/screens/HomeScreen.kt")
         assertTrue(home.contains("snapshotFlow {"))
         assertTrue(home.contains(".distinctUntilChanged()"))
-        assertTrue(home.contains(".filter { (continuation, nearEnd) -> continuation != null && nearEnd }"))
-        assertTrue(home.contains("loadMoreYouTubeItems(continuation)"))
+        assertTrue(home.contains("catalog?.continuation ?: return@LaunchedEffect"))
+        assertTrue(home.contains("loadMoreYouTubeItems(next)"))
         assertFalse(home.contains("Ver más"))
         assertFalse(home.contains("Ver menos"))
         assertFalse(home.contains("showAllRecommendations"))
@@ -111,8 +111,8 @@ class GalaxEditorialKeysTest {
         assertTrue(ambient.contains("active && !reducedMotion"))
         assertTrue(ambient.contains("durationMillis = 32000"))
         assertTrue(ambient.contains("durationMillis = 44000"))
-        assertTrue(pages.contains("ambientActive = pager.currentPage == 0"))
-        assertTrue(pages.contains("ambientActive = pager.currentPage == 1"))
+        assertTrue(pages.contains("pager.settledPage == page"))
+        assertTrue(pages.contains("!pager.isScrollInProgress"))
         assertFalse(ambient.contains(".blur("))
         assertFalse(ambient.contains(".cloudy("))
     }

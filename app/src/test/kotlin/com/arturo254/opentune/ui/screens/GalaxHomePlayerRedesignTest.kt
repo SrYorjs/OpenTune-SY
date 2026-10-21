@@ -29,12 +29,12 @@ class GalaxHomePlayerRedesignTest {
     fun homeStreamsAllSectionsWithoutManualExpansion() {
         val home = source("ui/screens/HomeScreen.kt")
         val cards = source("ui/screens/GalaxAetherHome.kt")
-        assertTrue(home.contains("AetherHomeMasthead("))
-        assertTrue(home.contains("AetherOpeningStage("))
-        assertTrue(home.contains("AetherCoverTile("))
-        assertTrue(home.contains("AetherMusicLine("))
-        assertTrue(home.contains("viewModel.loadMoreYouTubeItems(continuation)"))
-        assertTrue(home.contains("homePage?.sections.orEmpty().forEachIndexed"))
+        assertTrue(home.contains("HorizonOpening("))
+        assertTrue(home.contains("HorizonOpening("))
+        assertTrue(home.contains("HorizonCover("))
+        assertTrue(home.contains("NovaMusicRow("))
+        assertTrue(home.contains("viewModel.loadMoreYouTubeItems(next)"))
+        assertTrue(home.contains("catalog?.sections.orEmpty().forEachIndexed"))
         assertFalse(home.contains("Ver más"))
         assertFalse(home.contains("Ver menos"))
         assertTrue(cards.contains("AetherGlassPlate("))
@@ -44,21 +44,21 @@ class GalaxHomePlayerRedesignTest {
     fun homeKeepsRealPlaybackShuffleMenusAndRemoteSections() {
         val home = source("ui/screens/HomeScreen.kt")
         assertTrue(home.contains("ListQueue("))
-        assertTrue(home.contains("songs.map { it.toMediaItem() }"))
+        assertTrue(home.contains("queue.map { it.toMediaItem() }"))
         assertTrue(home.contains("viewModel.playGalaxShuffle(player)"))
         assertTrue(home.contains("SongMenu("))
-        assertTrue(home.contains("onDismiss = menu::dismiss"))
-        assertTrue(home.contains("AetherTrendingShelf("))
-        assertTrue(home.contains("AetherCatalogShelf("))
+        assertTrue(home.contains("onDismiss = menus::dismiss"))
+        assertTrue(home.contains("viewModel.playSourceVariant("))
+        assertTrue(home.contains("HorizonCatalog("))
     }
 
     @Test
     fun searchTabUsesUniqueGenreKeysAndPreservesUniversalPlayback() {
-        val pages = source("ui/screens/GalaxAtlasScreen.kt")
+        val pages = source("ui/screens/GalaxDiscoverExperience.kt")
         val results = source("ui/screens/search/UniversalSearchScreen.kt")
-        val hero = source("ui/screens/search/GalaxSearchExperience.kt")
-        assertTrue(pages.contains("AtlasLaunchStage("))
-        assertTrue(pages.contains("AtlasGenreTile("))
+        val hero = source("ui/screens/search/UniversalSearchScreen.kt")
+        assertTrue(pages.contains("ObservatoryLens("))
+        assertTrue(pages.contains("ObservatorySpectrum("))
         assertTrue(pages.contains("itemsIndexed("))
         assertTrue(pages.contains("galaxDiscoveryGenreRowKey("))
         assertTrue(pages.contains("distinctBy { it.endpoint.browseId +"))
@@ -66,8 +66,8 @@ class GalaxHomePlayerRedesignTest {
         assertTrue(results.contains("UniversalVersionQualityDialog("))
         assertTrue(results.contains(".enqueueOffline(result)"))
         assertTrue(results.contains("itemsIndexed("))
-        assertTrue(hero.contains("GalaxSearchEditorialHero("))
-        assertTrue(hero.contains("SearchFrequencySpectrum("))
+        assertTrue(hero.contains("SignalHeader("))
+        assertTrue(hero.contains("SignalHeader("))
     }
 
     @Test

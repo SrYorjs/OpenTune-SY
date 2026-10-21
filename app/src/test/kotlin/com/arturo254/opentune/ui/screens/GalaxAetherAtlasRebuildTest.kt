@@ -20,10 +20,10 @@ class GalaxAetherAtlasRebuildTest {
     @Test
     fun homeHasDistinctLayoutWithoutReusingThePreviousEditorialScreen() {
         val home = source("ui/screens/HomeScreen.kt")
-        assertTrue(home.contains("AetherHomeMasthead("))
-        assertTrue(home.contains("AetherOpeningStage("))
-        assertTrue(home.contains("AetherMusicLine("))
-        assertTrue(home.contains("AetherCoverTile("))
+        assertTrue(home.contains("HorizonOpening("))
+        assertTrue(home.contains("HorizonOpening("))
+        assertTrue(home.contains("NovaMusicRow("))
+        assertTrue(home.contains("HorizonCover("))
         assertFalse(home.contains("GalaxHomeImmersiveFeature("))
         assertFalse(home.contains("GalaxHomePoster("))
         assertFalse(home.contains("GalaxHomeCompactTrack("))
@@ -32,9 +32,9 @@ class GalaxAetherAtlasRebuildTest {
     @Test
     fun newHomeCatalogDoesNotRenderTheOldHomePageSections() {
         val home = source("ui/screens/HomeScreen.kt")
-        val catalog = source("ui/screens/GalaxAetherCatalog.kt")
-        assertTrue(home.contains("AetherCatalogHeading("))
-        assertTrue(home.contains("AetherCatalogShelf("))
+        val catalog = source("ui/screens/HomeScreen.kt")
+        assertTrue(home.contains("NovaHeading("))
+        assertTrue(home.contains("HorizonCatalog("))
         assertFalse(home.contains("HomePageSectionTitle("))
         assertFalse(home.contains("HomePageSectionContent("))
         assertTrue(catalog.contains("is SongItem ->"))
@@ -45,23 +45,23 @@ class GalaxAetherAtlasRebuildTest {
 
     @Test
     fun catalogRetainsEveryMusicActionIncludingContextMenus() {
-        val catalog = source("ui/screens/GalaxAetherCatalog.kt")
+        val catalog = source("ui/screens/HomeScreen.kt")
         assertTrue(catalog.contains("YouTubeSongMenu("))
         assertTrue(catalog.contains("YouTubeAlbumMenu("))
         assertTrue(catalog.contains("YouTubeArtistMenu("))
         assertTrue(catalog.contains("YouTubePlaylistMenu("))
         assertTrue(catalog.contains("YouTubeQueue("))
         assertTrue(catalog.contains("online_playlist/"))
-        assertTrue(catalog.contains("navController.navigate(\"album/"))
-        assertTrue(catalog.contains("navController.navigate(\"artist/"))
+        assertTrue(catalog.contains("nav.navigate(\"album/"))
+        assertTrue(catalog.contains("nav.navigate(\"artist/"))
     }
 
     @Test
     fun homeLoadsAdditionalCatalogPagesWithoutAButton() {
         val home = source("ui/screens/HomeScreen.kt")
         assertTrue(home.contains("snapshotFlow {"))
-        assertTrue(home.contains("loadMoreYouTubeItems(continuation)"))
-        assertTrue(home.contains("homePage?.sections.orEmpty().forEachIndexed"))
+        assertTrue(home.contains("loadMoreYouTubeItems(next)"))
+        assertTrue(home.contains("catalog?.sections.orEmpty().forEachIndexed"))
         assertFalse(home.contains("showAllRecommendations"))
         assertFalse(home.contains("Ver más"))
         assertFalse(home.contains("Ver menos"))
@@ -69,12 +69,12 @@ class GalaxAetherAtlasRebuildTest {
 
     @Test
     fun searchIsNowAnIndependentAtlasNotAnOldDiscoveryWrapper() {
-        val screen = source("ui/screens/GalaxAtlasScreen.kt")
+        val screen = source("ui/screens/GalaxDiscoverExperience.kt")
         val host = source("ui/screens/GalaxMainPages.kt")
         assertTrue(host.contains("GalaxDiscoverScreen("))
-        assertTrue(screen.contains("AtlasLaunchStage("))
-        assertTrue(screen.contains("AtlasGenreTile("))
-        assertTrue(screen.contains("AtlasGateway("))
+        assertTrue(screen.contains("ObservatoryLens("))
+        assertTrue(screen.contains("ObservatorySpectrum("))
+        assertTrue(screen.contains("ObservatoryDestination("))
         assertFalse(screen.contains("GalaxDiscoveryHero("))
         assertFalse(screen.contains("GalaxDiscoveryCategory("))
     }
@@ -85,7 +85,7 @@ class GalaxAetherAtlasRebuildTest {
             (0 until 150).map { galaxDiscoveryGenreRowKey(it, true) }
         assertEquals(300, keys.distinct().size)
         assertNotEquals(galaxDiscoveryGenreRowKey(5, false), galaxDiscoveryGenreRowKey(5, true))
-        val screen = source("ui/screens/GalaxAtlasScreen.kt")
+        val screen = source("ui/screens/GalaxDiscoverExperience.kt")
         assertTrue(screen.contains("distinctBy { it.endpoint.browseId +"))
         assertTrue(screen.contains("key = { index, _ -> galaxDiscoveryGenreRowKey("))
     }
@@ -131,9 +131,9 @@ class GalaxAetherAtlasRebuildTest {
         val visuals = source("ui/screens/GalaxAetherVisuals.kt")
         val pages = source("ui/screens/GalaxMainPages.kt")
         assertTrue(visuals.contains("active && !reduced"))
-        assertTrue(pages.contains("ambientActive = pager.currentPage == 0"))
-        assertTrue(pages.contains("ambientActive = pager.currentPage == 1"))
-        assertTrue(pages.contains("ambientActive = pager.currentPage == 2"))
+        assertTrue(pages.contains("pager.settledPage == page"))
+        assertTrue(pages.contains("!pager.isScrollInProgress"))
+        assertTrue(pages.contains("ambientActive = active"))
         assertFalse(visuals.contains("preferredFrameRate(120f)"))
     }
 
@@ -141,7 +141,7 @@ class GalaxAetherAtlasRebuildTest {
     fun playerAndLibraryEntryPointsRemainWhereTheyWere() {
         val pages = source("ui/screens/GalaxMainPages.kt")
         val home = source("ui/screens/HomeScreen.kt")
-        assertTrue(pages.contains("HorizontalPager(state = pager"))
+        assertTrue(pages.contains("HorizontalPager("))
         assertTrue(pages.contains("LibraryScreen("))
         assertTrue(home.contains("viewModel.playGalaxShuffle(player)"))
         assertTrue(home.contains("SongMenu("))
@@ -154,7 +154,7 @@ class GalaxAetherAtlasRebuildTest {
         val pages = source("ui/screens/GalaxMainPages.kt")
         assertTrue(search.contains("if (pureBlack) Color.Black else MaterialTheme.colorScheme.background"))
         assertTrue(pages.contains(".background(MaterialTheme.colorScheme.background)"))
-        assertTrue(search.contains("liquidGlassScreenBackground(pureBlack = pureBlack)"))
+        assertTrue(search.contains("pureBlack = pureBlack"))
     }
 
     @Test

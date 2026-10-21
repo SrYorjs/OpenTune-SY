@@ -107,8 +107,8 @@ class GalaxThemeAndDiscoveryContractTest {
     fun searchNeverReintroducesProviderSwitching() {
         val search = source("ui/screens/search/UniversalSearchScreen.kt")
         val experience = source("ui/screens/search/GalaxSearchExperience.kt")
-        assertTrue(search.contains("GalaxSearchEditorialHero("))
-        assertTrue(search.contains("GalaxSearchQualityBar("))
+        assertTrue(search.contains("SignalHeader("))
+        assertTrue(search.contains("SignalQuality("))
         assertTrue(search.contains("state.result.tracks"))
         assertTrue(search.contains("viewModel.selectVariant"))
         assertTrue(search.contains("viewModel.loadMore()"))
@@ -121,15 +121,15 @@ class GalaxThemeAndDiscoveryContractTest {
 
     @Test
     fun discoveryRetainsGenreNavigationAndSearchLaunch() {
-        val main = source("ui/screens/GalaxAtlasScreen.kt")
-        val experience = source("ui/screens/GalaxAtlasDiscovery.kt")
-        assertTrue(main.contains("AtlasLaunchStage("))
-        assertTrue(main.contains("AtlasGenreTile("))
-        assertTrue(main.contains("onSearch = onOpenSearch"))
+        val main = source("ui/screens/GalaxDiscoverExperience.kt")
+        val experience = source("ui/screens/GalaxDiscoverExperience.kt")
+        assertTrue(main.contains("ObservatoryLens("))
+        assertTrue(main.contains("ObservatorySpectrum("))
+        assertTrue(main.contains("onClick = onOpenSearch"))
         assertTrue(main.contains("youtube_browse/"))
         assertTrue(main.contains("itemsIndexed("))
         assertTrue(main.contains("galaxDiscoveryGenreRowKey("))
-        assertTrue(experience.contains("fun AtlasGenreTile("))
+        assertTrue(experience.contains("fun ObservatorySpectrum("))
     }
 
     @Test
