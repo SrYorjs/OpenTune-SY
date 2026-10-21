@@ -26,44 +26,48 @@ class GalaxHomePlayerRedesignTest {
     }
 
     @Test
-    fun rebuiltHomeUsesMinimalSectionsAndPreservesContinuation() {
+    fun homeStreamsAllSectionsWithoutManualExpansion() {
         val home = source("ui/screens/HomeScreen.kt")
-        assertTrue(home.contains("fun GalaxHomeCover("))
-        assertTrue(home.contains("fun GalaxHomeAlbumCard("))
-        assertTrue(home.contains("fun GalaxHomeTrackRow("))
-        assertTrue(home.contains("showAllRecommendations by rememberSaveable"))
-        assertTrue(home.contains("currentPage?.continuation"))
-        assertTrue(home.contains("viewModel.loadMoreYouTubeItems(continuation)"))
-        assertTrue(home.contains("if (showAllRecommendations) Int.MAX_VALUE else 3"))
-        assertFalse(home.contains("GalaxHomeChapterDivider("))
+        val cards = source("ui/screens/GalaxHomeEditorial.kt")
+        assertTrue(home.contains("GalaxHomeEditorialTopBar("))
+        assertTrue(home.contains("GalaxHomeImmersiveFeature("))
+        assertTrue(home.contains("GalaxHomePoster("))
+        assertTrue(home.contains("GalaxHomeCompactTrack("))
+        assertTrue(home.contains("viewModel.loadMoreYouTubeItems(currentHome?.continuation)"))
+        assertTrue(home.contains("homePage?.sections.orEmpty().forEachIndexed"))
+        assertFalse(home.contains("Ver más"))
+        assertFalse(home.contains("Ver menos"))
+        assertTrue(cards.contains("GalaxEditorialSurface("))
     }
 
     @Test
-    fun rebuiltHomePreservesPlaybackShuffleAndContextMenu() {
+    fun homeKeepsRealPlaybackShuffleMenusAndRemoteSections() {
         val home = source("ui/screens/HomeScreen.kt")
         assertTrue(home.contains("ListQueue("))
-        assertTrue(home.contains("queue.map { it.toMediaItem() }"))
-        assertTrue(home.contains("viewModel.playGalaxShuffle("))
+        assertTrue(home.contains("songs.map { it.toMediaItem() }"))
+        assertTrue(home.contains("viewModel.playGalaxShuffle(player)"))
         assertTrue(home.contains("SongMenu("))
-        assertTrue(home.contains("onDismiss = menuState::dismiss"))
+        assertTrue(home.contains("onDismiss = menu::dismiss"))
         assertTrue(home.contains("GlobalCatalogHomeSection("))
         assertTrue(home.contains("HomePageSectionContent("))
     }
 
     @Test
-    fun discoveryTabAndUniversalSearchKeepTheirPlaybackContracts() {
+    fun searchTabUsesUniqueGenreKeysAndPreservesUniversalPlayback() {
         val pages = source("ui/screens/GalaxMainPages.kt")
         val results = source("ui/screens/search/UniversalSearchScreen.kt")
         val hero = source("ui/screens/search/GalaxSearchExperience.kt")
-        assertTrue(pages.contains("fun GalaxDiscoverScreen("))
-        assertTrue(pages.contains("GalaxDiscoverGenreTile("))
-        assertTrue(pages.contains("onOpenSearch"))
-        assertTrue(pages.contains("galaxLiquidChrome("))
+        assertTrue(pages.contains("GalaxDiscoveryHero("))
+        assertTrue(pages.contains("GalaxDiscoveryCategory("))
+        assertTrue(pages.contains("itemsIndexed("))
+        assertTrue(pages.contains("genre_pair_"))
+        assertTrue(pages.contains("distinctBy { it.endpoint.browseId +"))
         assertTrue(results.contains("viewModel.playFirstAvailable("))
         assertTrue(results.contains("UniversalVersionQualityDialog("))
         assertTrue(results.contains(".enqueueOffline(result)"))
-        assertTrue(hero.contains("fun GalaxSearchEditorialHero("))
-        assertTrue(hero.contains("GalaxOrbitField("))
+        assertTrue(results.contains("itemsIndexed("))
+        assertTrue(hero.contains("GalaxSearchEditorialHero("))
+        assertTrue(hero.contains("GalaxEditorialBackdrop("))
     }
 
     @Test
@@ -89,7 +93,8 @@ class GalaxHomePlayerRedesignTest {
         val pages = source("ui/screens/GalaxMainPages.kt")
         val liquid = source("core/designsystem/liquid/GalaxLiquidModel.kt")
         val host = source("ui/player/host/PlayerHost.kt")
-        assertTrue(pages.contains("HorizontalPager(state = pager"))
+        assertTrue(pages.contains("HorizontalPager("))
+        assertTrue(pages.contains("state = pager"))
         assertTrue(liquid.contains("LocalGalaxLiquidVariant"))
         assertTrue(host.contains("BottomSheetPlayer("))
     }

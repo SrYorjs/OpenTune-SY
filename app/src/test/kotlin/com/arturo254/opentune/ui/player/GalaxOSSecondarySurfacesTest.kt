@@ -20,7 +20,7 @@ class GalaxOSSecondarySurfacesTest {
         assertTrue(vm.contains("ListQueue("))
         assertTrue(vm.contains("filterIsInstance<SongItem>()"))
         assertTrue(vm.contains("playSourceVariant("))
-        assertTrue(screen.contains("viewModel.playGalaxShuffle(playerConnection)"))
+        assertTrue(screen.contains("viewModel.playGalaxShuffle(player)"))
         assertTrue(screen.contains("galax_shuffle_unavailable"))
         assertTrue(actions.contains("loading = isShuffling"))
         assertFalse(screen.contains("onShuffle = {\n                            (quickPicks.orEmpty() + speedDialSongs).randomOrNull()"))

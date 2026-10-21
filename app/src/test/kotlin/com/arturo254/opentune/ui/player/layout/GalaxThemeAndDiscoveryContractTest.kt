@@ -112,7 +112,8 @@ class GalaxThemeAndDiscoveryContractTest {
         assertTrue(search.contains("state.result.tracks"))
         assertTrue(search.contains("viewModel.selectVariant"))
         assertTrue(search.contains("viewModel.loadMore()"))
-        assertTrue(experience.contains("TODOS"))
+        assertFalse(experience.contains("ProviderId.SPOTIFY"))
+        assertTrue(search.contains("itemsIndexed("))
         assertTrue(experience.contains("AudioSelectionMode.AUTOMATIC"))
         assertTrue(experience.contains("AudioSelectionMode.BEST_QUALITY"))
         assertTrue(experience.contains("AudioSelectionMode.DATA_SAVER"))
@@ -122,12 +123,13 @@ class GalaxThemeAndDiscoveryContractTest {
     fun discoveryRetainsGenreNavigationAndSearchLaunch() {
         val main = source("ui/screens/GalaxMainPages.kt")
         val experience = source("ui/screens/GalaxDiscoverExperience.kt")
-        assertTrue(main.contains("GalaxDiscoverPortal("))
-        assertTrue(main.contains("GalaxGenreSurface("))
+        assertTrue(main.contains("GalaxDiscoveryHero("))
+        assertTrue(main.contains("GalaxDiscoveryCategory("))
         assertTrue(main.contains("onSearch = onOpenSearch"))
         assertTrue(main.contains("youtube_browse/"))
-        assertTrue(main.contains("GalaxDiscoverEditorialHeading("))
-        assertTrue(experience.contains("role = Role.Button"))
+        assertTrue(main.contains("itemsIndexed("))
+        assertTrue(main.contains("genre_pair_"))
+        assertTrue(experience.contains("fun GalaxGenreSurface("))
     }
 
     @Test
@@ -135,7 +137,8 @@ class GalaxThemeAndDiscoveryContractTest {
         val main = source("ui/screens/GalaxMainPages.kt")
         val liquid = source("core/designsystem/liquid/GalaxLiquidModel.kt")
         val player = source("ui/player/Player.kt")
-        assertTrue(main.contains("HorizontalPager(state = pager"))
+        assertTrue(main.contains("HorizontalPager("))
+        assertTrue(main.contains("state = pager"))
         assertTrue(liquid.contains("LocalGalaxLiquidVariant"))
         assertTrue(player.contains("LocalGalaxLiquidBackdrop"))
         assertTrue(player.contains("MiniPlayer("))

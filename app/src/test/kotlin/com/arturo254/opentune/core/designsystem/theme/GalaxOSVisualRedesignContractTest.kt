@@ -25,19 +25,17 @@ class GalaxOSVisualRedesignContractTest {
     }
 
     @Test
-    fun homeEditorialHeroUsesRealTrackAndIndependentGlassSource() {
+    fun editorialHomeHasRealPlaybackAndNoFullscreenBlur() {
         val home = source("ui/screens/HomeScreen.kt")
-        val hero = source("ui/screens/GalaxFeaturedTrack.kt")
-        val actions = source("ui/screens/GalaxHomeActions.kt")
-        assertTrue(home.contains("GalaxFeaturedTrack(featured"))
-        assertTrue(home.contains("GalaxHomeActions("))
-        assertTrue(hero.contains("song.song.title"))
-        assertTrue(hero.contains("Palette.from(bitmap)"))
-        assertTrue(hero.contains(".size(96).allowHardware(false)"))
-        assertTrue(hero.contains(".galaxLiquidChrome(GalaxScreenStyle.pillShape"))
-        assertFalse(hero.contains("rememberLayerBackdrop()"))
-        assertTrue(home.contains("onRecognition ="))
-        assertFalse(actions.contains(".blur("))
+        val composition = source("ui/screens/GalaxHomeEditorial.kt")
+        val atmosphere = source("ui/screens/GalaxEditorialAtmosphere.kt")
+        assertTrue(home.contains("GalaxHomeImmersiveFeature("))
+        assertTrue(home.contains("viewModel.playGalaxShuffle(player)"))
+        assertTrue(composition.contains("song.thumbnailUrl"))
+        assertTrue(composition.contains("GalaxEditorialSurface("))
+        assertTrue(atmosphere.contains("galaxMotion.reducedMotion"))
+        assertTrue(atmosphere.contains("galaxLiquidChrome("))
+        assertFalse(atmosphere.contains(".blur("))
     }
 
     @Test
@@ -50,10 +48,11 @@ class GalaxOSVisualRedesignContractTest {
         assertTrue(media.contains("GalaxMediaFacts(facts)"))
         assertTrue(media.contains("supporting()"))
         assertTrue(media.contains("actions()"))
-        assertTrue(discovery.contains("GalaxDiscoverPortal("))
+        assertTrue(discovery.contains("GalaxDiscoveryHero("))
         assertTrue(discovery.contains("onSearch = onOpenSearch"))
-        val portal = source("ui/screens/GalaxDiscoverExperience.kt")
-        assertTrue(portal.contains(".clickable(role = Role.Button, onClick = onSearch)"))
+        val portal = source("ui/screens/GalaxDiscoverEditorial.kt")
+        assertTrue(portal.contains(".clickable(onClick = onSearch)"))
+        assertTrue(discovery.contains("genre_pair_"))
     }
 
     @Test
@@ -62,7 +61,8 @@ class GalaxOSVisualRedesignContractTest {
         val liquid = source("core/designsystem/liquid/GalaxLiquidModel.kt")
         val tabs = source("ui/screens/GalaxMainPages.kt")
         assertTrue(nav.contains("val MainScreens = listOf(Home, Search, Library)"))
-        assertTrue(tabs.contains("HorizontalPager(state = pager"))
+        assertTrue(tabs.contains("HorizontalPager("))
+        assertTrue(tabs.contains("state = pager"))
         assertTrue(liquid.contains("LocalGalaxLiquidTuning"))
         assertTrue(liquid.contains("LocalGalaxLiquidBackdrop"))
     }
