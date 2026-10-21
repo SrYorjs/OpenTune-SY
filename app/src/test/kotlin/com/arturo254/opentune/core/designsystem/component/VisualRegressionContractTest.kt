@@ -38,7 +38,7 @@ class VisualRegressionContractTest {
         assertTrue(home.contains("OpenTuneShimmerState("))
         assertTrue(home.contains("Artwork("))
         assertTrue(search.contains("OpenTuneLoadingState("))
-        assertTrue(search.contains("OpenTuneEmptyState("))
+        assertTrue(search.contains("GalaxUniversalNoResults("))
         assertTrue(albums.contains("OpenTuneEmptyState("))
         assertTrue(artists.contains("OpenTuneEmptyState("))
         assertTrue(settings.contains("OpenTuneEmptyPresentation.SETTINGS"))

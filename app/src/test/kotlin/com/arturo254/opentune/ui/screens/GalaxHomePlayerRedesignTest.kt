@@ -60,7 +60,7 @@ class GalaxHomePlayerRedesignTest {
         assertTrue(pages.contains("GalaxDiscoveryHero("))
         assertTrue(pages.contains("GalaxDiscoveryCategory("))
         assertTrue(pages.contains("itemsIndexed("))
-        assertTrue(pages.contains("genre_pair_"))
+        assertTrue(pages.contains("galaxDiscoveryGenreRowKey("))
         assertTrue(pages.contains("distinctBy { it.endpoint.browseId +"))
         assertTrue(results.contains("viewModel.playFirstAvailable("))
         assertTrue(results.contains("UniversalVersionQualityDialog("))

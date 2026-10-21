@@ -52,7 +52,7 @@ class GalaxOSVisualRedesignContractTest {
         assertTrue(discovery.contains("onSearch = onOpenSearch"))
         val portal = source("ui/screens/GalaxDiscoverEditorial.kt")
         assertTrue(portal.contains(".clickable(onClick = onSearch)"))
-        assertTrue(discovery.contains("genre_pair_"))
+        assertTrue(discovery.contains("galaxDiscoveryGenreRowKey("))
     }
 
     @Test

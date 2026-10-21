@@ -30,7 +30,7 @@ class MediaComponentsArchitectureTest {
         val contents =
             File(sourceRoot, "com/arturo254/opentune/ui/screens/search/UniversalSearchScreen.kt")
                 .readText()
-        assertTrue(contents.contains("Artwork("))
+        assertTrue(contents.contains("GalaxUniversalResultCard("))
         assertTrue(contents.contains("onVersionsClick"))
         assertTrue(contents.contains("qualitySummary"))
         assertTrue(contents.contains("isResolving"))

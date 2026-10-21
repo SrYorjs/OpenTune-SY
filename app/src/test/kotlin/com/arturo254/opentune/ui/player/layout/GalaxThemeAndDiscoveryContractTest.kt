@@ -128,7 +128,7 @@ class GalaxThemeAndDiscoveryContractTest {
         assertTrue(main.contains("onSearch = onOpenSearch"))
         assertTrue(main.contains("youtube_browse/"))
         assertTrue(main.contains("itemsIndexed("))
-        assertTrue(main.contains("genre_pair_"))
+        assertTrue(main.contains("galaxDiscoveryGenreRowKey("))
         assertTrue(experience.contains("fun GalaxGenreSurface("))
     }
 

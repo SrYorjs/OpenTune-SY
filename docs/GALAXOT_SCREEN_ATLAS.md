@@ -10,7 +10,7 @@ El catálogo contiene **los 98 archivos Kotlin de `ui/screens/`**, tanto pantall
 | --- | --- |
 | Inicio | `ui/screens/HomeScreen.kt`, `ui/screens/GalaxMainPages.kt` |
 | Buscar | `ui/screens/GalaxMainPages.kt`, `ui/screens/search/GalaxSearchExperience.kt`, `ui/screens/search/UniversalSearchScreen.kt` |
-| Biblioteca | `ui/screens/library/LibraryScreen.kt`, `ui/screens/library/LibraryMixScreen.kt` |
+| Biblioteca | `ui/screens/library/LibraryScreen.kt`, `ui/screens/library/GalaxArchiveDesign.kt` |
 | Ajustes | `ui/screens/settings/SettingsScreen.kt`, `ui/screens/settings/SettingsLayout.kt` |
 | Apariencia | `ui/screens/settings/AppearanceSettings.kt` |
 | Liquid Glass, solo controles de preferencias | `ui/screens/settings/GalaxLiquidSettingsScreen.kt` |
@@ -39,6 +39,11 @@ El catálogo contiene **los 98 archivos Kotlin de `ui/screens/`**, tanto pantall
 | `GalaxHomeExperience.kt` | Mosaicos destacados de Inicio | `—` |
 | `GalaxHomeZones.kt` | Secciones editoriales de Inicio | `—` |
 | `GalaxListeningDeck.kt` | Panel de escucha | `—` |
+| `GalaxDiscoverEditorial.kt` | Nuevo diseño inmersivo de descubrimiento | `search` |
+| `GalaxEditorialAtmosphere.kt` | Capas estelares y materiales compartidos | `—` |
+| `GalaxHomeEditorial.kt` | Nueva composición editorial de Inicio | `home` |
+| `library/GalaxArchiveDesign.kt` | Nueva biblioteca: portada, tarjetas y listas | `library` |
+| `search/GalaxUniversalResultCard.kt` | Nueva tarjeta de resultados multiproveedor | `search/{query}` |
 | `GalaxMainPages.kt` | Contenedor de tres pestañas | `home · search · library` |
 | `GalaxMediaHeader.kt` | Cabecera de álbum/artista/playlist | `—` |
 | `GalaxRemoteShelf.kt` | Estantes remotos | `—` |

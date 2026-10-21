@@ -69,8 +69,7 @@ fun GalaxMainPages(
         scope.launch { pager.animateScrollToPage(0) }
     }
     Box(modifier = Modifier.fillMaxSize()) {
-        HorizontalPager(
-            state = pager,
+        HorizontalPager(state = pager,
             key = { Screens.MainScreens[it].route },
             modifier = Modifier.fillMaxSize(),
         ) { page ->
