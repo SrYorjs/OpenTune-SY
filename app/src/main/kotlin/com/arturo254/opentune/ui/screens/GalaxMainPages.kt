@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -166,7 +167,9 @@ fun GalaxDiscoverScreen(
             }
         }
         item("genres_title") { GalaxDiscoverCleanHeading(stringResource(R.string.mood_and_genres)) }
-        val featured = genres.orEmpty().take(6)
+        val featured = genres.orEmpty()
+            .distinctBy { it.endpoint.browseId + ":" + it.title }
+            .take(6)
         if (featured.isEmpty() && !genresLoading) {
             item("genre_suggestions") {
                 val defaults = listOf("Pop", "Rock", "Hip-hop", "Electrónica")
@@ -186,9 +189,9 @@ fun GalaxDiscoverScreen(
             }
         }
         if (featured.isNotEmpty()) {
-            items(featured.chunked(2), key = { row ->
-                row.joinToString(":") { it.endpoint.browseId }
-            }) { row ->
+            itemsIndexed(featured.chunked(2), key = { index, _ ->
+                "galax_genre_pair_$" + "index"
+            }) { _, row ->
                 Row(Modifier.padding(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     row.forEach { genre ->

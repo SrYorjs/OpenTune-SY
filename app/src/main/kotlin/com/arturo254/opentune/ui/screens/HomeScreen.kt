@@ -115,7 +115,7 @@ fun HomeScreen(
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     var shufflePending by remember { mutableStateOf(false) }
-    var showAllRecommendations by rememberSaveable { mutableStateOf(false) }
+    val showAllRecommendations = true
 
     val recentSongs = remember(keepListening) {
         keepListening.orEmpty().filterIsInstance<Song>().distinctBy { it.id }.take(8)
@@ -354,15 +354,7 @@ fun HomeScreen(
                             )
                         }
                     }
-                if (sections.size > 3 || homePage?.continuation != null) {
-                    item("catalog_more") {
-                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            TextButton(onClick = { showAllRecommendations = !showAllRecommendations }) {
-                                Text(if (showAllRecommendations) "Ver menos" else "Ver más")
-                            }
-                        }
-                    }
-                }
+
             }
             if (isLoading) {
                 item("loading") {
