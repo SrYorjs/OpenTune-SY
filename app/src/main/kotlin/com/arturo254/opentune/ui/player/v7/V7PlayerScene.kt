@@ -74,17 +74,7 @@ fun V7PlayerScene(
                 )
                 .nestedScroll(nestedScrollConnection),
         ) {
-            if (isLandscape) {
-                controls()
-            } else {
-                GalaxPlayerControlDock(
-                    accent = gradientColors.firstOrNull()
-                        ?: androidx.compose.material3.MaterialTheme.colorScheme.primary,
-                    isPlaying = isPlaying,
-                ) {
-                    controls()
-                }
-            }
+            controls()
             Spacer(Modifier.height(if (isLandscape) 16.dp else 24.dp))
         }
     }

@@ -41,6 +41,7 @@ fun V8PlayerScene(
     playerBackdrop: com.kyant.backdrop.backdrops.LayerBackdrop? = null,
     immersiveGlass: Boolean = false,
     bareControls: Boolean = false,
+    legacyMain: Boolean = false,
     gradientColors: List<androidx.compose.ui.graphics.Color> = emptyList(),
     controls: @Composable ColumnScope.() -> Unit,
 ) {
@@ -51,6 +52,15 @@ fun V8PlayerScene(
         { canvasFrame.value = it }
     }
     Box(modifier = Modifier.fillMaxSize()) {
+        if (legacyMain) {
+            MainV8PlayerBackdrop(
+                thumbnailUrl = artworkUrl,
+                canvasArtwork = canvasArtwork,
+                isPlaying = isPlaying,
+                disableBlur = disableBlur,
+                label = if (isLandscape) "v8BackdropLandscape" else "v8BackdropPortrait",
+            )
+        } else {
         if (immersiveGlass) {
             Box(Modifier.fillMaxSize().then(
                 if (playerBackdrop != null) Modifier.layerBackdrop(playerBackdrop) else Modifier
@@ -85,6 +95,7 @@ fun V8PlayerScene(
             artworkUrl = artworkUrl,
             palette = gradientColors,
         )
+        }
 
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -98,7 +109,7 @@ fun V8PlayerScene(
                 )
                 .nestedScroll(nestedScrollConnection),
         ) {
-            if (isLandscape || bareControls) {
+            if (legacyMain || isLandscape || bareControls) {
                 controls()
             } else {
                 GalaxPlayerControlDock(

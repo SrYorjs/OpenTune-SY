@@ -734,86 +734,32 @@ fun BottomSheetPlayer(
         PlayerLayout(
             style = playerDesignStyle,
             applePortrait = {
-                AppleMusicPlayerScene(
+                V8PlayerScene(
                     isLandscape = false,
-                    queuePeekHeight = queueSheetState.collapsedBound,
-                    palette = gradientColors,
-                    playback = playerState,
-                    actions = playerActions,
-                    positionMs = position,
-                    durationMs = duration,
-                    pendingSeekMs = sliderPosition,
-                    onSeek = updatedOnSliderValueChange,
-                    onSeekFinished = updatedOnSliderValueChangeFinished,
-                    volume = playerVolume.value,
-                    onVolumeChange = { playerConnection.service.playerVolume.value = it },
-                    onLyrics = { lyricsSheetState.expandSoft() },
-                    onQueue = { queueSheetState.expandSoft() },
-                    onMenu = {
-                        enrichedMetadata?.let { metadata ->
-                            menuState.showPlayerPanelMenu(
-                                metadata = metadata,
-                                navController = navController,
-                                playerBottomSheetState = state,
-                                bottomSheetPageState = bottomSheetPageState,
-                            )
-                        }
-                    },
                     artworkUrl = playerVisuals.artworkUrl,
                     canvasArtwork = canvasArtwork,
+                    isPlaying = isPlaying,
                     disableBlur = disableBlur,
-                    immersiveGlass = activePlayerGlass,
-                    playerBackdrop = if (activePlayerGlass) playerArtworkBackdrop else null,
+                    queuePeekHeight = queueSheetState.collapsedBound,
                     nestedScrollConnection = state.preUpPostDownNestedScrollConnection,
-                    artwork = {
-                        Thumbnail(
-                            sliderPositionProvider = { seekSession.pendingSeekMs },
-                            modifier = Modifier.fillMaxSize(),
-                            isPlayerExpanded = state.isExpanded,
-                        )
-                    },
-                )
+                    legacyMain = true,
+                ) {
+                    enrichedMetadata?.let { v8ControlsContent(it) }
+                }
             },
             appleLandscape = {
-                AppleMusicPlayerScene(
+                V8PlayerScene(
                     isLandscape = true,
-                    queuePeekHeight = queueSheetState.collapsedBound,
-                    palette = gradientColors,
-                    playback = playerState,
-                    actions = playerActions,
-                    positionMs = position,
-                    durationMs = duration,
-                    pendingSeekMs = sliderPosition,
-                    onSeek = updatedOnSliderValueChange,
-                    onSeekFinished = updatedOnSliderValueChangeFinished,
-                    volume = playerVolume.value,
-                    onVolumeChange = { playerConnection.service.playerVolume.value = it },
-                    onLyrics = { lyricsSheetState.expandSoft() },
-                    onQueue = { queueSheetState.expandSoft() },
-                    onMenu = {
-                        enrichedMetadata?.let { metadata ->
-                            menuState.showPlayerPanelMenu(
-                                metadata = metadata,
-                                navController = navController,
-                                playerBottomSheetState = state,
-                                bottomSheetPageState = bottomSheetPageState,
-                            )
-                        }
-                    },
                     artworkUrl = playerVisuals.artworkUrl,
                     canvasArtwork = canvasArtwork,
+                    isPlaying = isPlaying,
                     disableBlur = disableBlur,
-                    immersiveGlass = activePlayerGlass,
-                    playerBackdrop = if (activePlayerGlass) playerArtworkBackdrop else null,
+                    queuePeekHeight = queueSheetState.collapsedBound,
                     nestedScrollConnection = state.preUpPostDownNestedScrollConnection,
-                    artwork = {
-                        Thumbnail(
-                            sliderPositionProvider = { seekSession.pendingSeekMs },
-                            modifier = Modifier.fillMaxSize(),
-                            isPlayerExpanded = state.isExpanded,
-                        )
-                    },
-                )
+                    legacyMain = true,
+                ) {
+                    enrichedMetadata?.let { v8ControlsContent(it) }
+                }
             },
             vinylPortrait = {
                 VinJaxPlayerScene(
@@ -914,12 +860,6 @@ fun BottomSheetPlayer(
                                 modifier = playerSourceModifier,
                             )
                         }
-                        GalaxOrbitField(
-                            modifier = Modifier.fillMaxSize(),
-                            active = isPlaying,
-                            intensity = .27f,
-                            accent = MaterialTheme.colorScheme.primary,
-                        )
                         Box(
                             modifier =
                                 Modifier
@@ -1050,12 +990,6 @@ fun BottomSheetPlayer(
                                 modifier = playerSourceModifier,
                             )
                         }
-                        GalaxOrbitField(
-                            modifier = Modifier.fillMaxSize(),
-                            active = isPlaying,
-                            intensity = .27f,
-                            accent = MaterialTheme.colorScheme.primary,
-                        )
                         Box(
                             modifier =
                                 Modifier
