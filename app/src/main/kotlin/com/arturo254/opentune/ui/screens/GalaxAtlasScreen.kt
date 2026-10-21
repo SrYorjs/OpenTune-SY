@@ -244,9 +244,9 @@ fun GalaxDiscoverScreen(
             }
             if (genreTiles.size >= 8) {
                 item(key = "atlas_more_genres") {
-                    AtlasAllGenres {
-                        navController.navigate(Screens.MoodAndGenres.route)
-                    }
+                    AtlasAllGenres(
+                        onClick = { navController.navigate(Screens.MoodAndGenres.route) },
+                    )
                 }
             }
             if (remoteSongs.isNotEmpty() || localSongs.isNotEmpty()) {

@@ -166,7 +166,7 @@ private fun AetherCatalogItem(
     val haptic = LocalHapticFeedback.current
 
     val playingThis = item is SongItem && current?.id == item.id
-    val onPlay = {
+    val onPlay: () -> Unit = {
         when (item) {
             is SongItem -> {
                 if (playingThis) {
@@ -184,8 +184,9 @@ private fun AetherCatalogItem(
             is ArtistItem -> navController.navigate("artist/${item.id}")
             is PlaylistItem -> navController.navigate("online_playlist/${item.id}")
         }
+        Unit
     }
-    val onLongPress = {
+    val onLongPress: () -> Unit = {
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         menu.show {
             when (item) {

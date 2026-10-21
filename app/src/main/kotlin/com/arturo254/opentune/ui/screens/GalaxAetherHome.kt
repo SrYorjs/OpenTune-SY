@@ -189,6 +189,7 @@ internal fun AetherOpeningStage(
                             deep.copy(alpha = .97f),
                         ),
                     ),
+                ),
         )
         AetherConstellation(
             modifier = Modifier.align(Alignment.TopStart).size(139.dp),
