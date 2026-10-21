@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
@@ -183,11 +184,9 @@ fun UniversalSearchScreen(
         }
         if (state.result.tracks.isNotEmpty()) {
             item(key = "galax_search_result_heading") {
-                Text(
-                    text = "Canciones",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                    modifier = Modifier.padding(start = 6.dp, top = 7.dp, bottom = 5.dp),
+                GalaxSearchSectionHeading(
+                    title = "Canciones",
+                    detail = "",
                 )
             }
         }
@@ -219,18 +218,17 @@ fun UniversalSearchScreen(
             state.result.tracks.isEmpty()
         ) {
             item(key = "empty") {
-                OpenTuneEmptyState(
-                    icon = null,
-                    text = stringResource(R.string.no_results_found),
-                    presentation = OpenTuneEmptyPresentation.COMPACT,
+                GalaxUniversalNoResults(
+                    message = stringResource(R.string.no_results_found),
                 )
             }
         }
 
-        items(
+        itemsIndexed(
             items = state.result.tracks,
-            key = UnifiedTrackSearchResult::stableResultKey,
-        ) { result ->
+            key = { index, result -> "universal_result_$" + "index:" + result.stableResultKey() },
+            contentType = { _, _ -> "universal_track" },
+        ) { _, result ->
             val variantKeys =
                 result.variants
                     .map { variant -> variant.provider to variant.sourceId }
@@ -406,60 +404,30 @@ private fun UnifiedTrackRow(
     onVersionsClick: () -> Unit,
     onClick: (() -> Unit)?,
 ) {
-    val recommended = preferredDisplayVariant ?: result.recommendedVariant
-    val artwork = recommended?.artworkUrl ?: result.variants.firstNotNullOfOrNull { it.artworkUrl }
+    val selected = preferredDisplayVariant ?: result.recommendedVariant
+    val cover = selected?.artworkUrl
+        ?: result.variants.firstNotNullOfOrNull { it.artworkUrl }
     val providers = remember(result, preferredDisplayVariant) {
-        (result.variants + listOfNotNull(preferredDisplayVariant)).distinctBy { it.provider }
+        (result.variants + listOfNotNull(preferredDisplayVariant))
+            .distinctBy { it.provider }
             .joinToString(" · ") { providerName(it.provider) }
     }
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(21.dp))
-        .background(MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = .58f))
-        .clickable(enabled = onClick != null && !isResolving) { onClick?.invoke() }
-        .padding(12.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Artwork(artwork, Modifier.size(58.dp),
-                shape = com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.artworkShape,
-                overlay = {
-                    if (isActive || isResolving) Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = .3f)),
-                        contentAlignment = Alignment.Center) {
-                        if (isResolving) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp, color = Color.White)
-                        else Icon(painterResource(if (isPlaying) R.drawable.pause else R.drawable.play), null, tint = Color.White)
-                    }
-                })
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(result.identity.title, style = MaterialTheme.typography.titleMedium,
-                    color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(result.identity.artists.joinToString { it.name }, style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-            IconButton(onClick = onVersionsClick) {
-                Icon(painterResource(R.drawable.tune), stringResource(R.string.universal_versions_action))
-            }
-        }
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(providers, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
-                if (recommended?.isCatalogOnly() == true) {
-                    Text(stringResource(R.string.universal_versions_catalog), style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                qualitySummary(recommended)?.let { quality ->
-                    Text(quality, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                }
-            }
-            when {
-                isOfflineAvailable -> Icon(painterResource(R.drawable.offline), stringResource(R.string.offline),
-                    Modifier.size(22.dp), tint = MaterialTheme.colorScheme.primary)
-                isPreparingOffline -> CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                onDownload != null -> IconButton(onClick = onDownload) {
-                    Icon(painterResource(R.drawable.download), stringResource(R.string.download))
-                }
-            }
-        }
-    }
+    GalaxUniversalResultCard(
+        title = result.identity.title,
+        artist = result.identity.artists.joinToString { it.name },
+        artwork = cover,
+        providers = providers,
+        quality = qualitySummary(selected),
+        catalogOnly = selected?.isCatalogOnly() == true,
+        active = isActive,
+        playing = isPlaying,
+        resolving = isResolving,
+        downloaded = isOfflineAvailable,
+        downloading = isPreparingOffline,
+        onClick = onClick,
+        onVersions = onVersionsClick,
+        onDownload = onDownload,
+    )
 }
 
 private fun UnifiedTrackSearchResult.stableResultKey(): String =
