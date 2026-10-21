@@ -118,18 +118,23 @@ fun GalaxEditorialBackdrop(
     intensity: Float = 1f,
 ) {
     val reducedMotion = OpenTuneDesignSystem.galaxMotion.reducedMotion
-    val transition = rememberInfiniteTransition(label = "editorialStarlight")
-    val phase by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 32000, easing = LinearEasing),
-        ),
-        label = "editorialStarPhase",
-    )
+    val phase = if (active && !reducedMotion) {
+        val transition = rememberInfiniteTransition(label = "editorialStarlight")
+        val value by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 32000, easing = LinearEasing),
+            ),
+            label = "editorialStarPhase",
+        )
+        value
+    } else {
+        0f
+    }
     val stars = remember(density) { galaxyStarField(density.coerceIn(8, 52)) }
     val dark = MaterialTheme.colorScheme.background.luminance() < .5f
-    val motionPhase = if (reducedMotion || !active) 0f else phase
+    val motionPhase = phase
     val visible = intensity.coerceIn(0f, 1f)
     Canvas(modifier.fillMaxSize()) {
         val centerOne = Offset(size.width * .91f, size.height * .15f)
@@ -167,16 +172,20 @@ fun GalaxEditorialOrb(
     rings: Int = 3,
 ) {
     val reducedMotion = OpenTuneDesignSystem.galaxMotion.reducedMotion
-    val transition = rememberInfiniteTransition(label = "editorialOrbit")
-    val rotation by transition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 44000, easing = LinearEasing),
-        ),
-        label = "editorialRotation",
-    )
-    val angle = if (reducedMotion || !active) 0f else rotation
+    val angle = if (active && !reducedMotion) {
+        val transition = rememberInfiniteTransition(label = "editorialOrbit")
+        val value by transition.animateFloat(
+            initialValue = 0f,
+            targetValue = 360f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(durationMillis = 44000, easing = LinearEasing),
+            ),
+            label = "editorialRotation",
+        )
+        value
+    } else {
+        0f
+    }
     Canvas(modifier.fillMaxSize()) {
         val minSide = min(size.width, size.height)
         val origin = Offset(size.width * .72f, size.height * .43f)
