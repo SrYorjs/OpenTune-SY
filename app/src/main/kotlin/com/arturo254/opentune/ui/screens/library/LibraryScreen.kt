@@ -188,6 +188,7 @@ fun LibraryScreen(
         menu.show {
             ArtistMenu(
                 originalArtist = artist,
+                coroutineScope = scope,
                 onDismiss = menu::dismiss,
             )
         }
@@ -315,9 +316,10 @@ fun LibraryScreen(
                 if (visiblePlaylists.isNotEmpty()) {
                     if (section == ArchiveSection.ALL) {
                         item(key = "playlist_heading") {
-                            ArchiveChapter("Tus listas") {
-                                onFilter(ArchiveSection.PLAYLISTS)
-                            }
+                            ArchiveChapter(
+                                title = "Tus listas",
+                                onOpen = { onFilter(ArchiveSection.PLAYLISTS) },
+                            )
                         }
                         item(key = "playlist_carousel") {
                             LazyRow(
@@ -364,9 +366,10 @@ fun LibraryScreen(
                 if (visibleAlbums.isNotEmpty()) {
                     if (section == ArchiveSection.ALL) {
                         item(key = "albums_heading") {
-                            ArchiveChapter("Álbumes") {
-                                onFilter(ArchiveSection.ALBUMS)
-                            }
+                            ArchiveChapter(
+                                title = "Álbumes",
+                                onOpen = { onFilter(ArchiveSection.ALBUMS) },
+                            )
                         }
                         item(key = "album_carousel") {
                             LazyRow(
@@ -405,9 +408,10 @@ fun LibraryScreen(
                 if (visibleArtists.isNotEmpty()) {
                     if (section == ArchiveSection.ALL) {
                         item(key = "artists_heading") {
-                            ArchiveChapter("Artistas") {
-                                onFilter(ArchiveSection.ARTISTS)
-                            }
+                            ArchiveChapter(
+                                title = "Artistas",
+                                onOpen = { onFilter(ArchiveSection.ARTISTS) },
+                            )
                         }
                         item(key = "artists_carousel") {
                             LazyRow(
@@ -443,9 +447,10 @@ fun LibraryScreen(
             if (section == ArchiveSection.ALL || section == ArchiveSection.SONGS) {
                 if (visibleSongs.isNotEmpty()) {
                     item(key = "songs_heading") {
-                        ArchiveChapter("Canciones") {
-                            onFilter(ArchiveSection.SONGS)
-                        }
+                        ArchiveChapter(
+                                title = "Canciones",
+                                onOpen = { onFilter(ArchiveSection.SONGS) },
+                            )
                     }
                     itemsIndexed(
                         if (section == ArchiveSection.ALL) visibleSongs.take(12) else visibleSongs,
