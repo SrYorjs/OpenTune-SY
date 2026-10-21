@@ -112,7 +112,7 @@ class GalaxAetherAtlasRebuildTest {
         assertTrue(frames.contains("AtlasResultsWarning("))
         assertTrue(card.contains("downloaded ->"))
         assertTrue(card.contains("downloading ->"))
-        assertTrue(card.contains("onVersions ="))
+        assertTrue(card.contains("onClick = onVersions"))
     }
 
     @Test
