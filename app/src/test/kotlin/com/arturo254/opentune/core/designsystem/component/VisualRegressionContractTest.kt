@@ -9,10 +9,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/**
- * Structural regression contract for the incremental Phase 3 migration.
- * Device screenshots are intentionally not claimed here.
- */
 class VisualRegressionContractTest {
     private val root = listOf(File("src/main/kotlin"), File("app/src/main/kotlin"))
         .firstOrNull(File::isDirectory) ?: error("Source root missing")
@@ -37,8 +33,8 @@ class VisualRegressionContractTest {
         val settings = source("ui/screens/settings/SettingsComponents.kt")
         assertTrue(home.contains("OpenTuneShimmerState("))
         assertTrue(home.contains("Artwork("))
-        assertTrue(search.contains("NovaLoading("))
-        assertTrue(search.contains("NovaMessage("))
+        assertTrue(search.contains("AsterLoading("))
+        assertTrue(search.contains("AsterMessage("))
         assertTrue(albums.contains("OpenTuneEmptyState("))
         assertTrue(artists.contains("OpenTuneEmptyState("))
         assertTrue(settings.contains("OpenTuneEmptyPresentation.SETTINGS"))
