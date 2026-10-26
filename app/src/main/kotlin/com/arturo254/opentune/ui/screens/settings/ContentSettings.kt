@@ -10,7 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,7 +47,7 @@ private fun getLanguageDisplayName(languageCode: String): String {
 fun ContentSettings(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.CONTENT) {
     val context = LocalContext.current
 
     val (appLanguage, onAppLanguageChange) = rememberPreference(
@@ -473,7 +473,7 @@ fun ContentSettings(
             ) {
                 Icon(
                     painterResource(R.drawable.arrow_back),
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.aster_settings_back),
                 )
             }
         }

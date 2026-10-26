@@ -11,10 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -38,13 +35,9 @@ import com.arturo254.opentune.ui.menu.SongMenu
 import com.arturo254.opentune.ui.menu.YouTubeSongMenu
 import com.arturo254.opentune.viewmodels.HomeViewModel
 import com.arturo254.opentune.viewmodels.MoodAndGenresViewModel
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
 
-/** Observatory: an open optical lens, a search console and full-width spectra. */
 @Composable
-internal fun NovaDiscoveryExperience(
+internal fun AsterDiscoveryExperience(
     navController: NavController,
     onOpenSearch: () -> Unit,
     genresModel: MoodAndGenresViewModel,
@@ -61,12 +54,18 @@ internal fun NovaDiscoveryExperience(
     val playing = player?.isPlaying?.collectAsStateWithLifecycle()?.value == true
     val menus = LocalMenuState.current
     val list = rememberLazyListState()
+    val palette = asterPalette()
+    val phase = rememberAsterPhase(ambientActive)
     val remote = remember(recommendations) {
         recommendations.orEmpty().flatMap { it.items }.filterIsInstance<SongItem>().distinctBy { it.id }.take(12)
     }
     val local = remember(picks) { picks.orEmpty().distinctBy { it.id }.take(12) }
-    val tiles = remember(genres) { genres.orEmpty().distinctBy { it.endpoint.browseId + it.title }.take(12) }
-    val fallback = remember { listOf("Electrónica", "Jazz", "Pop", "Rock", "R&B", "Hip-hop") }
+    val tiles = remember(genres) {
+        genres.orEmpty().distinctBy { it.endpoint.browseId + ":" + it.title }.take(12)
+    }
+    val fallback = remember {
+        listOf("Electrónica", "Jazz", "Pop", "Rock", "R&B", "Hip-hop", "Clásica", "Ambient")
+    }
     val backStack by navController.currentBackStackEntryAsState()
     val top = backStack?.savedStateHandle?.getStateFlow("scrollToTop", false)?.collectAsState()
     LaunchedEffect(top?.value, ambientActive) {
@@ -76,154 +75,315 @@ internal fun NovaDiscoveryExperience(
         }
     }
     Box(Modifier.fillMaxSize()) {
-        NovaBackdrop(NovaSpace.OBSERVATORY, ambientActive, Modifier.fillMaxSize())
-        LazyColumn(state = list, modifier = Modifier.fillMaxSize(),
+        AsterBackdrop(AsterScene.EXPLORE, phase, Modifier.fillMaxSize())
+        LazyColumn(
+            state = list,
+            modifier = Modifier.fillMaxSize(),
             contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
-            verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            item("observatory/title") {
-                Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text("SIN FRONTERAS", style = MaterialTheme.typography.labelSmall, letterSpacing = 2.sp, color = MaterialTheme.colorScheme.primary)
-                        Text("Descubrir", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.SemiBold)
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            item("explore/heading") {
+                Column(
+                    Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 22.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        AsterEyebrow("DESCUBRIR", Modifier.weight(1f))
+                        Box(Modifier.size(6.dp).background(palette.ice, CircleShape))
+                        Spacer(Modifier.width(7.dp))
+                        Text("SIN LÍMITES", style = MaterialTheme.typography.labelSmall, color = palette.muted, letterSpacing = 1.sp)
                     }
-                    NovaIcon(R.drawable.search, "Abrir búsqueda", onOpenSearch)
+                    Text(
+                        "Sal de\ntu órbita.",
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Light,
+                        letterSpacing = (-2).sp,
+                        lineHeight = 50.sp,
+                    )
+                    Text(
+                        "Otro sonido. Otra forma de sentir.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = palette.muted,
+                    )
                 }
             }
-            item("observatory/lens") { NovaEntrance { ObservatoryLens(ambientActive) } }
-            item("observatory/search") {
-                Column(Modifier.padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text("¿A dónde te lleva la música?", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Medium)
-                    Surface(onClick = onOpenSearch, shape = RoundedCornerShape(20.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.fillMaxWidth()) {
-                        Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Icon(painterResource(R.drawable.search), null, tint = MaterialTheme.colorScheme.primary)
-                            Text("Canciones, artistas, álbumes…", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-                            Text("TODOS", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+            item("explore/search") {
+                AsterEntrance { ExploreSearchConsole(onOpenSearch) }
+            }
+            item("explore/destinations") {
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    ExploreDestination(
+                        title = "En tendencia",
+                        subtitle = "El pulso del mundo",
+                        icon = R.drawable.trending_up,
+                        modifier = Modifier.weight(1f),
+                        onClick = { navController.navigate("charts_screen") },
+                    )
+                    ExploreDestination(
+                        title = "Estrenos",
+                        subtitle = "Antes que nadie",
+                        icon = R.drawable.album,
+                        modifier = Modifier.weight(1f),
+                        onClick = { navController.navigate("new_release") },
+                    )
+                }
+            }
+            item("explore/map-title") {
+                AsterHeading("Elige tu destino", "Mapa de sonidos", "Todos") {
+                    navController.navigate(Screens.MoodAndGenres.route)
+                }
+            }
+            if (loading && tiles.isEmpty()) {
+                item("explore/loading") { AsterLoading("Abriendo nuevos caminos…") }
+            }
+            itemsIndexed(
+                tiles.chunked(2),
+                key = { index, _ -> galaxDiscoveryGenreRowKey(index, fallback = false) },
+            ) { row, pair ->
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    pair.forEachIndexed { column, genre ->
+                        val index = row * 2 + column
+                        ExploreGenre(
+                            title = genre.title,
+                            index = index,
+                            phase = phase,
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                navController.navigate("youtube_browse/${genre.endpoint.browseId}?params=${Uri.encode(genre.endpoint.params.orEmpty())}")
+                            },
+                        )
+                    }
+                    if (pair.size == 1) Spacer(Modifier.weight(1f))
+                }
+            }
+            if (!loading && tiles.isEmpty()) {
+                itemsIndexed(
+                    fallback.chunked(2),
+                    key = { index, _ -> galaxDiscoveryGenreRowKey(index, fallback = true) },
+                ) { row, pair ->
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        pair.forEachIndexed { column, genre ->
+                            ExploreGenre(
+                                title = genre,
+                                index = row * 2 + column,
+                                phase = phase,
+                                modifier = Modifier.weight(1f),
+                                onClick = { navController.navigate("search/${Uri.encode(genre)}") },
+                            )
                         }
                     }
                 }
             }
-            item("observatory/destinations") {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    ObservatoryDestination("En tendencia", "Lo que mueve al mundo", R.drawable.trending_up, Modifier.weight(1f)) {
-                        navController.navigate("charts_screen")
+            if (failed) {
+                item("explore/retry") {
+                    AsterMessage(
+                        "El mapa está tardando",
+                        "Puedes buscar directamente o volver a cargar los géneros.",
+                        "Reintentar",
+                        genresModel::refresh,
+                    )
+                }
+            }
+            if (remote.isNotEmpty() || local.isNotEmpty()) {
+                item("explore/radio-heading") {
+                    AsterHeading("Conexiones inesperadas", "Dale una oportunidad")
+                }
+                item("explore/radio") {
+                    LazyRow(
+                        contentPadding = PaddingValues(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        if (remote.isNotEmpty()) {
+                            items(remote, key = { "remote/${it.id}" }) { song ->
+                                ExploreRadio(
+                                    title = song.title,
+                                    artist = song.artists.joinToString { it.name },
+                                    artwork = song.thumbnail,
+                                    active = current?.id == song.id,
+                                    playing = playing,
+                                    onPlay = {
+                                        if (current?.id == song.id) player?.player?.togglePlayPause()
+                                        else player?.playQueue(YouTubeQueue.radio(song.toMediaMetadata()))
+                                    },
+                                    onMenu = {
+                                        menus.show {
+                                            YouTubeSongMenu(song = song, navController = navController, onDismiss = menus::dismiss)
+                                        }
+                                    },
+                                )
+                            }
+                        } else {
+                            items(local, key = { "local/${it.id}" }) { song ->
+                                ExploreRadio(
+                                    title = song.title,
+                                    artist = song.artists.joinToString { it.name },
+                                    artwork = song.thumbnailUrl,
+                                    active = current?.id == song.id,
+                                    playing = playing,
+                                    onPlay = {
+                                        if (current?.id == song.id) player?.player?.togglePlayPause()
+                                        else player?.playQueue(
+                                            ListQueue(
+                                                title = "Descubrir",
+                                                items = local.map { it.toMediaItem() },
+                                                startIndex = local.indexOfFirst { it.id == song.id }.coerceAtLeast(0),
+                                            ),
+                                        )
+                                    },
+                                    onMenu = {
+                                        menus.show {
+                                            SongMenu(originalSong = song, navController = navController, onDismiss = menus::dismiss)
+                                        }
+                                    },
+                                )
+                            }
+                        }
                     }
-                    ObservatoryDestination("Recién llegado", "Nuevos lanzamientos", R.drawable.album, Modifier.weight(1f)) {
-                        navController.navigate("new_release")
+                }
+            }
+            item("explore/invitation") {
+                Column(
+                    Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    HorizontalDivider(color = palette.line)
+                    Text("Siempre hay algo\nque aún no escuchaste.", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Light)
+                    TextButton(onClick = onOpenSearch) {
+                        Text("Encuentra tu próxima canción", color = palette.ice)
+                        Spacer(Modifier.width(10.dp))
+                        Icon(painterResource(R.drawable.arrow_forward), null, Modifier.size(18.dp), tint = palette.ice)
                     }
                 }
             }
-            item("observatory/genres-title") {
-                NovaHeading("Sintoniza un universo", "Géneros y estados de ánimo", "Ver todo") {
-                    navController.navigate(Screens.MoodAndGenres.route)
-                }
-            }
-            itemsIndexed(tiles, key = { index, _ -> galaxDiscoveryGenreRowKey(index, fallback = false) }) { index, genre ->
-                ObservatorySpectrum(genre.title, Color(genre.stripeColor), index,
-                    onClick = { navController.navigate("youtube_browse/${genre.endpoint.browseId}?params=${Uri.encode(genre.endpoint.params.orEmpty())}") })
-            }
-            if (loading && tiles.isEmpty()) item("observatory/loading") { NovaLoading("Buscando nuevas frecuencias…") }
-            if (!loading && tiles.isEmpty()) {
-                itemsIndexed(fallback, key = { index, _ -> galaxDiscoveryGenreRowKey(index, fallback = true) }) { index, genre ->
-                    ObservatorySpectrum(genre, MaterialTheme.colorScheme.primary, index,
-                        onClick = { navController.navigate("search/${Uri.encode(genre)}") })
-                }
-            }
-            if (failed) item("observatory/retry") {
-                NovaMessage("No se pudo cargar el catálogo", "Puedes seguir buscando música o volver a intentarlo.", "Reintentar", genresModel::refresh)
-            }
-            if (remote.isNotEmpty() || local.isNotEmpty()) item("observatory/selection-title") {
-                NovaHeading("Fuera de tu órbita", "Algo que aún no conocías")
-            }
-            if (remote.isNotEmpty()) {
-                items(remote, key = { "observatory/remote/${it.id}" }) { song ->
-                    NovaMusicRow(song.title, song.artists.joinToString { it.name }, song.thumbnail,
-                        modifier = Modifier.padding(horizontal = 12.dp), active = current?.id == song.id, playing = playing,
-                        onClick = {
-                            if (current?.id == song.id) player?.player?.togglePlayPause()
-                            else player?.playQueue(YouTubeQueue.radio(song.toMediaMetadata()))
-                        }, onMenu = { menus.show { YouTubeSongMenu(song = song, navController = navController, onDismiss = menus::dismiss) } })
-                }
-            } else {
-                items(local, key = { "observatory/local/${it.id}" }) { song ->
-                    NovaMusicRow(song.title, song.artists.joinToString { it.name }, song.thumbnailUrl,
-                        modifier = Modifier.padding(horizontal = 12.dp), active = current?.id == song.id, playing = playing,
-                        onClick = {
-                            if (current?.id == song.id) player?.player?.togglePlayPause()
-                            else player?.playQueue(ListQueue(title = "Descubrir", items = local.map { it.toMediaItem() },
-                                startIndex = local.indexOfFirst { it.id == song.id }.coerceAtLeast(0)))
-                        }, onMenu = { menus.show { SongMenu(originalSong = song, navController = navController, onDismiss = menus::dismiss) } })
-                }
-            }
-            item("observatory/end") { Spacer(Modifier.height(32.dp)) }
         }
     }
 }
 
 @Composable
-private fun ObservatoryLens(active: Boolean) {
-    val phase = rememberNovaPhase(active)
-    val colors = MaterialTheme.colorScheme
-    Canvas(Modifier.fillMaxWidth().height(190.dp)) {
-        val t = phase.value * (2 * PI.toFloat())
-        val c = Offset(size.width * .54f, size.height * .5f)
-        val r = size.height * .37f
-        drawCircle(Brush.radialGradient(listOf(colors.primary.copy(alpha = .18f), Color.Transparent), c, r * 1.8f), r * 1.8f, c)
-        repeat(5) { i ->
-            val rx = r * (1f + i * .15f)
-            val ry = r * (.43f + i * .07f)
-            drawOval(colors.primary.copy(alpha = .3f - i * .045f), c - Offset(rx, ry), Size(rx * 2, ry * 2), style = Stroke(1.dp.toPx()))
+private fun ExploreSearchConsole(onClick: () -> Unit) {
+    val palette = asterPalette()
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(palette.ink)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 20.dp, vertical = 24.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Icon(painterResource(R.drawable.search), null, Modifier.size(28.dp), tint = palette.base)
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Text("¿Qué quieres escuchar?", style = MaterialTheme.typography.titleMedium, color = palette.base, fontWeight = FontWeight.SemiBold)
+            Text("Canciones, artistas, álbumes", style = MaterialTheme.typography.bodySmall, color = palette.base.copy(alpha = .75f))
         }
-        drawCircle(colors.background, r * .57f, c)
-        drawCircle(Brush.linearGradient(listOf(colors.primary.copy(alpha = .65f), colors.background), c - Offset(r, r), c + Offset(r, r)), r * .55f, c)
-        drawArc(colors.onSurface.copy(alpha = .45f), 200f, 105f, false,
-            c - Offset(r * .56f, r * .56f), Size(r * 1.12f, r * 1.12f), style = Stroke(1.dp.toPx()))
-        val point = c + Offset(cos(t) * r * 1.5f, sin(t) * r * .64f)
-        drawCircle(colors.primary.copy(alpha = .16f), 9.dp.toPx(), point)
-        drawCircle(colors.primary, 2.5.dp.toPx(), point)
-        for (side in listOf(-1, 1)) {
-            val x = c.x + side * r * 2.05f
-            drawLine(colors.outlineVariant, Offset(x, c.y - 5.dp.toPx()), Offset(x, c.y + 5.dp.toPx()), 1.dp.toPx())
-            drawLine(colors.outlineVariant, Offset(x - 5.dp.toPx(), c.y), Offset(x + 5.dp.toPx(), c.y), 1.dp.toPx())
-        }
+        Icon(painterResource(R.drawable.arrow_forward), null, Modifier.size(20.dp), tint = palette.base)
     }
 }
 
 @Composable
-private fun ObservatoryDestination(title: String, subtitle: String, icon: Int, modifier: Modifier, onClick: () -> Unit) {
-    Column(modifier.clip(RoundedCornerShape(18.dp)).clickable(role = Role.Button, onClick = onClick).padding(vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Icon(painterResource(icon), null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(26.dp))
-        Text(title, style = MaterialTheme.typography.titleSmall)
-        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .5f))
+private fun ExploreDestination(
+    title: String,
+    subtitle: String,
+    icon: Int,
+    modifier: Modifier,
+    onClick: () -> Unit,
+) {
+    val palette = asterPalette()
+    Column(
+        modifier.clip(RoundedCornerShape(18.dp))
+            .background(palette.panel.copy(alpha = .7f))
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Icon(painterResource(icon), null, Modifier.size(22.dp), tint = palette.ice)
+        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = palette.muted)
     }
 }
 
 @Composable
-private fun ObservatorySpectrum(title: String, tint: Color, index: Int, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    Box(Modifier.fillMaxWidth().padding(horizontal = 24.dp).heightIn(min = 90.dp)
-        .clip(RoundedCornerShape(12.dp)).background(colors.surfaceContainer.copy(alpha = .7f))
-        .clickable(role = Role.Button, onClick = onClick)) {
-        Canvas(Modifier.matchParentSize()) {
-            val ink = lerp(colors.primary, tint, .35f)
-            val start = size.width * .58f
-            repeat(34) { bar ->
-                val x = start + (size.width - start) * bar / 34f
-                val wave = .12f + .68f * kotlin.math.abs(sin(bar * (.21f + index * .025f) + index))
-                val h = size.height * wave
-                drawLine(ink.copy(alpha = .16f + bar / 140f), Offset(x, (size.height - h) / 2),
-                    Offset(x, (size.height + h) / 2), 2.dp.toPx(), cap = StrokeCap.Round)
-            }
+private fun ExploreGenre(
+    title: String,
+    index: Int,
+    phase: State<Float>,
+    modifier: Modifier,
+    onClick: () -> Unit,
+) {
+    val palette = asterPalette()
+    val accent = when (index % 3) {
+        0 -> palette.violet
+        1 -> palette.ice
+        else -> palette.rose
+    }
+    Column(
+        modifier.clip(RoundedCornerShape(22.dp))
+            .background(accent.copy(alpha = .08f))
+            .border(1.dp, accent.copy(alpha = .18f), RoundedCornerShape(22.dp))
+            .clickable(role = Role.Button, onClick = onClick),
+    ) {
+        Box(Modifier.fillMaxWidth().height(108.dp)) {
+            Canvas(Modifier.matchParentSize()) { drawAsterGlyph(index, accent, phase.value) }
+            Text(
+                (index + 1).toString().padStart(2, '0'),
+                modifier = Modifier.align(Alignment.TopStart).padding(14.dp),
+                style = MaterialTheme.typography.labelSmall,
+                color = accent,
+            )
         }
-        Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text("%02d".format(index + 1), style = MaterialTheme.typography.labelSmall, color = colors.primary)
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 2,
-                    overflow = TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth(.7f))
-            }
-            Icon(painterResource(R.drawable.arrow_forward), null, modifier = Modifier.size(18.dp))
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 62.dp).padding(start = 16.dp, end = 12.dp, bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Icon(painterResource(R.drawable.arrow_forward), null, Modifier.size(16.dp), tint = accent)
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ExploreRadio(
+    title: String,
+    artist: String,
+    artwork: String?,
+    active: Boolean,
+    playing: Boolean,
+    onPlay: () -> Unit,
+    onMenu: () -> Unit,
+) {
+    val palette = asterPalette()
+    Column(
+        Modifier.width(206.dp).clip(RoundedCornerShape(26.dp))
+            .background(palette.panel)
+            .combinedClickable(role = Role.Button, onClick = onPlay, onLongClick = onMenu)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(Modifier.fillMaxWidth().aspectRatio(1f), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxSize().border(1.dp, palette.line, CircleShape))
+            Box(Modifier.fillMaxSize(.88f).border(1.dp, palette.violet.copy(alpha = .25f), CircleShape))
+            AsterArtwork(artwork, Modifier.fillMaxSize(.74f), circular = true)
+            Box(
+                Modifier.align(Alignment.BottomEnd).size(40.dp).background(palette.base, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) { AsterPlaybackMark(active && playing) }
+        }
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(artist, style = MaterialTheme.typography.bodySmall, color = palette.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("EXPLORAR SONIDO", Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, letterSpacing = .6.sp, color = palette.ice)
+            AsterIcon(R.drawable.more_vert, "Opciones de $title", onMenu)
         }
     }
 }

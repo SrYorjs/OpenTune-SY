@@ -18,7 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -76,7 +76,7 @@ import com.arturo254.opentune.LocalDatabase
 fun PlayerSettings(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.PLAYER) {
     val (audioQuality, onAudioQualityChange) = rememberEnumPreference(
         AudioQualityKey,
         defaultValue = AudioQuality.AUTO
@@ -462,7 +462,7 @@ fun PlayerSettings(
             ) {
                 Icon(
                     painterResource(R.drawable.arrow_back),
-                    contentDescription = null
+                    contentDescription = stringResource(R.string.aster_settings_back)
                 )
             }
         }

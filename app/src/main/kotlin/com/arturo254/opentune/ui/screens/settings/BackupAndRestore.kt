@@ -68,12 +68,12 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsScaffold as Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.toShape
@@ -163,7 +163,7 @@ fun BackupAndRestore(
     scrollBehavior: TopAppBarScrollBehavior,
     viewModel: BackupRestoreViewModel = hiltViewModel(),
     spotifyAccountViewModel: SpotifyAccountViewModel = hiltViewModel(),
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.BACKUP) {
     var importedTitle by remember { mutableStateOf("") }
     val importedSongs = remember { mutableStateListOf<Song>() }
     var showChoosePlaylistDialogOnline by rememberSaveable { mutableStateOf(false) }
@@ -247,7 +247,7 @@ fun BackupAndRestore(
                     ) {
                         Icon(
                             painterResource(R.drawable.arrow_back),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.aster_settings_back),
                         )
                     }
                 },
@@ -269,6 +269,7 @@ fun BackupAndRestore(
                 start = 16.dp, end = 16.dp, bottom = 16.dp, top = 8.dp
             ),
         ) {
+            item(key = "aster_page_intro") { AsterSettingsPageIntro() }
 
             item {
                 Card(
@@ -963,6 +964,7 @@ fun BackupAndRestore(
         )
     }
 }
+
 
 @Composable
 private fun SpotifyAccountIcon(avatarUrl: String?) {

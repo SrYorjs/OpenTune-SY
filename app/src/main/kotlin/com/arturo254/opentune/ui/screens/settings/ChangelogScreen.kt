@@ -1,6 +1,6 @@
 package com.arturo254.opentune.ui.screens.settings
 
-import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsScaffold as Scaffold
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.background
@@ -11,7 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,7 +44,7 @@ import androidx.compose.ui.platform.LocalLocale
 fun ChangelogScreen(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.CHANGELOG) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -135,7 +135,7 @@ fun ChangelogScreen(
                     ) {
                         Icon(
                             painterResource(R.drawable.arrow_back),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.aster_settings_back),
                         )
                     }
                 },
@@ -248,55 +248,16 @@ fun ChangelogScreen(
 }
 
 
+
 @Composable
 private fun GalaxChangelogHero(label: String, title: String, subtitle: String) {
-    val colors = MaterialTheme.colorScheme
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(30.dp))
-            .background(
-                Brush.linearGradient(
-                    listOf(
-                        colors.primary.copy(alpha = .25f),
-                        colors.surfaceContainerHigh,
-                        colors.tertiary.copy(alpha = .12f),
-                    ),
-                ),
-            )
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Text(
-            text = "GALAXOS  /  $label",
-            style = MaterialTheme.typography.labelSmall,
-            color = colors.primary,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = colors.onSurface,
-        )
-        if (subtitle.isNotBlank()) {
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.onSurfaceVariant,
-            )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            repeat(4) { index ->
-                Box(
-                    modifier = Modifier
-                        .size(width = if (index == 0) 34.dp else 9.dp, height = 3.dp)
-                        .clip(RoundedCornerShape(50))
-                        .background(
-                            if (index == 0) colors.primary else colors.primary.copy(alpha = .22f),
-                        ),
-                )
-            }
+    Column {
+        AsterSettingsHero(title = title)
+        Row(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+            if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

@@ -40,7 +40,6 @@ import androidx.navigation.NavController
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.PlayerDesignStyle
 import com.arturo254.opentune.constants.PlayerDesignStyleKey
-import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import com.arturo254.opentune.ui.player.preferences.GalaxPlayerStyleGallery
 import com.arturo254.opentune.ui.player.preferences.playerLayoutLabel
 import com.arturo254.opentune.ui.player.GalaxStudioPlayer.originalPlayerStyleConfig
@@ -69,14 +68,14 @@ private fun studioIdentity(style: PlayerDesignStyle): StudioIdentity = when (sty
 }
 
 @Composable
-fun GalaxPlayerStyleStudioScreen(navController: NavController) {
+fun GalaxPlayerStyleStudioScreen(navController: NavController) = AsterSettingsEnvironment(AsterSettingsSection.STUDIO) {
     val (selected, onSelected) = rememberEnumPreference(
         PlayerDesignStyleKey,
         PlayerDesignStyle.V8,
     )
     val scheme = MaterialTheme.colorScheme
     LazyColumn(
-        modifier = Modifier.fillMaxSize().galaxScreenBackground(),
+        modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 140.dp),
         verticalArrangement = Arrangement.spacedBy(17.dp),
     ) {
@@ -100,54 +99,21 @@ fun GalaxPlayerStyleStudioScreen(navController: NavController) {
                     )
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text("GALAXOT  /  APARIENCIA", color = scheme.primary,
+                    Text("ASTER  /  APARIENCIA", color = scheme.primary,
                         style = MaterialTheme.typography.labelSmall, letterSpacing = 1.4.sp)
                     Text("Estudio de reproductores", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 }
             }
         }
         item("studio_featured") {
-            Box(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 17.dp)
-                    .clip(RoundedCornerShape(33.dp))
-                    .background(
-                        Brush.linearGradient(listOf(
-                            scheme.primary.copy(alpha = .28f),
-                            scheme.surfaceContainer,
-                            scheme.tertiary.copy(alpha = .12f),
-                        )),
-                    ),
-            ) {
-                Canvas(Modifier.matchParentSize()) {
-                    for (n in 0..7) {
-                        drawCircle(
-                            scheme.primary.copy(alpha = .11f),
-                            radius = size.width * (.13f + .12f * n),
-                            center = Offset(size.width * .86f, size.height * .15f),
-                            style = Stroke(width = 1.dp.toPx()),
-                        )
-                    }
-                }
-                Column(
-                    Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text("17 FORMAS DE SENTIR TU MÚSICA",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = scheme.primary, letterSpacing = 1.1.sp,
-                        fontWeight = FontWeight.Bold)
-                    Text("Un universo. Diecisiete identidades.",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Black, color = scheme.onSurface)
-
-                    Box(Modifier.clip(RoundedCornerShape(17.dp))
-                        .background(scheme.primary.copy(alpha = .17f))
-                        .padding(horizontal = 13.dp, vertical = 9.dp)) {
-                        Text("SELECCIONADO  •  " + selected.name + "  /  " + studioIdentity(selected).category,
-                            color = scheme.primary,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold)
-                    }
+            Column {
+                AsterSettingsPageIntro()
+                Row(Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(selected.name, style = MaterialTheme.typography.labelLarge,
+                        color = scheme.primary, fontWeight = FontWeight.Bold)
+                    Text(studioIdentity(selected).category, style = MaterialTheme.typography.labelLarge,
+                        color = scheme.onSurfaceVariant)
                 }
             }
         }
@@ -192,6 +158,7 @@ fun GalaxPlayerStyleStudioScreen(navController: NavController) {
         }
     }
 }
+
 
 @Composable
 private fun StudioStyleCard(

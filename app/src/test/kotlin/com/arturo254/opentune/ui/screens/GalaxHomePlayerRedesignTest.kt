@@ -29,10 +29,10 @@ class GalaxHomePlayerRedesignTest {
     fun homeStreamsAllSectionsWithoutManualExpansion() {
         val home = source("ui/screens/HomeScreen.kt")
         val cards = source("ui/screens/GalaxAetherHome.kt")
-        assertTrue(home.contains("HorizonOpening("))
-        assertTrue(home.contains("HorizonOpening("))
-        assertTrue(home.contains("HorizonCover("))
-        assertTrue(home.contains("NovaMusicRow("))
+        assertTrue(home.contains("SessionFeature("))
+        assertTrue(home.contains("SessionFeature("))
+        assertTrue(home.contains("AsterRecordCard("))
+        assertTrue(home.contains("AsterMusicRow("))
         assertTrue(home.contains("viewModel.loadMoreYouTubeItems(next)"))
         assertTrue(home.contains("catalog?.sections.orEmpty().forEachIndexed"))
         assertFalse(home.contains("Ver más"))
@@ -49,7 +49,7 @@ class GalaxHomePlayerRedesignTest {
         assertTrue(home.contains("SongMenu("))
         assertTrue(home.contains("onDismiss = menus::dismiss"))
         assertTrue(home.contains("viewModel.playSourceVariant("))
-        assertTrue(home.contains("HorizonCatalog("))
+        assertTrue(home.contains("SessionCatalog("))
     }
 
     @Test
@@ -57,8 +57,8 @@ class GalaxHomePlayerRedesignTest {
         val pages = source("ui/screens/GalaxDiscoverExperience.kt")
         val results = source("ui/screens/search/UniversalSearchScreen.kt")
         val hero = source("ui/screens/search/UniversalSearchScreen.kt")
-        assertTrue(pages.contains("ObservatoryLens("))
-        assertTrue(pages.contains("ObservatorySpectrum("))
+        assertTrue(pages.contains("ExploreSearchConsole("))
+        assertTrue(pages.contains("ExploreGenre("))
         assertTrue(pages.contains("itemsIndexed("))
         assertTrue(pages.contains("galaxDiscoveryGenreRowKey("))
         assertTrue(pages.contains("distinctBy { it.endpoint.browseId +"))
@@ -66,8 +66,8 @@ class GalaxHomePlayerRedesignTest {
         assertTrue(results.contains("UniversalVersionQualityDialog("))
         assertTrue(results.contains(".enqueueOffline(result)"))
         assertTrue(results.contains("itemsIndexed("))
-        assertTrue(hero.contains("SignalHeader("))
-        assertTrue(hero.contains("SignalHeader("))
+        assertTrue(hero.contains("TransmissionHeader("))
+        assertTrue(hero.contains("TransmissionHeader("))
     }
 
     @Test

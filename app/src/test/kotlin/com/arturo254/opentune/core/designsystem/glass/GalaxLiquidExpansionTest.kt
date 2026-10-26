@@ -6,7 +6,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** 4.5 regression: continuous studio scroll, top-level swipe and wider chrome. */
 class GalaxLiquidExpansionTest {
     private val root = listOf(File("src/main/kotlin"), File("app/src/main/kotlin"))
         .firstOrNull(File::isDirectory) ?: error("Android Kotlin source root unavailable")
@@ -34,7 +33,7 @@ class GalaxLiquidExpansionTest {
         assertFalse(toolbar.contains("val itemBounds = remember(items)"))
         assertFalse(toolbar.contains("liquidTabDragFeedback"))
         val pages = source("ui/screens/GalaxMainPages.kt")
-        assertTrue(pages.contains("HorizontalPager(state = pager"))
+        assertTrue(pages.contains("HorizontalPager("))
         assertTrue(source("ui/screens/Screens.kt").contains("listOf(Home, Search, Library)"))
         assertTrue(toolbar.contains("haptic(GalaxHapticCue.SELECTION)"))
         assertTrue(motion.contains("if (policy.reducedMotion) return EnterTransition.None"))

@@ -8,6 +8,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
+import com.arturo254.opentune.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,7 +27,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.widthIn
-import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -72,6 +76,7 @@ data class SettingsContentState(
     val onPlayerStudioClick: () -> Unit,
     val onLiquidGlassClick: () -> Unit,
     val onPaletteClick: () -> Unit,
+    val onSearchClick: () -> Unit,
 )
 
 @Composable
@@ -83,18 +88,21 @@ fun AdaptiveSettingsLayout(
 ) {
     val mode = resolveLayoutMode()
     val columns = if (mode == SettingsLayoutMode.COMPACT) 1 else 2
-    val quickColumns = if (mode == SettingsLayoutMode.COMPACT) 3 else 4
-    androidx.compose.foundation.layout.Box(modifier.fillMaxSize().galaxScreenBackground(),
+    val quickColumns = if (mode == SettingsLayoutMode.COMPACT) 2 else 4
+    androidx.compose.foundation.layout.Box(modifier.fillMaxSize(),
         contentAlignment = androidx.compose.ui.Alignment.TopCenter) {
         LazyColumn(
             state = listState,
             modifier = Modifier.widthIn(max = 1040.dp).fillMaxSize().windowInsetsPadding(
                 LocalPlayerAwareWindowInsets.current.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)),
-            contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = topPadding, bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+            contentPadding = PaddingValues(start = 18.dp, end = 18.dp, top = topPadding + 22.dp, bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             if (!state.isSearchActive) {
                 item(key = "profile", contentType = "profile") { SettingsProfileHeader() }
+                item(key = "search", contentType = "search") {
+                    AsterSettingsSearchLauncher(state.onSearchClick)
+                }
                 item(key = "galaxCreativeShortcuts", contentType = "actions") {
                     GalaxSettingsCreativeShortcuts(
                         onPlayerStudio = state.onPlayerStudioClick,
@@ -110,10 +118,16 @@ fun AdaptiveSettingsLayout(
                 }
             }
             if (state.quickActions.isNotEmpty()) item(key = "quickActions", contentType = "actions") {
-                SettingsQuickActionsSection(actions = state.quickActions, columns = quickColumns)
+                Column {
+                    AsterSettingsHeading(stringResource(R.string.aster_settings_essentials))
+                    SettingsQuickActionsSection(actions = state.quickActions, columns = quickColumns)
+                }
             }
             if (state.integrations.isNotEmpty()) item(key = "integrations", contentType = "integrations") {
-                SettingsIntegrationsSection(integrations = state.integrations)
+                Column {
+                    AsterSettingsHeading(stringResource(R.string.aster_settings_connections))
+                    SettingsIntegrationsSection(integrations = state.integrations)
+                }
             }
             if (state.isSearchActive && !state.hasSearchResults) {
                 item(key = "empty", contentType = "empty") { SettingsSearchEmpty() }
@@ -128,6 +142,14 @@ fun AdaptiveSettingsLayout(
                         if (rows[index].size < columns) Spacer(Modifier.weight(1f))
                     }
                 }
+            }
+            if (!state.isSearchActive) item(key = "footer", contentType = "footer") {
+                Text(
+                    stringResource(R.string.aster_settings_footer),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 16.dp),
+                )
             }
         }
     }

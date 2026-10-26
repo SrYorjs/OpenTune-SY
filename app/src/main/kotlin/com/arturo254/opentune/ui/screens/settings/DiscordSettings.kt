@@ -1,6 +1,6 @@
 package com.arturo254.opentune.ui.screens.settings
 
-import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsScaffold as Scaffold
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
@@ -13,7 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -58,8 +58,8 @@ enum class ActivitySource { ARTIST, ALBUM, SONG, APP }
 fun DiscordSettings(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-) {
-    val playerConnection = LocalPlayerConnection.current ?: return
+) = AsterSettingsEnvironment(AsterSettingsSection.DISCORD) {
+    val playerConnection = LocalPlayerConnection.current ?: return@AsterSettingsEnvironment
     val song by playerConnection.currentSong.collectAsState(null)
     val playbackState by playerConnection.playbackState.collectAsState()
     var position by rememberSaveable(playbackState) {
@@ -129,6 +129,8 @@ fun DiscordSettings(
                 LocalPlayerAwareWindowInsets.current.only(WindowInsetsSides.Top)
             )
         )
+        AsterSettingsPageIntro()
+
 
         AnimatedVisibility(visible = !infoDismissed) {
             Card(
@@ -734,7 +736,7 @@ if (smallImageType == "custom") {
             ) {
                 Icon(
                     painter = painterResource(R.drawable.arrow_back),
-                    contentDescription = null
+                    contentDescription = stringResource(R.string.aster_settings_back)
                 )
             }
         },
@@ -770,6 +772,7 @@ if (smallImageType == "custom") {
       )
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

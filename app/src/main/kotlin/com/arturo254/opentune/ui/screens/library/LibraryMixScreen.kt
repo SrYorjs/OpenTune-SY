@@ -8,13 +8,11 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -26,11 +24,9 @@ import androidx.navigation.NavController
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.LibraryFilter
 import com.arturo254.opentune.spotify.SpotifyLibraryViewModel
-import com.arturo254.opentune.ui.screens.NovaArtwork
-import com.arturo254.opentune.ui.screens.NovaIcon
+import com.arturo254.opentune.ui.screens.*
 import com.arturo254.opentune.viewmodels.LibraryMixViewModel
 
-/** The legacy entry now opens the same new collection, with its caller's filters. */
 @Composable
 fun LibraryMixScreen(
     navController: NavController,
@@ -39,9 +35,13 @@ fun LibraryMixScreen(
     viewModel: LibraryMixViewModel = hiltViewModel(),
     spotifyLibraryViewModel: SpotifyLibraryViewModel = hiltViewModel(),
 ) {
-    LibraryScreen(navController = navController, viewModel = viewModel,
-        spotifyViewModel = spotifyLibraryViewModel, filterContent = filterContent,
-        onCategorySelected = onTabSelected)
+    LibraryScreen(
+        navController = navController,
+        viewModel = viewModel,
+        spotifyViewModel = spotifyLibraryViewModel,
+        filterContent = filterContent,
+        onCategorySelected = onTabSelected,
+    )
 }
 
 internal fun collectionLabel(section: LibraryFilter): String = when (section) {
@@ -53,55 +53,141 @@ internal fun collectionLabel(section: LibraryFilter): String = when (section) {
     LibraryFilter.SPOTIFY -> "Spotify"
 }
 
-/** Collection typography and navigation are intentionally independent of Home. */
 @Composable
-internal fun CollectionMasthead(songCount: Int, collectionCount: Int, onCreate: () -> Unit, onSettings: () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 14.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp)) {
+internal fun VaultHeader(
+    songCount: Int,
+    collectionCount: Int,
+    artworks: List<String>,
+    onCreate: () -> Unit,
+    onSettings: () -> Unit,
+) {
+    val palette = asterPalette()
+    Column(
+        Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp),
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("BIBLIOTECA", style = MaterialTheme.typography.labelMedium, letterSpacing = 2.5.sp,
-                color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
-            NovaIcon(R.drawable.add, "Crear playlist", onCreate)
-            NovaIcon(R.drawable.settings, "Ajustes", onSettings)
+            AsterEyebrow("BIBLIOTECA  /  TU ESPACIO", Modifier.weight(1f))
+            AsterIcon(R.drawable.settings, "Ajustes", onSettings)
         }
-        Text("Tu colección.", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Medium, letterSpacing = (-1.5).sp)
-        Row(Modifier.fillMaxWidth().padding(end = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(songCount.toString(), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Light)
-                Text("canciones", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    "Muy tuyo.",
+                    style = MaterialTheme.typography.displaySmall,
+                    fontWeight = FontWeight.Light,
+                    letterSpacing = (-1.5).sp,
+                )
+                Text(
+                    "$songCount canciones\n$collectionCount álbumes y listas",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = palette.muted,
+                    lineHeight = 22.sp,
+                )
             }
-            Column(Modifier.weight(1f)) {
-                Text(collectionCount.toString(), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Light)
-                Text("álbumes y listas", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            val ink = MaterialTheme.colorScheme.primary
-            Canvas(Modifier.size(66.dp)) {
-                // An engraved collection seal, not another hero illustration.
-                repeat(4) { i ->
-                    drawCircle(ink.copy(alpha = .12f + i * .05f), size.minDimension * (.18f + i * .09f), style = Stroke(1.dp.toPx()))
+            Box(Modifier.width(112.dp).height(116.dp), contentAlignment = Alignment.Center) {
+                repeat(3) { index ->
+                    AsterArtwork(
+                        artworks.getOrNull(2 - index),
+                        Modifier.size(76.dp).graphicsLayer {
+                            rotationZ = -16f + index * 14f
+                            translationX = (index - 1) * 10.dp.toPx()
+                            translationY = (1 - index) * 5.dp.toPx()
+                        },
+                    )
                 }
-                drawLine(ink.copy(alpha = .5f), Offset(size.width * .15f, size.height * .85f),
-                    Offset(size.width * .85f, size.height * .15f), 1.dp.toPx())
+            }
+        }
+        Surface(
+            onClick = onCreate,
+            shape = RoundedCornerShape(14.dp),
+            color = palette.violet.copy(alpha = .12f),
+            border = BorderStroke(1.dp, palette.violet.copy(alpha = .24f)),
+        ) {
+            Row(
+                Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Icon(painterResource(R.drawable.add), null, Modifier.size(20.dp), tint = palette.violet)
+                Text("Crear una lista", style = MaterialTheme.typography.labelLarge, color = palette.violet)
             }
         }
     }
 }
 
 @Composable
-internal fun CollectionTabs(selected: LibraryFilter, spotify: Boolean, counts: Map<LibraryFilter, Int>, onSelect: (LibraryFilter) -> Unit) {
-    val tabs = listOf(LibraryFilter.LIBRARY, LibraryFilter.SONGS, LibraryFilter.PLAYLISTS,
-        LibraryFilter.ALBUMS, LibraryFilter.ARTISTS) + if (spotify) listOf(LibraryFilter.SPOTIFY) else emptyList()
-    LazyRow(contentPadding = PaddingValues(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(22.dp)) {
+internal fun VaultCategories(
+    selected: LibraryFilter,
+    spotify: Boolean,
+    counts: Map<LibraryFilter, Int>,
+    onSelect: (LibraryFilter) -> Unit,
+) {
+    val palette = asterPalette()
+    val tabs = listOf(
+        LibraryFilter.LIBRARY,
+        LibraryFilter.PLAYLISTS,
+        LibraryFilter.SONGS,
+        LibraryFilter.ALBUMS,
+        LibraryFilter.ARTISTS,
+    ) + if (spotify) listOf(LibraryFilter.SPOTIFY) else emptyList()
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         items(tabs, key = { it.name }) { tab ->
-            Column(Modifier.clip(RoundedCornerShape(8.dp)).selectable(selected = tab == selected, role = Role.Tab, onClick = { onSelect(tab) })
-                .padding(top = 14.dp, bottom = 6.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(collectionLabel(tab), fontWeight = if (tab == selected) FontWeight.Bold else FontWeight.Normal,
-                        style = MaterialTheme.typography.titleSmall,
-                        color = if (tab == selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-                    counts[tab]?.let { Text(it.toString(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                }
-                Box(Modifier.width(36.dp).height(2.dp).background(if (tab == selected) MaterialTheme.colorScheme.primary else Color.Transparent))
+            val active = tab == selected
+            Column(
+                Modifier.widthIn(min = 88.dp)
+                    .clip(RoundedCornerShape(17.dp))
+                    .background(if (active) palette.violet.copy(alpha = .14f) else palette.panel.copy(alpha = .55f))
+                    .border(1.dp, if (active) palette.violet.copy(alpha = .45f) else palette.line, RoundedCornerShape(17.dp))
+                    .selectable(selected = active, role = Role.Tab, onClick = { onSelect(tab) })
+                    .padding(horizontal = 16.dp, vertical = 13.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(
+                    counts[tab]?.toString() ?: "∞",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Light,
+                    color = if (active) palette.violet else palette.muted,
+                )
+                Text(
+                    collectionLabel(tab),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (active) palette.violet else palette.ink,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+internal fun VaultShortcut(
+    title: String,
+    subtitle: String,
+    icon: Int,
+    index: Int,
+    onClick: () -> Unit,
+) {
+    val palette = asterPalette()
+    val accent = if (index % 2 == 0) palette.rose else palette.ice
+    Box(
+        Modifier.width(184.dp).clip(RoundedCornerShape(20.dp))
+            .background(accent.copy(alpha = .07f))
+            .border(1.dp, accent.copy(alpha = .2f), RoundedCornerShape(20.dp))
+            .clickable(role = Role.Button, onClick = onClick),
+    ) {
+        Canvas(Modifier.matchParentSize()) { drawAsterGlyph(index + 2, accent.copy(alpha = .45f)) }
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Icon(painterResource(icon), null, Modifier.size(22.dp), tint = accent)
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Medium)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = palette.muted)
             }
         }
     }
@@ -109,29 +195,98 @@ internal fun CollectionTabs(selected: LibraryFilter, spotify: Boolean, counts: M
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun CollectionTile(title: String, subtitle: String, image: String?, onOpen: () -> Unit,
-    onMenu: () -> Unit, modifier: Modifier = Modifier, circular: Boolean = false) {
-    Column(modifier.combinedClickable(role = Role.Button, onClick = onOpen, onLongClick = onMenu),
-        verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Box {
-            NovaArtwork(image, Modifier.fillMaxWidth().aspectRatio(1f), circular)
-            Surface(color = MaterialTheme.colorScheme.surface.copy(alpha = .92f), shape = CircleShape,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp)) {
-                NovaIcon(R.drawable.more_vert, "Opciones de $title", onMenu)
+internal fun VaultFolder(
+    title: String,
+    subtitle: String,
+    image: String?,
+    onOpen: () -> Unit,
+    onMenu: () -> Unit,
+    modifier: Modifier = Modifier,
+    album: Boolean = false,
+) {
+    val palette = asterPalette()
+    Column(
+        modifier.clip(RoundedCornerShape(18.dp))
+            .combinedClickable(role = Role.Button, onClick = onOpen, onLongClick = onMenu),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box(Modifier.fillMaxWidth().aspectRatio(if (album) 1f else 1.18f)) {
+            if (album) {
+                AsterArtwork(image, Modifier.fillMaxSize())
+            } else {
+                Box(
+                    Modifier.fillMaxWidth(.54f).height(18.dp)
+                        .background(palette.violet.copy(alpha = .25f), RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+                )
+                Box(
+                    Modifier.fillMaxSize().padding(top = 9.dp)
+                        .background(palette.panel, RoundedCornerShape(15.dp))
+                        .border(1.dp, palette.line, RoundedCornerShape(15.dp)),
+                ) {
+                    AsterArtwork(image, Modifier.fillMaxSize().padding(14.dp).graphicsLayer { rotationZ = -5f })
+                }
+            }
+            Surface(
+                color = palette.base.copy(alpha = .94f),
+                shape = CircleShape,
+                modifier = Modifier.align(Alignment.BottomEnd).padding(6.dp),
+            ) {
+                AsterIcon(R.drawable.more_vert, "Opciones de $title", onMenu)
             }
         }
+        Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = palette.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun VaultArtist(
+    title: String,
+    count: Int,
+    image: String?,
+    onOpen: () -> Unit,
+    onMenu: () -> Unit,
+) {
+    val palette = asterPalette()
+    Column(
+        Modifier.width(132.dp).clip(RoundedCornerShape(18.dp))
+            .combinedClickable(role = Role.Button, onClick = onOpen, onLongClick = onMenu)
+            .padding(6.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(9.dp),
+    ) {
+        Box(Modifier.size(110.dp).border(1.dp, palette.line, CircleShape).padding(6.dp)) {
+            AsterArtwork(image, Modifier.fillMaxSize(), circular = true)
+        }
         Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-        Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text("$count canciones", style = MaterialTheme.typography.bodySmall, color = palette.muted)
     }
 }
 
 @Composable
-internal fun CollectionShortcut(title: String, icon: Int, onClick: () -> Unit) {
-    Surface(onClick = onClick, shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
-        Row(Modifier.padding(horizontal = 16.dp, vertical = 15.dp), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(painterResource(icon), null, Modifier.size(19.dp), tint = MaterialTheme.colorScheme.primary)
-            Text(title, style = MaterialTheme.typography.labelLarge)
-        }
-    }
+internal fun VaultSearch(
+    query: String,
+    onQuery: (String) -> Unit,
+) {
+    val palette = asterPalette()
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQuery,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+        singleLine = true,
+        shape = RoundedCornerShape(16.dp),
+        placeholder = { Text("Encuentra algo tuyo") },
+        leadingIcon = { Icon(painterResource(R.drawable.search), null, tint = palette.muted) },
+        trailingIcon = {
+            if (query.isNotEmpty()) AsterIcon(R.drawable.close, "Borrar búsqueda", { onQuery("") })
+        },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = palette.violet,
+            unfocusedBorderColor = palette.line,
+            focusedContainerColor = palette.panel.copy(alpha = .6f),
+            unfocusedContainerColor = palette.panel.copy(alpha = .6f),
+            cursorColor = palette.violet,
+        ),
+    )
 }

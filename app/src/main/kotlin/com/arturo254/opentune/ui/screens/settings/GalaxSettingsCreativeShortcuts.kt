@@ -1,35 +1,21 @@
 package com.arturo254.opentune.ui.screens.settings
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.arturo254.opentune.R
+import com.arturo254.opentune.ui.screens.drawAsterGlyph
 
 @Composable
 fun GalaxSettingsCreativeShortcuts(
@@ -38,110 +24,52 @@ fun GalaxSettingsCreativeShortcuts(
     onPalette: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val scheme = MaterialTheme.colorScheme
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(11.dp),
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(
-                text = stringResource(R.string.galax_settings_creative_tools),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = scheme.onSurface,
-            )
-            Text(
-                text = "03",
-                style = MaterialTheme.typography.labelSmall,
-                color = scheme.primary,
-                letterSpacing = 1.1.sp,
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            GalaxSettingsCreativeTile(
-                title = stringResource(R.string.galax_settings_studio_shortcut),
-                ordinal = "01",
-                tint = scheme.primary,
-                onClick = onPlayerStudio,
-            )
-            GalaxSettingsCreativeTile(
-                title = stringResource(R.string.galax_settings_glass_shortcut),
-                ordinal = "02",
-                tint = scheme.tertiary,
-                onClick = onLiquidGlass,
-            )
-            GalaxSettingsCreativeTile(
-                title = stringResource(R.string.galax_settings_palette_shortcut),
-                ordinal = "03",
-                tint = scheme.secondary,
-                onClick = onPalette,
-            )
+    Column(modifier.fillMaxWidth()) {
+        AsterSettingsHeading(stringResource(R.string.aster_settings_creative), trailing = "03")
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            item("player") {
+                AsterCreativeTile(
+                    title = stringResource(R.string.aster_settings_studio),
+                    subtitle = stringResource(R.string.aster_settings_studio_detail),
+                    kind = 1, tint = MaterialTheme.colorScheme.primary,
+                    onClick = onPlayerStudio,
+                )
+            }
+            item("glass") {
+                AsterCreativeTile(
+                    title = stringResource(R.string.aster_settings_glass),
+                    subtitle = stringResource(R.string.aster_settings_glass_detail),
+                    kind = 0, tint = MaterialTheme.colorScheme.secondary,
+                    onClick = onLiquidGlass,
+                )
+            }
+            item("palette") {
+                AsterCreativeTile(
+                    title = stringResource(R.string.aster_settings_palette),
+                    subtitle = stringResource(R.string.aster_settings_palette_detail),
+                    kind = 2, tint = MaterialTheme.colorScheme.tertiary,
+                    onClick = onPalette,
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun GalaxSettingsCreativeTile(
-    title: String,
-    ordinal: String,
-    tint: androidx.compose.ui.graphics.Color,
-    onClick: () -> Unit,
-) {
-    val colors = MaterialTheme.colorScheme
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.width(194.dp).height(110.dp),
-        shape = RoundedCornerShape(24.dp),
-        color = colors.surfaceContainerLow,
-    ) {
-        Box(
-            modifier = Modifier.background(
-                Brush.linearGradient(
-                    listOf(tint.copy(alpha = .20f), colors.surfaceContainerLow),
-                ),
-            ),
-        ) {
-            Canvas(Modifier.matchParentSize()) {
-                val pivot = Offset(size.width * .86f, size.height * .15f)
-                for (i in 1..5) {
-                    drawCircle(
-                        color = tint.copy(alpha = .09f + (i % 2) * .055f),
-                        radius = size.width * (.14f + i * .08f),
-                        center = pivot,
-                        style = Stroke(width = .9.dp.toPx()),
-                    )
-                }
+private fun AsterCreativeTile(title: String, subtitle: String, kind: Int, tint: Color, onClick: () -> Unit) {
+    val phase = LocalAsterSettingsPhase.current
+    val scheme = MaterialTheme.colorScheme
+    Surface(onClick = onClick, modifier = Modifier.width(210.dp), shape = RoundedCornerShape(24.dp),
+        color = scheme.surfaceContainerLow, border = BorderStroke(.75.dp, scheme.outlineVariant)) {
+        Column {
+            Box(Modifier.fillMaxWidth().height(104.dp)
+                .background(Brush.verticalGradient(listOf(tint.copy(alpha = .1f), Color.Transparent)))) {
+                Canvas(Modifier.matchParentSize()) { drawAsterGlyph(kind, tint, phase.value) }
             }
-            Column(
-                modifier = Modifier.padding(15.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Box(
-                    Modifier.size(24.dp).background(tint.copy(alpha = .22f), CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        ordinal,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = tint,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-                Text(
-                    title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    color = colors.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+            Column(Modifier.padding(start = 18.dp, end = 18.dp, bottom = 18.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = scheme.onSurfaceVariant)
             }
         }
     }

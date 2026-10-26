@@ -8,7 +8,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.*
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 @SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DiscordLoginScreen(navController: NavController) {
+fun DiscordLoginScreen(navController: NavController) = AsterSettingsEnvironment(AsterSettingsSection.LOGIN) {
     val scope = rememberCoroutineScope()
     var discordToken by rememberPreference(DiscordTokenKey, "")
     var webView by remember { mutableStateOf<WebView?>(null) }
@@ -202,7 +202,7 @@ fun DiscordLoginScreen(navController: NavController) {
             ) {
                 Icon(
                     painterResource(R.drawable.arrow_back),
-                    contentDescription = null
+                    contentDescription = stringResource(R.string.aster_settings_back)
                 )
             }
         }

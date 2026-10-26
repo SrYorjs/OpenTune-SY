@@ -20,10 +20,10 @@ class GalaxAetherAtlasRebuildTest {
     @Test
     fun homeHasDistinctLayoutWithoutReusingThePreviousEditorialScreen() {
         val home = source("ui/screens/HomeScreen.kt")
-        assertTrue(home.contains("HorizonOpening("))
-        assertTrue(home.contains("HorizonOpening("))
-        assertTrue(home.contains("NovaMusicRow("))
-        assertTrue(home.contains("HorizonCover("))
+        assertTrue(home.contains("SessionFeature("))
+        assertTrue(home.contains("SessionFeature("))
+        assertTrue(home.contains("AsterMusicRow("))
+        assertTrue(home.contains("AsterRecordCard("))
         assertFalse(home.contains("GalaxHomeImmersiveFeature("))
         assertFalse(home.contains("GalaxHomePoster("))
         assertFalse(home.contains("GalaxHomeCompactTrack("))
@@ -33,8 +33,8 @@ class GalaxAetherAtlasRebuildTest {
     fun newHomeCatalogDoesNotRenderTheOldHomePageSections() {
         val home = source("ui/screens/HomeScreen.kt")
         val catalog = source("ui/screens/HomeScreen.kt")
-        assertTrue(home.contains("NovaHeading("))
-        assertTrue(home.contains("HorizonCatalog("))
+        assertTrue(home.contains("AsterHeading("))
+        assertTrue(home.contains("SessionCatalog("))
         assertFalse(home.contains("HomePageSectionTitle("))
         assertFalse(home.contains("HomePageSectionContent("))
         assertTrue(catalog.contains("is SongItem ->"))
@@ -72,9 +72,9 @@ class GalaxAetherAtlasRebuildTest {
         val screen = source("ui/screens/GalaxDiscoverExperience.kt")
         val host = source("ui/screens/GalaxMainPages.kt")
         assertTrue(host.contains("GalaxDiscoverScreen("))
-        assertTrue(screen.contains("ObservatoryLens("))
-        assertTrue(screen.contains("ObservatorySpectrum("))
-        assertTrue(screen.contains("ObservatoryDestination("))
+        assertTrue(screen.contains("ExploreSearchConsole("))
+        assertTrue(screen.contains("ExploreGenre("))
+        assertTrue(screen.contains("ExploreDestination("))
         assertFalse(screen.contains("GalaxDiscoveryHero("))
         assertFalse(screen.contains("GalaxDiscoveryCategory("))
     }

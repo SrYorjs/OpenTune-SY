@@ -17,9 +17,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as LargeTopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
-import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsScaffold as Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
@@ -53,7 +53,7 @@ fun SettingsScreen(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
     latestVersionName: String,
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.HUB) {
     val context = LocalContext.current
     val focusManager = LocalFocusManager.current
     val isAndroid12OrLater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
@@ -171,6 +171,7 @@ fun SettingsScreen(
         onPlayerStudioClick = { navController.navigate("settings/appearance/player_studio") },
         onLiquidGlassClick = { navController.navigate("settings/appearance/galax_liquid") },
         onPaletteClick = { navController.navigate("settings/appearance/palette_picker") },
+        onSearchClick = { isSearching = true },
     )
 
     Scaffold(
@@ -190,7 +191,7 @@ fun SettingsScreen(
                         ) {
                             Icon(
                                 painterResource(R.drawable.arrow_back),
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.aster_settings_back),
                             )
                         }
                     },
@@ -256,7 +257,7 @@ fun SettingsScreen(
                         ) {
                             Icon(
                                 painterResource(R.drawable.arrow_back),
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.aster_settings_back),
                             )
                         }
                     },
@@ -289,4 +290,3 @@ fun SettingsScreen(
         }
     }
 }
-

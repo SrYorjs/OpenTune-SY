@@ -52,7 +52,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -107,7 +107,7 @@ import com.arturo254.opentune.utils.rememberPreference
 fun MusicTogetherScreen(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.TOGETHER) {
     val context = LocalContext.current
     val playerConnection = LocalPlayerConnection.current
     val clipboard = LocalClipboardManager.current
@@ -326,6 +326,8 @@ fun MusicTogetherScreen(
                 LocalPlayerAwareWindowInsets.current.only(WindowInsetsSides.Top)
             )
         )
+        AsterSettingsPageIntro()
+
 
         StatusCard(
             state = sessionState,
@@ -437,12 +439,13 @@ fun MusicTogetherScreen(
                 onClick = navController::navigateUp,
                 onLongClick = navController::backToMain,
             ) {
-                Icon(painterResource(R.drawable.arrow_back), null)
+                Icon(painterResource(R.drawable.arrow_back), contentDescription = stringResource(R.string.aster_settings_back))
             }
         },
         scrollBehavior = scrollBehavior,
     )
 }
+
 
 @Composable
 private fun HostSectionCard(

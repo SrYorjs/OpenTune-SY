@@ -1,6 +1,6 @@
 package com.arturo254.opentune.ui.screens.settings
 
-import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsScaffold as Scaffold
 import android.net.Uri
 import android.content.Intent
 import android.widget.Toast
@@ -16,7 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -44,7 +44,7 @@ import com.arturo254.opentune.utils.rememberPreference
 @Composable
 fun CustomizeBackground(
     navController: NavController,
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.BACKGROUND) {
     val context = LocalContext.current
 
     val (imageUri, onImageUriChange) = rememberPreference(PlayerCustomImageUriKey, "")
@@ -68,7 +68,7 @@ fun CustomizeBackground(
                 title = { Text(stringResource(R.string.customize_background_title)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(painterResource(R.drawable.arrow_back), contentDescription = null)
+                        Icon(painterResource(R.drawable.arrow_back), contentDescription = stringResource(R.string.aster_settings_back))
                     }
                 }
             )
@@ -84,6 +84,8 @@ fun CustomizeBackground(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
+            AsterSettingsPageIntro()
             val heightScale = 1.4f
             val playerPreviewHeight = (screenHeightDp * (1518f / 2400f) * heightScale).dp
             val lyricsPreviewHeight = (screenHeightDp * (1386f / 2400f) * heightScale).dp

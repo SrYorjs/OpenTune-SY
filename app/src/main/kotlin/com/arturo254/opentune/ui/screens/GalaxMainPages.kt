@@ -4,12 +4,12 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -21,10 +21,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -44,201 +48,556 @@ import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.random.Random
 
-/** Main routes share primitives, never a page template or a translucent root. */
 @Composable
-fun GalaxMainPages(navController: NavController, pager: PagerState, onOpenSearch: () -> Unit) {
+fun GalaxMainPages(
+    navController: NavController,
+    pager: PagerState,
+    onOpenSearch: () -> Unit,
+) {
     val scope = rememberCoroutineScope()
     val reduced = OpenTuneDesignSystem.galaxMotion.reducedMotion
-    fun open(page: Int) {
+    val navigatePage: (Int) -> Unit = { page ->
         scope.launch {
-            if (reduced) pager.scrollToPage(page) else pager.animateScrollToPage(page)
+            if (reduced) pager.scrollToPage(page)
+            else pager.animateScrollToPage(page)
         }
     }
-    BackHandler(pager.currentPage != 0) { open(0) }
-    HorizontalPager(state = pager,
+    BackHandler(pager.currentPage != 0) { navigatePage(0) }
+    HorizontalPager(
+        state = pager,
         key = { Screens.MainScreens[it].route },
         beyondViewportPageCount = 0,
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
     ) { page ->
-        // Only the settled visible page spends frames on ambient animation.
         val active = pager.settledPage == page && !pager.isScrollInProgress
         when (page) {
-            0 -> HomeScreen(navController, ambientActive = active,
-                onOpenSearchTab = { open(1) }, onOpenLibraryTab = { open(2) })
-            1 -> GalaxDiscoverScreen(navController, onOpenSearch, ambientActive = active)
-            2 -> LibraryScreen(navController, ambientActive = active,
-                onOpenSearchTab = { open(1) })
+            0 -> HomeScreen(
+                navController = navController,
+                ambientActive = active,
+                onOpenSearchTab = { navigatePage(1) },
+                onOpenLibraryTab = { navigatePage(2) },
+            )
+            1 -> GalaxDiscoverScreen(
+                navController = navController,
+                onOpenSearch = onOpenSearch,
+                ambientActive = active,
+            )
+            2 -> LibraryScreen(
+                navController = navController,
+                ambientActive = active,
+                onOpenSearchTab = { navigatePage(1) },
+            )
         }
     }
 }
 
-internal enum class NovaSpace { HORIZON, OBSERVATORY, COLLECTION, RESULTS }
+internal enum class AsterScene { SESSION, EXPLORE, VAULT, SEARCH }
 
-/** A single slow clock per visible scene; no particle coroutines or background work. */
+@Immutable
+internal data class AsterPalette(
+    val violet: Color,
+    val ice: Color,
+    val rose: Color,
+    val base: Color,
+    val panel: Color,
+    val ink: Color,
+    val muted: Color,
+    val line: Color,
+)
+
 @Composable
-internal fun rememberNovaPhase(active: Boolean): State<Float> {
-    val motion = OpenTuneDesignSystem.galaxMotion.reducedMotion
+internal fun asterPalette(): AsterPalette {
+    val scheme = MaterialTheme.colorScheme
+    val dark = scheme.background.luminance() < .4f
+    return if (dark) AsterPalette(
+        violet = Color(0xFFC6B5FF),
+        ice = Color(0xFF9DE4E5),
+        rose = Color(0xFFF1BDCE),
+        base = scheme.background,
+        panel = lerp(scheme.surfaceContainer, Color(0xFF211C34), .45f),
+        ink = scheme.onSurface,
+        muted = scheme.onSurfaceVariant,
+        line = scheme.onSurface.copy(alpha = .11f),
+    ) else AsterPalette(
+        violet = Color(0xFF6040A4),
+        ice = Color(0xFF17686F),
+        rose = Color(0xFF974465),
+        base = scheme.background,
+        panel = lerp(scheme.surfaceContainer, Color(0xFFF0EBF8), .45f),
+        ink = scheme.onSurface,
+        muted = scheme.onSurfaceVariant,
+        line = scheme.onSurface.copy(alpha = .14f),
+    )
+}
+
+@Composable
+internal fun rememberAsterPhase(active: Boolean): State<Float> {
+    val reduced = OpenTuneDesignSystem.galaxMotion.reducedMotion
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    var visible by remember(lifecycle) {
+    var resumed by remember(lifecycle) {
         mutableStateOf(lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
     }
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, _ ->
-            visible = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+            resumed = lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
         }
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer) }
     }
     val phase = remember { Animatable(0f) }
-    LaunchedEffect(active, visible, motion) {
-        if (!active || !visible || motion) return@LaunchedEffect
+    LaunchedEffect(active, resumed, reduced) {
+        if (!active || !resumed || reduced) return@LaunchedEffect
         while (currentCoroutineContext().isActive) {
             if ((currentCoroutineContext()[MotionDurationScale]?.scaleFactor ?: 1f) <= 0f) break
-            phase.animateTo(1f, tween(48000, easing = LinearEasing))
+            val remaining = ((1f - phase.value) * 60000).toInt().coerceAtLeast(1)
+            phase.animateTo(1f, tween(remaining, easing = LinearEasing))
             phase.snapTo(0f)
         }
     }
     return phase.asState()
 }
 
-/** Opaque roots prevent the previous pager page from leaking behind the mini player. */
+private data class AsterStar(
+    val x: Float,
+    val y: Float,
+    val radius: Float,
+    val offset: Float,
+)
+
 @Composable
-internal fun NovaBackdrop(
-    space: NovaSpace,
-    active: Boolean,
+internal fun AsterBackdrop(
+    scene: AsterScene,
+    phase: State<Float>,
     modifier: Modifier = Modifier,
     pureBlack: Boolean = false,
 ) {
-    val phase = rememberNovaPhase(active)
-    val colors = MaterialTheme.colorScheme
-    val base = if (pureBlack) Color.Black else colors.background
-    val dark = base.luminance() < .4f
-    val blue = if (dark) Color(0xFF79A8FF) else Color(0xFF345AB6)
-    val secondary = if (dark) Color(0xFFA994E9) else Color(0xFF70509B)
-    Canvas(modifier.background(base)) {
-        val t = phase.value * (2f * PI.toFloat())
-        val focal = when (space) {
-            NovaSpace.HORIZON -> Offset(size.width * .5f, size.height * .28f)
-            NovaSpace.OBSERVATORY -> Offset(size.width * .85f, size.height * .22f)
-            NovaSpace.COLLECTION -> Offset(size.width * .08f, size.height * .1f)
-            NovaSpace.RESULTS -> Offset(size.width * .95f, 0f)
+    val palette = asterPalette()
+    val stars = remember(scene) {
+        val random = Random(487 + scene.ordinal)
+        List(if (scene == AsterScene.SEARCH) 16 else 52) {
+            AsterStar(random.nextFloat(), random.nextFloat(), .4f + random.nextFloat(), random.nextFloat() * 6.28f)
         }
-        drawRect(Brush.radialGradient(
-            listOf(blue.copy(alpha = if (dark) .12f else .075f), Color.Transparent),
-            center = focal, radius = size.maxDimension * .65f,
-        ))
-        if (space == NovaSpace.COLLECTION) {
-            // Vertical light columns instead of the curved horizon used at home.
-            repeat(6) { index ->
-                val x = size.width * (index + .5f) / 6f
-                drawLine(blue.copy(alpha = .045f), Offset(x, 0f),
-                    Offset(x, size.height * .65f), 1.dp.toPx())
+    }
+    val base = if (pureBlack) Color.Black else palette.base
+    Canvas(modifier.background(base)) {
+        val t = phase.value * 2f * PI.toFloat()
+        val focus = when (scene) {
+            AsterScene.SESSION -> Offset(size.width * .9f, size.height * .12f)
+            AsterScene.EXPLORE -> Offset(size.width * .1f, size.height * .42f)
+            AsterScene.VAULT -> Offset(size.width * .8f, size.height * .04f)
+            AsterScene.SEARCH -> Offset(size.width, 0f)
+        }
+        drawRect(
+            brush = Brush.radialGradient(
+                colors = listOf(palette.violet.copy(alpha = .12f), Color.Transparent),
+                center = focus,
+                radius = size.maxDimension * .7f,
+            ),
+        )
+        if (scene == AsterScene.EXPLORE) {
+            val path = Path().apply {
+                moveTo(-size.width * .2f, size.height * .12f)
+                cubicTo(size.width * .8f, size.height * .1f, size.width * .2f, size.height * .6f, size.width * 1.2f, size.height * .58f)
+            }
+            drawPath(path, palette.ice.copy(alpha = .065f), style = Stroke(1.dp.toPx()))
+        }
+        stars.forEachIndexed { index, star ->
+            val center = Offset(
+                size.width * star.x + sin(t + star.offset) * 3.dp.toPx(),
+                size.height * star.y,
+            )
+            val opacity = .12f + (.5f + .5f * sin(t + star.offset)) * .2f
+            val tint = if (index % 3 == 0) palette.ice else palette.violet
+            drawCircle(tint.copy(alpha = opacity), star.radius.dp.toPx(), center)
+            if (index % 13 == 0) {
+                val length = 3.dp.toPx()
+                drawLine(tint.copy(alpha = opacity * .4f), center - Offset(length, 0f), center + Offset(length, 0f), .5.dp.toPx())
+                drawLine(tint.copy(alpha = opacity * .4f), center - Offset(0f, length), center + Offset(0f, length), .5.dp.toPx())
             }
         }
-        val count = if (space == NovaSpace.RESULTS) 12 else 32
-        repeat(count) { index ->
-            val x = ((index * 71 + 19) % 997) / 997f * size.width
-            val y = ((index * 137 + 53) % 991) / 991f * size.height * .72f
-            val drift = sin(t + index) * 3.dp.toPx()
-            val alpha = .10f + .11f * (.5f + .5f * cos(t + index * .7f))
-            drawCircle(if (index % 4 == 0) secondary.copy(alpha = alpha) else blue.copy(alpha = alpha),
-                radius = if (index % 5 == 0) 1.dp.toPx() else .65.dp.toPx(),
-                center = Offset(x + drift, y))
-        }
-        drawRect(Brush.verticalGradient(
-            0f to Color.Transparent, .62f to Color.Transparent, 1f to base,
-        ))
+        drawRect(Brush.verticalGradient(0f to Color.Transparent, .45f to Color.Transparent, 1f to base))
     }
 }
 
-@Composable
-internal fun NovaIcon(icon: Int, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    IconButton(onClick = onClick, modifier = modifier.size(48.dp)) {
-        Icon(painterResource(icon), contentDescription = label, modifier = Modifier.size(22.dp))
-    }
-}
-
-@Composable
-internal fun NovaHeading(title: String, detail: String? = null, action: String? = null, onAction: (() -> Unit)? = null) {
-    Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            if (detail != null) Text(detail.uppercase(), style = MaterialTheme.typography.labelSmall,
-                letterSpacing = 1.8.sp, color = MaterialTheme.colorScheme.primary)
-            Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-        }
-        if (action != null && onAction != null) TextButton(onClick = onAction) { Text(action) }
-    }
-}
-
-@Composable
-internal fun NovaArtwork(url: String?, modifier: Modifier, circular: Boolean = false) {
-    Box(modifier.clip(if (circular) CircleShape else RoundedCornerShape(16.dp))
-        .background(MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
-        Icon(painterResource(R.drawable.music_note), null, tint = MaterialTheme.colorScheme.primary.copy(alpha = .3f),
-            modifier = Modifier.size(28.dp))
-        AsyncImage(model = url, contentDescription = null, contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize())
-    }
-}
-
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-@Composable
-internal fun NovaMusicRow(
-    title: String, subtitle: String, artwork: String?, onClick: () -> Unit,
-    modifier: Modifier = Modifier, active: Boolean = false, playing: Boolean = false,
-    onMenu: (() -> Unit)? = null, circular: Boolean = false,
+internal fun DrawScope.drawAsterGlyph(
+    kind: Int,
+    tint: Color,
+    phase: Float = 0f,
 ) {
-    Row(
-        modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp))
-            .background(if (active) MaterialTheme.colorScheme.primary.copy(alpha = .09f) else Color.Transparent)
-            .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onMenu)
-            .padding(start = 12.dp, top = 10.dp, bottom = 10.dp, end = 4.dp),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(13.dp),
-    ) {
-        NovaArtwork(artwork, Modifier.size(54.dp), circular)
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 2,
-                overflow = TextOverflow.Ellipsis, color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, maxLines = 1,
-                overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    val center = Offset(size.width * .67f, size.height * .5f)
+    val radius = size.minDimension * .42f
+    when (kind % 4) {
+        0 -> rotate(-28f, center) {
+            repeat(9) { ring ->
+                val scale = .28f + ring * .105f
+                drawOval(
+                    color = tint.copy(alpha = .1f + ring * .035f),
+                    topLeft = center - Offset(radius * scale, radius * scale * .38f),
+                    size = Size(radius * scale * 2, radius * scale * .76f),
+                    style = Stroke(if (ring == 7) 2.dp.toPx() else .8.dp.toPx()),
+                )
+            }
+            val angle = phase * 6.283f
+            val point = center + Offset(cos(angle) * radius, sin(angle) * radius * .38f)
+            drawCircle(tint.copy(alpha = .12f), 8.dp.toPx(), point)
+            drawCircle(tint, 2.dp.toPx(), point)
         }
-        if (active) Icon(painterResource(if (playing) R.drawable.pause else R.drawable.play),
-            contentDescription = if (playing) "Pausar" else "Reproducir", tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(22.dp))
-        if (onMenu != null) NovaIcon(R.drawable.more_vert, "Opciones de $title", onMenu)
-        else Spacer(Modifier.width(10.dp))
+        1 -> {
+            repeat(17) { band ->
+                val path = Path()
+                for (step in 0..32) {
+                    val x = size.width * .25f + step / 32f * size.width * .8f
+                    val wave = sin(step / 32f * 6.28f + band * .13f + phase * 6.28f)
+                    val y = size.height * .2f + band * size.height * .033f + wave * size.height * .13f
+                    if (step == 0) path.moveTo(x, y) else path.lineTo(x, y)
+                }
+                drawPath(path, tint.copy(alpha = .12f + band * .018f), style = Stroke(.8.dp.toPx()))
+            }
+        }
+        2 -> rotate(24f, center) {
+            repeat(8) { index ->
+                val edge = radius * (.35f + index * .16f)
+                drawRect(
+                    tint.copy(alpha = .12f + index * .025f),
+                    center - Offset(edge, edge),
+                    Size(edge * 2, edge * 2),
+                    style = Stroke(.8.dp.toPx()),
+                )
+            }
+            drawCircle(tint.copy(alpha = .7f), 3.dp.toPx(), center)
+        }
+        else -> {
+            repeat(8) { ray ->
+                val angle = ray * PI.toFloat() / 4 + phase * 6.28f
+                val end = center + Offset(cos(angle), sin(angle)) * radius
+                drawLine(tint.copy(alpha = .28f), center, end, .8.dp.toPx())
+                drawCircle(tint.copy(alpha = .7f), 2.dp.toPx(), end)
+            }
+            repeat(3) { ring ->
+                drawCircle(tint.copy(alpha = .12f), radius * (.35f + ring * .3f), center, style = Stroke(.8.dp.toPx()))
+            }
+        }
     }
 }
 
 @Composable
-internal fun NovaMessage(title: String, message: String, action: String? = null, onAction: (() -> Unit)? = null) {
-    Column(Modifier.fillMaxWidth().padding(28.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
-        Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        if (action != null && onAction != null) OutlinedButton(onClick = onAction) { Text(action) }
+internal fun AsterIcon(
+    icon: Int,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    IconButton(onClick = onClick, modifier = modifier.size(48.dp)) {
+        Icon(painterResource(icon), label, Modifier.size(21.dp))
     }
 }
 
 @Composable
-internal fun NovaLoading(label: String) {
-    Row(Modifier.fillMaxWidth().padding(28.dp), horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically) {
-        CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+internal fun AsterEyebrow(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        modifier = modifier,
+        style = MaterialTheme.typography.labelSmall,
+        letterSpacing = 2.sp,
+        fontWeight = FontWeight.Medium,
+        color = asterPalette().violet,
+    )
+}
+
+@Composable
+internal fun AsterHeading(
+    title: String,
+    detail: String? = null,
+    action: String? = null,
+    onAction: (() -> Unit)? = null,
+) {
+    val palette = asterPalette()
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(Modifier.width(3.dp).height(30.dp).background(palette.violet, CircleShape))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            if (!detail.isNullOrBlank()) AsterEyebrow(detail.uppercase())
+            Text(
+                title,
+                modifier = Modifier.semantics { heading() },
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = (-.6).sp,
+            )
+        }
+        if (action != null && onAction != null) {
+            TextButton(onClick = onAction) { Text(action, color = palette.violet) }
+        }
     }
 }
 
-/** Entry motion is finite and honours the same reduced-motion policy as the player. */
 @Composable
-internal fun NovaEntrance(content: @Composable () -> Unit) {
+internal fun AsterArtwork(
+    url: String?,
+    modifier: Modifier,
+    circular: Boolean = false,
+) {
+    val palette = asterPalette()
+    val shape = if (circular) CircleShape else RoundedCornerShape(12.dp)
+    Box(
+        modifier = modifier.clip(shape).background(palette.panel),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.fillMaxSize()) {
+            drawRect(Brush.linearGradient(listOf(palette.violet.copy(alpha = .18f), palette.ice.copy(alpha = .08f))))
+            drawAsterGlyph(0, palette.violet.copy(alpha = .5f))
+        }
+        Icon(
+            painter = painterResource(R.drawable.music_note),
+            contentDescription = null,
+            tint = palette.violet,
+            modifier = Modifier.size(24.dp),
+        )
+        AsyncImage(
+            model = url,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
+}
+
+@Composable
+internal fun AsterChoice(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val palette = asterPalette()
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (selected) palette.violet.copy(alpha = .17f) else palette.panel.copy(alpha = .65f))
+            .border(1.dp, if (selected) palette.violet.copy(alpha = .5f) else palette.line, RoundedCornerShape(14.dp))
+            .selectable(selected = selected, role = Role.Tab, onClick = onClick)
+            .heightIn(min = 48.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(7.dp),
+    ) {
+        if (selected) Box(Modifier.size(5.dp).background(palette.violet, CircleShape))
+        Text(
+            text,
+            style = MaterialTheme.typography.labelLarge,
+            color = if (selected) palette.violet else palette.muted,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+        )
+    }
+}
+
+@Composable
+internal fun AsterPlaybackMark(
+    playing: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val palette = asterPalette()
+    Icon(
+        painterResource(if (playing) R.drawable.pause else R.drawable.play),
+        contentDescription = if (playing) "Pausar" else "Reproducir",
+        tint = palette.violet,
+        modifier = modifier.size(22.dp),
+    )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun AsterMusicRow(
+    title: String,
+    subtitle: String,
+    artwork: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    active: Boolean = false,
+    playing: Boolean = false,
+    onMenu: (() -> Unit)? = null,
+    circular: Boolean = false,
+    number: Int? = null,
+) {
+    val palette = asterPalette()
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(if (active) palette.violet.copy(alpha = .1f) else Color.Transparent)
+            .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onMenu)
+            .padding(start = 12.dp, end = 2.dp, top = 9.dp, bottom = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        if (number != null) {
+            Text(
+                text = number.toString().padStart(2, '0'),
+                modifier = Modifier.width(24.dp),
+                style = MaterialTheme.typography.labelSmall,
+                color = if (active) palette.violet else palette.muted,
+            )
+        }
+        Box {
+            AsterArtwork(artwork, Modifier.size(52.dp), circular)
+            if (active) {
+                Box(
+                    Modifier.matchParentSize().background(Color.Black.copy(alpha = .45f), if (circular) CircleShape else RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center,
+                ) { AsterPlaybackMark(playing) }
+            }
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium,
+                color = if (active) palette.violet else palette.ink,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = palette.muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        if (onMenu != null) AsterIcon(R.drawable.more_vert, "Opciones de $title", onMenu)
+        else Spacer(Modifier.width(12.dp))
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+internal fun AsterRecordCard(
+    title: String,
+    subtitle: String,
+    artwork: String?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    onMenu: (() -> Unit)? = null,
+    active: Boolean = false,
+    playing: Boolean = false,
+    busy: Boolean = false,
+    circular: Boolean = false,
+    index: Int? = null,
+) {
+    val palette = asterPalette()
+    Column(
+        modifier = modifier
+            .width(164.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onMenu),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
+            AsterArtwork(artwork, Modifier.fillMaxSize(), circular)
+            if (index != null) {
+                Surface(
+                    color = palette.base.copy(alpha = .94f),
+                    shape = RoundedCornerShape(bottomEnd = 12.dp),
+                    modifier = Modifier.align(Alignment.TopStart),
+                ) {
+                    Text(
+                        index.toString().padStart(2, '0'),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = palette.violet,
+                    )
+                }
+            }
+            if (active || busy) {
+                Box(
+                    Modifier.align(Alignment.BottomEnd).padding(8.dp).size(38.dp)
+                        .background(palette.base.copy(alpha = .94f), CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (busy) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = palette.violet)
+                    else AsterPlaybackMark(playing)
+                }
+            }
+        }
+        Column(Modifier.padding(horizontal = 2.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = palette.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+@Composable
+internal fun AsterMessage(
+    title: String,
+    message: String,
+    action: String? = null,
+    onAction: (() -> Unit)? = null,
+) {
+    val palette = asterPalette()
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(24.dp)
+            .border(1.dp, palette.line, RoundedCornerShape(24.dp))
+            .background(palette.panel.copy(alpha = .6f), RoundedCornerShape(24.dp))
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Canvas(Modifier.size(54.dp)) { drawAsterGlyph(3, palette.violet) }
+        Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Medium)
+        Text(message, style = MaterialTheme.typography.bodyMedium, color = palette.muted)
+        if (action != null && onAction != null) {
+            FilledTonalButton(onClick = onAction) { Text(action) }
+        }
+    }
+}
+
+@Composable
+internal fun AsterLoading(label: String) {
+    val palette = asterPalette()
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = palette.violet)
+            Text(label, style = MaterialTheme.typography.bodySmall, color = palette.muted)
+        }
+        repeat(3) { index ->
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Box(Modifier.size(50.dp).background(palette.panel, RoundedCornerShape(12.dp)))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                    Box(Modifier.fillMaxWidth(.7f - index * .1f).height(11.dp).background(palette.line, CircleShape))
+                    Box(Modifier.fillMaxWidth(.4f).height(8.dp).background(palette.line.copy(alpha = .06f), CircleShape))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+internal fun AsterEntrance(content: @Composable () -> Unit) {
     val reduced = OpenTuneDesignSystem.galaxMotion.reducedMotion
-    val opacity = remember { Animatable(if (reduced) 1f else 0f) }
+    val progress = remember { Animatable(if (reduced) 1f else 0f) }
     LaunchedEffect(reduced) {
-        if (reduced) opacity.snapTo(1f) else opacity.animateTo(1f, tween(420))
+        if (reduced) progress.snapTo(1f)
+        else progress.animateTo(1f, tween(520))
     }
-    Box(Modifier.graphicsLayer { this.alpha = opacity.value; translationY = (1f - opacity.value) * 12.dp.toPx() }) {
-        content()
-    }
+    Box(Modifier.graphicsLayer {
+        alpha = progress.value
+        translationY = (1f - progress.value) * 16.dp.toPx()
+    }) { content() }
+}
+
+@Composable
+internal fun LazyItemScope.asterItemMotion(modifier: Modifier = Modifier): Modifier {
+    return if (OpenTuneDesignSystem.galaxMotion.reducedMotion) modifier
+    else modifier.animateItem()
 }

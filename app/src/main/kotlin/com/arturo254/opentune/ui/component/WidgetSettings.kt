@@ -6,6 +6,9 @@
 
 package com.arturo254.opentune.ui.component
 
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsEnvironment
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsSection
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsPageIntro
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -61,7 +64,7 @@ import kotlinx.coroutines.launch
 fun WidgetSettings(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.WIDGET) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -96,6 +99,7 @@ fun WidgetSettings(
             .windowInsetsPadding(LocalPlayerAwareWindowInsets.current)
             .verticalScroll(rememberScrollState()),
     ) {
+        AsterSettingsPageIntro()
         PreferenceGroupTitle(
             title = stringResource(R.string.widget_preview),
         )
@@ -181,12 +185,13 @@ fun WidgetSettings(
             ) {
                 Icon(
                     painterResource(R.drawable.arrow_back),
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.aster_settings_back),
                 )
             }
         },
     )
 }
+
 
 /**
  * Vista previa en vivo del widget dentro de la propia pantalla de Settings,

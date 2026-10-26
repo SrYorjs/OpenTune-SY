@@ -116,7 +116,7 @@ class GalaxStudioPlayerIsolationTest {
         val library = source("ui/screens/library/LibraryScreen.kt")
         val portal = source("ui/screens/library/GalaxLibraryOrbitNavigator.kt")
         val media = source("ui/screens/GalaxMediaHeader.kt")
-        assertTrue(library.contains("CollectionTabs("))
+        assertTrue(library.contains("VaultCategories("))
         assertTrue(library.contains("filterContent()"))
         assertTrue(library.contains("DropdownMenu("))
         assertTrue(library.contains("PlaylistMenu("))

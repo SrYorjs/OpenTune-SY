@@ -87,6 +87,11 @@ import androidx.compose.ui.unit.sp
 import com.arturo254.opentune.R
 import me.saket.squiggles.SquigglySlider
 import kotlin.math.roundToInt
+import com.arturo254.opentune.ui.screens.settings.LocalAsterSettingsSection
+import com.arturo254.opentune.ui.screens.settings.AsterPreferenceRow
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsPanel
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsHeading
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsSwitch
 
 val LocalPreferenceInGroup = compositionLocalOf { false }
 
@@ -125,6 +130,27 @@ fun PreferenceEntry(
     elevation: Float = 0f,
 ) {
     val inGroup = LocalPreferenceInGroup.current
+    if (LocalAsterSettingsSection.current != null) {
+        AsterPreferenceRow(
+            title = title,
+            modifier = modifier,
+            supporting = if (subtitle != null || description != null || content != null) {
+                {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        subtitle?.invoke()
+                        description?.let { Text(it) }
+                        content?.invoke()
+                    }
+                }
+            } else null,
+            icon = icon,
+            trailing = trailingContent,
+            enabled = isEnabled,
+            grouped = inGroup,
+            onClick = onClick,
+        )
+        return
+    }
     val row: @Composable () -> Unit = {
         NewMenuItem(
             headlineContent = title,
@@ -274,6 +300,19 @@ fun SwitchPreference(
     onCheckedChange: (Boolean) -> Unit,
     isEnabled: Boolean = true,
 ) {
+    if (LocalAsterSettingsSection.current != null) {
+        AsterSettingsSwitch(
+            title = title,
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = modifier,
+            description = description,
+            icon = icon,
+            enabled = isEnabled,
+            grouped = LocalPreferenceInGroup.current,
+        )
+        return
+    }
     val rotation by animateFloatAsState(
         targetValue = if (checked) 0f else 180f,
         animationSpec = spring(
@@ -708,6 +747,17 @@ fun PreferenceGroup(
     title: String? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    if (LocalAsterSettingsSection.current != null) {
+        Column(modifier.padding(horizontal = 18.dp)) {
+            title?.let { AsterSettingsHeading(it) }
+            AsterSettingsPanel {
+                CompositionLocalProvider(LocalPreferenceInGroup provides true) {
+                    Column(content = content)
+                }
+            }
+        }
+        return
+    }
     Column(modifier = modifier.padding(horizontal = 16.dp)) {
         if (title != null) {
             Text(
@@ -762,6 +812,10 @@ fun PreferenceGroupTitle(
     title: String,
     modifier: Modifier = Modifier,
 ) {
+    if (LocalAsterSettingsSection.current != null) {
+        AsterSettingsHeading(title, modifier.padding(horizontal = 22.dp, vertical = 6.dp))
+        return
+    }
     Text(
         text = title,
         style = MaterialTheme.typography.labelLarge.copy(

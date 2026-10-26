@@ -1,6 +1,8 @@
 package com.arturo254.opentune.ui.screens.settings
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -17,7 +19,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -66,11 +68,11 @@ import kotlinx.coroutines.withContext
 fun StorageSettings(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.STORAGE) {
     val context = LocalContext.current
-    val imageDiskCache = context.imageLoader.diskCache ?: return
-    val playerCache = LocalPlayerConnection.current?.service?.playerCache ?: return
-    val downloadCache = LocalPlayerConnection.current?.service?.downloadCache ?: return
+    val imageDiskCache = context.imageLoader.diskCache ?: return@AsterSettingsEnvironment
+    val playerCache = LocalPlayerConnection.current?.service?.playerCache ?: return@AsterSettingsEnvironment
+    val downloadCache = LocalPlayerConnection.current?.service?.downloadCache ?: return@AsterSettingsEnvironment
 
     val downloadCacheDir = remember { context.filesDir.resolve("download") }
     val playerCacheDir = remember { context.filesDir.resolve("exoplayer") }
@@ -403,12 +405,13 @@ fun StorageSettings(
             ) {
                 Icon(
                     painterResource(R.drawable.arrow_back),
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.aster_settings_back),
                 )
             }
         }
     )
 }
+
 
 @Composable
 fun CacheCard(
@@ -418,58 +421,29 @@ fun CacheCard(
     progress: Float?,
     actions: @Composable () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        shape = MaterialTheme.shapes.large
-    ) {
-        Column(Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Card(
-                    modifier = Modifier.padding(end = 12.dp),
-                    shape = MaterialTheme.shapes.small,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
-                ) {
-                    androidx.compose.foundation.layout.Box(modifier = Modifier.padding(8.dp), contentAlignment = Alignment.Center) {
-                        Icon(
-                            painter = painterResource(icon),
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
+    val colors = MaterialTheme.colorScheme
+    val fraction = progress?.takeIf { it.isFinite() }?.coerceIn(0f, 1f)
+    AsterSettingsPanel(Modifier.padding(vertical = 8.dp)) {
+        Row(Modifier.fillMaxWidth().padding(18.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+            androidx.compose.foundation.layout.Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
+                androidx.compose.foundation.Canvas(Modifier.matchParentSize()) {
+                    drawCircle(colors.outlineVariant, radius = size.minDimension * .45f,
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(3.dp.toPx()))
+                    if (fraction != null) drawArc(colors.primary, -90f, fraction * 360f, false,
+                        topLeft = androidx.compose.ui.geometry.Offset(size.width * .05f, size.height * .05f),
+                        size = androidx.compose.ui.geometry.Size(size.width * .9f, size.height * .9f),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(3.dp.toPx(), cap = StrokeCap.Round))
                 }
-                Column {
-                    Text(title, style = MaterialTheme.typography.titleMedium)
-                    Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+                Icon(painterResource(icon), null, Modifier.size(24.dp), tint = colors.primary)
             }
-            if (progress != null) {
-                Spacer(Modifier.padding(top = 8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    LinearProgressIndicator(
-                        progress = progress,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp),
-                        color = MaterialTheme.colorScheme.primary,
-                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                        strokeCap = StrokeCap.Round
-                    )
-
-                    Text(
-                        text = "${(progress * 100).toInt()}%",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium)
+                Text(description, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+                if (fraction != null) Text("${(fraction * 100).toInt()}%",
+                    style = MaterialTheme.typography.labelMedium, color = colors.primary)
             }
-            Spacer(Modifier.padding(4.dp))
-            actions()
         }
+        androidx.compose.foundation.layout.Box(Modifier.padding(start = 18.dp, end = 18.dp, bottom = 12.dp)) { actions() }
     }
 }

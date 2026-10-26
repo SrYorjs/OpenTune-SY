@@ -5,6 +5,16 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.motion.galaxMotion
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,7 +50,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import java.util.Locale
 
-/** Signal: one universal result stream, explicit versions, quality and offline state. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: UniversalSearchViewModel = hiltViewModel()) {
@@ -55,9 +64,8 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
     var resolving by remember { mutableStateOf<String?>(null) }
     var downloading by remember { mutableStateOf<String?>(null) }
     var dialog by remember(query) { mutableStateOf<String?>(null) }
-    val manual = remember { mutableStateMapOf<String, SourceVariantKey>() }
+    val manual = remember(query) { mutableStateMapOf<String, SourceVariantKey>() }
     var quality by rememberEnumPreference(UniversalAudioSelectionModeKey, AudioSelectionMode.AUTOMATIC)
-    // During the debounce interval do not relabel the previous query's results.
     val sameQuery = state.query == query.trim()
     val entries = if (sameQuery) state.result.tracks else emptyList()
     val loading = state.isLoading || (!sameQuery && query.isNotBlank())
@@ -86,34 +94,72 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
             }
         }
     }
+
+    val phase = rememberAsterPhase(false)
+    val palette = asterPalette()
     Box(Modifier.fillMaxSize().background(if (pureBlack) Color.Black else MaterialTheme.colorScheme.background)) {
-        NovaBackdrop(NovaSpace.RESULTS, active = false, modifier = Modifier.fillMaxSize(), pureBlack = pureBlack)
-        LazyColumn(state = list, modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 16.dp, bottom = bottom + 24.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            item("signal/header") { SignalHeader(query, entries.size, loading) }
-            item("signal/quality") { SignalQuality(quality) { quality = it } }
-            if (sameQuery && state.result.failedSourceCount > 0) item("signal/partial") {
-                Surface(Modifier.padding(horizontal = 20.dp), shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.secondaryContainer) {
-                    Text("Algunas fuentes no respondieron. Estos resultados siguen disponibles.",
-                        Modifier.padding(16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
+        AsterBackdrop(AsterScene.SEARCH, phase, Modifier.fillMaxSize(), pureBlack = pureBlack)
+        LazyColumn(
+            state = list,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(top = 18.dp, bottom = bottom + 24.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            item("transmission/header") {
+                TransmissionHeader(query, entries.size, loading)
+            }
+            item("transmission/quality") {
+                TransmissionQuality(quality) { quality = it }
+            }
+            if (sameQuery && state.result.failedSourceCount > 0) {
+                item("transmission/partial") {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 24.dp)
+                            .background(palette.rose.copy(alpha = .1f), RoundedCornerShape(16.dp))
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Icon(painterResource(R.drawable.info), null, Modifier.size(20.dp), tint = palette.rose)
+                        Text(
+                            "Algunas fuentes no respondieron. Puedes escuchar los resultados disponibles.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = palette.ink,
+                        )
+                    }
                 }
             }
-            if (loading && entries.isEmpty()) item("signal/loading") { NovaLoading("Buscando en todos los catálogos…") }
-            if (!loading && entries.isEmpty()) item("signal/empty") {
-                NovaMessage(
-                    title = if (state.error != null) "No pudimos completar la búsqueda" else if (query.isBlank()) "Encuentra tu próxima canción" else "No hay coincidencias",
-                    message = if (state.error != null) "Comprueba tu conexión y vuelve a enviar la búsqueda." else "Prueba con el título, un artista o una parte del nombre.",
-                )
+            if (loading && entries.isEmpty()) {
+                item("transmission/loading") { AsterLoading("Buscando en todos los catálogos…") }
             }
-            itemsIndexed(entries, key = { index, result -> universalResultRowKey(index, result.signalKey()) },
-                contentType = { _, _ -> "signal/recording" }) { index, result ->
+            if (!loading && entries.isEmpty()) {
+                item("transmission/empty") {
+                    AsterMessage(
+                        title = if (sameQuery && state.error != null) "La señal no llegó" else if (query.isBlank()) "Tu próxima canción empieza aquí" else "No encontramos esa frecuencia",
+                        message = if (sameQuery && state.error != null) "Comprueba tu conexión y vuelve a enviar la búsqueda."
+                            else "Prueba con un título, un artista o una parte del nombre.",
+                    )
+                }
+            }
+            itemsIndexed(
+                entries,
+                key = { index, result -> universalResultRowKey(index, result.signalKey()) },
+                contentType = { _, _ -> "transmission/track" },
+            ) { index, result ->
                 val key = result.signalKey()
                 val sources = result.variants.map { it.provider to it.sourceId }.toSet()
-                val asset = offlineAssets.firstOrNull { asset -> asset.discoverySources.any { (it.provider to it.sourceId) in sources } }
+                val asset = offlineAssets.firstOrNull { candidate ->
+                    candidate.discoverySources.any { source ->
+                        (source.provider to source.sourceId) in sources
+                    }
+                }
                 val offline = asset?.takeIf { it.state == OfflineTrackState.AVAILABLE }?.toSourceVariant()
                     ?: result.variants.firstOrNull { it.provider == ProviderId.OPEN_TUNE_OFFLINE }
-                val preferred = viewModel.selectVariant(result, result.variants + listOfNotNull(offline), quality, manual[key])
+                val preferred = viewModel.selectVariant(
+                    result = result,
+                    variants = result.variants + listOfNotNull(offline),
+                    mode = quality,
+                    manualVariant = manual[key],
+                )
                 val fallbacks = if (preferred == null) result.variants.filter {
                     it.provider in setOf(ProviderId.DEEZER, ProviderId.SPOTIFY, ProviderId.TIDAL, ProviderId.APPLE_MUSIC)
                 } else emptyList()
@@ -126,10 +172,16 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                 val canDownload = offline == null && !pending && result.variants.any {
                     it.provider != ProviderId.LOCAL && it.provider != ProviderId.OPEN_TUNE_OFFLINE
                 }
-                SignalResult(
-                    index = index, result = result, preferred = preferred, active = active, playing = playing,
-                    resolving = resolving == key, downloaded = offline != null, downloading = pending,
-                    modifier = Modifier.animateItem(),
+                TransmissionResult(
+                    index = index,
+                    result = result,
+                    preferred = preferred,
+                    active = active,
+                    playing = playing,
+                    resolving = resolving == key,
+                    downloaded = offline != null,
+                    downloading = pending,
+                    modifier = asterItemMotion(),
                     onVersions = { dialog = key },
                     onPlay = if (player != null && (active || preferred != null || fallbacks.isNotEmpty())) {
                         { if (active) player.player.togglePlayPause() else play(result, listOfNotNull(preferred) + fallbacks) }
@@ -148,9 +200,16 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                     } } else null,
                 )
             }
-            if (sameQuery && state.isLoadingMore) item("signal/more-loading") { NovaLoading("Cargando más canciones…") }
-            else if (sameQuery && state.result.hasMore && entries.isNotEmpty()) item("signal/more") {
-                TextButton(onClick = viewModel::loadMore, modifier = Modifier.padding(horizontal = 20.dp)) { Text("Cargar más resultados") }
+
+            if (sameQuery && state.isLoadingMore) {
+                item("transmission/loading-more") { AsterLoading("Encontrando más música…") }
+            } else if (sameQuery && state.result.hasMore && entries.isNotEmpty()) {
+                item("transmission/more") {
+                    OutlinedButton(
+                        onClick = viewModel::loadMore,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    ) { Text("Seguir explorando resultados") }
+                }
             }
         }
     }
@@ -173,91 +232,242 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
     }
 }
 
+
 @Composable
-private fun SignalHeader(query: String, count: Int, loading: Boolean) {
-    val ink = MaterialTheme.colorScheme.primary
-    Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+private fun TransmissionHeader(query: String, count: Int, loading: Boolean) {
+    val palette = asterPalette()
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Canvas(Modifier.size(28.dp)) {
-                repeat(5) { bar ->
-                    val height = size.height * listOf(.3f, .6f, 1f, .65f, .35f)[bar]
-                    val x = size.width * (bar + .5f) / 5
-                    drawLine(ink, Offset(x, (size.height - height) / 2), Offset(x, (size.height + height) / 2), 2.dp.toPx())
-                }
-            }
-            Text("TODOS LOS CATÁLOGOS", style = MaterialTheme.typography.labelSmall, letterSpacing = 1.8.sp, color = ink)
+            Box(Modifier.size(7.dp).background(palette.ice, CircleShape))
+            AsterEyebrow("BÚSQUEDA UNIVERSAL", Modifier.weight(1f))
+            Text(if (loading) "…" else count.toString().padStart(2, '0'), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Light, color = palette.violet)
         }
-        Text(query.ifBlank { "Tu música, aquí." }, style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Medium, letterSpacing = (-1).sp, maxLines = 3, overflow = TextOverflow.Ellipsis)
-        Text(if (loading) "Explorando…" else "$count canciones encontradas", style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
-}
-
-@Composable
-private fun SignalQuality(selected: AudioSelectionMode, onSelect: (AudioSelectionMode) -> Unit) {
-    LazyRow(contentPadding = PaddingValues(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(AudioSelectionMode.entries, key = { it.name }) { mode ->
-            FilterChip(selected = selected == mode, onClick = { onSelect(mode) }, label = { Text(when (mode) {
-                AudioSelectionMode.AUTOMATIC -> "Automática"
-                AudioSelectionMode.BEST_QUALITY -> "Mejor calidad"
-                AudioSelectionMode.DATA_SAVER -> "Ahorrar datos"
-            }) })
+        Text(
+            query.ifBlank { "Sigue el sonido." },
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = (-1).sp,
+            maxLines = 3,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            Text(
+                if (loading) "Explorando catálogos" else "$count canciones encontradas",
+                style = MaterialTheme.typography.bodySmall,
+                color = palette.muted,
+            )
+            HorizontalDivider(Modifier.weight(1f), color = palette.line)
         }
     }
 }
 
 @Composable
-private fun SignalResult(
-    index: Int, result: UnifiedTrackSearchResult, preferred: SourceVariant?, active: Boolean, playing: Boolean,
-    resolving: Boolean, downloaded: Boolean, downloading: Boolean, onPlay: (() -> Unit)?,
-    onVersions: () -> Unit, onDownload: (() -> Unit)?, modifier: Modifier = Modifier,
+private fun TransmissionQuality(
+    selected: AudioSelectionMode,
+    onSelect: (AudioSelectionMode) -> Unit,
 ) {
-    val colors = MaterialTheme.colorScheme
+    val palette = asterPalette()
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            items(AudioSelectionMode.entries, key = { it.name }) { mode ->
+                AsterChoice(
+                    text = when (mode) {
+                        AudioSelectionMode.AUTOMATIC -> "Automática"
+                        AudioSelectionMode.BEST_QUALITY -> "Mejor calidad"
+                        AudioSelectionMode.DATA_SAVER -> "Ahorrar datos"
+                    },
+                    selected = selected == mode,
+                    onClick = { onSelect(mode) },
+                )
+            }
+        }
+        Text(
+            text = when (selected) {
+                AudioSelectionMode.AUTOMATIC -> "Elegimos una versión disponible para reproducir."
+                AudioSelectionMode.BEST_QUALITY -> "Prioriza la mejor calidad disponible."
+                AudioSelectionMode.DATA_SAVER -> "Prioriza versiones que consumen menos datos."
+            },
+            modifier = Modifier.padding(horizontal = 24.dp),
+            style = MaterialTheme.typography.bodySmall,
+            color = palette.muted,
+        )
+    }
+}
+
+@Composable
+private fun TransmissionResult(
+    index: Int,
+    result: UnifiedTrackSearchResult,
+    preferred: SourceVariant?,
+    active: Boolean,
+    playing: Boolean,
+    resolving: Boolean,
+    downloaded: Boolean,
+    downloading: Boolean,
+    onPlay: (() -> Unit)?,
+    onVersions: () -> Unit,
+    onDownload: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+) {
+    val palette = asterPalette()
     val display = preferred ?: result.recommendedVariant
     val artwork = display?.artworkUrl ?: result.variants.firstNotNullOfOrNull { it.artworkUrl }
-    val providers = (result.variants + listOfNotNull(preferred)).map { it.provider }.distinct().joinToString(" · ") { signalProvider(it) }
+    val providers = (result.variants + listOfNotNull(preferred)).map { it.provider }.distinct()
     val quality = signalQuality(display)
-    Column(modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(20.dp))
-        .background(if (active) colors.primary.copy(alpha = .1f) else colors.surfaceContainerLow.copy(alpha = .8f))) {
-        Row(Modifier.fillMaxWidth().clickable(enabled = onPlay != null, role = Role.Button) { onPlay?.invoke() }
-            .padding(14.dp), horizontalArrangement = Arrangement.spacedBy(13.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box {
-                NovaArtwork(artwork, Modifier.size(68.dp))
-                if (resolving) CircularProgressIndicator(Modifier.align(Alignment.Center).size(25.dp), strokeWidth = 2.dp)
+    val reduced = OpenTuneDesignSystem.galaxMotion.reducedMotion
+    var expanded by rememberSaveable(result.signalKey()) { mutableStateOf(false) }
+    Column(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 20.dp)
+            .clip(RoundedCornerShape(22.dp))
+            .background(if (active) palette.violet.copy(alpha = .1f) else palette.panel.copy(alpha = .65f))
+            .border(1.dp, if (active) palette.violet.copy(alpha = .4f) else palette.line, RoundedCornerShape(22.dp)),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                (index + 1).toString().padStart(2, '0'),
+                style = MaterialTheme.typography.labelSmall,
+                letterSpacing = 1.sp,
+                color = palette.muted,
+            )
+            Spacer(Modifier.width(12.dp))
+            if (downloaded || downloading) {
+                Text(
+                    if (downloaded) "SIN CONEXIÓN" else "PREPARANDO DESCARGA",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = palette.ice,
+                    modifier = Modifier.weight(1f),
+                )
+            } else {
+                Text(
+                    if (active) "AHORA SUENA" else "CANCIÓN",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (active) palette.violet else palette.muted,
+                    modifier = Modifier.weight(1f),
+                )
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text(result.identity.title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis,
-                    color = if (active) colors.primary else colors.onSurface)
-                Text(result.identity.artists.joinToString { it.name }, style = MaterialTheme.typography.bodySmall,
-                    color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                if (quality != null) Text(quality, style = MaterialTheme.typography.labelSmall, color = colors.primary,
-                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+            TextButton(onClick = { expanded = !expanded }) {
+                Text(if (expanded) "Ocultar detalles" else "Detalles", style = MaterialTheme.typography.labelSmall, color = palette.violet)
             }
-            if (!resolving && onPlay != null) Icon(painterResource(if (active && playing) R.drawable.pause else R.drawable.play),
-                contentDescription = if (active && playing) "Pausar" else "Reproducir", tint = colors.primary, modifier = Modifier.size(22.dp))
         }
-        HorizontalDivider(Modifier.padding(horizontal = 14.dp), color = colors.outlineVariant.copy(alpha = .35f))
-        Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
-                Text(providers, style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant,
-                    maxLines = 2, overflow = TextOverflow.Ellipsis)
-                if (downloaded || downloading || display?.isCatalogOnly() == true) Text(
-                    when { downloaded -> "Disponible sin conexión"; downloading -> "Preparando descarga…"; else -> "Se buscará una versión reproducible" },
-                    style = MaterialTheme.typography.labelSmall, color = colors.primary)
+        Row(
+            Modifier.fillMaxWidth()
+                .clickable(enabled = onPlay != null && !resolving, role = Role.Button) { onPlay?.invoke() }
+                .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            AsterArtwork(artwork, Modifier.size(66.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(7.dp)) {
+                Text(
+                    result.identity.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    color = if (active) palette.violet else palette.ink,
+                )
+                Text(
+                    result.identity.artists.joinToString { it.name },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = palette.muted,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
-            TextButton(onClick = onVersions) { Text("Versiones") }
-            if (downloading) CircularProgressIndicator(Modifier.padding(12.dp).size(20.dp), strokeWidth = 2.dp)
-            else if (onDownload != null) NovaIcon(R.drawable.download, "Descargar ${result.identity.title}", onDownload)
+            if (resolving) {
+                CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp, color = palette.violet)
+            } else if (onPlay != null) {
+                Box(Modifier.size(38.dp).background(palette.violet.copy(alpha = .12f), CircleShape), contentAlignment = Alignment.Center) {
+                    AsterPlaybackMark(active && playing)
+                }
+            }
+        }
+        AnimatedVisibility(
+            visible = expanded,
+            enter = if (reduced) EnterTransition.None else fadeIn(),
+            exit = if (reduced) ExitTransition.None else fadeOut(),
+        ) {
+            Column(
+                Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                HorizontalDivider(color = palette.line)
+                TransmissionDetail("Fuentes", providers.joinToString(" · ") { signalProvider(it) })
+                if (quality != null) TransmissionDetail("Calidad", quality)
+                result.identity.album?.title?.takeIf { it.isNotBlank() }?.let { album ->
+                    TransmissionDetail("Álbum", album)
+                }
+                if (display?.isCatalogOnly() == true) {
+                    Text("Se buscará una versión reproducible al escuchar.", style = MaterialTheme.typography.bodySmall, color = palette.muted)
+                }
+                if (onPlay == null) {
+                    Text("No hay una versión reproducible disponible. Revisa las versiones.", style = MaterialTheme.typography.bodySmall, color = palette.rose)
+                }
+            }
+        }
+        Row(
+            Modifier.fillMaxWidth()
+                .background(palette.base.copy(alpha = .3f))
+                .padding(start = 16.dp, end = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Column(Modifier.weight(1f).padding(vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    "${result.variants.size} ${if (result.variants.size == 1) "versión" else "versiones"}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = palette.ink,
+                )
+                Text(
+                    quality ?: providers.take(2).joinToString(" · ") { signalProvider(it) },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = palette.muted,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            TextButton(onClick = onVersions) { Text("Versiones", color = palette.violet) }
+            when {
+                downloading -> CircularProgressIndicator(Modifier.padding(12.dp).size(20.dp), strokeWidth = 2.dp, color = palette.ice)
+                downloaded -> Icon(painterResource(R.drawable.offline), "Disponible sin conexión", Modifier.padding(12.dp).size(20.dp), tint = palette.ice)
+                onDownload != null -> AsterIcon(R.drawable.download, "Descargar ${result.identity.title}", onDownload)
+            }
         }
     }
 }
 
-/** Includes version traits and album so alternate recordings cannot share choices. */
-private fun UnifiedTrackSearchResult.signalKey(): String = identity.isrc?.takeIf { it.isNotBlank() }?.let { "isrc:${it.uppercase(Locale.ROOT)}" }
-    ?: listOf(identity.title.trim().lowercase(Locale.ROOT), identity.artists.joinToString(",") { it.name.trim().lowercase(Locale.ROOT) },
-        identity.durationMs ?: -1L, identity.album?.canonicalId ?: identity.album?.title.orEmpty(),
-        identity.version.traits.map { it.name }.sorted().joinToString(","), identity.version.label.orEmpty().trim().lowercase(Locale.ROOT)).joinToString("|")
+@Composable
+private fun TransmissionDetail(label: String, value: String) {
+    val palette = asterPalette()
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(label.uppercase(), style = MaterialTheme.typography.labelSmall, letterSpacing = 1.sp, color = palette.violet)
+        Text(value, style = MaterialTheme.typography.bodySmall, color = palette.muted)
+    }
+}
+
+private fun UnifiedTrackSearchResult.signalKey(): String {
+    val isrc = identity.isrc?.takeIf { it.isNotBlank() }
+    if (isrc != null) return "isrc:${isrc.uppercase(Locale.ROOT)}"
+    return listOf(
+        identity.title.trim().lowercase(Locale.ROOT),
+        identity.artists.joinToString(",") { artist ->
+            artist.name.trim().lowercase(Locale.ROOT)
+        },
+        identity.durationMs ?: -1L,
+        identity.album?.canonicalId ?: identity.album?.title.orEmpty(),
+        identity.version.traits.map { it.name }.sorted().joinToString(","),
+        identity.version.label.orEmpty().trim().lowercase(Locale.ROOT),
+    ).joinToString("|")
+}
 
 private fun signalProvider(provider: ProviderId): String = when (provider) {
     ProviderId.YOUTUBE_MUSIC -> "YouTube Music"

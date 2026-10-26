@@ -13,7 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -44,7 +44,7 @@ import com.arturo254.opentune.utils.rememberPreference
 fun PrivacySettings(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.PRIVACY) {
     val database = LocalDatabase.current
     val (pauseListenHistory, onPauseListenHistoryChange) = rememberPreference(
         key = PauseListenHistoryKey,
@@ -202,7 +202,7 @@ fun PrivacySettings(
             ) {
                 Icon(
                     painterResource(R.drawable.arrow_back),
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.aster_settings_back),
                 )
             }
         }
