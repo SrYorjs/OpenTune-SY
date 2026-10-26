@@ -44,10 +44,10 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsScaffold as Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -855,7 +855,7 @@ private fun Color.toHexString(): String {
 @Composable
 fun PalettePickerScreen(
     navController: NavController
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.PALETTE) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val (customThemeColor, onCustomThemeColorChange) = rememberPreference(
@@ -958,6 +958,8 @@ fun PalettePickerScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
+        AsterSettingsPageIntro()
             Spacer(modifier = Modifier.height(16.dp))
 
             ThemePreviewCard(
@@ -981,6 +983,7 @@ fun PalettePickerScreen(
         }
     }
 }
+
 
 private fun ThemeSeedPalette.toThemePalette(): ThemePalette =
     ThemePalette(

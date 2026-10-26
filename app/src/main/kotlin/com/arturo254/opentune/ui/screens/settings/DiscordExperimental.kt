@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -28,7 +28,7 @@ import com.arturo254.opentune.utils.rememberPreference
 @Composable
 fun DiscordExperimental(
     navController: NavController,
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.EXPERIMENTAL) {
     Scaffold { inner ->
         Column(Modifier.fillMaxSize()) {
             TopAppBar(
@@ -45,6 +45,7 @@ fun DiscordExperimental(
                     .padding(inner.calculateBottomPadding())
                     .padding(bottom = 80.dp)
             ) {
+            item(key = "aster_page_intro") { AsterSettingsPageIntro() }
                 item {
                     Text(
                         text = stringResource(R.string.translator_options),

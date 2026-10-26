@@ -43,7 +43,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -94,7 +94,7 @@ fun PoTokenScreen(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
     viewModel: PoTokenViewModel = hiltViewModel(),
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.TOKEN) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val tokenState by viewModel.state.collectAsState()
@@ -266,6 +266,8 @@ fun PoTokenScreen(
                 LocalPlayerAwareWindowInsets.current.only(WindowInsetsSides.Top)
             )
         )
+        AsterSettingsPageIntro()
+
 
         SwitchPreference(
             title = { Text(stringResource(R.string.web_client_po_token)) },
@@ -416,6 +418,7 @@ fun PoTokenScreen(
         }
     )
 }
+
 
 @Composable
 private fun SelectableTokenCard(

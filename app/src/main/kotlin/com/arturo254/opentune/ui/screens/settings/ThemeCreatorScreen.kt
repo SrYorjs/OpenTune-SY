@@ -56,14 +56,14 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
-import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsScaffold as Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -117,7 +117,7 @@ private enum class SeedRole {
 @Composable
 fun ThemeCreatorScreen(
     navController: NavController,
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.THEME) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -298,6 +298,8 @@ fun ThemeCreatorScreen(
                 .windowInsetsPadding(LocalPlayerAwareWindowInsets.current.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
                 .verticalScroll(rememberScrollState()),
         ) {
+
+        AsterSettingsPageIntro()
             ThemeHeroPreview(
                 palette = currentPalette,
                 modifier = Modifier
@@ -376,6 +378,7 @@ fun ThemeCreatorScreen(
         }
     }
 }
+
 
 private fun ThemePalette.toSeedPalette(): ThemeSeedPalette =
     ThemeSeedPalette(
@@ -1446,4 +1449,3 @@ private fun PresetSwatches(
         }
     }
 }
-

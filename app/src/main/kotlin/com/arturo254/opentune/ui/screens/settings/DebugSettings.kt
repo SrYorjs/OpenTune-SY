@@ -46,13 +46,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
-import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsScaffold as Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -101,7 +101,7 @@ import kotlin.math.roundToInt
 @Composable
 fun DebugSettings(
     navController: NavController
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.DEBUG) {
     val (showDevDebug, onShowDevDebugChange) = rememberPreference(
         key = booleanPreferencesKey("dev_show_discord_debug"),
         defaultValue = false
@@ -148,6 +148,8 @@ fun DebugSettings(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+
+        AsterSettingsPageIntro()
             PreferenceGroupTitle(
                 title = stringResource(R.string.experimental_features)
             )
@@ -208,6 +210,7 @@ fun DebugSettings(
         }
     }
 }
+
 
 @Composable
 private fun DiscordDebugSection() {

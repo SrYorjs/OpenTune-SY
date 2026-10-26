@@ -41,10 +41,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsScaffold as Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -102,7 +102,7 @@ private sealed interface UpdateCheckState {
 fun UpdateScreen(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.UPDATE) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val coroutineScope = rememberCoroutineScope()
@@ -250,6 +250,7 @@ fun UpdateScreen(
                 )
                 .padding(horizontal = 16.dp)
         ) {
+            item(key = "aster_page_intro") { AsterSettingsPageIntro() }
 
             item {
                 Spacer(Modifier.height(8.dp))
@@ -462,6 +463,7 @@ fun UpdateScreen(
         }
     }
 }
+
 
 @Composable
 private fun UpdateCheckButton(

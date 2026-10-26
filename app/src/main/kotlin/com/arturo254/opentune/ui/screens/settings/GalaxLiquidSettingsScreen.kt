@@ -8,7 +8,8 @@ import android.widget.Toast
 import com.arturo254.opentune.constants.GalaxLiquidPreviewBackgroundUriKey
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,10 +25,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsScaffold as Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -73,7 +74,7 @@ private data class LiquidStudioState(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GalaxLiquidSettingsScreen(navController: NavController) {
+fun GalaxLiquidSettingsScreen(navController: NavController) = AsterSettingsEnvironment(AsterSettingsSection.GLASS) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var state by remember {
@@ -184,6 +185,8 @@ fun GalaxLiquidSettingsScreen(navController: NavController) {
                     .padding(horizontal = 15.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
+
+        AsterSettingsPageIntro()
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -264,6 +267,7 @@ fun GalaxLiquidSettingsScreen(navController: NavController) {
     }
 }
 
+
 private fun liquidVariantDescription(variant: GalaxLiquidVariant): String = when (variant) {
     GalaxLiquidVariant.SILK -> "Agua suave, transparencia alta"
     GalaxLiquidVariant.CRYSTAL -> "Cristal nítido, lente profunda"
@@ -293,7 +297,7 @@ private fun LiquidVariantGrid(
             row.forEach { variant ->
                 val selected = selectedVariant == variant
                 Card(
-                    modifier = Modifier.weight(1f).clickable { onSelect(variant) },
+                    modifier = Modifier.weight(1f).selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(variant) }),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(19.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer

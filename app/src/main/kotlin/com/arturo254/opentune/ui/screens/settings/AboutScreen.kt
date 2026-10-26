@@ -45,10 +45,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as LargeTopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as LargeTopAppBar
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.MaterialTheme
-import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsScaffold as Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -129,7 +129,7 @@ fun AboutScreen(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
     viewModel: AboutViewModel = viewModel()
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.ABOUT) {
     val uriHandler = LocalUriHandler.current
     val contributors by viewModel.contributors.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
@@ -286,6 +286,7 @@ fun AboutScreen(
     }
 }
 
+
 @Composable
 private fun SectionHeaderExpressive(
     title: String,
@@ -324,105 +325,17 @@ private fun SectionHeaderExpressive(
 
 @Composable
 private fun GalaxAboutHero() {
-    val colors = MaterialTheme.colorScheme
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(30.dp))
-            .background(
-                Brush.linearGradient(
-                    listOf(
-                        colors.primary.copy(alpha = .23f),
-                        colors.surfaceContainerHigh.copy(alpha = .97f),
-                        colors.tertiary.copy(alpha = .12f),
-                    ),
-                ),
-            ),
-    ) {
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 20.dp, end = 20.dp)
-                .size(92.dp)
-                .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        listOf(
-                            colors.primary.copy(alpha = .24f),
-                            Color.Transparent,
-                        ),
-                    ),
-                ),
-        )
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(22.dp),
-                    color = colors.primaryContainer.copy(alpha = .78f),
-                    modifier = Modifier.size(74.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Image(
-                            painter = painterResource(R.drawable.opentune_monochrome),
-                            contentDescription = null,
-                            colorFilter = ColorFilter.tint(
-                                colors.onPrimaryContainer,
-                                BlendMode.SrcIn,
-                            ),
-                            modifier = Modifier.size(49.dp),
-                        )
-                    }
-                }
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(5.dp),
-                ) {
-                    Text(
-                        text = "GALACTIC MUSIC EXPERIENCE",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = colors.primary,
-                    )
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = colors.onSurface,
-                        maxLines = 1,
-                    )
-                    Text(
-                        text = "v${BuildConfig.VERSION_NAME}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.onSurfaceVariant,
-                    )
-                }
-            }
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                VersionBadgeExpressive(
-                    text = "#${BuildConfig.VERSION_CODE}",
-                    containerColor = colors.primaryContainer,
-                    contentColor = colors.onPrimaryContainer,
-                )
-                if (BuildConfig.DEBUG) {
-                    VersionBadgeExpressive(
-                        text = "DEBUG",
-                        containerColor = colors.errorContainer,
-                        contentColor = colors.onErrorContainer,
-                    )
-                }
-            }
-            HorizontalDivider(color = colors.onSurface.copy(alpha = .10f))
-            DeveloperInfoExpressive()
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        AsterSettingsPageIntro()
+        Row(Modifier.padding(horizontal = 22.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            VersionBadgeExpressive("v" + BuildConfig.VERSION_NAME, MaterialTheme.colorScheme.primaryContainer,
+                MaterialTheme.colorScheme.onPrimaryContainer)
+            VersionBadgeExpressive("#" + BuildConfig.VERSION_CODE, MaterialTheme.colorScheme.surfaceContainerHigh,
+                MaterialTheme.colorScheme.onSurfaceVariant)
+            if (BuildConfig.DEBUG) VersionBadgeExpressive("DEBUG", MaterialTheme.colorScheme.errorContainer,
+                MaterialTheme.colorScheme.onErrorContainer)
         }
+        AsterSettingsPanel { Box(Modifier.padding(18.dp)) { DeveloperInfoExpressive() } }
     }
 }
 

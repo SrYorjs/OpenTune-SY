@@ -24,6 +24,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.arturo254.opentune.ui.screens.settings.LocalAsterSettingsSection
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsPanel
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsHeading
+import com.arturo254.opentune.ui.screens.settings.AsterPreferenceRow
 
 /**
  * A Material 3 Expressive style settings group component
@@ -35,6 +39,35 @@ fun Material3SettingsGroup(
     title: String? = null,
     items: List<Material3SettingsItem>
 ) {
+    if (LocalAsterSettingsSection.current != null) {
+        Column(Modifier.fillMaxWidth()) {
+            title?.let { AsterSettingsHeading(it) }
+            AsterSettingsPanel {
+                items.forEachIndexed { index, item ->
+                    AsterPreferenceRow(
+                        title = item.title,
+                        supporting = item.description,
+                        icon = item.icon?.let { painter ->
+                            {
+                                BadgedBox(badge = { if (item.showBadge) Badge() }) {
+                                    Icon(painter, null)
+                                }
+                            }
+                        },
+                        trailing = item.trailingContent,
+                        grouped = true,
+                        onClick = item.onClick,
+                    )
+                    if (index < items.lastIndex) HorizontalDivider(
+                        modifier = Modifier.padding(start = if (item.icon == null) 16.dp else 66.dp, end = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant,
+                        thickness = .5.dp,
+                    )
+                }
+            }
+        }
+        return
+    }
     val liquid = LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -49,7 +82,7 @@ fun Material3SettingsGroup(
                 modifier = Modifier.padding(start = 16.dp, bottom = 8.dp, top = 8.dp)
             )
         }
-        
+
         // Settings card
         Card(
             modifier = Modifier
@@ -110,7 +143,7 @@ private fun Material3SettingsItemRow(
                 ) {
                     if (item.showBadge) {
                         BadgedBox(
-                            badge = { 
+                            badge = {
                                 Badge(
                                     containerColor = MaterialTheme.colorScheme.error
                                 )
@@ -119,9 +152,9 @@ private fun Material3SettingsItemRow(
                             Icon(
                                 painter = icon,
                                 contentDescription = null,
-                                tint = if (item.isHighlighted) 
-                                    MaterialTheme.colorScheme.primary 
-                                else 
+                                tint = if (item.isHighlighted)
+                                    MaterialTheme.colorScheme.primary
+                                else
                                     MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
                                 modifier = Modifier.size(24.dp)
                             )
@@ -130,39 +163,39 @@ private fun Material3SettingsItemRow(
                         Icon(
                             painter = icon,
                             contentDescription = null,
-                            tint = if (item.isHighlighted) 
-                                MaterialTheme.colorScheme.primary 
-                            else 
+                            tint = if (item.isHighlighted)
+                                MaterialTheme.colorScheme.primary
+                            else
                                 MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
                             modifier = Modifier.size(24.dp)
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.width(16.dp))
             }
-            
+
             // Title and description
             Column(
                 modifier = Modifier.weight(1f)
             ) {
                 // Title content (can be Text or custom composable)
                 item.title()
-                
+
                 // Description if provided
                 item.description?.let { desc ->
                     Spacer(modifier = Modifier.height(2.dp))
                     desc()
                 }
             }
-            
+
             // Trailing content
             item.trailingContent?.let { trailing ->
                 Spacer(modifier = Modifier.width(8.dp))
                 trailing()
             }
         }
-        
+
         // Divider
         if (showDivider) {
             HorizontalDivider(

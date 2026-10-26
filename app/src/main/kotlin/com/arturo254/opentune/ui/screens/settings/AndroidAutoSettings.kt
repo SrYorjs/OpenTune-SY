@@ -14,9 +14,9 @@ import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as LargeFlexibleTopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsScaffold as Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.ToggleButton
@@ -57,7 +57,7 @@ fun AndroidAutoSettings(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
     context: Context,
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.AUTO) {
     val (androidAutoEnabled, onAndroidAutoEnabledChange) = rememberPreference(
         AndroidAutoConstants.AndroidAutoEnabledKey,
         defaultValue = true,
@@ -136,6 +136,8 @@ fun AndroidAutoSettings(
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
+
+        AsterSettingsPageIntro()
             AndroidAutoHeroCard(
                 androidAutoEnabled = androidAutoEnabled,
                 onAndroidAutoEnabledChange = onAndroidAutoEnabledChange,
@@ -256,6 +258,7 @@ fun AndroidAutoSettings(
         }
     }
 }
+
 
 @Composable
 private fun AndroidAutoHeroCard(

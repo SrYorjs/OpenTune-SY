@@ -1,6 +1,5 @@
 package com.arturo254.opentune.ui.screens.settings
 
-import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -112,7 +111,7 @@ fun AccountSettings(
     navController: NavController,
     onClose: () -> Unit,
     latestVersionName: String
-) {
+) = AsterSettingsEnvironment(AsterSettingsSection.ACCOUNT, modifier = Modifier.fillMaxWidth()) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
 
@@ -142,11 +141,12 @@ fun AccountSettings(
 
     Column(
         modifier = Modifier
-            .galaxScreenBackground()
+
             .verticalScroll(rememberScrollState())
     ) {
 
         AccountSettingsHeader(onClose = onClose)
+        AsterSettingsPageIntro()
 
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
@@ -312,6 +312,7 @@ fun AccountSettings(
     }
 }
 
+
 @Composable
 private fun AccountSettingsHeader(onClose: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
@@ -332,7 +333,7 @@ private fun AccountCard(
     onAccountClick: () -> Unit,
     onLogout: () -> Unit
 ) {
-    com.arturo254.opentune.ui.component.MenuSurfaceSection {
+    AsterSettingsPanel {
         com.arturo254.opentune.ui.component.NewMenuItem(
             headlineContent = { Text(if (isLoggedIn) accountName else stringResource(R.string.login),
                 style = MaterialTheme.typography.titleLarge) },
@@ -356,10 +357,9 @@ private fun SettingsSection(
     title: String? = null,
     content: @Composable () -> Unit
 ) {
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        title?.let { Text(it, style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 8.dp)) }
-        com.arturo254.opentune.ui.component.MenuSurfaceSection { content() }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        title?.let { AsterSettingsHeading(it) }
+        AsterSettingsPanel { content() }
     }
 }
 
@@ -371,16 +371,17 @@ private fun SettingsClickableItem(
     showBadge: Boolean = false,
     onClick: () -> Unit
 ) {
-    com.arturo254.opentune.ui.component.NewMenuItem(
-        headlineContent = { Text(title) },
-        supportingContent = subtitle?.let { { Text(it) } },
-        leadingContent = { Icon(icon, null, tint = MaterialTheme.colorScheme.primary) },
-        trailingContent = {
+    AsterPreferenceRow(
+        title = { Text(title) },
+        supporting = subtitle?.let { { Text(it) } },
+        icon = { Icon(icon, null) },
+        trailing = {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (showBadge) Badge()
                 Icon(painterResource(R.drawable.chevron_right), null)
             }
         },
+        grouped = true,
         onClick = onClick,
     )
 }
@@ -393,12 +394,13 @@ private fun SettingsToggleItem(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    com.arturo254.opentune.ui.component.NewMenuItem(
-        headlineContent = { Text(title) },
-        supportingContent = subtitle?.let { { Text(it) } },
-        leadingContent = { Icon(icon, null, tint = MaterialTheme.colorScheme.primary) },
-        trailingContent = { Switch(checked = checked, onCheckedChange = onCheckedChange) },
-        onClick = { onCheckedChange(!checked) },
+    AsterSettingsSwitch(
+        title = { Text(title) },
+        description = subtitle,
+        icon = { Icon(icon, null) },
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        grouped = true,
     )
 }
 

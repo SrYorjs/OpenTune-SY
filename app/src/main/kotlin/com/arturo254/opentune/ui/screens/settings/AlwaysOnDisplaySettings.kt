@@ -45,9 +45,9 @@ import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
-import com.arturo254.opentune.ui.screens.GalaxTopAppBar as LargeFlexibleTopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as LargeFlexibleTopAppBar
 import androidx.compose.material3.MaterialTheme
-import com.arturo254.opentune.ui.screens.GalaxScaffold as Scaffold
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsScaffold as Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -198,8 +198,7 @@ enum class AodAutoTimeout(val seconds: Int, val labelRes: Int) {
 fun AODSettings(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-) {
-
+) = AsterSettingsEnvironment(AsterSettingsSection.AOD) {
     val (rawStyle, setRawStyle) = rememberPreference(AodStyleKey, AodStyle.CLASSIC.name)
     val (rawShape, setRawShape) = rememberPreference(AodArtShapeKey, AodArtShape.ROUNDED.name)
     val (darkness, setDarkness) = rememberPreference(AodDarknessKey, 0.55f)
@@ -278,6 +277,8 @@ fun AODSettings(
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
+
+        AsterSettingsPageIntro()
             AodOverviewCard(
                 currentStyle = currentStyle,
                 currentShape = currentShape,
@@ -546,6 +547,7 @@ fun AODSettings(
         }
     }
 }
+
 
 @Composable
 private fun AodOverviewCard(

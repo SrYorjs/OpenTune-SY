@@ -210,3 +210,6 @@ Raíz: `app/src/main/kotlin/com/arturo254/opentune/`.
 - Los archivos `ui/screens/settings/GalaxSettingsSectionHero.kt` y `SettingsLayout.kt` configuran el diseño editorial de la Parte 7.
 - Los archivos `core/designsystem/liquid/` constituyen el motor Liquid Glass; están fuera del alcance de rediseños normales y no deben tocarse para cambiar una pantalla.
 - Algunas pantallas se abren desde filtros, hojas o diálogos; que no tengan ruta propia no implica que sean código muerto.
+
+
+`settings/AsterSettingsDesign.kt` — Sistema Aster para las 27 pantallas de ajustes, controles, cabeceras y entorno visual.
