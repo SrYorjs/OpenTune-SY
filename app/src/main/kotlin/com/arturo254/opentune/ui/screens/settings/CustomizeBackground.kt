@@ -68,7 +68,7 @@ fun CustomizeBackground(
                 title = { Text(stringResource(R.string.customize_background_title)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(painterResource(R.drawable.arrow_back), contentDescription = null)
+                        Icon(painterResource(R.drawable.arrow_back), contentDescription = stringResource(R.string.aster_settings_back))
                     }
                 }
             )
@@ -85,7 +85,7 @@ fun CustomizeBackground(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-        AsterSettingsPageIntro()
+            AsterSettingsPageIntro()
             val heightScale = 1.4f
             val playerPreviewHeight = (screenHeightDp * (1518f / 2400f) * heightScale).dp
             val lyricsPreviewHeight = (screenHeightDp * (1386f / 2400f) * heightScale).dp

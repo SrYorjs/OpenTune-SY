@@ -69,4 +69,5 @@
     <string name="aster_settings_token_title">Connection</string>
     <string name="aster_settings_background_title">Your background</string>
     <string name="aster_settings_account_title">Your account</string>
+    <string name="aster_settings_back">Back</string>
 </resources>

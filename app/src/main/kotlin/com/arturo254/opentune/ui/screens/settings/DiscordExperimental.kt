@@ -35,7 +35,7 @@ fun DiscordExperimental(
                 title = { Text(stringResource(R.string.experiment_settings)) },
                 navigationIcon = {
                     IconButton(onClick = navController::navigateUp) {
-                        Icon(painterResource(R.drawable.arrow_back), contentDescription = null)
+                        Icon(painterResource(R.drawable.arrow_back), contentDescription = stringResource(R.string.aster_settings_back))
                     }
                 }
             )

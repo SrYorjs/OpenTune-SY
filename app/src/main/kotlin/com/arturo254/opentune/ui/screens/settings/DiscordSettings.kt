@@ -59,7 +59,7 @@ fun DiscordSettings(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
 ) = AsterSettingsEnvironment(AsterSettingsSection.DISCORD) {
-    val playerConnection = LocalPlayerConnection.current ?: return
+    val playerConnection = LocalPlayerConnection.current ?: return@AsterSettingsEnvironment
     val song by playerConnection.currentSong.collectAsState(null)
     val playbackState by playerConnection.playbackState.collectAsState()
     var position by rememberSaveable(playbackState) {
@@ -736,7 +736,7 @@ if (smallImageType == "custom") {
             ) {
                 Icon(
                     painter = painterResource(R.drawable.arrow_back),
-                    contentDescription = null
+                    contentDescription = stringResource(R.string.aster_settings_back)
                 )
             }
         },

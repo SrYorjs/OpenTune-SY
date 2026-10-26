@@ -186,7 +186,7 @@ fun GalaxLiquidSettingsScreen(navController: NavController) = AsterSettingsEnvir
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
 
-        AsterSettingsPageIntro()
+                AsterSettingsPageIntro()
                 Row(
                     Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),

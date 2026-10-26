@@ -115,7 +115,7 @@ fun AndroidAutoSettings(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.arrow_back),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.aster_settings_back),
                         )
                     }
                 },
@@ -137,7 +137,7 @@ fun AndroidAutoSettings(
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
 
-        AsterSettingsPageIntro()
+            AsterSettingsPageIntro()
             AndroidAutoHeroCard(
                 androidAutoEnabled = androidAutoEnabled,
                 onAndroidAutoEnabledChange = onAndroidAutoEnabledChange,

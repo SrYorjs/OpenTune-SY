@@ -237,7 +237,7 @@ fun ThemeCreatorScreen(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.arrow_back),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.aster_settings_back),
                         )
                     }
                 },
@@ -299,7 +299,7 @@ fun ThemeCreatorScreen(
                 .verticalScroll(rememberScrollState()),
         ) {
 
-        AsterSettingsPageIntro()
+            AsterSettingsPageIntro()
             ThemeHeroPreview(
                 palette = currentPalette,
                 modifier = Modifier
@@ -712,7 +712,7 @@ private fun ThemeRichPreview(
                                 ) {
                                     Icon(
                                         painter = painterResource(R.drawable.arrow_back),
-                                        contentDescription = null,
+                                        contentDescription = stringResource(R.string.aster_settings_back),
                                         modifier = Modifier.padding(10.dp).size(18.dp),
                                     )
                                 }

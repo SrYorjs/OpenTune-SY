@@ -257,7 +257,7 @@ fun AODSettings(
                         onClick = navController::navigateUp,
                         onLongClick = navController::backToMain,
                     ) {
-                        Icon(painterResource(R.drawable.arrow_back), contentDescription = null)
+                        Icon(painterResource(R.drawable.arrow_back), contentDescription = stringResource(R.string.aster_settings_back))
                     }
                 },
                 colors = TopAppBarDefaults.largeTopAppBarColors(
@@ -278,7 +278,7 @@ fun AODSettings(
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
 
-        AsterSettingsPageIntro()
+            AsterSettingsPageIntro()
             AodOverviewCard(
                 currentStyle = currentStyle,
                 currentShape = currentShape,

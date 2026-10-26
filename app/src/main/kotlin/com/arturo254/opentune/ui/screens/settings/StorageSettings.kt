@@ -70,9 +70,9 @@ fun StorageSettings(
     scrollBehavior: TopAppBarScrollBehavior,
 ) = AsterSettingsEnvironment(AsterSettingsSection.STORAGE) {
     val context = LocalContext.current
-    val imageDiskCache = context.imageLoader.diskCache ?: return
-    val playerCache = LocalPlayerConnection.current?.service?.playerCache ?: return
-    val downloadCache = LocalPlayerConnection.current?.service?.downloadCache ?: return
+    val imageDiskCache = context.imageLoader.diskCache ?: return@AsterSettingsEnvironment
+    val playerCache = LocalPlayerConnection.current?.service?.playerCache ?: return@AsterSettingsEnvironment
+    val downloadCache = LocalPlayerConnection.current?.service?.downloadCache ?: return@AsterSettingsEnvironment
 
     val downloadCacheDir = remember { context.filesDir.resolve("download") }
     val playerCacheDir = remember { context.filesDir.resolve("exoplayer") }
@@ -405,7 +405,7 @@ fun StorageSettings(
             ) {
                 Icon(
                     painterResource(R.drawable.arrow_back),
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.aster_settings_back),
                 )
             }
         }

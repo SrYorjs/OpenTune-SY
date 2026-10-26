@@ -214,16 +214,16 @@ fun AsterSettingsHero(
             Text((section.ordinal + 1).toString().padStart(2, '0'), color = accent,
                 style = MaterialTheme.typography.labelMedium)
         }
+        Text(
+            title,
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Light,
+            letterSpacing = (-1.3).sp,
+            color = colors.onSurface,
+            modifier = Modifier.semantics { heading() },
+        )
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(18.dp)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Light,
-                    letterSpacing = (-1.3).sp,
-                    color = colors.onSurface,
-                    modifier = Modifier.semantics { heading() },
-                )
                 Text(description, style = MaterialTheme.typography.bodyMedium,
                     color = colors.onSurfaceVariant, lineHeight = 21.sp)
             }
@@ -391,4 +391,35 @@ fun AsterSettingsSwitch(
 fun AsterSettingsPageIntro(modifier: Modifier = Modifier) {
     val section = LocalAsterSettingsSection.current ?: AsterSettingsSection.HUB
     AsterSettingsHero(title = stringResource(section.title), modifier = modifier)
+}
+
+@androidx.compose.ui.tooling.preview.Preview(name = "Settings · Light", widthDp = 360)
+@androidx.compose.ui.tooling.preview.Preview(name = "Settings · Dark", widthDp = 360,
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@androidx.compose.ui.tooling.preview.Preview(name = "Settings · Large text", widthDp = 320, fontScale = 1.6f)
+@Composable
+private fun AsterSettingsControlsPreview() {
+    val dark = androidx.compose.foundation.isSystemInDarkTheme()
+    var checked by remember { mutableStateOf(true) }
+    MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
+        AsterSettingsEnvironment(AsterSettingsSection.PRIVACY) {
+            Column {
+                AsterSettingsPageIntro()
+                AsterSettingsSwitch(
+                    title = { Text(stringResource(R.string.pause_listen_history)) },
+                    description = stringResource(R.string.aster_settings_privacy_description),
+                    icon = { Icon(painterResource(R.drawable.history), null) },
+                    checked = checked,
+                    onCheckedChange = { checked = it },
+                )
+                AsterSettingsSwitch(
+                    title = { Text(stringResource(R.string.pause_search_history)) },
+                    icon = { Icon(painterResource(R.drawable.search), null) },
+                    checked = false,
+                    onCheckedChange = {},
+                    enabled = false,
+                )
+            }
+        }
+    }
 }

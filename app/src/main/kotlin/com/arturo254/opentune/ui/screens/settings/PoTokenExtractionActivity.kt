@@ -15,6 +15,8 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -26,7 +28,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import com.arturo254.opentune.ui.screens.settings.AsterSettingsTopBar as TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -68,7 +70,14 @@ class PoTokenExtractionActivity : ComponentActivity() {
                 ?: DEFAULT_EXTRACT_URL
 
         setContent {
-            PoTokenExtractionContent(targetUrl)
+            androidx.compose.material3.MaterialTheme(
+                colorScheme = if (androidx.compose.foundation.isSystemInDarkTheme())
+                    androidx.compose.material3.darkColorScheme() else androidx.compose.material3.lightColorScheme(),
+            ) {
+                AsterSettingsEnvironment(AsterSettingsSection.TOKEN) {
+                    PoTokenExtractionContent(targetUrl)
+                }
+            }
         }
     }
 
@@ -215,64 +224,7 @@ class PoTokenExtractionActivity : ComponentActivity() {
             }
         }
 
-        Box(modifier = Modifier.fillMaxSize()) {
-            AndroidView(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.systemBars),
-                factory = { ctx ->
-                    WebView(ctx).apply {
-                        val cookieManager = CookieManager.getInstance()
-                        cookieManager.removeAllCookies(null)
-                        cookieManager.flush()
-                        cookieManager.setAcceptCookie(true)
-                        cookieManager.setAcceptThirdPartyCookies(this, true)
-
-                        clearHistory()
-                        clearFormData()
-                        clearCache(true)
-
-                        settings.javaScriptEnabled = true
-                        settings.domStorageEnabled = true
-                        settings.setSupportZoom(true)
-                        settings.builtInZoomControls = true
-                        settings.displayZoomControls = false
-
-                        addJavascriptInterface(object {
-                            @JavascriptInterface
-                            fun onRetrieveVisitorData(newVisitorData: String?) {
-                                if (!newVisitorData.isNullOrBlank()) {
-                                    extractedVisitorData = newVisitorData
-                                    runOnUiThread { completeIfReady() }
-                                }
-                            }
-
-                            @JavascriptInterface
-                            fun onRetrievePoToken(newPoToken: String?) {
-                                if (!newPoToken.isNullOrBlank()) {
-                                    extractedGvsToken = newPoToken
-                                    runOnUiThread { completeIfReady() }
-                                }
-                            }
-                        }, "Android")
-
-                        webViewClient = object : WebViewClient() {
-                            override fun onPageFinished(view: WebView, url: String?) {
-                                currentUrl = url.orEmpty()
-                            }
-                        }
-
-                        loadUrl(targetUrl)
-                        webView = this
-                        activeWebView = this
-                    }
-                },
-                update = { view ->
-                    webView = view
-                    activeWebView = view
-                }
-            )
-
+        AsterSettingsScaffold(topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.extracting_from_url)) },
                 navigationIcon = {
@@ -282,56 +234,117 @@ class PoTokenExtractionActivity : ComponentActivity() {
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.arrow_back),
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.aster_settings_back),
                         )
                     }
                 }
             )
+        }) { innerPadding ->
+            Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+                AndroidView(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)),
+                    factory = { ctx ->
+                        WebView(ctx).apply {
+                            val cookieManager = CookieManager.getInstance()
+                            cookieManager.removeAllCookies(null)
+                            cookieManager.flush()
+                            cookieManager.setAcceptCookie(true)
+                            cookieManager.setAcceptThirdPartyCookies(this, true)
 
-            ExtendedFloatingActionButton(
-                text = {
-                    Text(
-                        if (isExtracting) {
-                            stringResource(R.string.generating_tokens)
-                        } else {
-                            stringResource(R.string.regenerate_token)
+                            clearHistory()
+                            clearFormData()
+                            clearCache(true)
+
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            settings.setSupportZoom(true)
+                            settings.builtInZoomControls = true
+                            settings.displayZoomControls = false
+
+                            addJavascriptInterface(object {
+                                @JavascriptInterface
+                                fun onRetrieveVisitorData(newVisitorData: String?) {
+                                    if (!newVisitorData.isNullOrBlank()) {
+                                        extractedVisitorData = newVisitorData
+                                        runOnUiThread { completeIfReady() }
+                                    }
+                                }
+
+                                @JavascriptInterface
+                                fun onRetrievePoToken(newPoToken: String?) {
+                                    if (!newPoToken.isNullOrBlank()) {
+                                        extractedGvsToken = newPoToken
+                                        runOnUiThread { completeIfReady() }
+                                    }
+                                }
+                            }, "Android")
+
+                            webViewClient = object : WebViewClient() {
+                                override fun onPageFinished(view: WebView, url: String?) {
+                                    currentUrl = url.orEmpty()
+                                }
+                            }
+
+                            loadUrl(targetUrl)
+                            webView = this
+                            activeWebView = this
                         }
-                    )
-                },
-                icon = {
-                    if (isExtracting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            strokeWidth = 2.dp,
+                    },
+                    update = { view ->
+                        webView = view
+                        activeWebView = view
+                    }
+                )
+
+
+
+                ExtendedFloatingActionButton(
+                    text = {
+                        Text(
+                            if (isExtracting) {
+                                stringResource(R.string.generating_tokens)
+                            } else {
+                                stringResource(R.string.regenerate_token)
+                            }
                         )
+                    },
+                    icon = {
+                        if (isExtracting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                            )
+                        } else {
+                            Icon(
+                                painter = painterResource(R.drawable.done),
+                                contentDescription = null,
+                            )
+                        }
+                    },
+                    onClick = {
+                        if (canExtract) {
+                            triggerExtraction()
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
+                        .padding(16.dp),
+                    expanded = true,
+                    containerColor = if (canExtract) {
+                        MaterialTheme.colorScheme.primary
                     } else {
-                        Icon(
-                            painter = painterResource(R.drawable.done),
-                            contentDescription = null,
-                        )
-                    }
-                },
-                onClick = {
-                    if (canExtract) {
-                        triggerExtraction()
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .windowInsetsPadding(WindowInsets.systemBars)
-                    .padding(16.dp),
-                expanded = true,
-                containerColor = if (canExtract) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.surfaceVariant
-                },
-                contentColor = if (canExtract) {
-                    MaterialTheme.colorScheme.onPrimary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            )
+                        MaterialTheme.colorScheme.surfaceVariant
+                    },
+                    contentColor = if (canExtract) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+                }
         }
     }
 }

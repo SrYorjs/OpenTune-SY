@@ -135,7 +135,7 @@ fun DebugSettings(
                         onClick = navController::navigateUp,
                         onLongClick = navController::backToMain
                     ) {
-                        Icon(painterResource(R.drawable.arrow_back), contentDescription = null)
+                        Icon(painterResource(R.drawable.arrow_back), contentDescription = stringResource(R.string.aster_settings_back))
                     }
                 }
             )
@@ -149,7 +149,7 @@ fun DebugSettings(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
 
-        AsterSettingsPageIntro()
+            AsterSettingsPageIntro()
             PreferenceGroupTitle(
                 title = stringResource(R.string.experimental_features)
             )

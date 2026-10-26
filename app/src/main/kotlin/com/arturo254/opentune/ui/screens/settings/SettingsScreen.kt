@@ -191,7 +191,7 @@ fun SettingsScreen(
                         ) {
                             Icon(
                                 painterResource(R.drawable.arrow_back),
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.aster_settings_back),
                             )
                         }
                     },
@@ -257,7 +257,7 @@ fun SettingsScreen(
                         ) {
                             Icon(
                                 painterResource(R.drawable.arrow_back),
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.aster_settings_back),
                             )
                         }
                     },

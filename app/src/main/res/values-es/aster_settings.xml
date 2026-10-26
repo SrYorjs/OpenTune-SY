@@ -69,4 +69,5 @@
     <string name="aster_settings_token_title">Conexión</string>
     <string name="aster_settings_background_title">Tu fondo</string>
     <string name="aster_settings_account_title">Tu cuenta</string>
+    <string name="aster_settings_back">Volver</string>
 </resources>

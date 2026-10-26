@@ -439,7 +439,7 @@ fun MusicTogetherScreen(
                 onClick = navController::navigateUp,
                 onLongClick = navController::backToMain,
             ) {
-                Icon(painterResource(R.drawable.arrow_back), null)
+                Icon(painterResource(R.drawable.arrow_back), contentDescription = stringResource(R.string.aster_settings_back))
             }
         },
         scrollBehavior = scrollBehavior,

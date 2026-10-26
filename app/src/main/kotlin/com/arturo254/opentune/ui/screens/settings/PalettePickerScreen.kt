@@ -907,7 +907,7 @@ fun PalettePickerScreen(
                     ) {
                         Icon(
                             painterResource(R.drawable.arrow_back),
-                            contentDescription = null
+                            contentDescription = stringResource(R.string.aster_settings_back)
                         )
                     }
                 },
@@ -959,7 +959,7 @@ fun PalettePickerScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-        AsterSettingsPageIntro()
+            AsterSettingsPageIntro()
             Spacer(modifier = Modifier.height(16.dp))
 
             ThemePreviewCard(
