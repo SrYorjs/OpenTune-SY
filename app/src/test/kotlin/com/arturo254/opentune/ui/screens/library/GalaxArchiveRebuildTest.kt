@@ -5,7 +5,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Regression contracts for the replacement collection browser. */
 class GalaxArchiveRebuildTest {
     private val root = listOf(File("src/main/kotlin"), File("app/src/main/kotlin"))
         .firstOrNull(File::isDirectory) ?: error("Source files not found")
@@ -17,8 +16,8 @@ class GalaxArchiveRebuildTest {
             "LibrarySongsScreen(", "LibraryAlbumsScreen(", "LibraryArtistsScreen(").forEach {
             assertFalse("Retired presentation still mounted: $it", screen.contains(it))
         }
-        assertTrue(screen.contains("CollectionMasthead("))
-        assertTrue(screen.contains("CollectionTabs("))
+        assertTrue(screen.contains("VaultHeader("))
+        assertTrue(screen.contains("VaultCategories("))
         assertTrue(read("ui/screens/library/LibraryMixScreen.kt").contains("LibraryScreen("))
     }
 
@@ -32,7 +31,7 @@ class GalaxArchiveRebuildTest {
 
     @Test fun filtersOfflineAndSynchronizationRemainAvailable() {
         val screen = read("ui/screens/library/LibraryScreen.kt")
-        listOf("OutlinedTextField(", "query.trim()", "LibraryFilter.SONGS", "LibraryFilter.ALBUMS",
+        listOf("VaultSearch(", "query.trim()", "LibraryFilter.SONGS", "LibraryFilter.ALBUMS",
             "LibraryFilter.ARTISTS", "LibraryFilter.PLAYLISTS", "LibraryFilter.SPOTIFY", "playlistIdsByTags(",
             "onRefresh = viewModel::syncAllLibrary", "auto_playlist/downloaded", "cache_playlist/cached").forEach {
             assertTrue("Lost library action: $it", screen.contains(it))
@@ -61,7 +60,7 @@ class GalaxArchiveRebuildTest {
     @Test fun libraryKeysUseUniqueEntitiesRatherThanChangingPositions() {
         val screen = read("ui/screens/library/LibraryScreen.kt")
         assertTrue(screen.contains("distinctBy { it.id }"))
-        listOf("collection/song/", "collection/artist/", "collection/albums/", "collection/playlists/").forEach {
+        listOf("vault/song/", "vault/artist/", "vault/albums/", "vault/playlists/").forEach {
             assertTrue(screen.contains(it))
         }
     }

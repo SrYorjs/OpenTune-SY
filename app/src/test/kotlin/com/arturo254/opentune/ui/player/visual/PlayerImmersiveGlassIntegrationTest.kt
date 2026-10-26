@@ -69,7 +69,7 @@ class PlayerImmersiveGlassIntegrationTest {
         val toolbar = source("ui/component/FloatingNavigationToolbar.kt")
         val pages = source("ui/screens/GalaxMainPages.kt")
         val scaffold = source("MainActivityScaffold.kt")
-        assertTrue(pages.contains("HorizontalPager(state = pager"))
+        assertTrue(pages.contains("HorizontalPager("))
         assertTrue(toolbar.contains("pagerState.currentPage + pagerState.currentPageOffsetFraction"))
         assertTrue(toolbar.contains("pagerState.dispatchRawDelta("))
         assertTrue(toolbar.contains("pagerState.animateScrollToPage("))

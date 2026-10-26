@@ -6,7 +6,7 @@ import androidx.navigation.NavController
 import com.arturo254.opentune.viewmodels.HomeViewModel
 import com.arturo254.opentune.viewmodels.MoodAndGenresViewModel
 
-/** Stable navigation entry; the obsolete Atlas layout has been removed. */
+
 @Composable
 fun GalaxDiscoverScreen(
     navController: NavController,
@@ -15,5 +15,5 @@ fun GalaxDiscoverScreen(
     home: HomeViewModel = hiltViewModel(),
     ambientActive: Boolean = true,
 ) {
-    NovaDiscoveryExperience(navController, onOpenSearch, genresModel, home, ambientActive)
+    AsterDiscoveryExperience(navController, onOpenSearch, genresModel, home, ambientActive)
 }
