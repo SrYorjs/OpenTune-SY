@@ -170,7 +170,6 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                             ProviderId.OPEN_TUNE_OFFLINE, ProviderId.LOCAL -> 0
                             ProviderId.AUDIUS -> 1
                             ProviderId.YOUTUBE_MUSIC -> 2
-                            ProviderId.SOUNDCLOUD -> 3
                             else -> 3
                         }
                     }
@@ -182,7 +181,7 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                 val pending = downloading == key || asset?.state == OfflineTrackState.PENDING
                 val canDownload = offline == null && !pending && result.variants.any {
                     when (it.provider) {
-                        ProviderId.LOCAL, ProviderId.OPEN_TUNE_OFFLINE, ProviderId.SOUNDCLOUD -> false
+                        ProviderId.LOCAL, ProviderId.OPEN_TUNE_OFFLINE -> false
                         ProviderId.AUDIUS -> it.downloadable == true
                         else -> true
                     }
@@ -329,7 +328,6 @@ private fun signalProvider(provider: ProviderId): String = when (provider) {
     ProviderId.SPOTIFY -> "Spotify"
     ProviderId.TIDAL -> "TIDAL"
     ProviderId.APPLE_MUSIC -> "Apple Music"
-    ProviderId.SOUNDCLOUD -> "SoundCloud"
     ProviderId.AUDIUS -> "Audius"
     ProviderId.LOCAL -> "Local"
     ProviderId.OPEN_TUNE_OFFLINE -> "Offline"
@@ -343,9 +341,8 @@ internal fun sourceFailureLabel(error: com.arturo254.opentune.sources.search.Uni
         "TimeoutException" in type -> "No respondió antes del límite de espera"
         "UnknownHostException" in type -> "Sin conexión con el proveedor"
         "SocketTimeoutException" in type -> "El servidor tardó demasiado"
-        "client_id" in details.lowercase() || "unauthorized" in details.lowercase() ||
-            "http 401" in details.lowercase() || "http 403" in details.lowercase() ->
-            "La conexión necesita credenciales válidas de SoundCloud"
+        "unauthorized" in details.lowercase() || "http 401" in details.lowercase() ||
+            "http 403" in details.lowercase() -> "El proveedor requiere credenciales válidas"
         "http 429" in details.lowercase() -> "Límite de solicitudes alcanzado"
         "http 503" in details.lowercase() -> "El servicio reporta mantenimiento o indisponibilidad"
         else -> "No se pudo conectar con el proveedor"
