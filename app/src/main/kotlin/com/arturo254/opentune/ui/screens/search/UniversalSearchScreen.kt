@@ -114,9 +114,16 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                 val offline = asset?.takeIf { it.state == OfflineTrackState.AVAILABLE }?.toSourceVariant()
                     ?: result.variants.firstOrNull { it.provider == ProviderId.OPEN_TUNE_OFFLINE }
                 val preferred = viewModel.selectVariant(result, result.variants + listOfNotNull(offline), quality, manual[key])
-                val fallbacks = if (preferred == null) result.variants.filter {
-                    it.provider in setOf(ProviderId.DEEZER, ProviderId.SPOTIFY, ProviderId.TIDAL, ProviderId.APPLE_MUSIC)
-                } else emptyList()
+                val fallbacks = (result.variants + listOfNotNull(offline))
+                    .filterNot { it.provider == preferred?.provider && it.sourceId == preferred?.sourceId }
+                    .sortedBy { variant ->
+                        when (variant.provider) {
+                            ProviderId.OPEN_TUNE_OFFLINE, ProviderId.LOCAL -> 0
+                            ProviderId.SOUNDCLOUD -> 1
+                            ProviderId.YOUTUBE_MUSIC -> 2
+                            else -> 3
+                        }
+                    }
                 val active = (current != null && (result.variants + listOfNotNull(offline)).any { it.sourceId == current.id }) ||
                     (current != null && (preferred == null || preferred.isCatalogOnly()) &&
                         current.title.equals(result.identity.title, true) && result.identity.artists.any { artist ->
