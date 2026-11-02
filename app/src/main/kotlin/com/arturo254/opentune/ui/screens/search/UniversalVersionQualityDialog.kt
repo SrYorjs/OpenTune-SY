@@ -46,7 +46,7 @@ internal fun UniversalVersionQualityDialog(
     onClearManual: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val recordings = listOf(selected) + relatedVersions
+    val recordings = versionDisplayRecordings(selected, relatedVersions)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -126,15 +126,15 @@ internal fun UniversalVersionQualityDialog(
                                     color = MaterialTheme.colorScheme.primary,
                                 )
                                 Text(
-                                    text = recording.identity.title,
+                                    text = recording.recording.identity.title,
                                     fontWeight = FontWeight.Bold,
                                     style = MaterialTheme.typography.bodyMedium,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis,
                                 )
                                 val versionDescription =
-                                    recording.identity.version.label
-                                        ?: recording.identity.version.traits
+                                    recording.recording.identity.version.label
+                                        ?: recording.recording.identity.version.traits
                                             .joinToString(" • ") { it.name.replace('_', ' ') }
                                             .takeIf(String::isNotBlank)
                                 Text(
@@ -175,7 +175,7 @@ internal fun UniversalVersionQualityDialog(
                                 modifier =
                                     Modifier
                                         .fillMaxWidth()
-                                        .clickable { onSelectVariant(recording, variant) },
+                                        .clickable { onSelectVariant(recording.recording, variant) },
                             ) {
                                 Column(
                                     modifier = Modifier.padding(10.dp),
@@ -247,10 +247,21 @@ internal fun variantProviderName(provider: ProviderId): String =
     }
 
 internal fun variantQualityDescription(variant: SourceVariant): String? {
+    if (variant.isCatalogOnly()) return null
     val quality = variant.quality ?: return null
     val parts = mutableListOf<String>()
     if (quality.lossless == true) parts += "Lossless"
-    quality.codec?.takeIf(String::isNotBlank)?.let(parts::add)
+    val format = quality.codec?.takeIf(String::isNotBlank)
+        ?: when (quality.mimeType?.lowercase(Locale.ROOT)) {
+            "audio/mpeg" -> "MP3"
+            "audio/flac", "audio/x-flac" -> "FLAC"
+            "audio/aac", "audio/aacp" -> "AAC"
+            "audio/ogg" -> "OGG"
+            "audio/opus" -> "Opus"
+            "audio/mp4" -> "MP4"
+            else -> null
+        }
+    format?.let(parts::add)
     quality.bitDepth?.takeIf { it > 0 }?.let { parts += "$it-bit" }
     quality.sampleRateHz?.takeIf { it > 0 }?.let {
         parts += String.format(Locale.US, "%.1f kHz", it / 1000.0)
