@@ -6,6 +6,9 @@ import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.core.model.TrackIdentity
 import com.arturo254.opentune.models.MediaMetadata
+import com.arturo254.opentune.sources.ManagedDownloadMusicSource
+import com.arturo254.opentune.sources.SourceCapability
+import com.arturo254.opentune.sources.SourceRegistry
 import com.arturo254.opentune.playback.DownloadUtil
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -13,12 +16,15 @@ import javax.inject.Singleton
 data class OfflineDownloadPlan(
     val asset: OfflineTrackAsset,
     val metadata: MediaMetadata,
+    val downloadUri: String? = null,
 )
 
 @Singleton
 class OfflineDownloadPlanner
 @Inject
-constructor() {
+constructor(
+    private val sourceRegistry: SourceRegistry,
+) {
     suspend fun plan(
         identity: TrackIdentity,
         variants: List<SourceVariant>,
@@ -33,15 +39,35 @@ constructor() {
                 "No downloadable online variant is available"
             }
 
+            val directDownload = candidates.firstNotNullOfOrNull { variant ->
+                val source = sourceRegistry[variant.provider]
+                if (source !is ManagedDownloadMusicSource ||
+                    !source.supports(SourceCapability.OPEN_TUNE_MANAGED_DOWNLOAD)
+                ) {
+                    null
+                } else {
+                    val resource = source.resolveManagedDownload(variant)
+                    if (resource != null && isSupportedDirectDownload(resource.url)) {
+                        variant to resource
+                    } else {
+                        null
+                    }
+                }
+            }
+            val directVariant = directDownload?.first
             val youtubeVariant =
                 candidates.firstOrNull { it.provider == ProviderId.YOUTUBE_MUSIC }
             val discoveryVariant =
-                youtubeVariant
-                    ?: candidates.firstOrNull { it.provider == ProviderId.SOUNDCLOUD }
+                directVariant
+                    ?: youtubeVariant
                     ?: candidates.first()
 
             val metadata =
-                if (youtubeVariant != null) {
+                if (directVariant != null) {
+                    directVariant.toOfflineMetadata(identity).copy(
+                        id = "offline:" + directVariant.provider.value + ":" + directVariant.sourceId,
+                    )
+                } else if (youtubeVariant != null) {
                     youtubeVariant.toOfflineMetadata(identity)
                 } else {
                     CatalogPlaybackResolver.resolveToMetadata(
@@ -77,7 +103,8 @@ constructor() {
                 }
 
             val backingVariant =
-                youtubeVariant
+                directVariant
+                    ?: youtubeVariant
                     ?: SourceVariant(
                         provider = ProviderId.YOUTUBE_MUSIC,
                         sourceId = metadata.id,
@@ -108,8 +135,8 @@ constructor() {
                     OfflineTrackAsset(
                         mediaId = metadata.id,
                         discoverySources = discoverySources,
-                        backingProvider = ProviderId.YOUTUBE_MUSIC,
-                        backingSourceId = metadata.id,
+                        backingProvider = backingVariant.provider,
+                        backingSourceId = backingVariant.sourceId,
                         title = identity.title.ifBlank { metadata.title },
                         artists =
                             identity.artists
@@ -139,6 +166,7 @@ constructor() {
                             variants.firstNotNullOfOrNull { it.animatedArtworkUrl },
                         quality = backingVariant.quality,
                     ),
+                downloadUri = directDownload?.second?.url,
                 metadata =
                     metadata.copy(
                         title = identity.title.ifBlank { metadata.title },
@@ -171,6 +199,13 @@ constructor() {
                     ),
             )
         }
+
+    private fun isSupportedDirectDownload(url: String): Boolean {
+        val uri = runCatching { java.net.URI(url) }.getOrNull() ?: return false
+        return uri.scheme.equals("https", ignoreCase = true) &&
+            !uri.host.isNullOrBlank() &&
+            !uri.path.orEmpty().endsWith(".m3u8", ignoreCase = true)
+    }
 
     private fun SourceVariant.toOfflineMetadata(identity: TrackIdentity): MediaMetadata {
         val resolvedArtists =
@@ -231,6 +266,7 @@ constructor(
                 downloadUtil.enqueueOfflineDownload(
                     asset = plan.asset,
                     metadata = plan.metadata,
+                    streamUri = plan.downloadUri,
                 )
                 plan.asset
             }
