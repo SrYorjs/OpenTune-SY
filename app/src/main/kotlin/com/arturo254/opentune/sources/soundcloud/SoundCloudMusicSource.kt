@@ -14,6 +14,7 @@ import com.arturo254.opentune.sources.SourceCapability
 import com.arturo254.opentune.sources.TrackSearchPage
 import com.arturo254.opentune.sources.TrackSearchRequest
 import com.arturo254.opentune.sources.TrackSearchSource
+import com.arturo254.opentune.sources.StreamMusicSource
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -517,7 +518,8 @@ class SoundCloudMusicSource
 @Inject
 constructor(
     private val gateway: SoundCloudCatalogGateway,
-) : TrackSearchSource {
+    private val playbackResolver: SoundCloudPlaybackResolver,
+) : TrackSearchSource, StreamMusicSource {
     override val id: ProviderId = ProviderId.SOUNDCLOUD
     override val displayName: String = "SoundCloud"
 
@@ -531,6 +533,9 @@ constructor(
             SourceCapability.STATIC_ARTWORK,
             SourceCapability.AUDIO_QUALITY,
         )
+
+    override suspend fun resolvePlayback(variant: SourceVariant): MediaItem? =
+        playbackResolver.resolveToMediaItem(variant)
 
     override suspend fun searchTracks(request: TrackSearchRequest): Result<TrackSearchPage> {
         val query = request.query.trim()
