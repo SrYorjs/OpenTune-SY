@@ -59,8 +59,9 @@ constructor(
                         preferredProviders =
                             listOf(
                                 ProviderId.LOCAL,
-                                ProviderId.SOUNDCLOUD,
+                                ProviderId.AUDIUS,
                                 ProviderId.YOUTUBE_MUSIC,
+                                ProviderId.SOUNDCLOUD,
                             ),
                         qualityMode = mode,
                     ),
