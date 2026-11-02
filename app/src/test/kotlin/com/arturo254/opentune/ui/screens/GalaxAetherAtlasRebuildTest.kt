@@ -96,7 +96,7 @@ class GalaxAetherAtlasRebuildTest {
         assertEquals(keys.size, keys.distinct().size)
         val results = source("ui/screens/search/UniversalSearchScreen.kt")
         assertTrue(results.contains("viewModel.selectVariant("))
-        assertTrue(results.contains("viewModel.playFirstAvailable("))
+        assertTrue(results.contains("viewModel.playSearchResults("))
         assertTrue(results.contains("UniversalVersionQualityDialog("))
         assertTrue(results.contains("viewModel.loadMore()"))
         assertTrue(results.contains(".enqueueOffline(result)"))
