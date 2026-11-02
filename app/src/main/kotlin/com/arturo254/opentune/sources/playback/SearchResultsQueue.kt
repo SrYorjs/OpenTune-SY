@@ -9,6 +9,8 @@ import com.arturo254.opentune.sources.search.UnifiedSearchRepository
 import com.arturo254.opentune.sources.search.UnifiedSearchRequest
 import com.arturo254.opentune.sources.search.UnifiedSearchResult
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
+import com.arturo254.opentune.sources.matching.TrackMatcher
+import com.arturo254.opentune.sources.search.sameRecording
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -32,6 +34,7 @@ class SearchResultsQueue(
     private val knownTracks = initialResult.tracks.toMutableList()
     private val pending = mutableListOf<UnifiedTrackSearchResult>()
     private val knownKeys = mutableSetOf<String>()
+    private val recordingMatcher = TrackMatcher()
     private val emittedIds = mutableSetOf<String>()
     private val relatedQueries = mutableSetOf<String>()
     private var relatedSearches = 0
@@ -149,8 +152,9 @@ class SearchResultsQueue(
 
     private fun rememberTrack(track: UnifiedTrackSearchResult) {
         val sources = track.variants.map { it.provider to it.sourceId }.toSet()
-        if (sources.isNotEmpty() && pending.any { existing ->
-            existing.variants.any { (it.provider to it.sourceId) in sources }
+        if (pending.any { existing ->
+            existing.variants.any { (it.provider to it.sourceId) in sources } ||
+                sameRecording(existing, track, recordingMatcher)
         }) return
         if (knownKeys.add(trackKey(track))) pending.add(track)
     }
