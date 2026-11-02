@@ -122,17 +122,23 @@ constructor(
         preferredVariants: List<SourceVariant>,
         queueTitle: String,
     ): Boolean {
-        val queue = SearchResultsQueue(
-            title = queueTitle,
-            initialResult = result,
-            selected = selected,
-            selectedVariants = preferredVariants,
-            repository = searchRepository,
-            coordinator = this,
-        )
-        val firstItem = queue.getInitialStatus().items.firstOrNull() ?: return false
-        connection.playQueue(queue)
-        return awaitPlaybackStart(connection, firstItem.mediaId)
+        val choices = preferredVariants
+            .ifEmpty { listOfNotNull(selected.recommendedVariant) + selected.variants }
+            .distinctBy { it.provider to it.sourceId }
+        for (choice in choices) {
+            val queue = SearchResultsQueue(
+                title = queueTitle,
+                initialResult = result,
+                selected = selected,
+                selectedVariants = listOf(choice),
+                repository = searchRepository,
+                coordinator = this,
+            )
+            val firstItem = queue.getInitialStatus().items.firstOrNull() ?: continue
+            connection.playQueue(queue)
+            if (awaitPlaybackStart(connection, firstItem.mediaId)) return true
+        }
+        return false
     }
 
     internal suspend fun resolveMediaItem(variant: SourceVariant): MediaItem? =
