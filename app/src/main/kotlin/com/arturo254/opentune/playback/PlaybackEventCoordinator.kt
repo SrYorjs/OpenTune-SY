@@ -159,9 +159,13 @@ internal class PlaybackEventCoordinator(
                 scopeProvider().launch(
                     SilentHandler,
                 ) {
+                    val requestedQueue = queueController.currentQueue
                     val mediaItems =
                         queueController
                             .nextPage()
+                    if (queueController.currentQueue !== requestedQueue) {
+                        return@launch
+                    }
 
                     if (
                         player.playbackState !=
