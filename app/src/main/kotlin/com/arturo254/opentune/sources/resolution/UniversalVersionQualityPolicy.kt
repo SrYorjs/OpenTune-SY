@@ -61,7 +61,6 @@ constructor(
                                 ProviderId.LOCAL,
                                 ProviderId.AUDIUS,
                                 ProviderId.YOUTUBE_MUSIC,
-                                ProviderId.SOUNDCLOUD,
                             ),
                         qualityMode = mode,
                     ),
