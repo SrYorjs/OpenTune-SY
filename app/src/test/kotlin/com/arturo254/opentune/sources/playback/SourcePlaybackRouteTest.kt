@@ -75,6 +75,14 @@ class SourcePlaybackRouteTest {
     }
 
     @Test
+    fun audiusTracksUseTheirOwnStreamingRoute() {
+        assertEquals(
+            SourcePlaybackRoute.AUDIUS_DIRECT,
+            variant(ProviderId.AUDIUS).playbackRoute(),
+        )
+    }
+
+    @Test
     fun unknownProviderFailsClosed() {
         assertEquals(
             SourcePlaybackRoute.UNSUPPORTED,
