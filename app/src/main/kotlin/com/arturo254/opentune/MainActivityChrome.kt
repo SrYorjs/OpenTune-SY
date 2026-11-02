@@ -219,8 +219,6 @@ import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
 import com.arturo254.opentune.ui.component.LiquidGlassControlCluster
 import com.arturo254.opentune.ui.component.LiquidGlassIconButton
 import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidChrome
-import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidBackdrop
-import com.kyant.backdrop.backdrops.layerBackdrop
 import com.mikepenz.markdown.m3.Markdown
 import com.arturo254.opentune.constants.TogetherDisplayNameKey
 import com.arturo254.opentune.ui.component.BottomSheetPageState
@@ -566,6 +564,7 @@ internal fun MainActivitySearchBar(
     navigationState: MainActivityNavigationState,
     playerUiState: MainActivityPlayerUiState,
     searchBarAlignmentModifier: Modifier,
+    searchBackdropModifier: Modifier,
 ) {
     val navController = navigationState.navController
     val navBackStackEntry = navigationState.navBackStackEntry
@@ -577,7 +576,6 @@ internal fun MainActivitySearchBar(
     val onActiveChange = navigationState.onActiveChange
     val searchBarFocusRequester = navigationState.searchBarFocusRequester
     val playerBottomSheetState = playerUiState.bottomSheetState
-    val searchGlassBackdrop = LocalGalaxLiquidBackdrop.current
 
                                         androidx.compose.animation.AnimatedVisibility(
                                             visible = active || navBackStackEntry?.destination?.route?.startsWith("search/") == true,
@@ -657,11 +655,7 @@ internal fun MainActivitySearchBar(
                                                     Modifier
                                                         .focusRequester(searchBarFocusRequester)
                                                         .then(searchBarAlignmentModifier)
-                                                        .then(
-                                                            if (active && searchGlassBackdrop != null)
-                                                                Modifier.layerBackdrop(searchGlassBackdrop)
-                                                            else Modifier
-                                                        ),
+                                                        .then(searchBackdropModifier),
                                                 focusRequester = searchBarFocusRequester,
                                                 colors = if (pureBlack && active) {
                                                     SearchBarDefaults.colors(
