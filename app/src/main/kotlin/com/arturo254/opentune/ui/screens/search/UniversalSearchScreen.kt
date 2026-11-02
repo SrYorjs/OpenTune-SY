@@ -63,7 +63,30 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
     var visibleCount by remember(query) { mutableIntStateOf(50) }
     var lastPageRequest by remember(query) { mutableStateOf("") }
     var sourceDetails by remember(query) { mutableStateOf(false) }
-    val visibleEntries = entries.take(visibleCount)
+    var category by remember(query) { mutableStateOf(SearchResultCategory.ALL) }
+    var activeArtist by remember(query) { mutableStateOf<String?>(null) }
+    var activeAlbum by remember(query) { mutableStateOf<String?>(null) }
+    val artists = remember(entries) { groupSearchArtists(entries) }
+    val albums = remember(entries) { groupSearchAlbums(entries) }
+    val selectedTracks = when (category) {
+        SearchResultCategory.ALL, SearchResultCategory.SONGS -> entries
+        SearchResultCategory.ARTISTS ->
+            artists.firstOrNull { searchCategoryKey(it.name) == activeArtist }?.tracks.orEmpty()
+        SearchResultCategory.ALBUMS ->
+            albums.firstOrNull { it.key == activeAlbum }?.tracks.orEmpty()
+        SearchResultCategory.PLAYLISTS -> emptyList()
+    }
+    val showingTracks = category == SearchResultCategory.ALL ||
+        category == SearchResultCategory.SONGS ||
+        (category == SearchResultCategory.ARTISTS && activeArtist != null) ||
+        (category == SearchResultCategory.ALBUMS && activeAlbum != null)
+    val availableCount = when (category) {
+        SearchResultCategory.ARTISTS -> if (activeArtist == null) artists.size else selectedTracks.size
+        SearchResultCategory.ALBUMS -> if (activeAlbum == null) albums.size else selectedTracks.size
+        SearchResultCategory.PLAYLISTS -> 0
+        else -> selectedTracks.size
+    }
+    val visibleEntries = selectedTracks.take(visibleCount)
     val failedSources = if (sameQuery && !state.isLoading) {
         state.result.sources.values.filter { it.error != null }
     } else {
@@ -79,14 +102,14 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
         viewModel.query.value = query
         list.scrollToItem(0)
     }
-    LaunchedEffect(list, query, entries.size, visibleCount, nextPageToken, state.isLoadingMore) {
-        if (!sameQuery || state.isLoading) return@LaunchedEffect
+    LaunchedEffect(list, query, category, activeArtist, activeAlbum, availableCount, visibleCount, nextPageToken, state.isLoadingMore) {
+        if (!sameQuery || state.isLoading || category == SearchResultCategory.PLAYLISTS) return@LaunchedEffect
         snapshotFlow {
             val info = list.layoutInfo
             info.totalItemsCount > 0 &&
                 (info.visibleItemsInfo.lastOrNull()?.index ?: -1) >= info.totalItemsCount - 6
         }.distinctUntilChanged().filter { it }.collect {
-            if (entries.size > visibleCount) {
+            if (availableCount > visibleCount) {
                 visibleCount += 50
             } else if (state.result.hasMore && !state.isLoadingMore) {
                 val requestKey = "$visibleCount:$nextPageToken"
@@ -120,8 +143,17 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
         LazyColumn(state = list, modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(top = 16.dp, bottom = bottom + 24.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            item("signal/header") { SignalHeader(query, visibleEntries.size, loading, entries.size) }
-            item("signal/quality") { SignalQuality(quality) { quality = it } }
+            item("signal/header") { SignalHeader(query) }
+            item("signal/categories") {
+                SignalCategories(category) { selected ->
+                    category = selected
+                    activeArtist = null
+                    activeAlbum = null
+                    visibleCount = 50
+                    lastPageRequest = ""
+                    scope.launch { list.animateScrollToItem(0) }
+                }
+            }
             if (failedSources.isNotEmpty()) item("signal/partial") {
                 Column(Modifier.padding(horizontal = 20.dp)) {
                     TextButton(onClick = { sourceDetails = !sourceDetails }) {
@@ -148,14 +180,76 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                     }
                 }
             }
-            if (loading && entries.isEmpty()) item("signal/loading") { NovaLoading("Buscando en todos los catálogos…") }
+            if (loading && entries.isEmpty()) item("signal/loading") { NovaLoading("Buscando música…") }
             if (!loading && entries.isEmpty()) item("signal/empty") {
                 NovaMessage(
                     title = if (state.error != null) "No pudimos completar la búsqueda" else if (query.isBlank()) "Encuentra tu próxima canción" else "No hay coincidencias",
                     message = if (state.error != null) "Comprueba tu conexión y vuelve a enviar la búsqueda." else "Prueba con el título, un artista o una parte del nombre.",
                 )
             }
-            itemsIndexed(visibleEntries, key = { index, result -> universalResultRowKey(index, result.signalKey()) },
+            if (category == SearchResultCategory.PLAYLISTS && !loading && entries.isNotEmpty()) item("signal/playlists") {
+                NovaMessage(
+                    title = "Listas de reproducción",
+                    message = "La búsqueda de listas de Audius estará disponible en la siguiente fase. Aquí no se mezclan canciones con listas.",
+                )
+            }
+            if (category == SearchResultCategory.ARTISTS && activeArtist == null) {
+                if (!loading && artists.isEmpty() && entries.isNotEmpty()) item("signal/no-artists") {
+                    NovaMessage(title = "No hay artistas", message = "No encontramos artistas entre los resultados de esta búsqueda.")
+                }
+                items(artists.take(visibleCount), key = { "signal/artist/" + searchCategoryKey(it.name) }) { artist ->
+                    SignalCollectionRow(
+                        title = artist.name,
+                        subtitle = if (artist.tracks.size == 1) "1 canción encontrada" else "${artist.tracks.size} canciones encontradas",
+                        artworkUrl = artist.artworkUrl,
+                        onClick = {
+                            activeArtist = searchCategoryKey(artist.name)
+                            visibleCount = 50
+                            lastPageRequest = ""
+                            scope.launch { list.animateScrollToItem(0) }
+                        },
+                    )
+                }
+            }
+            if (category == SearchResultCategory.ALBUMS && activeAlbum == null) {
+                if (!loading && albums.isEmpty() && entries.isNotEmpty()) item("signal/no-albums") {
+                    NovaMessage(title = "No hay álbumes", message = "Las fuentes consultadas no proporcionaron álbumes para esta búsqueda.")
+                }
+                items(albums.take(visibleCount), key = { "signal/album/" + it.key }) { album ->
+                    SignalCollectionRow(
+                        title = album.title,
+                        subtitle = album.artist.ifBlank { "Álbum" },
+                        artworkUrl = album.artworkUrl,
+                        onClick = {
+                            activeAlbum = album.key
+                            visibleCount = 50
+                            lastPageRequest = ""
+                            scope.launch { list.animateScrollToItem(0) }
+                        },
+                    )
+                }
+            }
+            if (category == SearchResultCategory.ARTISTS && activeArtist != null) item("signal/back-artist") {
+                TextButton(
+                    onClick = {
+                        activeArtist = null
+                        visibleCount = 50
+                        scope.launch { list.animateScrollToItem(0) }
+                    },
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                ) { Text("Volver a artistas") }
+            }
+            if (category == SearchResultCategory.ALBUMS && activeAlbum != null) item("signal/back-album") {
+                TextButton(
+                    onClick = {
+                        activeAlbum = null
+                        visibleCount = 50
+                        scope.launch { list.animateScrollToItem(0) }
+                    },
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                ) { Text("Volver a álbumes") }
+            }
+            if (showingTracks) itemsIndexed(visibleEntries, key = { index, result -> universalResultRowKey(index, result.signalKey()) },
                 contentType = { _, _ -> "signal/recording" }) { index, result ->
                 val key = result.signalKey()
                 val sources = result.variants.map { it.provider to it.sourceId }.toSet()
@@ -208,12 +302,16 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                     } } else null,
                 )
             }
-            if (sameQuery && state.isLoadingMore) item("signal/more-loading") { NovaLoading("Cargando más canciones…") }
-            else if (sameQuery && visibleCount < entries.size) item("signal/more") {
-                TextButton(onClick = { visibleCount += 50 }, modifier = Modifier.padding(horizontal = 20.dp)) { Text("Mostrar otras 50 canciones") }
-            }
-            else if (sameQuery && state.result.hasMore && entries.isNotEmpty()) item("signal/more") {
-                TextButton(onClick = viewModel::loadMore, modifier = Modifier.padding(horizontal = 20.dp)) { Text("Buscar otras 50 canciones") }
+            if (sameQuery && category != SearchResultCategory.PLAYLISTS && state.isLoadingMore) item("signal/more-loading") {
+                NovaLoading("Cargando más resultados…")
+            } else if (sameQuery && category != SearchResultCategory.PLAYLISTS && visibleCount < availableCount) item("signal/more") {
+                TextButton(onClick = { visibleCount += 50 }, modifier = Modifier.padding(horizontal = 20.dp)) {
+                    Text("Mostrar más resultados")
+                }
+            } else if (sameQuery && category != SearchResultCategory.PLAYLISTS && state.result.hasMore && entries.isNotEmpty()) item("signal/more") {
+                TextButton(onClick = viewModel::loadMore, modifier = Modifier.padding(horizontal = 20.dp)) {
+                    Text("Buscar más resultados")
+                }
             }
         }
     }
@@ -237,35 +335,72 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
 }
 
 @Composable
-private fun SignalHeader(query: String, count: Int, loading: Boolean, total: Int) {
-    val ink = MaterialTheme.colorScheme.primary
-    Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Canvas(Modifier.size(28.dp)) {
-                repeat(5) { bar ->
-                    val height = size.height * listOf(.3f, .6f, 1f, .65f, .35f)[bar]
-                    val x = size.width * (bar + .5f) / 5
-                    drawLine(ink, Offset(x, (size.height - height) / 2), Offset(x, (size.height + height) / 2), 2.dp.toPx())
-                }
-            }
-            Text("TODOS LOS CATÁLOGOS", style = MaterialTheme.typography.labelSmall, letterSpacing = 1.8.sp, color = ink)
+private fun SignalHeader(query: String) {
+    Text(
+        text = query.ifBlank { "Encuentra tu música" },
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 6.dp),
+        style = MaterialTheme.typography.displaySmall,
+        fontWeight = FontWeight.Medium,
+        letterSpacing = (-1.2).sp,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis,
+    )
+}
+
+@Composable
+private fun SignalCategories(
+    selected: SearchResultCategory,
+    onSelect: (SearchResultCategory) -> Unit,
+) {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 18.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(SearchResultCategory.entries, key = { it.name }) { category ->
+            FilterChip(
+                selected = selected == category,
+                onClick = { onSelect(category) },
+                label = { Text(category.title) },
+            )
         }
-        Text(query.ifBlank { "Tu música, aquí." }, style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Medium, letterSpacing = (-1).sp, maxLines = 3, overflow = TextOverflow.Ellipsis)
-        Text(if (loading) "Explorando…" else "$count de $total canciones disponibles · Carga en bloques de 50", style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
-private fun SignalQuality(selected: AudioSelectionMode, onSelect: (AudioSelectionMode) -> Unit) {
-    LazyRow(contentPadding = PaddingValues(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        items(AudioSelectionMode.entries, key = { it.name }) { mode ->
-            FilterChip(selected = selected == mode, onClick = { onSelect(mode) }, label = { Text(when (mode) {
-                AudioSelectionMode.AUTOMATIC -> "Automática"
-                AudioSelectionMode.BEST_QUALITY -> "Mejor calidad"
-                AudioSelectionMode.DATA_SAVER -> "Ahorrar datos"
-            }) })
+private fun SignalCollectionRow(
+    title: String,
+    subtitle: String,
+    artworkUrl: String?,
+    onClick: () -> Unit,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = .8f),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            NovaArtwork(artworkUrl, Modifier.size(60.dp))
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(title, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            Icon(
+                painter = painterResource(R.drawable.chevron_right),
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
