@@ -111,10 +111,10 @@ class OfflineDownloadPlannerTest {
     @Test
     fun streamingWithoutDownloadPermissionUsesLegacyAudioResolver() =
         runBlocking {
-            val provider = ProviderId.SOUNDCLOUD
+            val provider = ProviderId("stream_only_test")
             val source = object : ManagedDownloadMusicSource {
                 override val id = provider
-                override val displayName = "SoundCloud"
+                override val displayName = "Streaming only"
                 override val capabilities = SourceCapabilities.of(SourceCapability.STREAM)
                 override suspend fun resolveManagedDownload(
                     variant: SourceVariant,
