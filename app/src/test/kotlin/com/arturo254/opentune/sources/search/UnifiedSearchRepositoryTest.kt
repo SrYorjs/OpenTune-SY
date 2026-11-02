@@ -149,6 +149,69 @@ class UnifiedSearchRepositoryTest {
         }
 
     @Test
+    fun sameTitleAndArtistAcrossProvidersMergeWithCloseDurations() =
+        runBlocking {
+            val audius = FakeSearchSource(
+                id = ProviderId.AUDIUS,
+                onSearch = {
+                    page(variant(ProviderId.AUDIUS, "audius", title = "Azúl",
+                        artist = "Zoé").copy(durationMs = 182_000, albumName = "Aztlán"))
+                },
+            )
+            val youtube = FakeSearchSource(
+                id = ProviderId.YOUTUBE_MUSIC,
+                onSearch = {
+                    page(variant(ProviderId.YOUTUBE_MUSIC, "youtube", title = "Azul",
+                        artist = "Zoe").copy(durationMs = 184_000, albumName = "Otro álbum"))
+                },
+            )
+
+            val result = repository(audius, youtube).search(UnifiedSearchRequest("azul"))
+
+            assertEquals(1, result.tracks.size)
+            assertEquals(2, result.tracks.single().variants.size)
+        }
+
+    @Test
+    fun equalSongNamesWithDifferentIdentifiersOrRecordingsStayDistinct() =
+        runBlocking {
+            val audius = FakeSearchSource(
+                id = ProviderId.AUDIUS,
+                onSearch = {
+                    page(variant(ProviderId.AUDIUS, "recording-one",
+                        title = "Azul", artist = "Artist", isrc = "USAAA2600001"))
+                },
+            )
+            val youtube = FakeSearchSource(
+                id = ProviderId.YOUTUBE_MUSIC,
+                onSearch = {
+                    page(variant(ProviderId.YOUTUBE_MUSIC, "recording-two",
+                        title = "Azul", artist = "Artist", isrc = "USBBB2600002"))
+                },
+            )
+            val results = repository(audius, youtube).search(UnifiedSearchRequest("azul"))
+            assertEquals(2, results.tracks.size)
+        }
+
+    @Test
+    fun liveAndStudioTracksWithSameArtistRemainIndependent() =
+        runBlocking {
+            val audius = FakeSearchSource(
+                id = ProviderId.AUDIUS,
+                onSearch = { page(variant(ProviderId.AUDIUS, "original", title = "Azul")) },
+            )
+            val youtube = FakeSearchSource(
+                id = ProviderId.YOUTUBE_MUSIC,
+                onSearch = {
+                    page(variant(ProviderId.YOUTUBE_MUSIC, "live", title = "Azul (Live)",
+                        version = TrackVersion(setOf(TrackVersionTrait.LIVE))))
+                },
+            )
+            val results = repository(audius, youtube).search(UnifiedSearchRequest("azul"))
+            assertEquals(2, results.tracks.size)
+        }
+
+    @Test
     fun sameIsrcAcrossAllMajorProvidersMergesIntoOneTrack() =
         runBlocking {
             val providers =
