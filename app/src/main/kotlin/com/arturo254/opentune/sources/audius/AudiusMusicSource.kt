@@ -213,6 +213,7 @@ internal fun AudiusTrack.toSourceVariant(): SourceVariant =
         explicit = explicit,
         artworkUrl = artworkUrl,
         quality = AudioQualityInfo(mimeType = MimeTypes.AUDIO_MPEG, lossless = false),
+        downloadable = downloadable && !downloadGated && streamable && !streamGated,
     )
 
 @Singleton
