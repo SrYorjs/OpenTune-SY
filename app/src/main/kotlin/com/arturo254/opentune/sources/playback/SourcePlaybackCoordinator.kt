@@ -7,9 +7,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata.MEDIA_TYPE_MUSIC
 import com.arturo254.opentune.catalog.CatalogPlaybackResolver
 import com.arturo254.opentune.catalog.CatalogTrackReference
-import com.arturo254.opentune.core.model.ArtistIdentity
 import com.arturo254.opentune.core.model.ProviderId
-import com.arturo254.opentune.core.model.TrackIdentity
 import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.core.model.TrackVersionTrait
 import com.arturo254.opentune.extensions.ExtraIsMusicVideo
@@ -21,15 +19,11 @@ import com.arturo254.opentune.playback.queues.ListQueue
 import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.sources.SourceRegistry
 import com.arturo254.opentune.sources.StreamMusicSource
-import com.arturo254.opentune.sources.TrackSearchRequest
-import com.arturo254.opentune.sources.TrackSearchSource
-import com.arturo254.opentune.sources.matching.TrackMatcher
 import com.arturo254.opentune.sources.search.UnifiedSearchRepository
 import com.arturo254.opentune.sources.search.UnifiedSearchResult
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
 import com.arturo254.opentune.sources.apple.toAppleMusicCatalogReference
 import com.arturo254.opentune.sources.deezer.toDeezerCatalogReference
-import com.arturo254.opentune.sources.soundcloud.toSoundCloudCatalogReference
 import com.arturo254.opentune.sources.spotify.toSpotifyCatalogReference
 import com.arturo254.opentune.sources.tidal.toTidalCatalogReference
 import javax.inject.Inject
@@ -53,7 +47,6 @@ class SourcePlaybackCoordinator
 @Inject
 constructor(
     private val sourceRegistry: SourceRegistry,
-    private val trackMatcher: TrackMatcher,
     private val searchRepository: UnifiedSearchRepository,
 ) {
     suspend fun play(
@@ -80,22 +73,6 @@ constructor(
                     ),
                 )
                 true
-            }
-
-            SourcePlaybackRoute.SOUNDCLOUD_DIRECT -> {
-                val item =
-                    try {
-                        (sourceRegistry[variant.provider] as? StreamMusicSource)
-                            ?.resolvePlayback(variant)
-                            ?: CatalogPlaybackResolver.resolveToMediaItem(
-                                variant.toSoundCloudCatalogReference(),
-                            )
-                    } catch (cancel: CancellationException) {
-                        throw cancel
-                    } catch (_: Exception) {
-                        null
-                    }
-                playResolved(connection, item)
             }
 
             SourcePlaybackRoute.CATALOG_BRIDGE -> {
@@ -153,8 +130,6 @@ constructor(
             if (direct != null) direct else when (variant.playbackRoute()) {
                 SourcePlaybackRoute.YOUTUBE_QUEUE -> variant.toOpenTuneMetadata().toMediaItem()
                 SourcePlaybackRoute.LOCAL_OR_OFFLINE -> variant.toPlayableMediaItem()
-                SourcePlaybackRoute.SOUNDCLOUD_DIRECT ->
-                    CatalogPlaybackResolver.resolveToMediaItem(variant.toSoundCloudCatalogReference())
                 SourcePlaybackRoute.CATALOG_BRIDGE ->
                     CatalogPlaybackResolver.resolveToMediaItem(variant.toCatalogPlaybackReference())
                 SourcePlaybackRoute.AUDIUS_DIRECT,
@@ -168,31 +143,12 @@ constructor(
 
     internal suspend fun resolveTrack(
         variants: List<SourceVariant>,
-        allowSoundCloudSearch: Boolean,
     ): MediaItem? {
-        val candidates = variants.distinctBy { it.provider to it.sourceId }
-        for (variant in candidates) {
-            val resolved = withTimeoutOrNull(RESOLVE_ITEM_TIMEOUT_MS) {
+        for (variant in variants.distinctBy { it.provider to it.sourceId }) {
+            val item = withTimeoutOrNull(RESOLVE_ITEM_TIMEOUT_MS) {
                 resolveMediaItem(variant)
             }
-            if (resolved != null) return resolved
-        }
-        if (!allowSoundCloudSearch) return null
-        val reference = candidates.firstOrNull() ?: return null
-        if (candidates.any { it.provider == ProviderId.SOUNDCLOUD }) return null
-        val soundCloud = sourceRegistry[ProviderId.SOUNDCLOUD] as? TrackSearchSource ?: return null
-        val query = (listOf(reference.title) + reference.artists.take(1))
-            .filter(String::isNotBlank).joinToString(" ")
-        if (query.isBlank()) return null
-        val found = withTimeoutOrNull(SOUNDCLOUD_SEARCH_TIMEOUT_MS) {
-            soundCloud.searchTracks(TrackSearchRequest(query = query, limit = 12))
-                .getOrNull()?.items
-        }.orEmpty()
-        for (variant in matchingSoundCloudFallbacks(reference, found, trackMatcher)) {
-            val resolved = withTimeoutOrNull(RESOLVE_ITEM_TIMEOUT_MS) {
-                resolveMediaItem(variant)
-            }
-            if (resolved != null) return resolved
+            if (item != null) return item
         }
         return null
     }
@@ -207,22 +163,6 @@ constructor(
             if (tryPlayback(connection, variant, queueTitle)) return true
         }
 
-        val reference = candidates.firstOrNull() ?: return false
-        if (candidates.any { it.provider == ProviderId.SOUNDCLOUD }) return false
-        val soundCloud = sourceRegistry[ProviderId.SOUNDCLOUD] as? TrackSearchSource ?: return false
-        val query = (listOf(reference.title) + reference.artists.take(1))
-            .filter(String::isNotBlank)
-            .joinToString(" ")
-        if (query.isBlank()) return false
-
-        val discovered = withTimeoutOrNull(SOUNDCLOUD_SEARCH_TIMEOUT_MS) {
-            soundCloud.searchTracks(TrackSearchRequest(query = query, limit = 12))
-                .getOrNull()?.items
-        }.orEmpty()
-        val fallbackCandidates = matchingSoundCloudFallbacks(reference, discovered, trackMatcher)
-        for (variant in fallbackCandidates) {
-            if (tryPlayback(connection, variant, queueTitle)) return true
-        }
         return false
     }
 
@@ -278,7 +218,6 @@ constructor(
 
     private companion object {
         const val PLAYBACK_START_TIMEOUT_MS = 16_000L
-        const val SOUNDCLOUD_SEARCH_TIMEOUT_MS = 6_000L
         const val RESOLVE_ITEM_TIMEOUT_MS = 8_000L
     }
 
@@ -294,31 +233,9 @@ constructor(
     }
 }
 
-internal fun matchingSoundCloudFallbacks(
-    reference: SourceVariant,
-    candidates: List<SourceVariant>,
-    trackMatcher: TrackMatcher,
-): List<SourceVariant> {
-    val identity = TrackIdentity(
-        title = reference.title,
-        artists = reference.artists.map { ArtistIdentity(name = it) },
-        durationMs = reference.durationMs,
-        isrc = reference.isrc,
-        explicit = reference.explicit,
-        version = reference.version,
-    )
-    return trackMatcher.rankCandidates(identity, candidates)
-        .asSequence()
-        .filter { it.variant.provider == ProviderId.SOUNDCLOUD && it.match.isAccepted }
-        .map { it.variant }
-        .take(3)
-        .toList()
-}
-
 enum class SourcePlaybackRoute {
     YOUTUBE_QUEUE,
     LOCAL_OR_OFFLINE,
-    SOUNDCLOUD_DIRECT,
     AUDIUS_DIRECT,
     CATALOG_BRIDGE,
     UNSUPPORTED,
@@ -328,7 +245,6 @@ fun SourceVariant.playbackRoute(): SourcePlaybackRoute =
     when (provider) {
         ProviderId.YOUTUBE_MUSIC -> SourcePlaybackRoute.YOUTUBE_QUEUE
         ProviderId.LOCAL, ProviderId.OPEN_TUNE_OFFLINE -> SourcePlaybackRoute.LOCAL_OR_OFFLINE
-        ProviderId.SOUNDCLOUD -> SourcePlaybackRoute.SOUNDCLOUD_DIRECT
         ProviderId.AUDIUS -> SourcePlaybackRoute.AUDIUS_DIRECT
         ProviderId.DEEZER,
         ProviderId.SPOTIFY,
