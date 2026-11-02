@@ -1,12 +1,15 @@
 package com.arturo254.opentune.sources.playback
 
 import android.os.Bundle
+import androidx.media3.common.Player
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata.MEDIA_TYPE_MUSIC
 import com.arturo254.opentune.catalog.CatalogPlaybackResolver
 import com.arturo254.opentune.catalog.CatalogTrackReference
+import com.arturo254.opentune.core.model.ArtistIdentity
 import com.arturo254.opentune.core.model.ProviderId
+import com.arturo254.opentune.core.model.TrackIdentity
 import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.core.model.TrackVersionTrait
 import com.arturo254.opentune.extensions.ExtraIsMusicVideo
@@ -15,6 +18,10 @@ import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.playback.queues.ListQueue
 import com.arturo254.opentune.playback.queues.YouTubeQueue
+import com.arturo254.opentune.sources.SourceRegistry
+import com.arturo254.opentune.sources.TrackSearchRequest
+import com.arturo254.opentune.sources.TrackSearchSource
+import com.arturo254.opentune.sources.matching.TrackMatcher
 import com.arturo254.opentune.sources.apple.toAppleMusicCatalogReference
 import com.arturo254.opentune.sources.deezer.toDeezerCatalogReference
 import com.arturo254.opentune.sources.soundcloud.SoundCloudPlaybackResolver
@@ -24,6 +31,9 @@ import com.arturo254.opentune.sources.tidal.toTidalCatalogReference
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.coroutines.resume
 
 /**
  * Playback migration boundary shared by Search and Home.
@@ -39,6 +49,8 @@ class SourcePlaybackCoordinator
 @Inject
 constructor(
     private val soundCloudResolver: SoundCloudPlaybackResolver,
+    private val sourceRegistry: SourceRegistry,
+    private val trackMatcher: TrackMatcher,
 ) {
     suspend fun play(
         connection: PlayerConnection,
@@ -103,10 +115,77 @@ constructor(
         variants: List<SourceVariant>,
         queueTitle: String,
     ): Boolean {
-        for (variant in variants.distinctBy { it.provider to it.sourceId }) {
-            if (play(connection, variant, queueTitle)) return true
+        val candidates = variants.distinctBy { it.provider to it.sourceId }
+        for (variant in candidates) {
+            if (tryPlayback(connection, variant, queueTitle)) return true
+        }
+
+        val reference = candidates.firstOrNull() ?: return false
+        if (candidates.any { it.provider == ProviderId.SOUNDCLOUD }) return false
+        val soundCloud = sourceRegistry[ProviderId.SOUNDCLOUD] as? TrackSearchSource ?: return false
+        val query = (listOf(reference.title) + reference.artists.take(1))
+            .filter(String::isNotBlank)
+            .joinToString(" ")
+        if (query.isBlank()) return false
+
+        val discovered = withTimeoutOrNull(SOUNDCLOUD_SEARCH_TIMEOUT_MS) {
+            soundCloud.searchTracks(TrackSearchRequest(query = query, limit = 12))
+                .getOrNull()?.items
+        }.orEmpty()
+        val fallbackCandidates = matchingSoundCloudFallbacks(reference, discovered, trackMatcher)
+        for (variant in fallbackCandidates) {
+            if (tryPlayback(connection, variant, queueTitle)) return true
         }
         return false
+    }
+
+    private suspend fun tryPlayback(
+        connection: PlayerConnection,
+        variant: SourceVariant,
+        queueTitle: String,
+    ): Boolean {
+        val dispatched = try {
+            play(connection, variant, queueTitle)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            false
+        }
+        return dispatched && awaitPlaybackStart(connection, variant.sourceId)
+    }
+
+    private suspend fun awaitPlaybackStart(
+        connection: PlayerConnection,
+        mediaId: String,
+    ): Boolean = withTimeoutOrNull(PLAYBACK_START_TIMEOUT_MS) {
+        suspendCancellableCoroutine { continuation ->
+            val player = connection.player
+            val listener = object : Player.Listener {
+                fun inspect(player: Player) {
+                    if (player.currentMediaItem?.mediaId != mediaId) return
+                    val success = when {
+                        player.isPlaying -> true
+                        player.playerError != null -> false
+                        player.playbackState == Player.STATE_ENDED -> false
+                        else -> return
+                    }
+                    player.removeListener(this)
+                    if (continuation.isActive) continuation.resume(success)
+                }
+
+                override fun onEvents(player: Player, events: Player.Events) {
+                    inspect(player)
+                }
+            }
+            player.addListener(listener)
+            continuation.invokeOnCancellation { player.removeListener(listener) }
+            listener.inspect(player)
+        }
+    } ?: false
+
+    private companion object {
+        const val PLAYBACK_START_TIMEOUT_MS = 16_000L
+        const val SOUNDCLOUD_SEARCH_TIMEOUT_MS = 6_000L
     }
 
     private fun playResolved(
@@ -119,6 +198,27 @@ constructor(
         connection.player.playWhenReady = true
         return true
     }
+}
+
+internal fun matchingSoundCloudFallbacks(
+    reference: SourceVariant,
+    candidates: List<SourceVariant>,
+    trackMatcher: TrackMatcher,
+): List<SourceVariant> {
+    val identity = TrackIdentity(
+        title = reference.title,
+        artists = reference.artists.map(::ArtistIdentity),
+        durationMs = reference.durationMs,
+        isrc = reference.isrc,
+        explicit = reference.explicit,
+        version = reference.version,
+    )
+    return trackMatcher.rankCandidates(identity, candidates)
+        .asSequence()
+        .filter { it.variant.provider == ProviderId.SOUNDCLOUD && it.match.isAccepted }
+        .map { it.variant }
+        .take(3)
+        .toList()
 }
 
 enum class SourcePlaybackRoute {
