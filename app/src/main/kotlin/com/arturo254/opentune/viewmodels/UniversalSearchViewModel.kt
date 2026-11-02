@@ -101,6 +101,28 @@ constructor(
             queueTitle = queueTitle,
         )
 
+    suspend fun playSearchResults(
+        connection: PlayerConnection,
+        result: UnifiedTrackSearchResult,
+        searchResult: UnifiedSearchResult,
+        variants: List<SourceVariant>,
+        queueTitle: String,
+    ): Boolean =
+        sourcePlaybackCoordinator.playSearchResults(
+            connection = connection,
+            result = searchResult,
+            selected = result,
+            preferredVariants = variants,
+            queueTitle = queueTitle,
+        )
+
+    fun retrySearch() {
+        val currentQuery = query.value.trim()
+        if (currentQuery.isEmpty()) return
+        loadMoreJob?.cancel()
+        viewModelScope.launch { performSearch(currentQuery) }
+    }
+
     suspend fun enqueueOffline(result: UnifiedTrackSearchResult): Result<OfflineTrackAsset> =
         offlineDownloadCoordinator.enqueue(
             identity = result.identity,
