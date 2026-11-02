@@ -518,7 +518,7 @@ class SoundCloudMusicSource
 @Inject
 constructor(
     private val gateway: SoundCloudCatalogGateway,
-    private val playbackResolver: SoundCloudPlaybackResolver,
+    private val playbackResolver: SoundCloudPlaybackResolver? = null,
 ) : TrackSearchSource, StreamMusicSource {
     override val id: ProviderId = ProviderId.SOUNDCLOUD
     override val displayName: String = "SoundCloud"
@@ -535,7 +535,7 @@ constructor(
         )
 
     override suspend fun resolvePlayback(variant: SourceVariant): MediaItem? =
-        playbackResolver.resolveToMediaItem(variant)
+        playbackResolver?.resolveToMediaItem(variant)
 
     override suspend fun searchTracks(request: TrackSearchRequest): Result<TrackSearchPage> {
         val query = request.query.trim()
