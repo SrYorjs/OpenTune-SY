@@ -125,7 +125,10 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
             if (failedSources.isNotEmpty()) item("signal/partial") {
                 Column(Modifier.padding(horizontal = 20.dp)) {
                     TextButton(onClick = { sourceDetails = !sourceDetails }) {
-                        Text("${failedSources.size} fuentes no disponibles · Ver detalles")
+                        Text(
+                            if (failedSources.size == 1) "1 fuente no disponible · Ver detalles"
+                            else "${failedSources.size} fuentes no disponibles · Ver detalles"
+                        )
                     }
                     if (sourceDetails) {
                         Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
