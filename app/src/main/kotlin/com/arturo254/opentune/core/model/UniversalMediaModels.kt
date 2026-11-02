@@ -130,4 +130,5 @@ data class SourceVariant(
     val artworkUrl: String? = null,
     val animatedArtworkUrl: String? = null,
     val quality: AudioQualityInfo? = null,
+    val downloadable: Boolean? = null,
 )
