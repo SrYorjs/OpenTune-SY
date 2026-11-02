@@ -104,6 +104,13 @@ class AudiusHttpGateway @Inject constructor() : AudiusCatalogGateway {
             }
         }
 
+    internal suspend fun fetchDiscovery(
+        path: String,
+        parameters: List<Pair<String, String>> = emptyList(),
+    ): JsonObject = withContext(Dispatchers.IO) {
+        fetch(path, parameters)
+    }
+
     override fun streamUrl(id: String): String =
         endpoint("/tracks/${encodeSegment(id)}/stream").toString()
 
