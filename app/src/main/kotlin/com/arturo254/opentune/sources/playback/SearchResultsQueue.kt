@@ -69,7 +69,7 @@ class SearchResultsQueue(
             if (selectedTrack != null) {
                 cursor = 1
                 val choices = selectedVariants.ifEmpty { playbackOptions(selectedTrack) }
-                val item = coordinator.resolveTrack(choices, allowSoundCloudSearch = true)
+                val item = coordinator.resolveTrack(choices)
                 if (item != null && emittedIds.add(item.mediaId)) {
                     initialItem = item
                     loadedCount = 1
@@ -124,10 +124,7 @@ class SearchResultsQueue(
                 batch.map { track ->
                     async(Dispatchers.IO) {
                         semaphore.withPermit {
-                            coordinator.resolveTrack(
-                                playbackOptions(track),
-                                allowSoundCloudSearch = true,
-                            )
+                            coordinator.resolveTrack(playbackOptions(track))
                         }
                     }
                 }.awaitAll()
@@ -182,7 +179,6 @@ class SearchResultsQueue(
                     ProviderId.LOCAL, ProviderId.OPEN_TUNE_OFFLINE -> 0
                     ProviderId.AUDIUS -> 1
                     ProviderId.YOUTUBE_MUSIC -> 2
-                    ProviderId.SOUNDCLOUD -> 3
                     else -> 3
                 }
             }
