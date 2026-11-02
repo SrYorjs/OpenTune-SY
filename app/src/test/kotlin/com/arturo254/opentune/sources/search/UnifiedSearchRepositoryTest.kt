@@ -25,8 +25,8 @@ import org.junit.Test
 
 class UnifiedSearchRepositoryTest {
     @Test
-    fun soundCloudBootstrapTimeoutDoesNotPenalizeOtherCatalogs() {
-        assertEquals(30_000L, searchTimeoutMs(ProviderId.SOUNDCLOUD))
+    fun searchTimeoutRemainsConsistentAcrossActiveCatalogs() {
+        assertEquals(8_000L, searchTimeoutMs(ProviderId.AUDIUS))
         assertEquals(8_000L, searchTimeoutMs(ProviderId.YOUTUBE_MUSIC))
         assertEquals(8_000L, searchTimeoutMs(ProviderId.SPOTIFY))
     }
@@ -158,7 +158,7 @@ class UnifiedSearchRepositoryTest {
                     ProviderId.DEEZER,
                     ProviderId.TIDAL,
                     ProviderId.APPLE_MUSIC,
-                    ProviderId.SOUNDCLOUD,
+                    ProviderId.AUDIUS,
                 )
             val sources =
                 providers.mapIndexed { index, provider ->
@@ -197,10 +197,10 @@ class UnifiedSearchRepositoryTest {
                     id = ProviderId.YOUTUBE_MUSIC,
                     onSearch = { page(variant(ProviderId.YOUTUBE_MUSIC, "yt")) },
                 )
-            val soundCloud =
+            val audius =
                 FakeSearchSource(
-                    id = ProviderId.SOUNDCLOUD,
-                    onSearch = { page(variant(ProviderId.SOUNDCLOUD, "sc", title = "SC Song")) },
+                    id = ProviderId.AUDIUS,
+                    onSearch = { page(variant(ProviderId.AUDIUS, "au", title = "Audius Song")) },
                 )
             val brokenTidal =
                 FakeSearchSource(
@@ -214,7 +214,7 @@ class UnifiedSearchRepositoryTest {
                 )
 
             val result =
-                repository(youtube, soundCloud, brokenTidal, brokenApple)
+                repository(youtube, audius, brokenTidal, brokenApple)
                     .search(UnifiedSearchRequest("song"))
 
             assertEquals(2, result.successfulSourceCount)
@@ -391,7 +391,7 @@ class UnifiedSearchRepositoryTest {
                     ProviderId.DEEZER,
                     ProviderId.TIDAL,
                     ProviderId.APPLE_MUSIC,
-                    ProviderId.SOUNDCLOUD,
+                    ProviderId.AUDIUS,
                 ).map { provider ->
                     FakeSearchSource(
                         id = provider,
