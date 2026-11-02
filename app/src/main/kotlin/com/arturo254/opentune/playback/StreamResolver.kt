@@ -110,6 +110,9 @@ internal class StreamResolver(
 
     fun createDataSourceFactory(): DataSource.Factory =
         ResolvingDataSource.Factory(createCacheDataSource()) { dataSpec ->
+            if (StreamRequestPolicy.isDirectHttpStream(dataSpec.uri.toString())) {
+                return@Factory dataSpec
+            }
             val mediaId = dataSpec.key ?: error("No media id")
             val recovery = errorRecoveryControllerProvider()
 
