@@ -181,7 +181,11 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                         })
                 val pending = downloading == key || asset?.state == OfflineTrackState.PENDING
                 val canDownload = offline == null && !pending && result.variants.any {
-                    it.provider != ProviderId.LOCAL && it.provider != ProviderId.OPEN_TUNE_OFFLINE
+                    when (it.provider) {
+                        ProviderId.LOCAL, ProviderId.OPEN_TUNE_OFFLINE, ProviderId.SOUNDCLOUD -> false
+                        ProviderId.AUDIUS -> it.downloadable == true
+                        else -> true
+                    }
                 }
                 SignalResult(
                     index = index, result = result, preferred = preferred, active = active, playing = playing,
