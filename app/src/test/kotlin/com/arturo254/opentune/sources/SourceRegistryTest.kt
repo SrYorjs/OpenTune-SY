@@ -26,8 +26,8 @@ class SourceRegistryTest {
     fun capabilityMatrixReflectsInstalledSourcesWithoutHardcodedProviders() {
         val streamSource =
             object : MusicSource {
-                override val id = ProviderId.SOUNDCLOUD
-                override val displayName = "SoundCloud"
+                override val id = ProviderId.AUDIUS
+                override val displayName = "Audius"
                 override val capabilities =
                     SourceCapabilities.of(
                         SourceCapability.TRACK_SEARCH,
@@ -44,7 +44,7 @@ class SourceRegistryTest {
                 SourceCapability.TRACK_SEARCH,
                 SourceCapability.STREAM,
             ),
-            matrix[ProviderId.SOUNDCLOUD],
+            matrix[ProviderId.AUDIUS],
         )
         assertEquals(
             setOf(SourceCapability.TRACK_METADATA),
