@@ -20,6 +20,7 @@ import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.playback.queues.ListQueue
 import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.sources.SourceRegistry
+import com.arturo254.opentune.sources.StreamMusicSource
 import com.arturo254.opentune.sources.TrackSearchRequest
 import com.arturo254.opentune.sources.TrackSearchSource
 import com.arturo254.opentune.sources.matching.TrackMatcher
@@ -28,7 +29,6 @@ import com.arturo254.opentune.sources.search.UnifiedSearchResult
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
 import com.arturo254.opentune.sources.apple.toAppleMusicCatalogReference
 import com.arturo254.opentune.sources.deezer.toDeezerCatalogReference
-import com.arturo254.opentune.sources.soundcloud.SoundCloudPlaybackResolver
 import com.arturo254.opentune.sources.soundcloud.toSoundCloudCatalogReference
 import com.arturo254.opentune.sources.spotify.toSpotifyCatalogReference
 import com.arturo254.opentune.sources.tidal.toTidalCatalogReference
@@ -52,7 +52,6 @@ import kotlin.coroutines.resume
 class SourcePlaybackCoordinator
 @Inject
 constructor(
-    private val soundCloudResolver: SoundCloudPlaybackResolver,
     private val sourceRegistry: SourceRegistry,
     private val trackMatcher: TrackMatcher,
     private val searchRepository: UnifiedSearchRepository,
@@ -86,7 +85,8 @@ constructor(
             SourcePlaybackRoute.SOUNDCLOUD_DIRECT -> {
                 val item =
                     try {
-                        soundCloudResolver.resolveToMediaItem(variant)
+                        (sourceRegistry[variant.provider] as? StreamMusicSource)
+                            ?.resolvePlayback(variant)
                             ?: CatalogPlaybackResolver.resolveToMediaItem(
                                 variant.toSoundCloudCatalogReference(),
                             )
@@ -112,7 +112,11 @@ constructor(
                 playResolved(connection, item)
             }
 
-            SourcePlaybackRoute.UNSUPPORTED -> false
+            SourcePlaybackRoute.UNSUPPORTED -> {
+                val item = (sourceRegistry[variant.provider] as? StreamMusicSource)
+                    ?.resolvePlayback(variant)
+                playResolved(connection, item)
+            }
         }
 
     suspend fun playSearchResults(
@@ -143,12 +147,14 @@ constructor(
 
     internal suspend fun resolveMediaItem(variant: SourceVariant): MediaItem? =
         try {
+            val direct = (sourceRegistry[variant.provider] as? StreamMusicSource)
+                ?.resolvePlayback(variant)
+            if (direct != null) return direct
             when (variant.playbackRoute()) {
                 SourcePlaybackRoute.YOUTUBE_QUEUE -> variant.toOpenTuneMetadata().toMediaItem()
                 SourcePlaybackRoute.LOCAL_OR_OFFLINE -> variant.toPlayableMediaItem()
                 SourcePlaybackRoute.SOUNDCLOUD_DIRECT ->
-                    soundCloudResolver.resolveToMediaItem(variant)
-                        ?: CatalogPlaybackResolver.resolveToMediaItem(variant.toSoundCloudCatalogReference())
+                    CatalogPlaybackResolver.resolveToMediaItem(variant.toSoundCloudCatalogReference())
                 SourcePlaybackRoute.CATALOG_BRIDGE ->
                     CatalogPlaybackResolver.resolveToMediaItem(variant.toCatalogPlaybackReference())
                 SourcePlaybackRoute.UNSUPPORTED -> null
