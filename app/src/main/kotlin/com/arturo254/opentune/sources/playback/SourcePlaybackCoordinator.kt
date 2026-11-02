@@ -213,7 +213,7 @@ internal fun matchingSoundCloudFallbacks(
 ): List<SourceVariant> {
     val identity = TrackIdentity(
         title = reference.title,
-        artists = reference.artists.map(::ArtistIdentity),
+        artists = reference.artists.map { ArtistIdentity(name = it) },
         durationMs = reference.durationMs,
         isrc = reference.isrc,
         explicit = reference.explicit,
