@@ -9,7 +9,6 @@ import com.arturo254.opentune.sources.SourceRegistry
 import com.arturo254.opentune.sources.TrackSearchPage
 import com.arturo254.opentune.sources.TrackSearchRequest
 import com.arturo254.opentune.sources.TrackSearchSource
-import com.arturo254.opentune.sources.matching.TrackMatchIssue
 import com.arturo254.opentune.sources.matching.TrackMatcher
 import com.arturo254.opentune.sources.resolution.PlaybackAvailability
 import com.arturo254.opentune.sources.resolution.SourcePlaybackCandidate
@@ -321,19 +320,8 @@ constructor(
         identity: TrackIdentity,
         variants: List<SourceVariant>,
         candidate: SourceVariant,
-    ): Boolean {
-        val identityMatch = trackMatcher.match(identity, candidate)
-        if (!identityMatch.isAccepted) return false
-
-        return variants.none { existing ->
-            val pairMatch = trackMatcher.match(existing, candidate)
-            !pairMatch.isAccepted &&
-                (
-                    TrackMatchIssue.ISRC_CONFLICT in pairMatch.issues ||
-                        TrackMatchIssue.RECORDING_VERSION_CONFLICT in pairMatch.issues
-                )
-        }
-    }
+    ): Boolean =
+        sameRecording(identity, variants, candidate, trackMatcher)
 
     private fun mergeIdentity(
         current: TrackIdentity,
