@@ -132,12 +132,7 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                             Column(Modifier.padding(12.dp)) {
                                 failedSources.forEach { source ->
                                     Text(
-                                        "${signalProvider(source.provider)}: ${when (source.error?.type) {
-                                            "TimeoutException" -> "Tiempo de espera agotado"
-                                            "UnknownHostException" -> "Error de conexión"
-                                            "SocketTimeoutException" -> "El proveedor tardó demasiado"
-                                            else -> "Servicio temporalmente indisponible"
-                                        }}",
+                                        "${signalProvider(source.provider)}: ${sourceFailureLabel(source.error)}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -330,6 +325,22 @@ private fun signalProvider(provider: ProviderId): String = when (provider) {
     ProviderId.LOCAL -> "Local"
     ProviderId.OPEN_TUNE_OFFLINE -> "Offline"
     else -> provider.value
+}
+
+internal fun sourceFailureLabel(error: com.arturo254.opentune.sources.search.UnifiedSearchError?): String {
+    val type = error?.type.orEmpty()
+    val details = error?.message.orEmpty()
+    return when {
+        "TimeoutException" in type -> "No respondió antes del límite de espera"
+        "UnknownHostException" in type -> "Sin conexión con el proveedor"
+        "SocketTimeoutException" in type -> "El servidor tardó demasiado"
+        "client_id" in details.lowercase() || "unauthorized" in details.lowercase() ||
+            "http 401" in details.lowercase() || "http 403" in details.lowercase() ->
+            "La conexión necesita credenciales válidas de SoundCloud"
+        "http 429" in details.lowercase() -> "Límite de solicitudes alcanzado"
+        "http 503" in details.lowercase() -> "El servicio reporta mantenimiento o indisponibilidad"
+        else -> "No se pudo conectar con el proveedor"
+    }
 }
 
 private fun signalQuality(variant: SourceVariant?): String? {
