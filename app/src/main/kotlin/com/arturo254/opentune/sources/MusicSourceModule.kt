@@ -1,5 +1,8 @@
 package com.arturo254.opentune.sources
 
+import com.arturo254.opentune.sources.audius.AudiusCatalogGateway
+import com.arturo254.opentune.sources.audius.AudiusHttpGateway
+import com.arturo254.opentune.sources.audius.AudiusMusicSource
 import com.arturo254.opentune.sources.deezer.DeezerCatalogGateway
 import com.arturo254.opentune.sources.deezer.DeezerMusicSource
 import com.arturo254.opentune.sources.deezer.DefaultDeezerCatalogGateway
@@ -83,7 +86,10 @@ abstract class MusicSourceModule {
 
     @Binds
     @IntoSet
-    abstract fun bindSoundCloudMusicSource(source: SoundCloudMusicSource): MusicSource
+    abstract fun bindAudiusMusicSource(source: AudiusMusicSource): MusicSource
+
+    @Binds
+    abstract fun bindAudiusCatalogGateway(client: AudiusHttpGateway): AudiusCatalogGateway
 
     @Binds
     abstract fun bindSoundCloudCatalogGateway(
