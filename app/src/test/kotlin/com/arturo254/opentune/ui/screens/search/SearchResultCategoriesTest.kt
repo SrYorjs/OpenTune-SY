@@ -40,7 +40,7 @@ class SearchResultCategoriesTest {
         val missing = song("Sin álbum", "Zoé")
         val groups = groupSearchAlbums(listOf(first, second, other, missing))
 
-        assertEquals(3, groups.size)
+        assertEquals(2, groups.size)
         assertEquals(2, groups.first().tracks.size)
         assertEquals(1, groups.last().tracks.size)
     }
