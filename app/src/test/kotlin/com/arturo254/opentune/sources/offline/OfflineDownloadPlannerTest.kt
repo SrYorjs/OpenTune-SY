@@ -140,6 +140,27 @@ class OfflineDownloadPlannerTest {
         }
 
     @Test
+    fun audiusTrackWithoutDownloadPermissionCannotBeDownloadedAsYoutube() =
+        runBlocking {
+            val variant = SourceVariant(
+                provider = ProviderId.AUDIUS,
+                sourceId = "audius-only",
+                title = "Not Downloadable",
+                artists = listOf("Artist"),
+                downloadable = false,
+            )
+            val result = OfflineDownloadPlanner(SourceRegistry(emptySet())).plan(
+                TrackIdentity(
+                    title = "Not Downloadable",
+                    artists = listOf(ArtistIdentity("Artist")),
+                ),
+                listOf(variant),
+            )
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull()?.message?.contains("Audius") == true)
+        }
+
+    @Test
     fun localOnlyTrackDoesNotPretendToNeedAnOfflineDownload() =
         runBlocking {
             val planner = OfflineDownloadPlanner(SourceRegistry(emptySet()))
