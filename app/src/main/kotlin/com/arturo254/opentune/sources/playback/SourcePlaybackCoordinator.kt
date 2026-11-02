@@ -112,6 +112,7 @@ constructor(
                 playResolved(connection, item)
             }
 
+            SourcePlaybackRoute.AUDIUS_DIRECT,
             SourcePlaybackRoute.UNSUPPORTED -> {
                 val item = (sourceRegistry[variant.provider] as? StreamMusicSource)
                     ?.resolvePlayback(variant)
@@ -156,6 +157,7 @@ constructor(
                     CatalogPlaybackResolver.resolveToMediaItem(variant.toSoundCloudCatalogReference())
                 SourcePlaybackRoute.CATALOG_BRIDGE ->
                     CatalogPlaybackResolver.resolveToMediaItem(variant.toCatalogPlaybackReference())
+                SourcePlaybackRoute.AUDIUS_DIRECT,
                 SourcePlaybackRoute.UNSUPPORTED -> null
             }
         } catch (cancelled: CancellationException) {
@@ -317,6 +319,7 @@ enum class SourcePlaybackRoute {
     YOUTUBE_QUEUE,
     LOCAL_OR_OFFLINE,
     SOUNDCLOUD_DIRECT,
+    AUDIUS_DIRECT,
     CATALOG_BRIDGE,
     UNSUPPORTED,
 }
@@ -326,6 +329,7 @@ fun SourceVariant.playbackRoute(): SourcePlaybackRoute =
         ProviderId.YOUTUBE_MUSIC -> SourcePlaybackRoute.YOUTUBE_QUEUE
         ProviderId.LOCAL, ProviderId.OPEN_TUNE_OFFLINE -> SourcePlaybackRoute.LOCAL_OR_OFFLINE
         ProviderId.SOUNDCLOUD -> SourcePlaybackRoute.SOUNDCLOUD_DIRECT
+        ProviderId.AUDIUS -> SourcePlaybackRoute.AUDIUS_DIRECT
         ProviderId.DEEZER,
         ProviderId.SPOTIFY,
         ProviderId.TIDAL,
