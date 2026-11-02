@@ -532,6 +532,35 @@ class UnifiedSearchRepositoryTest {
         }
 
     @Test
+    fun failedContinuationPreservesSongsButStopsRetryLoop() =
+        runBlocking {
+            val provider = FakeSearchSource(
+                id = ProviderId.AUDIUS,
+                onSearch = { request ->
+                    if (request.continuationToken == null) {
+                        Result.success(
+                            TrackSearchPage(
+                                items = listOf(variant(ProviderId.AUDIUS, "available")),
+                                continuationToken = "page-two",
+                            ),
+                        )
+                    } else {
+                        Result.failure(IllegalStateException("provider unavailable"))
+                    }
+                },
+            )
+            val repository = repository(provider)
+            val request = UnifiedSearchRequest("song")
+            val first = repository.search(request)
+            assertTrue(first.hasMore)
+            val next = repository.loadMore(request, first)
+            assertEquals(1, next.tracks.size)
+            assertEquals("available", next.tracks.single().variants.single().sourceId)
+            assertTrue(!next.hasMore)
+            assertTrue(next.sources[ProviderId.AUDIUS]?.error != null)
+        }
+
+    @Test
     fun loadMoreDoesNotDuplicateProviderTrackIds() =
         runBlocking {
             val youtube =
