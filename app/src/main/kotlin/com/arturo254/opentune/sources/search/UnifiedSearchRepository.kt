@@ -410,8 +410,7 @@ constructor(
     )
 }
 
-internal fun searchTimeoutMs(provider: ProviderId): Long =
-    if (provider == ProviderId.SOUNDCLOUD) 30_000L else 8_000L
+internal fun searchTimeoutMs(provider: ProviderId): Long = 8_000L
 
 data class UnifiedSearchRequest(
     val query: String,
@@ -422,7 +421,6 @@ data class UnifiedSearchRequest(
             ProviderId.LOCAL,
             ProviderId.AUDIUS,
             ProviderId.YOUTUBE_MUSIC,
-            ProviderId.SOUNDCLOUD,
         ),
 ) {
     init {
