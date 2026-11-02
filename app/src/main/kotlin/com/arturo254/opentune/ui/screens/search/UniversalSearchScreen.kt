@@ -132,7 +132,12 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                             Column(Modifier.padding(12.dp)) {
                                 failedSources.forEach { source ->
                                     Text(
-                                        "${signalProvider(source.provider)}: ${source.error?.message ?: "Sin respuesta"}",
+                                        "${signalProvider(source.provider)}: ${when (source.error?.type) {
+                                            "TimeoutException" -> "Tiempo de espera agotado"
+                                            "UnknownHostException" -> "Error de conexión"
+                                            "SocketTimeoutException" -> "El proveedor tardó demasiado"
+                                            else -> "Servicio temporalmente indisponible"
+                                        }}",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -273,7 +278,7 @@ private fun SignalResult(
     val display = preferred ?: result.recommendedVariant
     val artwork = display?.artworkUrl ?: result.variants.firstNotNullOfOrNull { it.artworkUrl }
     val providers = (result.variants + listOfNotNull(preferred)).map { it.provider }.distinct().joinToString(" · ") { signalProvider(it) }
-    val quality = signalQuality(display)
+    val quality = if (display?.isCatalogOnly() == true) null else signalQuality(display)
     Column(modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(20.dp))
         .background(if (active) colors.primary.copy(alpha = .1f) else colors.surfaceContainerLow.copy(alpha = .8f))) {
         Row(Modifier.fillMaxWidth().clickable(enabled = onPlay != null, role = Role.Button) { onPlay?.invoke() }
