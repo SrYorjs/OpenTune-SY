@@ -406,8 +406,7 @@ internal fun MainActivityScaffold(
 
     val coroutineScope = rememberCoroutineScope()
     var showAccountDialog by remember { mutableStateOf(false) }
-    val searchOverlayCapturesGlass = navigationState.active ||
-        navigationState.currentRoute?.startsWith("search/") == true
+    val searchOverlayCapturesGlass = navigationState.active
 
                     CompositionLocalProvider(
                         LocalDatabase provides database,
@@ -469,11 +468,6 @@ internal fun MainActivityScaffold(
                                     },
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .then(
-                                            if (liveLiquidBackdrop != null && searchOverlayCapturesGlass)
-                                                Modifier.layerBackdrop(liveLiquidBackdrop)
-                                            else Modifier
-                                        )
                                         .nestedScroll(searchBarScrollBehavior.nestedScrollConnection)
                                 ) {
                                     CompositionLocalProvider(
