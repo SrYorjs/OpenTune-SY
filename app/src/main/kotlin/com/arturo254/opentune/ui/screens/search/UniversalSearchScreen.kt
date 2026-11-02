@@ -103,7 +103,9 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
         list.scrollToItem(0)
     }
     LaunchedEffect(list, query, category, activeArtist, activeAlbum, availableCount, visibleCount, nextPageToken, state.isLoadingMore) {
-        if (!sameQuery || state.isLoading || category == SearchResultCategory.PLAYLISTS) return@LaunchedEffect
+        if (!sameQuery || state.isLoading ||
+            (category != SearchResultCategory.ALL && category != SearchResultCategory.SONGS)
+        ) return@LaunchedEffect
         snapshotFlow {
             val info = list.layoutInfo
             info.totalItemsCount > 0 &&
