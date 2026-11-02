@@ -82,6 +82,8 @@ class AudiusMusicSourceTest {
         assertTrue(source.supports(SourceCapability.STREAM))
         assertTrue(source.supports(SourceCapability.OPEN_TUNE_MANAGED_DOWNLOAD))
         assertFalse(source.supports(SourceCapability.PROVIDER_MANAGED_OFFLINE))
+        assertFalse(source.supports(SourceCapability.ARTISTS))
+        assertFalse(source.supports(SourceCapability.PLAYLISTS))
     }
 
     @Test
