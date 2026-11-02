@@ -176,6 +176,12 @@ internal class StreamResolver(
                 }
             }
 
+            if (mediaId.startsWith("offline:")) {
+                throw java.io.FileNotFoundException(
+                    "El audio descargado no está completo o no está disponible"
+                )
+            }
+
             try {
                 val playbackData =
                     runBlocking(Dispatchers.IO) {
