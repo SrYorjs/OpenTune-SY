@@ -456,6 +456,10 @@ internal fun MainActivityScaffold(
                                             navigationState = navigationState,
                                             playerUiState = playerUiState,
                                             searchBarAlignmentModifier = searchBarAlignmentModifier,
+                                            searchBackdropModifier =
+                                                if (searchOverlayCapturesGlass && liveLiquidBackdrop != null)
+                                                    Modifier.layerBackdrop(liveLiquidBackdrop)
+                                                else Modifier,
                                         )
                                     },
                                     bottomBar = {
