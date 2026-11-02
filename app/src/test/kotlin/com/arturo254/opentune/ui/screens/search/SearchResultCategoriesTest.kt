@@ -72,5 +72,6 @@ class SearchResultCategoriesTest {
                 album = album?.let { AlbumIdentity(it) },
             ),
             variants = emptyList(),
+            recommendedVariant = null,
         )
 }
