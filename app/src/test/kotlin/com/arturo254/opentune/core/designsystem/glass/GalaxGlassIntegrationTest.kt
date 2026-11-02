@@ -40,8 +40,9 @@ class GalaxGlassIntegrationTest {
         val search = source("MainActivityChrome.kt")
         assertTrue(scaffold.contains("searchOverlayCapturesGlass = navigationState.active"))
         assertTrue(scaffold.contains("liveLiquidBackdrop != null && !searchOverlayCapturesGlass"))
-        assertTrue(search.contains("active && searchGlassBackdrop != null"))
-        assertTrue(search.contains("Modifier.layerBackdrop(searchGlassBackdrop)"))
+        assertTrue(scaffold.contains("searchBackdropModifier ="))
+        assertTrue(scaffold.contains("Modifier.layerBackdrop(liveLiquidBackdrop)"))
+        assertTrue(search.contains(".then(searchBackdropModifier)"))
         assertTrue(search.contains("UniversalSearchScreen("))
         assertTrue(source("ui/component/FloatingNavigationToolbar.kt").contains(".galaxGlassEffect("))
     }
