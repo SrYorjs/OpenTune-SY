@@ -145,6 +145,9 @@ constructor(
                     ),
                 ),
         ) { dataSpec ->
+            if (StreamRequestPolicy.isDirectHttpStream(dataSpec.uri.toString())) {
+                return@Factory dataSpec
+            }
             val mediaId = dataSpec.key ?: error("No media id")
             val length = if (dataSpec.length >= 0) dataSpec.length else 1
             if (playerCache.cacheSpace > 500 * 1024 * 1024L) {
@@ -437,6 +440,7 @@ constructor(
     suspend fun enqueueOfflineDownload(
         asset: OfflineTrackAsset,
         metadata: MediaMetadata,
+        streamUri: String? = null,
     ) {
         database.query {
             insert(metadata)
@@ -482,7 +486,7 @@ constructor(
             DownloadRequest
                 .Builder(
                     asset.mediaId,
-                    asset.mediaId.toUri(),
+                    (streamUri ?: asset.mediaId).toUri(),
                 ).setCustomCacheKey(asset.mediaId)
                 .setData(metadata.title.toByteArray())
                 .build()
