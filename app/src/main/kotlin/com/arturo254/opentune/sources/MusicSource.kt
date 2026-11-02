@@ -75,6 +75,14 @@ interface StreamMusicSource : MusicSource {
     suspend fun resolvePlayback(variant: SourceVariant): MediaItem?
 }
 
+interface ManagedDownloadMusicSource : MusicSource {
+    suspend fun resolveManagedDownload(variant: SourceVariant): ManagedDownloadResource?
+}
+
+data class ManagedDownloadResource(
+    val url: String,
+)
+
 /**
  * Provider-neutral search request. Continuation tokens are opaque to callers and
  * are meaningful only to the source that produced them.
