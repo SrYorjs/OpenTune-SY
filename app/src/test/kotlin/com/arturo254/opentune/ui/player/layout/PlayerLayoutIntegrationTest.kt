@@ -31,7 +31,8 @@ class PlayerLayoutIntegrationTest {
         }
         assertTrue(fullPlayer.contains("resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop"))
         assertTrue(fullPlayer.contains("GalaxPlayerClassicScene("))
-        assertTrue(fullPlayer.contains("AppleMusicPlayerScene("))
+        assertTrue(router.contains("PlayerLayoutFamily.APPLE_MUSIC -> applePortrait"))
+        assertTrue(router.contains("PlayerLayoutFamily.APPLE_MUSIC -> appleLandscape"))
         assertTrue(fullPlayer.contains("VinJaxPlayerScene("))
         assertEquals(
             1,
