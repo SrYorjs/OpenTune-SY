@@ -33,6 +33,8 @@ class SearchResultsQueue(
     private val pending = mutableListOf<UnifiedTrackSearchResult>()
     private val knownKeys = mutableSetOf<String>()
     private val emittedIds = mutableSetOf<String>()
+    private val relatedQueries = mutableSetOf<String>()
+    private var relatedSearches = 0
     private val semaphore = Semaphore(MAX_PARALLEL_RESOLUTIONS)
 
     @Volatile
@@ -56,10 +58,7 @@ class SearchResultsQueue(
         } else {
             knownTracks.drop(start) + knownTracks.take(start)
         }
-        rotated.forEach { track ->
-            val key = trackKey(track)
-            if (knownKeys.add(key)) pending.add(track)
-        }
+        rotated.forEach(::rememberTrack)
         nextPageAvailable = pending.isNotEmpty() || currentResult.hasMore
     }
 
@@ -98,17 +97,20 @@ class SearchResultsQueue(
 
         while (output.size < target) {
             if (cursor >= pending.size) {
-                if (!currentResult.hasMore || pagesWithoutNewTracks >= MAX_EMPTY_PAGES) break
-                val previous = currentResult
-                val updated = repository.loadMore(
-                    request = UnifiedSearchRequest(query = previous.query),
-                    previous = previous,
-                )
-                currentResult = updated
+                if (pagesWithoutNewTracks >= MAX_EMPTY_PAGES) break
                 val before = pending.size
-                updated.tracks.forEach { track ->
-                    if (knownKeys.add(trackKey(track))) pending.add(track)
+                if (currentResult.hasMore) {
+                    val previous = currentResult
+                    currentResult = repository.loadMore(
+                        request = UnifiedSearchRequest(query = previous.query),
+                        previous = previous,
+                    )
+                } else {
+                    val relatedQuery = nextRelatedQuery() ?: break
+                    relatedSearches++
+                    currentResult = repository.search(UnifiedSearchRequest(query = relatedQuery))
                 }
+                currentResult.tracks.forEach(::rememberTrack)
                 pagesWithoutNewTracks =
                     if (pending.size == before) pagesWithoutNewTracks + 1 else 0
                 continue
@@ -127,7 +129,7 @@ class SearchResultsQueue(
                         semaphore.withPermit {
                             coordinator.resolveTrack(
                                 playbackOptions(track),
-                                allowSoundCloudSearch = false,
+                                allowSoundCloudSearch = true,
                             )
                         }
                     }
@@ -145,7 +147,34 @@ class SearchResultsQueue(
     }
 
     private fun updateAvailability() {
-        nextPageAvailable = cursor < pending.size || currentResult.hasMore
+        nextPageAvailable =
+            cursor < pending.size || currentResult.hasMore || hasRelatedQuery()
+    }
+
+    private fun rememberTrack(track: UnifiedTrackSearchResult) {
+        val sources = track.variants.map { it.provider to it.sourceId }.toSet()
+        if (sources.isNotEmpty() && pending.any { existing ->
+            existing.variants.any { (it.provider to it.sourceId) in sources }
+        }) return
+        if (knownKeys.add(trackKey(track))) pending.add(track)
+    }
+
+    private fun hasRelatedQuery(): Boolean =
+        relatedSearches < MAX_RELATED_SEARCHES &&
+            pending.any { track ->
+                track.identity.artists.any { artist ->
+                    artist.name.isNotBlank() && artist.name.lowercase() !in relatedQueries
+                }
+            }
+
+    private fun nextRelatedQuery(): String? {
+        if (relatedSearches >= MAX_RELATED_SEARCHES) return null
+        val artist = pending.asReversed()
+            .flatMap { it.identity.artists }
+            .firstOrNull { it.name.isNotBlank() && it.name.lowercase() !in relatedQueries }
+            ?.name ?: return null
+        relatedQueries.add(artist.lowercase())
+        return artist
     }
 
     private fun playbackOptions(track: UnifiedTrackSearchResult): List<SourceVariant> =
@@ -170,5 +199,6 @@ class SearchResultsQueue(
         const val PAGE_SIZE = 50
         const val MAX_PARALLEL_RESOLUTIONS = 6
         const val MAX_EMPTY_PAGES = 2
+        const val MAX_RELATED_SEARCHES = 3
     }
 }
