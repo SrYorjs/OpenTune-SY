@@ -149,8 +149,7 @@ constructor(
         try {
             val direct = (sourceRegistry[variant.provider] as? StreamMusicSource)
                 ?.resolvePlayback(variant)
-            if (direct != null) return direct
-            when (variant.playbackRoute()) {
+            if (direct != null) direct else when (variant.playbackRoute()) {
                 SourcePlaybackRoute.YOUTUBE_QUEUE -> variant.toOpenTuneMetadata().toMediaItem()
                 SourcePlaybackRoute.LOCAL_OR_OFFLINE -> variant.toPlayableMediaItem()
                 SourcePlaybackRoute.SOUNDCLOUD_DIRECT ->
