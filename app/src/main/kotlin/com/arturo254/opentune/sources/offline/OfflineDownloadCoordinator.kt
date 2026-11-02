@@ -57,6 +57,11 @@ constructor(
             val directVariant = directDownload?.first
             val youtubeVariant =
                 candidates.firstOrNull { it.provider == ProviderId.YOUTUBE_MUSIC }
+            if (directVariant == null && youtubeVariant == null &&
+                candidates.all { it.provider == ProviderId.AUDIUS }
+            ) {
+                error("Esta canción de Audius no permite descarga sin conexión")
+            }
             val discoveryVariant =
                 directVariant
                     ?: youtubeVariant
@@ -164,7 +169,7 @@ constructor(
                                 ?: metadata.thumbnailUrl,
                         animatedArtworkUrl =
                             variants.firstNotNullOfOrNull { it.animatedArtworkUrl },
-                        quality = backingVariant.quality,
+                        quality = if (directVariant != null) null else backingVariant.quality,
                     ),
                 downloadUri = directDownload?.second?.url,
                 metadata =
