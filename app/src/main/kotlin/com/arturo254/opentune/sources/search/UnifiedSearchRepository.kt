@@ -157,7 +157,10 @@ constructor(
                         error = null,
                     )
                 } else {
-                    oldState.copy(error = sourceResult.error)
+                    oldState.copy(
+                        continuationToken = null,
+                        error = sourceResult.error,
+                    )
                 }
         }
 
