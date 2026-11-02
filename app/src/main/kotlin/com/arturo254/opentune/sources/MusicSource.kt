@@ -1,5 +1,6 @@
 package com.arturo254.opentune.sources
 
+import androidx.media3.common.MediaItem
 import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.core.model.SourceVariant
 
@@ -68,6 +69,10 @@ interface MusicSource {
  */
 interface TrackSearchSource : MusicSource {
     suspend fun searchTracks(request: TrackSearchRequest): Result<TrackSearchPage>
+}
+
+interface StreamMusicSource : MusicSource {
+    suspend fun resolvePlayback(variant: SourceVariant): MediaItem?
 }
 
 /**
