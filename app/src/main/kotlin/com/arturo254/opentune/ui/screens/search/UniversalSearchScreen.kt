@@ -168,8 +168,9 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                     .sortedBy { variant ->
                         when (variant.provider) {
                             ProviderId.OPEN_TUNE_OFFLINE, ProviderId.LOCAL -> 0
-                            ProviderId.SOUNDCLOUD -> 1
+                            ProviderId.AUDIUS -> 1
                             ProviderId.YOUTUBE_MUSIC -> 2
+                            ProviderId.SOUNDCLOUD -> 3
                             else -> 3
                         }
                     }
@@ -325,6 +326,7 @@ private fun signalProvider(provider: ProviderId): String = when (provider) {
     ProviderId.TIDAL -> "TIDAL"
     ProviderId.APPLE_MUSIC -> "Apple Music"
     ProviderId.SOUNDCLOUD -> "SoundCloud"
+    ProviderId.AUDIUS -> "Audius"
     ProviderId.LOCAL -> "Local"
     ProviderId.OPEN_TUNE_OFFLINE -> "Offline"
     else -> provider.value
