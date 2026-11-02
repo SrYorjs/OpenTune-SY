@@ -58,9 +58,9 @@ constructor(
                         preferLocal = true,
                         preferredProviders =
                             listOf(
-                                ProviderId.YOUTUBE_MUSIC,
                                 ProviderId.LOCAL,
                                 ProviderId.SOUNDCLOUD,
+                                ProviderId.YOUTUBE_MUSIC,
                             ),
                         qualityMode = mode,
                     ),
