@@ -151,7 +151,13 @@ constructor(
         } catch (_: Exception) {
             false
         }
-        return dispatched && awaitPlaybackStart(connection, variant.sourceId)
+        if (!dispatched) return false
+        val expectedMediaId = if (variant.playbackRoute() == SourcePlaybackRoute.CATALOG_BRIDGE) {
+            connection.player.currentMediaItem?.mediaId ?: return false
+        } else {
+            variant.sourceId
+        }
+        return awaitPlaybackStart(connection, expectedMediaId)
     }
 
     private suspend fun awaitPlaybackStart(
