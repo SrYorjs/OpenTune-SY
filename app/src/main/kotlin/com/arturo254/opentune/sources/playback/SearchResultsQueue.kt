@@ -35,6 +35,7 @@ class SearchResultsQueue(
     private val emittedIds = mutableSetOf<String>()
     private val relatedQueries = mutableSetOf<String>()
     private var relatedSearches = 0
+    private var exhausted = false
     private val semaphore = Semaphore(MAX_PARALLEL_RESOLUTIONS)
 
     @Volatile
@@ -135,14 +136,15 @@ class SearchResultsQueue(
             }
         }
 
+        if (pagesWithoutNewTracks >= MAX_EMPTY_PAGES) exhausted = true
         loadedCount += output.size
         updateAvailability()
         output
     }
 
     private fun updateAvailability() {
-        nextPageAvailable =
-            cursor < pending.size || currentResult.hasMore || hasRelatedQuery()
+        nextPageAvailable = !exhausted &&
+            (cursor < pending.size || currentResult.hasMore || hasRelatedQuery())
     }
 
     private fun rememberTrack(track: UnifiedTrackSearchResult) {
