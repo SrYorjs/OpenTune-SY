@@ -65,13 +65,10 @@ class SearchResultsQueue(
     override suspend fun getInitialStatus(): Queue.Status = mutex.withLock {
         if (!initialAttempted) {
             initialAttempted = true
-            while (cursor < pending.size && initialItem == null) {
-                val track = pending[cursor++]
-                val choices = if (track == pending.first()) {
-                    selectedVariants.ifEmpty { playbackOptions(track) }
-                } else {
-                    playbackOptions(track)
-                }
+            val selectedTrack = pending.firstOrNull()
+            if (selectedTrack != null) {
+                cursor = 1
+                val choices = selectedVariants.ifEmpty { playbackOptions(selectedTrack) }
                 val item = coordinator.resolveTrack(choices, allowSoundCloudSearch = true)
                 if (item != null && emittedIds.add(item.mediaId)) {
                     initialItem = item
