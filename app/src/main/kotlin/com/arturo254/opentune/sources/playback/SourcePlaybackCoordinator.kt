@@ -16,6 +16,7 @@ import com.arturo254.opentune.innertube.models.WatchEndpoint
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.playback.queues.ListQueue
+import com.arturo254.opentune.playback.queues.ListQueue
 import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.sources.SourceRegistry
 import com.arturo254.opentune.sources.StreamMusicSource
@@ -96,6 +97,26 @@ constructor(
                 playResolved(connection, item)
             }
         }
+
+    suspend fun playCollection(
+        connection: PlayerConnection,
+        tracks: List<SourceVariant>,
+        startIndex: Int,
+        queueTitle: String,
+    ): Boolean {
+        if (tracks.isEmpty() || startIndex !in tracks.indices) return false
+        val playable = tracks.mapNotNull { variant ->
+            if (variant.provider != ProviderId.AUDIUS) null
+            else resolveMediaItem(variant)
+        }
+        val requested = tracks[startIndex]
+        val selectedIndex = playable.indexOfFirst { it.mediaId == requested.sourceId }
+        if (selectedIndex < 0) return false
+        connection.playQueue(
+            ListQueue(title = queueTitle, items = playable, startIndex = selectedIndex),
+        )
+        return awaitPlaybackStart(connection, requested.sourceId)
+    }
 
     suspend fun playSearchResults(
         connection: PlayerConnection,
