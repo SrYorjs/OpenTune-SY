@@ -127,11 +127,16 @@ class OfflineDownloadPlannerTest {
                 title = "Song",
                 artists = listOf("Artist"),
             )
+            val youtube = variant.copy(
+                provider = ProviderId.YOUTUBE_MUSIC,
+                sourceId = "yt-valid",
+            )
             val plan = planner.plan(
                 TrackIdentity(title = "Song", artists = listOf(ArtistIdentity("Artist"))),
-                listOf(variant),
-            )
-            assertTrue(plan.isFailure || plan.getOrNull()?.asset?.backingProvider == ProviderId.YOUTUBE_MUSIC)
+                listOf(variant, youtube),
+            ).getOrThrow()
+            assertEquals(ProviderId.YOUTUBE_MUSIC, plan.asset.backingProvider)
+            assertEquals(null, plan.downloadUri)
         }
 
     @Test
