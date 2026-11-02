@@ -225,8 +225,6 @@ class AudiusMusicSource @Inject constructor(
     override val capabilities = SourceCapabilities.of(
         SourceCapability.TRACK_SEARCH,
         SourceCapability.TRACK_METADATA,
-        SourceCapability.ARTISTS,
-        SourceCapability.PLAYLISTS,
         SourceCapability.STREAM,
         SourceCapability.OPEN_TUNE_MANAGED_DOWNLOAD,
         SourceCapability.STATIC_ARTWORK,
