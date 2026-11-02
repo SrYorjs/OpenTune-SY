@@ -416,8 +416,9 @@ data class UnifiedSearchRequest(
     val providers: Set<ProviderId>? = null,
     val preferredProviderOrder: List<ProviderId> =
         listOf(
-            ProviderId.YOUTUBE_MUSIC,
             ProviderId.LOCAL,
+            ProviderId.SOUNDCLOUD,
+            ProviderId.YOUTUBE_MUSIC,
         ),
 ) {
     init {
