@@ -25,6 +25,13 @@ import org.junit.Test
 
 class UnifiedSearchRepositoryTest {
     @Test
+    fun soundCloudBootstrapTimeoutDoesNotPenalizeOtherCatalogs() {
+        assertEquals(30_000L, searchTimeoutMs(ProviderId.SOUNDCLOUD))
+        assertEquals(8_000L, searchTimeoutMs(ProviderId.YOUTUBE_MUSIC))
+        assertEquals(8_000L, searchTimeoutMs(ProviderId.SPOTIFY))
+    }
+
+    @Test
     fun publishesFastSourceBeforeSlowSourceFinishes() = runBlocking {
         val slowGate = CompletableDeferred<Unit>()
         val fast = FakeSearchSource(ProviderId.YOUTUBE_MUSIC, onSearch = {
