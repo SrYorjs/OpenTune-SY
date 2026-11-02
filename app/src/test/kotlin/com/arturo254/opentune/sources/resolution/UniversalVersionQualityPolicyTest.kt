@@ -22,7 +22,7 @@ class UniversalVersionQualityPolicyTest {
         source(ProviderId.YOUTUBE_MUSIC, SourceCapability.STREAM)
     private val losslessProvider =
         source(ProviderId("streaming_flac"), SourceCapability.STREAM, SourceCapability.AUDIO_QUALITY)
-    private val soundCloud = source(ProviderId.SOUNDCLOUD, SourceCapability.STREAM)
+    private val audius = source(ProviderId.AUDIUS, SourceCapability.STREAM)
     private val tidal =
         source(ProviderId.TIDAL, SourceCapability.TRACK_METADATA, SourceCapability.AUDIO_QUALITY)
 
@@ -50,14 +50,14 @@ class UniversalVersionQualityPolicyTest {
     }
 
     @Test
-    fun automaticPrefersDirectSoundCloudToYoutube() {
-        val policy = policy(youtube, soundCloud)
+    fun automaticPrefersDirectAudiusToYoutube() {
+        val policy = policy(youtube, audius)
         val candidates = listOf(
             variant(ProviderId.YOUTUBE_MUSIC, "youtube", bitrate = 128_000),
-            variant(ProviderId.SOUNDCLOUD, "soundcloud", bitrate = 128_000),
+            variant(ProviderId.AUDIUS, "audius", bitrate = 128_000),
         )
         assertEquals(
-            ProviderId.SOUNDCLOUD,
+            ProviderId.AUDIUS,
             policy.choose(identity(), candidates, AudioSelectionMode.AUTOMATIC)?.provider,
         )
     }
