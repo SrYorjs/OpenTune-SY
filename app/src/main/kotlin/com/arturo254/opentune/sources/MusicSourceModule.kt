@@ -11,10 +11,6 @@ import com.arturo254.opentune.sources.offline.OfflineMusicSource
 import com.arturo254.opentune.sources.spotify.DefaultSpotifyCatalogGateway
 import com.arturo254.opentune.sources.spotify.SpotifyCatalogGateway
 import com.arturo254.opentune.sources.spotify.SpotifyMusicSource
-import com.arturo254.opentune.sources.soundcloud.SoundCloudCatalogGateway
-import com.arturo254.opentune.sources.soundcloud.SoundCloudMusicSource
-import com.arturo254.opentune.sources.soundcloud.SoundCloudStreamGateway
-import com.arturo254.opentune.sources.soundcloud.SoundCloudWebClient
 import com.arturo254.opentune.sources.tidal.DefaultTidalCatalogGateway
 import com.arturo254.opentune.sources.tidal.TidalCatalogGateway
 import com.arturo254.opentune.sources.tidal.TidalMusicSource
@@ -91,13 +87,4 @@ abstract class MusicSourceModule {
     @Binds
     abstract fun bindAudiusCatalogGateway(client: AudiusHttpGateway): AudiusCatalogGateway
 
-    @Binds
-    abstract fun bindSoundCloudCatalogGateway(
-        client: SoundCloudWebClient,
-    ): SoundCloudCatalogGateway
-
-    @Binds
-    abstract fun bindSoundCloudStreamGateway(
-        client: SoundCloudWebClient,
-    ): SoundCloudStreamGateway
 }
