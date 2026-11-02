@@ -60,6 +60,18 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
     // During the debounce interval do not relabel the previous query's results.
     val sameQuery = state.query == query.trim()
     val entries = if (sameQuery) state.result.tracks else emptyList()
+    var visibleCount by remember(query) { mutableIntStateOf(50) }
+    var lastPageRequest by remember(query) { mutableStateOf("") }
+    var sourceDetails by remember(query) { mutableStateOf(false) }
+    val visibleEntries = entries.take(visibleCount)
+    val failedSources = if (sameQuery && !state.isLoading) {
+        state.result.sources.values.filter { it.error != null }
+    } else {
+        emptyList()
+    }
+    val nextPageToken = state.result.sources.values
+        .mapNotNull { it.continuationToken }
+        .sorted().joinToString("|")
     val loading = state.isLoading || (!sameQuery && query.isNotBlank())
     val bottom = LocalPlayerAwareWindowInsets.current.asPaddingValues().calculateBottomPadding()
 
@@ -67,19 +79,36 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
         viewModel.query.value = query
         list.scrollToItem(0)
     }
-    LaunchedEffect(list, query, entries.size, state.result.hasMore) {
-        if (!sameQuery || !state.result.hasMore) return@LaunchedEffect
+    LaunchedEffect(list, query, entries.size, visibleCount, nextPageToken, state.isLoadingMore) {
+        if (!sameQuery || state.isLoading) return@LaunchedEffect
         snapshotFlow {
             val info = list.layoutInfo
-            info.totalItemsCount > 0 && (info.visibleItemsInfo.lastOrNull()?.index ?: -1) >= info.totalItemsCount - 4
-        }.distinctUntilChanged().filter { it }.collect { viewModel.loadMore() }
+            info.totalItemsCount > 0 &&
+                (info.visibleItemsInfo.lastOrNull()?.index ?: -1) >= info.totalItemsCount - 6
+        }.distinctUntilChanged().filter { it }.collect {
+            if (entries.size > visibleCount) {
+                visibleCount += 50
+            } else if (state.result.hasMore && !state.isLoadingMore) {
+                val requestKey = "$visibleCount:$nextPageToken"
+                if (lastPageRequest != requestKey) {
+                    lastPageRequest = requestKey
+                    viewModel.loadMore()
+                }
+            }
+        }
     }
     val play: (UnifiedTrackSearchResult, List<SourceVariant>) -> Unit = { result, variants ->
         if (player != null && resolving == null && variants.isNotEmpty()) {
             scope.launch {
                 resolving = result.signalKey()
                 try {
-                    if (!viewModel.playFirstAvailable(player, variants, context.getString(R.string.queue_searched_songs))) {
+                    if (!viewModel.playSearchResults(
+                            player,
+                            result,
+                            state.result,
+                            variants,
+                            context.getString(R.string.queue_searched_songs),
+                        )) {
                         Toast.makeText(context, R.string.universal_versions_play_error, Toast.LENGTH_SHORT).show()
                     }
                 } finally { resolving = null }
@@ -91,12 +120,29 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
         LazyColumn(state = list, modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(top = 16.dp, bottom = bottom + 24.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            item("signal/header") { SignalHeader(query, entries.size, loading) }
+            item("signal/header") { SignalHeader(query, visibleEntries.size, loading, entries.size) }
             item("signal/quality") { SignalQuality(quality) { quality = it } }
-            if (sameQuery && state.result.failedSourceCount > 0) item("signal/partial") {
-                Surface(Modifier.padding(horizontal = 20.dp), shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.secondaryContainer) {
-                    Text("Algunas fuentes no respondieron. Estos resultados siguen disponibles.",
-                        Modifier.padding(16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
+            if (failedSources.isNotEmpty()) item("signal/partial") {
+                Column(Modifier.padding(horizontal = 20.dp)) {
+                    TextButton(onClick = { sourceDetails = !sourceDetails }) {
+                        Text("${failedSources.size} fuentes no disponibles · Ver detalles")
+                    }
+                    if (sourceDetails) {
+                        Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                            Column(Modifier.padding(12.dp)) {
+                                failedSources.forEach { source ->
+                                    Text(
+                                        "${signalProvider(source.provider)}: ${source.error?.message ?: "Sin respuesta"}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                                TextButton(onClick = viewModel::retrySearch) {
+                                    Text("Reintentar proveedores")
+                                }
+                            }
+                        }
+                    }
                 }
             }
             if (loading && entries.isEmpty()) item("signal/loading") { NovaLoading("Buscando en todos los catálogos…") }
@@ -106,7 +152,7 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                     message = if (state.error != null) "Comprueba tu conexión y vuelve a enviar la búsqueda." else "Prueba con el título, un artista o una parte del nombre.",
                 )
             }
-            itemsIndexed(entries, key = { index, result -> universalResultRowKey(index, result.signalKey()) },
+            itemsIndexed(visibleEntries, key = { index, result -> universalResultRowKey(index, result.signalKey()) },
                 contentType = { _, _ -> "signal/recording" }) { index, result ->
                 val key = result.signalKey()
                 val sources = result.variants.map { it.provider to it.sourceId }.toSet()
@@ -156,8 +202,11 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                 )
             }
             if (sameQuery && state.isLoadingMore) item("signal/more-loading") { NovaLoading("Cargando más canciones…") }
+            else if (sameQuery && visibleCount < entries.size) item("signal/more") {
+                TextButton(onClick = { visibleCount += 50 }, modifier = Modifier.padding(horizontal = 20.dp)) { Text("Mostrar otras 50 canciones") }
+            }
             else if (sameQuery && state.result.hasMore && entries.isNotEmpty()) item("signal/more") {
-                TextButton(onClick = viewModel::loadMore, modifier = Modifier.padding(horizontal = 20.dp)) { Text("Cargar más resultados") }
+                TextButton(onClick = viewModel::loadMore, modifier = Modifier.padding(horizontal = 20.dp)) { Text("Buscar otras 50 canciones") }
             }
         }
     }
@@ -181,7 +230,7 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
 }
 
 @Composable
-private fun SignalHeader(query: String, count: Int, loading: Boolean) {
+private fun SignalHeader(query: String, count: Int, loading: Boolean, total: Int) {
     val ink = MaterialTheme.colorScheme.primary
     Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -196,7 +245,7 @@ private fun SignalHeader(query: String, count: Int, loading: Boolean) {
         }
         Text(query.ifBlank { "Tu música, aquí." }, style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Medium, letterSpacing = (-1).sp, maxLines = 3, overflow = TextOverflow.Ellipsis)
-        Text(if (loading) "Explorando…" else "$count canciones encontradas", style = MaterialTheme.typography.bodySmall,
+        Text(if (loading) "Explorando…" else "$count de $total canciones disponibles · Carga en bloques de 50", style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
