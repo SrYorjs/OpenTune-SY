@@ -242,7 +242,7 @@ internal fun variantProviderName(provider: ProviderId): String =
         ProviderId.DEEZER -> "Deezer"
         ProviderId.TIDAL -> "TIDAL"
         ProviderId.APPLE_MUSIC -> "Apple Music"
-        ProviderId.SOUNDCLOUD -> "SoundCloud"
+        ProviderId.AUDIUS -> "Audius"
         else -> provider.value
     }
 
