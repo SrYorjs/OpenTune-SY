@@ -14,6 +14,7 @@ import com.arturo254.opentune.playback.queues.Queue
 import com.arturo254.opentune.playback.queues.filterExplicit
 import com.arturo254.opentune.playback.queues.filterVideo
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -36,6 +37,7 @@ internal class QueueController(
     private val onDeferredLoadError: (Throwable) -> Unit,
 ) {
     internal var currentQueue: Queue = EmptyQueue
+    private var activePlayQueueJob: Job? = null
     internal var queueTitle: String? = null
 
     @Volatile
@@ -82,6 +84,7 @@ internal class QueueController(
         playWhenReady: Boolean,
         clearAuxiliaryQueueState: () -> Unit,
     ) {
+        activePlayQueueJob?.cancel()
         suppressAutoPlayback = false
         currentQueue = queue
         queueTitle = null
@@ -98,7 +101,7 @@ internal class QueueController(
             player.playWhenReady = playWhenReady
         }
 
-        scopeProvider().launch(SilentHandler) {
+        activePlayQueueJob = scopeProvider().launch(SilentHandler) {
             val initialStatus =
                 withContext(Dispatchers.IO) {
                     queue
@@ -107,6 +110,7 @@ internal class QueueController(
                         .filterVideo(hideVideoProvider())
                 }
 
+            if (currentQueue !== queue) return@launch
             initialStatus.title?.let { queueTitle = it }
             if (initialStatus.items.isEmpty()) return@launch
 
@@ -178,6 +182,7 @@ internal class QueueController(
     fun clearState(
         suppressAutoPlayback: Boolean,
     ) {
+        activePlayQueueJob?.cancel()
         this.suppressAutoPlayback = suppressAutoPlayback
         currentQueue = EmptyQueue
         queueTitle = null

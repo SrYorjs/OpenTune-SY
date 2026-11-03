@@ -197,7 +197,7 @@ class SearchResultsQueue(
 
     private companion object {
         const val PAGE_SIZE = 50
-        const val MAX_PARALLEL_RESOLUTIONS = 6
+        const val MAX_PARALLEL_RESOLUTIONS = 2
         const val MAX_EMPTY_PAGES = 2
         const val MAX_RELATED_SEARCHES = 3
     }

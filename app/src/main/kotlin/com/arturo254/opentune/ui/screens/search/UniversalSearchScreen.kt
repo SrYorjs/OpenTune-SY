@@ -35,10 +35,11 @@ import com.arturo254.opentune.sources.offline.OfflineTrackState
 import com.arturo254.opentune.sources.resolution.AudioSelectionMode
 import com.arturo254.opentune.sources.resolution.SourceVariantKey
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
-import com.arturo254.opentune.sources.audius.AudiusCollectionType
 import com.arturo254.opentune.ui.screens.*
 import com.arturo254.opentune.utils.rememberEnumPreference
 import com.arturo254.opentune.viewmodels.UniversalSearchViewModel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -58,6 +59,7 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
     val list = rememberLazyListState()
     val scope = rememberCoroutineScope()
     var resolving by remember { mutableStateOf<String?>(null) }
+    var playbackJob by remember { mutableStateOf<Job?>(null) }
     var downloading by remember { mutableStateOf<String?>(null) }
     var dialog by remember(query) { mutableStateOf<String?>(null) }
     val manual = remember { mutableStateMapOf<String, SourceVariantKey>() }
@@ -149,9 +151,11 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
         }
     }
     val play: (UnifiedTrackSearchResult, List<SourceVariant>) -> Unit = { result, variants ->
-        if (player != null && resolving == null && variants.isNotEmpty()) {
-            scope.launch {
-                resolving = result.signalKey()
+        if (player != null && variants.isNotEmpty()) {
+            val requestedKey = result.signalKey()
+            playbackJob?.cancel()
+            resolving = requestedKey
+            playbackJob = scope.launch {
                 try {
                     val played = if (selectedCollection != null) {
                         val index = collectionVariants.indexOfFirst { source ->
@@ -172,10 +176,16 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                             context.getString(R.string.queue_searched_songs),
                         )
                     }
-                    if (!played) {
+                    if (!played && player.player.playerError == null) {
                         Toast.makeText(context, R.string.universal_versions_play_error, Toast.LENGTH_SHORT).show()
                     }
-                } finally { resolving = null }
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    Toast.makeText(context, R.string.universal_versions_play_error, Toast.LENGTH_SHORT).show()
+                } finally {
+                    if (resolving == requestedKey) resolving = null
+                }
             }
         }
     }

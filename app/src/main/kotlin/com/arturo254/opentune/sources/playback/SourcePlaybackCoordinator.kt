@@ -16,6 +16,7 @@ import com.arturo254.opentune.innertube.models.WatchEndpoint
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.playback.queues.ListQueue
+import com.arturo254.opentune.playback.PlaybackGateClassifier
 import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.sources.SourceRegistry
 import com.arturo254.opentune.sources.StreamMusicSource
@@ -26,10 +27,13 @@ import com.arturo254.opentune.sources.apple.toAppleMusicCatalogReference
 import com.arturo254.opentune.sources.deezer.toDeezerCatalogReference
 import com.arturo254.opentune.sources.spotify.toSpotifyCatalogReference
 import com.arturo254.opentune.sources.tidal.toTidalCatalogReference
+import com.arturo254.opentune.utils.YTPlayerUtils
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 
@@ -104,15 +108,18 @@ constructor(
         queueTitle: String,
     ): Boolean {
         if (tracks.isEmpty() || startIndex !in tracks.indices) return false
-        val playable = tracks.mapNotNull { variant ->
-            if (variant.provider != ProviderId.AUDIUS) null
-            else resolveMediaItem(variant)
-        }
         val requested = tracks[startIndex]
-        val selectedIndex = playable.indexOfFirst { it.mediaId == requested.sourceId }
+        if (requested.provider != ProviderId.AUDIUS) return false
+        val collectionTracks = tracks.filter { it.provider == ProviderId.AUDIUS }
+        val selectedIndex = collectionTracks.indexOfFirst { it.sourceId == requested.sourceId }
         if (selectedIndex < 0) return false
         connection.playQueue(
-            ListQueue(title = queueTitle, items = playable, startIndex = selectedIndex),
+            AudiusCollectionQueue(
+                title = queueTitle,
+                tracks = collectionTracks,
+                startIndex = selectedIndex,
+                resolver = ::resolveMediaItem,
+            ),
         )
         return awaitPlaybackStart(connection, requested.sourceId)
     }
@@ -127,18 +134,28 @@ constructor(
         val choices = preferredVariants
             .ifEmpty { listOfNotNull(selected.recommendedVariant) + selected.variants }
             .distinctBy { it.provider to it.sourceId }
+            .sortedBy { searchPlaybackPriority(it.provider) }
+        var ageRestricted = false
         for (choice in choices) {
-            val queue = SearchResultsQueue(
-                title = queueTitle,
-                initialResult = result,
-                selected = selected,
-                selectedVariants = listOf(choice),
-                repository = searchRepository,
-                coordinator = this,
-            )
-            val firstItem = queue.getInitialStatus().items.firstOrNull() ?: continue
+            if (ageRestricted && choice.playbackRoute() == SourcePlaybackRoute.CATALOG_BRIDGE) continue
+            val queue = withContext(Dispatchers.Default) {
+                SearchResultsQueue(
+                    title = queueTitle,
+                    initialResult = result,
+                    selected = selected,
+                    selectedVariants = listOf(choice),
+                    repository = searchRepository,
+                    coordinator = this@SourcePlaybackCoordinator,
+                )
+            }
+            val firstItem = withContext(Dispatchers.IO) {
+                queue.getInitialStatus().items.firstOrNull()
+            } ?: continue
             connection.playQueue(queue)
             if (awaitPlaybackStart(connection, firstItem.mediaId)) return true
+            if (choice.provider == ProviderId.YOUTUBE_MUSIC) {
+                ageRestricted = hasAgeVerificationError(connection.player.playerError)
+            }
         }
         return false
     }
@@ -251,6 +268,24 @@ constructor(
         connection.player.playWhenReady = true
         return true
     }
+}
+
+internal fun searchPlaybackPriority(provider: ProviderId): Int = when (provider) {
+    ProviderId.LOCAL, ProviderId.OPEN_TUNE_OFFLINE -> 0
+    ProviderId.AUDIUS -> 1
+    ProviderId.YOUTUBE_MUSIC -> 2
+    else -> 3
+}
+
+internal fun hasAgeVerificationError(error: Throwable?): Boolean {
+    var current = error
+    while (current != null) {
+        if (current is YTPlayerUtils.LoginRequiredForPlaybackException &&
+            PlaybackGateClassifier.requiresAgeVerification(current.message)
+        ) return true
+        current = current.cause
+    }
+    return false
 }
 
 enum class SourcePlaybackRoute {
