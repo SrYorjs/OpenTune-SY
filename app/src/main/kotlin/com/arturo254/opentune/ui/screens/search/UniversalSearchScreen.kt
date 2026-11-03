@@ -25,6 +25,8 @@ import com.arturo254.opentune.LocalPlayerAwareWindowInsets
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.UniversalAudioSelectionModeKey
+import com.arturo254.opentune.core.model.ArtistIdentity
+import com.arturo254.opentune.core.model.TrackIdentity
 import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.extensions.togglePlayPause
@@ -32,6 +34,7 @@ import com.arturo254.opentune.sources.offline.OfflineTrackState
 import com.arturo254.opentune.sources.resolution.AudioSelectionMode
 import com.arturo254.opentune.sources.resolution.SourceVariantKey
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
+import com.arturo254.opentune.sources.audius.AudiusCollectionType
 import com.arturo254.opentune.ui.screens.*
 import com.arturo254.opentune.utils.rememberEnumPreference
 import com.arturo254.opentune.viewmodels.UniversalSearchViewModel
@@ -47,6 +50,7 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
     val context = LocalContext.current
     val player = LocalPlayerConnection.current
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val audiusState by viewModel.audiusState.collectAsStateWithLifecycle()
     val offlineAssets by viewModel.offlineAssets.collectAsStateWithLifecycle()
     val current = player?.mediaMetadata?.collectAsStateWithLifecycle()?.value
     val playing = player?.isPlaying?.collectAsStateWithLifecycle()?.value == true
@@ -66,24 +70,45 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
     var category by remember(query) { mutableStateOf(SearchResultCategory.ALL) }
     var activeArtist by remember(query) { mutableStateOf<String?>(null) }
     var activeAlbum by remember(query) { mutableStateOf<String?>(null) }
-    val artists = remember(entries) { groupSearchArtists(entries) }
     val albums = remember(entries) { groupSearchAlbums(entries) }
+    val remoteMatchesQuery = audiusState.query == query.trim()
+    val discoveredArtists = if (remoteMatchesQuery) audiusState.artists else emptyList()
+    val discoveredPlaylists = if (remoteMatchesQuery) audiusState.playlists else emptyList()
+    val selectedCollection = audiusState.selected.takeIf { remoteMatchesQuery }
+    val collectionVariants = if (selectedCollection != null) audiusState.tracks else emptyList()
+    val collectionEntries = remember(collectionVariants) {
+        collectionVariants.map { variant ->
+            UnifiedTrackSearchResult(
+                identity = TrackIdentity(
+                    title = variant.title,
+                    artists = variant.artists.map { ArtistIdentity(name = it) },
+                    durationMs = variant.durationMs,
+                    isrc = variant.isrc,
+                    version = variant.version,
+                ),
+                variants = listOf(variant),
+                recommendedVariant = variant,
+            )
+        }
+    }
     val selectedTracks = when (category) {
         SearchResultCategory.ALL, SearchResultCategory.SONGS -> entries
-        SearchResultCategory.ARTISTS ->
-            artists.firstOrNull { searchCategoryKey(it.name) == activeArtist }?.tracks.orEmpty()
+        SearchResultCategory.ARTISTS, SearchResultCategory.PLAYLISTS ->
+            if (selectedCollection != null) collectionEntries else emptyList()
         SearchResultCategory.ALBUMS ->
             albums.firstOrNull { it.key == activeAlbum }?.tracks.orEmpty()
-        SearchResultCategory.PLAYLISTS -> emptyList()
     }
     val showingTracks = category == SearchResultCategory.ALL ||
         category == SearchResultCategory.SONGS ||
-        (category == SearchResultCategory.ARTISTS && activeArtist != null) ||
+        (category == SearchResultCategory.ARTISTS && selectedCollection != null) ||
+        (category == SearchResultCategory.PLAYLISTS && selectedCollection != null) ||
         (category == SearchResultCategory.ALBUMS && activeAlbum != null)
     val availableCount = when (category) {
-        SearchResultCategory.ARTISTS -> if (activeArtist == null) artists.size else selectedTracks.size
+        SearchResultCategory.ARTISTS ->
+            if (selectedCollection == null) discoveredArtists.size else selectedTracks.size
+        SearchResultCategory.PLAYLISTS ->
+            if (selectedCollection == null) discoveredPlaylists.size else selectedTracks.size
         SearchResultCategory.ALBUMS -> if (activeAlbum == null) albums.size else selectedTracks.size
-        SearchResultCategory.PLAYLISTS -> 0
         else -> selectedTracks.size
     }
     val visibleEntries = selectedTracks.take(visibleCount)
@@ -96,6 +121,7 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
         .mapNotNull { it.continuationToken }
         .sorted().joinToString("|")
     val loading = state.isLoading || (!sameQuery && query.isNotBlank())
+    val discoveryLoading = remoteMatchesQuery && audiusState.loading
     val bottom = LocalPlayerAwareWindowInsets.current.asPaddingValues().calculateBottomPadding()
 
     LaunchedEffect(query) {
@@ -127,13 +153,26 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
             scope.launch {
                 resolving = result.signalKey()
                 try {
-                    if (!viewModel.playSearchResults(
+                    val played = if (selectedCollection != null) {
+                        val index = collectionVariants.indexOfFirst { source ->
+                            result.variants.any { it.provider == source.provider && it.sourceId == source.sourceId }
+                        }
+                        viewModel.playAudiusCollection(
+                            player,
+                            collectionVariants,
+                            index,
+                            selectedCollection.title,
+                        )
+                    } else {
+                        viewModel.playSearchResults(
                             player,
                             result,
                             state.result,
                             variants,
                             context.getString(R.string.queue_searched_songs),
-                        )) {
+                        )
+                    }
+                    if (!played) {
                         Toast.makeText(context, R.string.universal_versions_play_error, Toast.LENGTH_SHORT).show()
                     }
                 } finally { resolving = null }
@@ -151,6 +190,7 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                     category = selected
                     activeArtist = null
                     activeAlbum = null
+                    viewModel.closeAudiusCollection()
                     visibleCount = 50
                     lastPageRequest = ""
                     scope.launch { list.animateScrollToItem(0) }
@@ -182,32 +222,151 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                     }
                 }
             }
-            if (loading && entries.isEmpty()) item("signal/loading") { NovaLoading("Buscando música…") }
-            if (!loading && entries.isEmpty()) item("signal/empty") {
+            if ((loading || discoveryLoading) && entries.isEmpty() &&
+                discoveredArtists.isEmpty() && discoveredPlaylists.isEmpty()
+            ) item("signal/loading") { NovaLoading("Buscando música…") }
+            if (!loading && !discoveryLoading && entries.isEmpty() &&
+                discoveredArtists.isEmpty() && discoveredPlaylists.isEmpty()
+            ) item("signal/empty") {
                 NovaMessage(
                     title = if (state.error != null) "No pudimos completar la búsqueda" else if (query.isBlank()) "Encuentra tu próxima canción" else "No hay coincidencias",
                     message = if (state.error != null) "Comprueba tu conexión y vuelve a enviar la búsqueda." else "Prueba con el título, un artista o una parte del nombre.",
                 )
             }
-            if (category == SearchResultCategory.PLAYLISTS && !loading && entries.isNotEmpty()) item("signal/playlists") {
-                NovaMessage(
-                    title = "Listas de reproducción",
-                    message = "La búsqueda de listas de Audius estará disponible en la siguiente fase. Aquí no se mezclan canciones con listas.",
-                )
-            }
-            if (category == SearchResultCategory.ARTISTS && activeArtist == null) {
-                if (!loading && artists.isEmpty() && entries.isNotEmpty()) item("signal/no-artists") {
-                    NovaMessage(title = "No hay artistas", message = "No encontramos artistas entre los resultados de esta búsqueda.")
+            if (selectedCollection != null &&
+                (category == SearchResultCategory.ARTISTS || category == SearchResultCategory.PLAYLISTS)
+            ) {
+                item("signal/collection/header") {
+                    Column(
+                        Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        TextButton(onClick = {
+                            viewModel.closeAudiusCollection()
+                            visibleCount = 50
+                            scope.launch { list.animateScrollToItem(0) }
+                        }) { Text(if (category == SearchResultCategory.ARTISTS) "Volver a artistas" else "Volver a listas") }
+                        NovaArtwork(selectedCollection.artworkUrl, Modifier.size(100.dp))
+                        Text(selectedCollection.title, style = MaterialTheme.typography.headlineMedium)
+                        if (selectedCollection.subtitle.isNotBlank()) Text(
+                            selectedCollection.subtitle,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        selectedCollection.description?.takeIf(String::isNotBlank)?.let { description ->
+                            Text(description, maxLines = 4, overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.bodySmall)
+                        }
+                        if (collectionVariants.isNotEmpty()) {
+                            Button(onClick = {
+                                val activePlayer = player ?: return@Button
+                                scope.launch {
+                                    val played = viewModel.playAudiusCollection(
+                                        activePlayer, collectionVariants, 0, selectedCollection.title,
+                                    )
+                                    if (!played) Toast.makeText(context,
+                                        R.string.universal_versions_play_error,
+                                        Toast.LENGTH_SHORT).show()
+                                }
+                            }) { Text("Reproducir todo") }
+                        }
+                    }
                 }
-                items(artists.take(visibleCount), key = { "signal/artist/" + searchCategoryKey(it.name) }) { artist ->
+                if (audiusState.loadingCollection) item("signal/collection/loading") {
+                    NovaLoading("Cargando canciones de Audius…")
+                }
+                if (audiusState.collectionError != null) item("signal/collection/error") {
+                    NovaMessage(title = "No se pudo cargar esta colección",
+                        message = audiusState.collectionError.orEmpty())
+                }
+                if (!audiusState.loadingCollection && collectionVariants.isEmpty() &&
+                    audiusState.collectionError == null
+                ) item("signal/collection/empty") {
+                    NovaMessage(title = "Sin canciones disponibles",
+                        message = "Esta colección no tiene pistas reproducibles públicamente.")
+                }
+            }
+            if (category == SearchResultCategory.ALL && selectedCollection == null) {
+                if (discoveredArtists.isNotEmpty()) {
+                    item("signal/featured/artists") {
+                        Text("Artistas", modifier = Modifier.padding(horizontal = 24.dp),
+                            style = MaterialTheme.typography.titleMedium)
+                    }
+                    items(discoveredArtists.take(3), key = { "signal/preview/artist/" + it.id }) { artist ->
+                        SignalCollectionRow(
+                            title = artist.name,
+                            subtitle = artist.handle.takeIf(String::isNotBlank)?.let { "@$it" }
+                                ?: "Artista de Audius",
+                            artworkUrl = artist.artworkUrl,
+                            onClick = {
+                                category = SearchResultCategory.ARTISTS
+                                viewModel.openAudiusArtist(artist)
+                                visibleCount = 50
+                                scope.launch { list.animateScrollToItem(0) }
+                            },
+                        )
+                    }
+                }
+                if (discoveredPlaylists.isNotEmpty()) {
+                    item("signal/featured/playlists") {
+                        Text("Listas", modifier = Modifier.padding(horizontal = 24.dp),
+                            style = MaterialTheme.typography.titleMedium)
+                    }
+                    items(discoveredPlaylists.take(3), key = { "signal/preview/playlist/" + it.id }) { playlist ->
+                        SignalCollectionRow(
+                            title = playlist.name,
+                            subtitle = playlist.creator.ifBlank { "Playlist de Audius" },
+                            artworkUrl = playlist.artworkUrl,
+                            onClick = {
+                                category = SearchResultCategory.PLAYLISTS
+                                viewModel.openAudiusPlaylist(playlist)
+                                visibleCount = 50
+                                scope.launch { list.animateScrollToItem(0) }
+                            },
+                        )
+                    }
+                }
+            }
+            if (category == SearchResultCategory.ARTISTS && selectedCollection == null) {
+                if (discoveryLoading) item("signal/artists/loading") {
+                    NovaLoading("Buscando artistas de Audius…")
+                }
+                if (!discoveryLoading && discoveredArtists.isEmpty()) item("signal/artists/empty") {
+                    NovaMessage(title = "Sin artistas",
+                        message = audiusState.artistError
+                            ?: "No encontramos perfiles de artistas para esta búsqueda en Audius.")
+                }
+                items(discoveredArtists.take(visibleCount), key = { "signal/artist/" + it.id }) { artist ->
                     SignalCollectionRow(
                         title = artist.name,
-                        subtitle = if (artist.tracks.size == 1) "1 canción encontrada" else "${artist.tracks.size} canciones encontradas",
+                        subtitle = artist.handle.takeIf(String::isNotBlank)?.let { "@$it" }
+                            ?: "Artista de Audius",
                         artworkUrl = artist.artworkUrl,
                         onClick = {
-                            activeArtist = searchCategoryKey(artist.name)
+                            viewModel.openAudiusArtist(artist)
                             visibleCount = 50
-                            lastPageRequest = ""
+                            scope.launch { list.animateScrollToItem(0) }
+                        },
+                    )
+                }
+            }
+            if (category == SearchResultCategory.PLAYLISTS && selectedCollection == null) {
+                if (discoveryLoading) item("signal/playlists/loading") {
+                    NovaLoading("Buscando listas de Audius…")
+                }
+                if (!discoveryLoading && discoveredPlaylists.isEmpty()) item("signal/playlists/empty") {
+                    NovaMessage(title = "Sin listas",
+                        message = audiusState.playlistError
+                            ?: "No encontramos playlists para esta búsqueda en Audius.")
+                }
+                items(discoveredPlaylists.take(visibleCount), key = { "signal/playlist/" + it.id }) { playlist ->
+                    SignalCollectionRow(
+                        title = playlist.name,
+                        subtitle = playlist.creator.ifBlank { "Playlist de Audius" },
+                        artworkUrl = playlist.artworkUrl,
+                        onClick = {
+                            viewModel.openAudiusPlaylist(playlist)
+                            visibleCount = 50
                             scope.launch { list.animateScrollToItem(0) }
                         },
                     )
@@ -230,16 +389,6 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                         },
                     )
                 }
-            }
-            if (category == SearchResultCategory.ARTISTS && activeArtist != null) item("signal/back-artist") {
-                TextButton(
-                    onClick = {
-                        activeArtist = null
-                        visibleCount = 50
-                        scope.launch { list.animateScrollToItem(0) }
-                    },
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                ) { Text("Volver a artistas") }
             }
             if (category == SearchResultCategory.ALBUMS && activeAlbum != null) item("signal/back-album") {
                 TextButton(
@@ -304,20 +453,30 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
                     } } else null,
                 )
             }
-            if (sameQuery && category != SearchResultCategory.PLAYLISTS && state.isLoadingMore) item("signal/more-loading") {
+            if (selectedCollection?.type == AudiusCollectionType.ARTIST &&
+                audiusState.hasMoreTracks && !audiusState.loadingCollection
+            ) item("signal/artist/more") {
+                TextButton(onClick = viewModel::loadMoreAudiusTracks,
+                    modifier = Modifier.padding(horizontal = 20.dp)) { Text("Cargar más canciones") }
+            }
+            if (sameQuery && selectedCollection == null && category != SearchResultCategory.PLAYLISTS && state.isLoadingMore) item("signal/more-loading") {
                 NovaLoading("Cargando más resultados…")
-            } else if (sameQuery && category != SearchResultCategory.PLAYLISTS && visibleCount < availableCount) item("signal/more") {
+            } else if (sameQuery && selectedCollection == null && visibleCount < availableCount) item("signal/more") {
                 TextButton(onClick = { visibleCount += 50 }, modifier = Modifier.padding(horizontal = 20.dp)) {
                     Text("Mostrar más resultados")
                 }
-            } else if (sameQuery && category != SearchResultCategory.PLAYLISTS && state.result.hasMore && entries.isNotEmpty()) item("signal/more") {
+            } else if (sameQuery && selectedCollection == null &&
+                (category == SearchResultCategory.ALL || category == SearchResultCategory.SONGS ||
+                    category == SearchResultCategory.ALBUMS) &&
+                state.result.hasMore && entries.isNotEmpty()
+            ) item("signal/more") {
                 TextButton(onClick = viewModel::loadMore, modifier = Modifier.padding(horizontal = 20.dp)) {
                     Text("Buscar más resultados")
                 }
             }
         }
     }
-    val selected = entries.firstOrNull { it.signalKey() == dialog }
+    val selected = (entries + collectionEntries).firstOrNull { it.signalKey() == dialog }
     if (selected != null) {
         UniversalVersionQualityDialog(
             selected = selected,
