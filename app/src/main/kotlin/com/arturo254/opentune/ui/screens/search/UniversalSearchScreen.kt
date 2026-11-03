@@ -1,6 +1,7 @@
 package com.arturo254.opentune.ui.screens.search
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -123,6 +124,10 @@ fun UniversalSearchScreen(query: String, pureBlack: Boolean, viewModel: Universa
     val loading = state.isLoading || (!sameQuery && query.isNotBlank())
     val discoveryLoading = remoteMatchesQuery && audiusState.loading
     val bottom = LocalPlayerAwareWindowInsets.current.asPaddingValues().calculateBottomPadding()
+    BackHandler(enabled = selectedCollection != null) {
+        viewModel.closeAudiusCollection()
+        visibleCount = 50
+    }
 
     LaunchedEffect(query) {
         viewModel.query.value = query
