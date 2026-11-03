@@ -16,7 +16,6 @@ import com.arturo254.opentune.innertube.models.WatchEndpoint
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.playback.PlayerConnection
 import com.arturo254.opentune.playback.queues.ListQueue
-import com.arturo254.opentune.playback.queues.ListQueue
 import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.sources.SourceRegistry
 import com.arturo254.opentune.sources.StreamMusicSource
