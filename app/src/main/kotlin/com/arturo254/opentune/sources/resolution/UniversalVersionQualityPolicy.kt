@@ -59,6 +59,7 @@ constructor(
                         preferredProviders =
                             listOf(
                                 ProviderId.LOCAL,
+                                ProviderId.NAVIDROME,
                                 ProviderId.AUDIUS,
                                 ProviderId.YOUTUBE_MUSIC,
                             ),
