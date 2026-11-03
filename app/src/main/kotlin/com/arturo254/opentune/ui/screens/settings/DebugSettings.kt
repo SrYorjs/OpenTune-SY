@@ -204,6 +204,11 @@ fun DebugSettings(
                 }
             }
 
+            PreferenceGroupTitle(
+                title = "Prueba de motores musicales"
+            )
+            MediaBackendDiagnosticsPanel()
+
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
