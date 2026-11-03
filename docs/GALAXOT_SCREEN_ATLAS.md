@@ -129,7 +129,7 @@ El catálogo contiene **los 98 archivos Kotlin de `ui/screens/`**, tanto pantall
 | `search/UniversalSearchScreen.kt` | Resultados universales multiproveedor | `search/{query}` |
 | `search/UniversalVersionQualityDialog.kt` | Diálogo de versiones y calidad | `diálogo interno` |
 
-## Ajustes, apariencia y pantallas secundarias (39)
+## Ajustes, apariencia y pantallas secundarias (40)
 
 | Archivo relativo | Qué controla | Ruta en la app |
 | --- | --- | --- |
@@ -151,7 +151,8 @@ El catálogo contiene **los 98 archivos Kotlin de `ui/screens/`**, tanto pantall
 | `settings/GalaxPlayerStyleStudioScreen.kt` | Estudio de 17 diseños de reproductor | `settings/appearance/player_studio` |
 | `settings/GalaxSettingsCreativeShortcuts.kt` | Atajos a Estudio, Liquid Glass y Paleta desde Ajustes | `settings` (tarjetas integradas) |
 | `settings/GalaxSettingsSectionHero.kt` | Cabeceras editoriales de seis secciones de Ajustes | `cabecera reutilizable` |
-| `settings/IntegrationScreen.kt` | Conexiones y scrobbling | `settings/integration` |
+| `settings/IntegrationScreen.kt` | Conexiones, Navidrome y scrobbling | `settings/integration` |
+| `settings/NavidromeConnectionPanel.kt` | Conexión HTTPS cifrada a biblioteca musical personal | `settings/integration` |
 | `settings/LastFMSettings.kt` | Last FMSettings | `settings/lastfm` |
 | `settings/ListenBrainzManager.kt` | Gestión de ListenBrainz (no pantalla) | `—` |
 | `settings/MusicTogetherScreen.kt` | Music Together Screen | `settings/music_together` |
