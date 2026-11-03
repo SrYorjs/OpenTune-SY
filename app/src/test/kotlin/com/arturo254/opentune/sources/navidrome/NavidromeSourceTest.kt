@@ -52,6 +52,21 @@ class NavidromeSourceTest {
     }
 
     @Test
+    fun serverAndAccountIdentifiersCannotCrossIntoAnotherLibrary() {
+        val first = NavidromeCredentials("https://music.example.com", "alice", "pass-one")
+        val second = NavidromeCredentials("https://music.example.com", "bob", "pass-two")
+        val third = NavidromeCredentials("https://another.example.com", "alice", "pass-one")
+        val id = navidromeAccountScope(first) + ":track-one"
+        assertEquals("track-one", unscopedNavidromeId(id, first))
+        assertEquals(null, unscopedNavidromeId(id, second))
+        assertEquals(null, unscopedNavidromeId(id, third))
+        assertEquals(
+            navidromeAccountScope(first),
+            navidromeAccountScope(first.copy(password = "new-password")),
+        )
+    }
+
+    @Test
     fun connectionRequiresHttpsAndRejectsEmbeddedSecrets() {
         assertEquals("https://music.example.com", validateNavidromeUrl("https://music.example.com/"))
         assertEquals("https://music.example.com/music", validateNavidromeUrl("https://music.example.com/music"))
