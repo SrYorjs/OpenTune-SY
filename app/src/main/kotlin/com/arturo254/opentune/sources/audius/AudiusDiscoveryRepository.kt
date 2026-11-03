@@ -155,4 +155,4 @@ private fun JsonObject.value(name: String): String? =
 
 private fun JsonObject.imageUrl(): String? =
     listOf("480x480", "_480x480", "1000x1000", "_1000x1000", "150x150", "_150x150")
-        .firstNotNullOfOrNull(::value)
+        .firstNotNullOfOrNull { value(it) }
