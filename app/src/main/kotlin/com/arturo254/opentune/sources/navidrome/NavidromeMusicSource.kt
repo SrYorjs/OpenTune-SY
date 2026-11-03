@@ -112,13 +112,15 @@ class NavidromeHttpGateway @Inject constructor(
     }
 
     override fun streamUrl(songId: String): String? =
-        accounts.credentials()?.let {
-            authenticatedUrl(it, "stream", listOf("id" to songId)).toString()
+        accounts.credentials()?.let { credentials ->
+            val id = unscopedNavidromeId(songId, credentials) ?: return null
+            authenticatedUrl(credentials, "stream", listOf("id" to id)).toString()
         }
 
     override fun downloadUrl(songId: String): String? =
-        accounts.credentials()?.let {
-            authenticatedUrl(it, "download", listOf("id" to songId)).toString()
+        accounts.credentials()?.let { credentials ->
+            val id = unscopedNavidromeId(songId, credentials) ?: return null
+            authenticatedUrl(credentials, "download", listOf("id" to id)).toString()
         }
 
     override fun coverArtUrl(coverId: String): String? =
@@ -171,6 +173,24 @@ class NavidromeHttpGateway @Inject constructor(
             .apply { parameters.forEach { (key, value) -> addQueryParameter(key, value) } }
             .build()
     }
+}
+
+internal fun navidromeAccountScope(credentials: NavidromeCredentials): String =
+    MessageDigest.getInstance("SHA-256")
+        .digest(
+            (validateNavidromeUrl(credentials.baseUrl) + "\n" + credentials.username)
+                .toByteArray(Charsets.UTF_8),
+        )
+        .take(8)
+        .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+
+internal fun unscopedNavidromeId(
+    scopedId: String,
+    credentials: NavidromeCredentials,
+): String? {
+    val prefix = navidromeAccountScope(credentials) + ":"
+    return scopedId.takeIf { it.startsWith(prefix) && it.length > prefix.length }
+        ?.removePrefix(prefix)
 }
 
 internal fun parseNavidromeSong(element: JsonElement): NavidromeSong? {
@@ -255,7 +275,9 @@ class NavidromeMusicSource @Inject constructor(
     )
 
     override suspend fun searchTracks(request: TrackSearchRequest): Result<TrackSearchPage> {
-        if (accounts.credentials() == null) return Result.success(TrackSearchPage(emptyList()))
+        val credentials = accounts.credentials()
+            ?: return Result.success(TrackSearchPage(emptyList()))
+        val accountPrefix = navidromeAccountScope(credentials) + ":"
         val offset = runCatching {
             request.continuationToken?.let {
                 require(it.startsWith(CURSOR_PREFIX))
@@ -267,6 +289,7 @@ class NavidromeMusicSource @Inject constructor(
             TrackSearchPage(
                 items = page.songs.map { song ->
                     song.toVariant(song.coverArt?.let(gateway::coverArtUrl))
+                        .copy(sourceId = accountPrefix + song.id)
                 },
                 continuationToken = if (page.hasMore) "$CURSOR_PREFIX${offset + page.songs.size}"
                     else null,
