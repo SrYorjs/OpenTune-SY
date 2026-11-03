@@ -38,7 +38,7 @@ class AudiusCollectionQueueTest {
         val firstPage = queue.nextPage()
         assertEquals(49, firstPage.size)
         assertEquals("track-21", firstPage.first().mediaId)
-        assertEquals("track-19", firstPage.last().mediaId)
+        assertEquals("track-69", firstPage.last().mediaId)
 
         val secondPage = queue.nextPage()
         assertEquals(25, secondPage.size)

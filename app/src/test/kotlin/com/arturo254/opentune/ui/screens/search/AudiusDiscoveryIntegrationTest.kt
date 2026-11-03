@@ -30,7 +30,7 @@ class AudiusDiscoveryIntegrationTest {
         assertTrue(screen.contains("viewModel.closeAudiusCollection()"))
         assertTrue(screen.contains("viewModel.playAudiusCollection("))
         assertFalse(screen.contains("signal/featured/artists"))
-        assertTrue(coordinator.contains("ListQueue(title = queueTitle, items = playable"))
+        assertTrue(coordinator.contains("AudiusCollectionQueue("))
     }
 
     @Test
