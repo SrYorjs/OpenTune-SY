@@ -29,9 +29,9 @@ class GalaxHomePlayerRedesignTest {
     fun homeStreamsAllSectionsWithoutManualExpansion() {
         val home = source("ui/screens/HomeScreen.kt")
         val cards = source("ui/screens/GalaxAetherHome.kt")
-        assertTrue(home.contains("HorizonOpening("))
-        assertTrue(home.contains("HorizonOpening("))
-        assertTrue(home.contains("HorizonCover("))
+        assertTrue(home.contains("OrbitOpening("))
+        assertTrue(home.contains("OrbitOpening("))
+        assertTrue(home.contains("OrbitCover("))
         assertTrue(home.contains("NovaMusicRow("))
         assertTrue(home.contains("viewModel.loadMoreYouTubeItems(next)"))
         assertTrue(home.contains("catalog?.sections.orEmpty().forEachIndexed"))
@@ -49,7 +49,7 @@ class GalaxHomePlayerRedesignTest {
         assertTrue(home.contains("SongMenu("))
         assertTrue(home.contains("onDismiss = menus::dismiss"))
         assertTrue(home.contains("viewModel.playSourceVariant("))
-        assertTrue(home.contains("HorizonCatalog("))
+        assertTrue(home.contains("OrbitCatalog("))
     }
 
     @Test

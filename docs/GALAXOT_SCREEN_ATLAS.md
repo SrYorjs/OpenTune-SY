@@ -1,14 +1,14 @@
 # Atlas de pantallas GalaxOT
 
-Rama: `opentune-rebuild-v1` · Inventario verificado: 20 de octubre de 2026.
+Rama: `opentune-rebuild-v1` · Inventario verificado: 3 de noviembre de 2026.
 
-El catálogo contiene **los 98 archivos Kotlin de `ui/screens/`**, tanto pantallas navegables como subcomponentes. Un guion significa que el archivo no tiene una ruta propia en `NavigationBuilder.kt`; puede ser visible a través de una pantalla principal. No todos los `Screen.kt` son entradas independientes.
+El catálogo contiene **los 114 archivos Kotlin de `ui/screens/`**, tanto pantallas navegables como subcomponentes. Un guion significa que el archivo no tiene una ruta propia en `NavigationBuilder.kt`; puede ser visible a través de una pantalla principal. No todos los `Screen.kt` son entradas independientes.
 
 ## Encuentra rápidamente la pantalla que quieres editar
 
 | Interfaz | Archivo principal |
 | --- | --- |
-| Inicio | `ui/screens/HomeScreen.kt`, `ui/screens/GalaxMainPages.kt` |
+| Inicio | `ui/screens/HomeScreen.kt`, `ui/screens/OrbitHomeComponents.kt`, `ui/screens/GalaxMainPages.kt` |
 | Buscar | `ui/screens/GalaxMainPages.kt`, `ui/screens/search/GalaxSearchExperience.kt`, `ui/screens/search/UniversalSearchScreen.kt` |
 | Biblioteca | `ui/screens/library/LibraryScreen.kt`, `ui/screens/library/GalaxArchiveDesign.kt` |
 | Ajustes | `ui/screens/settings/SettingsScreen.kt`, `ui/screens/settings/SettingsLayout.kt` |
@@ -21,7 +21,7 @@ El catálogo contiene **los 98 archivos Kotlin de `ui/screens/`**, tanto pantall
 
 **Raíz para todos los archivos de las tablas:** `app/src/main/kotlin/com/arturo254/opentune/ui/screens/`.
 
-## Pantallas y auxiliares principales (31)
+## Pantallas y auxiliares principales
 
 | Archivo relativo | Qué controla | Ruta en la app |
 | --- | --- | --- |
@@ -59,6 +59,7 @@ El catálogo contiene **los 98 archivos Kotlin de `ui/screens/`**, tanto pantall
 | `GalaxTopAppBar.kt` | Barra superior reutilizable | `—` |
 | `HistoryScreen.kt` | History Screen | `history` |
 | `HomeScreen.kt` | Inicio y recomendaciones | `home` |
+| `OrbitHomeComponents.kt` | Inicio Orbit: fondo continuo, partículas, disco, controles liquid glass y distribución según ancho, alto y tamaño de texto | `home` |
 | `HomeScreenComponents.kt` | Tarjetas comunes de Inicio | `—` |
 | `LoginScreen.kt` | Login Screen | `login?url={url}` |
 | `MoodAndGenresScreen.kt` | Mood And Genres Screen | `mood_and_genres` |

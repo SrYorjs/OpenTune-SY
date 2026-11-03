@@ -364,7 +364,7 @@ internal fun MainActivityTopBar(
     val searchBarScrollBehavior = navigationEffects.searchBarScrollBehavior
     val topAppBarScrollBehavior = navigationEffects.topAppBarScrollBehavior
 
-                                        if (shouldShowTopBar) {
+                                        if (shouldShowTopBar && navigationState.selectedNavigationRoute != Screens.Home.route) {
                                             val shouldUseFloatingTopBar = remember(navBackStackEntry) {
                                                 navBackStackEntry?.destination?.route == Screens.Home.route ||
                                                         navBackStackEntry?.destination?.route == Screens.MoodAndGenres.route ||

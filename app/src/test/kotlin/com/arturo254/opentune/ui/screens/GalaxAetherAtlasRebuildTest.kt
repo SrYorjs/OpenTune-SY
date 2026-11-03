@@ -20,10 +20,10 @@ class GalaxAetherAtlasRebuildTest {
     @Test
     fun homeHasDistinctLayoutWithoutReusingThePreviousEditorialScreen() {
         val home = source("ui/screens/HomeScreen.kt")
-        assertTrue(home.contains("HorizonOpening("))
-        assertTrue(home.contains("HorizonOpening("))
+        assertTrue(home.contains("OrbitOpening("))
+        assertTrue(home.contains("OrbitOpening("))
         assertTrue(home.contains("NovaMusicRow("))
-        assertTrue(home.contains("HorizonCover("))
+        assertTrue(home.contains("OrbitCover("))
         assertFalse(home.contains("GalaxHomeImmersiveFeature("))
         assertFalse(home.contains("GalaxHomePoster("))
         assertFalse(home.contains("GalaxHomeCompactTrack("))
@@ -34,7 +34,7 @@ class GalaxAetherAtlasRebuildTest {
         val home = source("ui/screens/HomeScreen.kt")
         val catalog = source("ui/screens/HomeScreen.kt")
         assertTrue(home.contains("NovaHeading("))
-        assertTrue(home.contains("HorizonCatalog("))
+        assertTrue(home.contains("OrbitCatalog("))
         assertFalse(home.contains("HomePageSectionTitle("))
         assertFalse(home.contains("HomePageSectionContent("))
         assertTrue(catalog.contains("is SongItem ->"))
