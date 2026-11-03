@@ -83,8 +83,9 @@ private fun providerPreference(variant: SourceVariant): Int =
     when (variant.provider) {
         ProviderId.OPEN_TUNE_OFFLINE -> 0
         ProviderId.LOCAL -> 1
-        ProviderId.AUDIUS -> 2
-        ProviderId.YOUTUBE_MUSIC -> 3
+        ProviderId.NAVIDROME -> 2
+        ProviderId.AUDIUS -> 3
+        ProviderId.YOUTUBE_MUSIC -> 4
         else -> 4
     }
 
