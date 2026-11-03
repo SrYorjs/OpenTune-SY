@@ -73,7 +73,7 @@ class GalaxPhaseSixRegressionTest {
         assertTrue(picker.contains("GalaxQualitySelectionHeader("))
         assertTrue(picker.contains("recordings.flatMap { it.variants }"))
         assertTrue(picker.contains("onQualityModeChange(mode)"))
-        assertTrue(picker.contains("onSelectVariant(recording, variant)"))
+        assertTrue(picker.contains("onSelectVariant(recording.recording, variant)"))
         assertTrue(picker.contains("onClearManual"))
         assertTrue(picker.contains("AudioSelectionMode.BEST_QUALITY"))
         assertTrue(picker.contains("AudioSelectionMode.DATA_SAVER"))
