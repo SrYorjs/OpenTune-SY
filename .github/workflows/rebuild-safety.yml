@@ -45,7 +45,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Run unit tests
-        run: ./gradlew testUniversalDebugUnitTest --no-daemon --stacktrace
+        run: ./gradlew :innertube:test testUniversalDebugUnitTest --no-daemon --stacktrace
 
       - name: Run Android lint
         run: ./gradlew lintUniversalDebug --no-daemon --stacktrace
