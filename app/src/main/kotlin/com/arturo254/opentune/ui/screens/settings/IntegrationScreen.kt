@@ -78,6 +78,11 @@ fun IntegrationScreen(
         )
 
         PreferenceGroupTitle(
+            title = "Biblioteca personal",
+        )
+        NavidromeConnectionPanel()
+
+        PreferenceGroupTitle(
             title = stringResource(R.string.scrobbling),
         )
 
