@@ -296,13 +296,13 @@ internal fun RowScope.MainActivityNavigationRail(
                                     visible = useRail && shouldShowNavigationBar
                                 ) {
                                     NavigationRail(
-                                        containerColor = if(pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer,
+                                        containerColor = Color.Transparent,
                                         contentColor = if(pureBlack) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
                                         header = { Spacer(Modifier.height(24.dp)) }
                                     ) {
                                         navigationItems.fastForEach { screen ->
                                             val isSelected =
-                                                navBackStackEntry?.destination?.hierarchy?.any { it.route == screen.route } == true
+                                                navigationState.selectedNavigationRoute == screen.route
 
                                             NavigationRailItem(
                                                 selected = isSelected,

@@ -8,7 +8,7 @@ El catálogo contiene **los 114 archivos Kotlin de `ui/screens/`**, tanto pantal
 
 | Interfaz | Archivo principal |
 | --- | --- |
-| Inicio | `ui/screens/HomeScreen.kt`, `ui/screens/OrbitHomeComponents.kt`, `ui/screens/GalaxMainPages.kt` |
+| Inicio | `ui/screens/HomeScreen.kt`, `ui/screens/PulseHomeDesign.kt`, `ui/screens/GalaxMainPages.kt` |
 | Buscar | `ui/screens/GalaxMainPages.kt`, `ui/screens/search/GalaxSearchExperience.kt`, `ui/screens/search/UniversalSearchScreen.kt` |
 | Biblioteca | `ui/screens/library/LibraryScreen.kt`, `ui/screens/library/GalaxArchiveDesign.kt` |
 | Ajustes | `ui/screens/settings/SettingsScreen.kt`, `ui/screens/settings/SettingsLayout.kt` |
@@ -59,7 +59,7 @@ El catálogo contiene **los 114 archivos Kotlin de `ui/screens/`**, tanto pantal
 | `GalaxTopAppBar.kt` | Barra superior reutilizable | `—` |
 | `HistoryScreen.kt` | History Screen | `history` |
 | `HomeScreen.kt` | Inicio y recomendaciones | `home` |
-| `OrbitHomeComponents.kt` | Inicio Orbit: fondo continuo, partículas, disco, controles liquid glass y distribución según ancho, alto y tamaño de texto | `home` |
+| `PulseHomeDesign.kt` | Inicio Pulse: búsqueda en cristal, carátulas protagonistas, jerarquía editorial, partículas discretas y distribución según ancho, alto y tamaño de texto | `home` |
 | `HomeScreenComponents.kt` | Tarjetas comunes de Inicio | `—` |
 | `LoginScreen.kt` | Login Screen | `login?url={url}` |
 | `MoodAndGenresScreen.kt` | Mood And Genres Screen | `mood_and_genres` |

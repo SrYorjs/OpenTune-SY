@@ -294,7 +294,7 @@ internal fun MainActivityShell(
                         Modifier
                             .fillMaxSize()
                             .background(
-                                if (pureBlack) Color.Black else MaterialTheme.colorScheme.surface
+                                if (pureBlack) Color.Black else MaterialTheme.colorScheme.background
                             )
                 ) {
                     val density = LocalDensity.current

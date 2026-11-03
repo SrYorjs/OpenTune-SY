@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pulse_for_you">Para ti</string>
+    <string name="pulse_search">¿Qué quieres escuchar?</string>
+    <string name="pulse_start">DESCUBRE TU PRÓXIMA FAVORITA</string>
+    <string name="pulse_spotlight">EN PRIMER PLANO</string>
+    <string name="pulse_welcome">Dale play a tu día.</string>
+    <string name="pulse_welcome_detail">Tu música, a un descubrimiento de distancia.</string>
+    <string name="pulse_daily">La banda sonora de tu día</string>
+    <string name="pulse_explore">Descubrir</string>
+    <string name="pulse_play">Escuchar</string>
+    <string name="pulse_pause">Pausar</string>
+    <string name="pulse_options">Opciones de la canción</string>
+    <string name="pulse_shuffle">Mi mix</string>
+    <string name="pulse_library">Biblioteca</string>
+    <string name="pulse_recognize">Identificar</string>
+    <string name="pulse_recent">Retoma tu ritmo</string>
+    <string name="pulse_picks">Hecho para tu día</string>
+    <string name="pulse_trending">Descubre algo nuevo</string>
+    <string name="pulse_trending_detail">Tendencias de tus fuentes de música</string>
+    <string name="pulse_empty">Aquí aparecerán tus recomendaciones</string>
+    <string name="pulse_empty_detail">Busca música o actualiza para volver a intentarlo.</string>
+    <string name="pulse_refresh">Actualizar</string>
+</resources>

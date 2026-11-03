@@ -28,16 +28,16 @@ class GalaxHomePlayerRedesignTest {
     @Test
     fun homeStreamsAllSectionsWithoutManualExpansion() {
         val home = source("ui/screens/HomeScreen.kt")
-        val cards = source("ui/screens/GalaxAetherHome.kt")
-        assertTrue(home.contains("OrbitOpening("))
-        assertTrue(home.contains("OrbitOpening("))
-        assertTrue(home.contains("OrbitCover("))
-        assertTrue(home.contains("NovaMusicRow("))
+        val cards = source("ui/screens/PulseHomeDesign.kt")
+        assertTrue(home.contains("PulseFeature("))
+        assertTrue(home.contains("PulseSearch("))
+        assertTrue(home.contains("PulseCover("))
+        assertTrue(home.contains("PulseScreenFrame("))
         assertTrue(home.contains("viewModel.loadMoreYouTubeItems(next)"))
         assertTrue(home.contains("catalog?.sections.orEmpty().forEachIndexed"))
         assertFalse(home.contains("Ver más"))
         assertFalse(home.contains("Ver menos"))
-        assertTrue(cards.contains("AetherGlassPlate("))
+        assertTrue(cards.contains("galaxLiquidEffect("))
     }
 
     @Test
@@ -49,7 +49,7 @@ class GalaxHomePlayerRedesignTest {
         assertTrue(home.contains("SongMenu("))
         assertTrue(home.contains("onDismiss = menus::dismiss"))
         assertTrue(home.contains("viewModel.playSourceVariant("))
-        assertTrue(home.contains("OrbitCatalog("))
+        assertTrue(home.contains("PulseCatalog("))
     }
 
     @Test

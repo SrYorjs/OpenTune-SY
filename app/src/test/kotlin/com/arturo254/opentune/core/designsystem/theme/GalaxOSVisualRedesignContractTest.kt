@@ -27,11 +27,11 @@ class GalaxOSVisualRedesignContractTest {
     @Test
     fun editorialHomeHasRealPlaybackAndNoFullscreenBlur() {
         val home = source("ui/screens/HomeScreen.kt")
-        val composition = source("ui/screens/OrbitHomeComponents.kt")
+        val composition = source("ui/screens/PulseHomeDesign.kt")
         val atmosphere = source("ui/screens/GalaxMainPages.kt")
-        assertTrue(home.contains("OrbitOpening("))
+        assertTrue(home.contains("PulseFeature("))
         assertTrue(home.contains("viewModel.playGalaxShuffle(player)"))
-        assertTrue(composition.contains("song?.thumbnailUrl"))
+        assertTrue(composition.contains("artwork"))
         assertTrue(composition.contains("galaxLiquidEffect("))
         assertTrue(composition.contains("rememberNovaPhase(active)"))
         assertTrue(atmosphere.contains("galaxMotion.reducedMotion"))

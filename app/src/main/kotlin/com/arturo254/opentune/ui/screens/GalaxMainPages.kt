@@ -65,7 +65,7 @@ fun GalaxMainPages(navController: NavController, pager: PagerState, onOpenSearch
         val active = pager.settledPage == page && !pager.isScrollInProgress
         when (page) {
             0 -> HomeScreen(navController, ambientActive = active,
-                onOpenSearchTab = { open(1) }, onOpenLibraryTab = { open(2) })
+                onOpenSearchTab = onOpenSearch, onOpenLibraryTab = { open(2) })
             1 -> GalaxDiscoverScreen(navController, onOpenSearch, ambientActive = active)
             2 -> LibraryScreen(navController, ambientActive = active,
                 onOpenSearchTab = { open(1) })

@@ -14,10 +14,12 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -27,7 +29,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.ShowHomeCategoryChipsKey
-import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidEffect
+import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.db.entities.Song
 import com.arturo254.opentune.extensions.toMediaItem
 import com.arturo254.opentune.extensions.togglePlayPause
@@ -44,7 +46,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
-/** Orbit: a fluid galactic home backed by the existing music and playback state. */
+/** Music-first home. Presentation is independent from playback and catalog state. */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
@@ -54,6 +56,7 @@ fun HomeScreen(
     onOpenLibraryTab: () -> Unit = { navController.navigate(Screens.Library.route) },
     ambientActive: Boolean = true,
 ) {
+    val queueTitle = stringResource(R.string.home)
     val player = LocalPlayerConnection.current
     val context = LocalContext.current
     val menus = LocalMenuState.current
@@ -110,7 +113,7 @@ fun HomeScreen(
         else
             player?.playQueue(
                 ListQueue(
-                    title = context.getString(R.string.home),
+                    title = queueTitle,
                     items = queue.map { it.toMediaItem() },
                     startIndex = queue.indexOfFirst { it.id == song.id }.coerceAtLeast(0),
                 )
@@ -137,7 +140,50 @@ fun HomeScreen(
             }
         }
     }
-    OrbitScreenFrame(active = ambientActive) { layout, safePadding ->
+    val featuredRemote =
+        catalog
+            ?.sections
+            .orEmpty()
+            .asSequence()
+            .flatMap { it.items.asSequence() }
+            .filterIsInstance<SongItem>()
+            .firstOrNull()
+    val featuredSource = trends.firstOrNull()
+    val resolve: (SourceVariant) -> Unit = { track ->
+        if (player != null && resolving == null)
+            scope.launch {
+                resolving = track.sourceId
+                try {
+                    if (!viewModel.playSourceVariant(player, track, queueTitle))
+                        Toast.makeText(
+                                context,
+                                R.string.catalog_source_unplayable,
+                                Toast.LENGTH_SHORT,
+                            )
+                            .show()
+                } finally {
+                    resolving = null
+                }
+            }
+    }
+    val playFeature: () -> Unit = {
+        when {
+            feature != null -> play(feature, selection)
+            featuredRemote != null -> {
+                if (current?.id == featuredRemote.id) player?.player?.togglePlayPause()
+                else
+                    player?.playQueue(
+                        YouTubeQueue(
+                            featuredRemote.endpoint ?: WatchEndpoint(videoId = featuredRemote.id),
+                            featuredRemote.toMediaMetadata(),
+                        )
+                    )
+            }
+            featuredSource != null -> resolve(featuredSource)
+            else -> onOpenSearchTab()
+        }
+    }
+    PulseScreenFrame(active = ambientActive) { layout, safePadding ->
         LazyColumn(
             state = list,
             modifier =
@@ -148,28 +194,46 @@ fun HomeScreen(
                         onRefresh = viewModel::refresh,
                     ),
             contentPadding = safePadding,
-            verticalArrangement = Arrangement.spacedBy(18.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item("orbit/masthead") {
-                OrbitMasthead(
-                    account,
-                    onNavigate = { navController.navigate(it) },
-                    onSearch = onOpenSearchTab,
+            item("pulse/header") {
+                PulseHeader(account, onNavigate = { navController.navigate(it) })
+            }
+            item("pulse/search") { PulseSearch(onOpenSearchTab) }
+            item("pulse/feature") {
+                PulseFeature(
+                    title = feature?.title ?: featuredRemote?.title ?: featuredSource?.title,
+                    subtitle =
+                        feature?.artists?.joinToString { it.name }
+                            ?: featuredRemote?.artists?.joinToString { it.name }
+                            ?: featuredSource?.artists?.joinToString(),
+                    artwork =
+                        feature?.thumbnailUrl
+                            ?: featuredRemote?.thumbnail
+                            ?: featuredSource?.artworkUrl,
+                    playing =
+                        playing &&
+                            (current?.id == feature?.id || current?.id == featuredRemote?.id),
+                    onPlay = playFeature,
+                    compactHeight = layout.compactHeight,
+                    onMenu =
+                        when {
+                            feature != null -> ({ menu(feature) })
+                            featuredRemote != null -> ({
+                                    menus.show {
+                                        YouTubeSongMenu(
+                                            song = featuredRemote,
+                                            navController = navController,
+                                            onDismiss = menus::dismiss,
+                                        )
+                                    }
+                                })
+                            else -> null
+                        },
                 )
             }
-            item("orbit/opening") {
-                OrbitOpening(
-                    feature,
-                    layout,
-                    current?.id == feature?.id && playing,
-                    onPlay = {
-                        if (feature != null) play(feature, selection) else onOpenSearchTab()
-                    },
-                    onMenu = { feature?.let(menu) },
-                )
-            }
-            item("orbit/actions") {
-                OrbitActions(
+            item("pulse/shortcuts") {
+                PulseShortcuts(
                     shuffling,
                     player != null,
                     shuffle,
@@ -182,10 +246,10 @@ fun HomeScreen(
                 )
             }
             if (showChips && catalog?.chips?.isNotEmpty() == true)
-                item("orbit/moods") {
+                item("pulse/filters") {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 24.dp),
-                        horizontalArrangement = Arrangement.spacedBy(9.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         itemsIndexed(
                             catalog?.chips.orEmpty(),
@@ -194,33 +258,56 @@ fun HomeScreen(
                             FilterChip(
                                 selected = item == chip,
                                 onClick = { viewModel.toggleChip(item) },
+                                shape = RoundedCornerShape(50),
                                 label = { Text(item.title) },
                             )
                         }
                     }
                 }
             if (recent.isNotEmpty()) {
-                item("orbit/resume-title") { NovaHeading("Vuelve a tu ritmo", "Tu última escucha") }
-                item("orbit/resume") {
+                item("pulse/recent-heading") { PulseHeading(stringResource(R.string.pulse_recent)) }
+                item("pulse/recent") {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 24.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        items(recent.take(12), key = { it.id }) { song ->
-                            Row(
-                                Modifier.width(
-                                        (layout.artworkDp.dp + 120.dp).coerceIn(220.dp, 320.dp)
-                                    )
-                                    .galaxLiquidEffect(shapeOverride = RoundedCornerShape(24.dp))
-                            ) {
-                                NovaMusicRow(
-                                    song.title,
-                                    song.artists.joinToString { it.name },
-                                    song.thumbnailUrl,
-                                    onClick = { play(song, recent) },
-                                    active = current?.id == song.id,
-                                    playing = playing,
-                                    onMenu = { menu(song) },
+                        items(recent.take(10), key = { it.id }) { song ->
+                            PulseTrackRow(
+                                song,
+                                current?.id == song.id,
+                                playing,
+                                { play(song, recent) },
+                                { menu(song) },
+                                Modifier.width((layout.coverWidth * 1.9f).coerceIn(240.dp, 330.dp)),
+                            )
+                        }
+                    }
+                }
+            }
+            if (trends.isNotEmpty() && chip == null) {
+                item("pulse/trends-heading") {
+                    PulseHeading(
+                        stringResource(R.string.pulse_trending),
+                        stringResource(R.string.pulse_trending_detail),
+                    )
+                }
+                item("pulse/trends") {
+                    PulseShelfLayout { coverWidth ->
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 24.dp),
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
+                            items(
+                                trends.distinctBy { it.provider.value + it.sourceId }.take(16),
+                                key = { it.provider.value + ":" + it.sourceId },
+                            ) { track ->
+                                PulseCover(
+                                    coverWidth,
+                                    track.title,
+                                    track.artists.joinToString(),
+                                    track.artworkUrl,
+                                    busy = resolving == track.sourceId,
+                                    onClick = { resolve(track) },
                                 )
                             }
                         }
@@ -228,49 +315,41 @@ fun HomeScreen(
                 }
             }
             if (selection.isNotEmpty()) {
-                item("orbit/selection-title") {
-                    NovaHeading("Una buena compañía", "Selección personal")
-                }
+                item("pulse/picks-heading") { PulseHeading(stringResource(R.string.pulse_picks)) }
                 itemsIndexed(
-                    selection.take(12).chunked(layout.columns),
-                    key = { index, _ -> "orbit/selection/$index" },
+                    selection.take(6).chunked(layout.columns),
+                    key = { index, _ -> "pulse/picks/$index" },
                 ) { _, row ->
                     Row(
-                        Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         row.forEach { song ->
-                            Box(Modifier.weight(1f)) {
-                                NovaMusicRow(
-                                    song.title,
-                                    song.artists.joinToString { it.name },
-                                    song.thumbnailUrl,
-                                    onClick = { play(song, selection) },
-                                    active = current?.id == song.id,
-                                    playing = playing,
-                                    onMenu = { menu(song) },
-                                )
-                            }
+                            PulseTrackRow(
+                                song,
+                                current?.id == song.id,
+                                playing,
+                                { play(song, selection) },
+                                { menu(song) },
+                                Modifier.weight(1f),
+                            )
                         }
                         repeat(layout.columns - row.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
             }
-
             if (dial.isNotEmpty()) {
-                item("orbit/dial-title") {
-                    NovaHeading(stringResource(R.string.speed_dial), "Siempre cerca")
-                }
-                item("orbit/dial") {
-                    OrbitShelf(dial.distinctBy { it.id }.take(16), current?.id, playing, play, menu)
+                item("pulse/dial-heading") { PulseHeading(stringResource(R.string.speed_dial)) }
+                item("pulse/dial") {
+                    PulseShelf(dial.distinctBy { it.id }.take(16), current?.id, playing, play, menu)
                 }
             }
             if (!forgotten.isNullOrEmpty()) {
-                item("orbit/forgotten-title") {
-                    NovaHeading(stringResource(R.string.forgotten_favorites), "Vuelve a descubrir")
+                item("pulse/favorites-heading") {
+                    PulseHeading(stringResource(R.string.forgotten_favorites))
                 }
-                item("orbit/forgotten") {
-                    OrbitShelf(
+                item("pulse/favorites") {
+                    PulseShelf(
                         forgotten.orEmpty().distinctBy { it.id }.take(16),
                         current?.id,
                         playing,
@@ -279,89 +358,59 @@ fun HomeScreen(
                     )
                 }
             }
-            if (trends.isNotEmpty() && chip == null) {
-                item("orbit/world-title") { NovaHeading("Al otro lado del mundo", "Tendencias") }
-                item("orbit/world") {
-                    OrbitShelfLayout { coverWidth ->
-                        LazyRow(
-                            contentPadding = PaddingValues(horizontal = 24.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        ) {
-                            items(
-                                trends.distinctBy { it.provider.value + it.sourceId }.take(16),
-                                key = { it.provider.value + ":" + it.sourceId },
-                            ) { track ->
-                                OrbitCover(
-                                    coverWidth,
-                                    track.title,
-                                    track.artists.joinToString(),
-                                    track.artworkUrl,
-                                    resolving == track.sourceId,
-                                    onClick = {
-                                        if (player != null && resolving == null)
-                                            scope.launch {
-                                                resolving = track.sourceId
-                                                try {
-                                                    if (
-                                                        !viewModel.playSourceVariant(
-                                                            player,
-                                                            track,
-                                                            "Tendencias",
-                                                        )
-                                                    )
-                                                        Toast.makeText(
-                                                                context,
-                                                                R.string.catalog_source_unplayable,
-                                                                Toast.LENGTH_SHORT,
-                                                            )
-                                                            .show()
-                                                } finally {
-                                                    resolving = null
-                                                }
-                                            }
-                                    },
-                                )
-                            }
-                        }
-                    }
-                }
-            }
             catalog?.sections.orEmpty().forEachIndexed { index, section ->
                 item(galaxHomeSectionRowKey(index, true)) {
-                    NovaHeading(
-                        section.title,
-                        section.label,
-                        if (section.endpoint?.browseId != null) "Explorar" else null,
-                        onAction = {
-                            section.endpoint?.browseId?.let { id ->
-                                navController.navigate(
-                                    if (id == "FEmusic_moods_and_genres")
-                                        Screens.MoodAndGenres.route
-                                    else "browse/$id"
-                                )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.weight(1f)) { PulseHeading(section.title, section.label) }
+                        if (section.endpoint?.browseId != null)
+                            TextButton(
+                                onClick = {
+                                    section.endpoint?.browseId?.let { id ->
+                                        navController.navigate(
+                                            if (id == "FEmusic_moods_and_genres")
+                                                Screens.MoodAndGenres.route
+                                            else "browse/$id"
+                                        )
+                                    }
+                                },
+                                modifier = Modifier.padding(end = 12.dp),
+                            ) {
+                                Text(stringResource(R.string.pulse_explore))
                             }
-                        },
-                    )
+                    }
                 }
-                item(galaxHomeSectionRowKey(index, false)) { OrbitCatalog(section, navController) }
+                item(galaxHomeSectionRowKey(index, false)) { PulseCatalog(section, navController) }
             }
-            if (loading) item("orbit/loading") { NovaLoading("Preparando tu música…") }
+            if (loading)
+                item("pulse/loading") {
+                    LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 24.dp))
+                }
             if (
                 !loading &&
                     selection.isEmpty() &&
                     catalog?.sections.isNullOrEmpty() &&
                     trends.isEmpty()
             ) {
-                item("orbit/empty") {
-                    NovaMessage(
-                        "Un universo por escuchar",
-                        "Busca tu primera canción o actualiza tus recomendaciones.",
-                        "Actualizar",
-                        viewModel::refresh,
-                    )
+                item("pulse/empty") {
+                    Column(
+                        Modifier.fillMaxWidth().padding(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Text(
+                            stringResource(R.string.pulse_empty),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(
+                            stringResource(R.string.pulse_empty_detail),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        TextButton(onClick = viewModel::refresh) {
+                            Text(stringResource(R.string.pulse_refresh))
+                        }
+                    }
                 }
             }
-            item("orbit/end") { Spacer(Modifier.height(32.dp)) }
         }
         Indicator(
             isRefreshing = refreshing,
@@ -375,20 +424,80 @@ fun HomeScreen(
 }
 
 @Composable
-private fun OrbitShelf(
+private fun PulseTrackRow(
+    song: Song,
+    active: Boolean,
+    playing: Boolean,
+    onClick: () -> Unit,
+    onMenu: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier
+            .clip(RoundedCornerShape(22.dp))
+            .background(
+                MaterialTheme.colorScheme.surfaceContainerHigh.copy(
+                    alpha = if (active) .85f else .5f
+                )
+            )
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(start = 10.dp, top = 10.dp, bottom = 10.dp, end = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(Modifier.size(54.dp).clip(RoundedCornerShape(14.dp))) {
+            PulseCoverArt(song.thumbnailUrl, Modifier.fillMaxSize())
+            if (active && playing)
+                Icon(
+                    painterResource(R.drawable.pause),
+                    null,
+                    Modifier.align(Alignment.BottomEnd)
+                        .size(22.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                        .padding(3.dp),
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                )
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                song.title,
+                style = MaterialTheme.typography.titleSmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                song.artists.joinToString { it.name },
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        IconButton(onClick = onMenu) {
+            Icon(
+                painterResource(R.drawable.more_vert),
+                stringResource(R.string.pulse_options),
+                Modifier.size(20.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun PulseShelf(
     songs: List<Song>,
     current: String?,
     playing: Boolean,
     play: (Song, List<Song>) -> Unit,
     menu: (Song) -> Unit,
 ) {
-    OrbitShelfLayout { coverWidth ->
+    PulseShelfLayout { coverWidth ->
         LazyRow(
             contentPadding = PaddingValues(horizontal = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             items(songs, key = { it.id }) { song ->
-                OrbitCover(
+                PulseCover(
                     coverWidth,
                     song.title,
                     song.artists.joinToString { it.name },
@@ -405,7 +514,7 @@ private fun OrbitShelf(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun OrbitCover(
+private fun PulseCover(
     coverWidth: androidx.compose.ui.unit.Dp,
     title: String,
     subtitle: String,
@@ -417,11 +526,22 @@ private fun OrbitCover(
     circular: Boolean = false,
 ) {
     Column(
-        Modifier.width(coverWidth).combinedClickable(onClick = onClick, onLongClick = onMenu),
+        Modifier.width(coverWidth)
+            .combinedClickable(
+                role = Role.Button,
+                onClick = onClick,
+                onLongClick = onMenu,
+                onLongClickLabel = stringResource(R.string.pulse_options),
+            ),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Box {
-            NovaArtwork(artwork, Modifier.fillMaxWidth().aspectRatio(1f), circular)
+            PulseCoverArt(
+                artwork,
+                Modifier.fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(if (circular) CircleShape else RoundedCornerShape(22.dp)),
+            )
             if (busy)
                 CircularProgressIndicator(
                     Modifier.align(Alignment.Center).size(28.dp),
@@ -460,11 +580,11 @@ private fun OrbitCover(
 }
 
 @Composable
-private fun OrbitCatalog(section: HomePage.Section, nav: NavController) {
+private fun PulseCatalog(section: HomePage.Section, nav: NavController) {
     val player = LocalPlayerConnection.current
     val menus = LocalMenuState.current
     val scope = rememberCoroutineScope()
-    OrbitShelfLayout { coverWidth ->
+    PulseShelfLayout { coverWidth ->
         LazyRow(
             contentPadding = PaddingValues(horizontal = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -473,7 +593,7 @@ private fun OrbitCatalog(section: HomePage.Section, nav: NavController) {
                 section.items.distinctBy { it.javaClass.simpleName + it.id },
                 key = { it.javaClass.simpleName + ":" + it.id },
             ) { item ->
-                OrbitCover(
+                PulseCover(
                     coverWidth,
                     item.title,
                     when (item) {
