@@ -1,6 +1,8 @@
 package com.arturo254.opentune.sources.playback
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.media3.common.Player
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
@@ -36,6 +38,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Playback migration boundary shared by Search and Home.
@@ -227,31 +230,45 @@ constructor(
     private suspend fun awaitPlaybackStart(
         connection: PlayerConnection,
         mediaId: String,
-    ): Boolean = withTimeoutOrNull(PLAYBACK_START_TIMEOUT_MS) {
-        suspendCancellableCoroutine { continuation ->
-            val player = connection.player
-            val listener = object : Player.Listener {
-                fun inspect(player: Player) {
-                    if (player.currentMediaItem?.mediaId != mediaId) return
-                    val success = when {
-                        player.isPlaying -> true
-                        player.playerError != null -> false
-                        player.playbackState == Player.STATE_ENDED -> false
-                        else -> return
+    ): Boolean = withContext(Dispatchers.Main.immediate) {
+        withTimeoutOrNull(PLAYBACK_START_TIMEOUT_MS) {
+            suspendCancellableCoroutine { continuation ->
+                val player = connection.player
+                val applicationLooper = player.applicationLooper
+                val handler = Handler(applicationLooper)
+                val removed = AtomicBoolean(false)
+                val listener = object : Player.Listener {
+                    fun inspect(player: Player) {
+                        if (player.currentMediaItem?.mediaId != mediaId) return
+                        val success = when {
+                            player.isPlaying -> true
+                            player.playerError != null -> false
+                            player.playbackState == Player.STATE_ENDED -> false
+                            else -> return
+                        }
+                        if (removed.compareAndSet(false, true)) player.removeListener(this)
+                        if (continuation.isActive) continuation.resume(success)
                     }
-                    player.removeListener(this)
-                    if (continuation.isActive) continuation.resume(success)
-                }
 
-                override fun onEvents(player: Player, events: Player.Events) {
-                    inspect(player)
+                    override fun onEvents(player: Player, events: Player.Events) {
+                        inspect(player)
+                    }
                 }
+                player.addListener(listener)
+                continuation.invokeOnCancellation {
+                    val cleanup = Runnable {
+                        if (removed.compareAndSet(false, true)) player.removeListener(listener)
+                    }
+                    if (Looper.myLooper() == applicationLooper) {
+                        cleanup.run()
+                    } else {
+                        handler.post(cleanup)
+                    }
+                }
+                listener.inspect(player)
             }
-            player.addListener(listener)
-            continuation.invokeOnCancellation { player.removeListener(listener) }
-            listener.inspect(player)
-        }
-    } ?: false
+        } ?: false
+    }
 
     private companion object {
         const val PLAYBACK_START_TIMEOUT_MS = 16_000L
