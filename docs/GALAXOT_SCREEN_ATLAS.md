@@ -118,12 +118,14 @@ El catálogo contiene **los 98 archivos Kotlin de `ui/screens/`**, tanto pantall
 | `playlist/SpotifyPlaylistScreen.kt` | Spotify Playlist Screen | `spotify_playlist/{playlistId}` |
 | `playlist/TopPlaylistScreen.kt` | Top Playlist Screen | `top_playlist/{top}` |
 
-## Búsqueda (4)
+## Búsqueda (6)
 
 | Archivo relativo | Qué controla | Ruta en la app |
 | --- | --- | --- |
 | `search/GalaxQualitySelectionHeader.kt` | Cabecera del selector de calidad | `—` |
 | `search/GalaxSearchExperience.kt` | Búsqueda en pestaña principal | `search (pestaña)` |
+| `search/SearchResultCategories.kt` | Categorías, agrupación de artistas y álbumes | `search/{query}` |
+| `search/VersionDisplayOptions.kt` | Opciones únicas por grabación y calidad real | `diálogo interno` |
 | `search/UniversalSearchScreen.kt` | Resultados universales multiproveedor | `search/{query}` |
 | `search/UniversalVersionQualityDialog.kt` | Diálogo de versiones y calidad | `diálogo interno` |
 
