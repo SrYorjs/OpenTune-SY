@@ -89,6 +89,9 @@ object NewPipeUtils {
         NewPipe.init(NewPipeDownloaderImpl(YouTube.proxy))
     }
 
+    /** Initializes the existing shared NewPipe downloader without fetching a stream. */
+    fun ensureInitialized() = Unit
+
     fun getSignatureTimestamp(videoId: String): Result<Int> = runCatching {
         YoutubeJavaScriptPlayerManager.getSignatureTimestamp(videoId)
     }
