@@ -218,7 +218,11 @@ internal fun NavidromeSong.toVariant(coverUrl: String?): SourceVariant {
             mimeType = mime,
             codec = extension.takeIf(String::isNotBlank)?.uppercase(),
             bitrateBitsPerSecond = bitrate?.takeIf { it > 0 }?.times(1_000),
-            lossless = extension in setOf("flac", "wav", "alac", "aiff"),
+            lossless = when (extension) {
+                "flac", "wav", "alac", "aiff" -> true
+                "mp3", "ogg", "opus", "aac" -> false
+                else -> null
+            },
         ),
         downloadable = true,
     )
