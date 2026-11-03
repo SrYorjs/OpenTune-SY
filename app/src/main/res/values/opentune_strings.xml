@@ -495,4 +495,7 @@
     <string name="galax_glass_blur">Blur Glass</string>
     <string name="galax_glass_classic">Classic Liquid Glass</string>
     <string name="galax_glass_disabled">Disabled</string>
+    <string name="playback_age_verification_title">Age verification required</string>
+    <string name="playback_age_verification_reason">YouTube Music requires an eligible signed-in account to verify your age for this song. Sign in through YouTube Music. GalaxOT may still be unable to play this version inside the app.</string>
+    <string name="playback_age_verification_action">Verify in YouTube Music</string>
 </resources>

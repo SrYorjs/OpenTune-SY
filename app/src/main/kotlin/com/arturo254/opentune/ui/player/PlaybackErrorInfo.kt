@@ -13,10 +13,12 @@ package com.arturo254.opentune.ui.player
 import androidx.media3.common.PlaybackException
 import androidx.media3.datasource.HttpDataSource
 import com.arturo254.opentune.ui.player.findCause
+import com.arturo254.opentune.playback.PlaybackGateClassifier
 import com.arturo254.opentune.utils.YTPlayerUtils
 
 internal enum class PlaybackErrorKind {
     LoginRefreshRequired,
+    AgeVerificationRequired,
     ConfirmationRequired,
     NoInternet,
     Timeout,
@@ -36,10 +38,15 @@ internal data class PlaybackErrorInfo(
 internal fun PlaybackException.toPlaybackErrorInfo(currentMediaId: String? = null): PlaybackErrorInfo {
     val httpCode = httpStatusCodeOrNull()
     val invalidPlaybackLoginContextUrl = invalidPlaybackLoginContextUrl()
+    val ageVerificationUrl =
+        findCause<YTPlayerUtils.LoginRequiredForPlaybackException>()
+            ?.takeIf { PlaybackGateClassifier.requiresAgeVerification(it.message) }
+            ?.targetUrl
     val loginRecoveryUrl = invalidPlaybackLoginContextUrl ?: loginRecoveryUrl(currentMediaId)
     val kind =
         when {
             invalidPlaybackLoginContextUrl != null -> PlaybackErrorKind.LoginRefreshRequired
+            ageVerificationUrl != null -> PlaybackErrorKind.AgeVerificationRequired
             loginRecoveryUrl != null -> PlaybackErrorKind.ConfirmationRequired
             errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED -> PlaybackErrorKind.NoInternet
             errorCode == PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT -> PlaybackErrorKind.Timeout

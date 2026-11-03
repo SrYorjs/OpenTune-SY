@@ -485,4 +485,7 @@
     <string name="galax_glass_blur">Vidrio difuminado</string>
     <string name="galax_glass_classic">Liquid Glass clásico</string>
     <string name="galax_glass_disabled">Desactivado</string>
+    <string name="playback_age_verification_title">Se requiere verificar tu edad</string>
+    <string name="playback_age_verification_reason">YouTube Music requiere una cuenta que cumpla los requisitos de edad. Inicia sesión y verifica tu edad directamente en YouTube Music. Es posible que esta versión siga sin poder reproducirse dentro de GalaxOT.</string>
+    <string name="playback_age_verification_action">Verificar en YouTube Music</string>
 </resources>

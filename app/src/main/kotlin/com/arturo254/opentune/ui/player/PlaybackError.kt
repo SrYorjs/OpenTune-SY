@@ -60,18 +60,25 @@ fun PlaybackError(
     val fallbackMalformedStream = stringResource(R.string.error_malformed_stream)
     val copyText = stringResource(R.string.copy)
     val copiedText = stringResource(R.string.copied)
-    val openYouTubeMusicText = stringResource(R.string.open_youtube_music)
     val errorInfo = remember(error, mediaId) { error.toPlaybackErrorInfo(mediaId) }
+    val openYouTubeMusicText =
+        if (errorInfo.kind == PlaybackErrorKind.AgeVerificationRequired) {
+            stringResource(R.string.playback_age_verification_action)
+        } else {
+            stringResource(R.string.open_youtube_music)
+        }
     val httpCode = errorInfo.httpCode
     val title =
         when (errorInfo.kind) {
             PlaybackErrorKind.LoginRefreshRequired -> stringResource(R.string.playback_login_refresh_required)
+            PlaybackErrorKind.AgeVerificationRequired -> stringResource(R.string.playback_age_verification_title)
             PlaybackErrorKind.ConfirmationRequired -> stringResource(R.string.playback_confirmation_required)
             else -> fallbackUnknown
         }
     val reason =
         when (errorInfo.kind) {
             PlaybackErrorKind.LoginRefreshRequired -> stringResource(R.string.playback_requires_youtube_music_login_refresh)
+            PlaybackErrorKind.AgeVerificationRequired -> stringResource(R.string.playback_age_verification_reason)
             PlaybackErrorKind.ConfirmationRequired -> stringResource(R.string.playback_requires_youtube_music_confirmation)
             PlaybackErrorKind.NoInternet -> fallbackNoInternet
             PlaybackErrorKind.Timeout -> fallbackTimeout
@@ -175,8 +182,12 @@ fun PlaybackError(
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             }
 
-                        runCatching { context.startActivity(loginIntent) }
-                            .recoverCatching { context.startActivity(fallbackIntent) }
+                        if (errorInfo.kind == PlaybackErrorKind.AgeVerificationRequired) {
+                            runCatching { context.startActivity(fallbackIntent) }
+                        } else {
+                            runCatching { context.startActivity(loginIntent) }
+                                .recoverCatching { context.startActivity(fallbackIntent) }
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors =

@@ -198,10 +198,12 @@ internal class StreamResolver(
                     }.getOrElse { throwable ->
                         when (throwable) {
                             is YTPlayerUtils.LoginRequiredForPlaybackException -> {
-                                promptLoginRecovery(
-                                    mediaId,
-                                    throwable.targetUrl,
-                                )
+                                if (!PlaybackGateClassifier.requiresAgeVerification(throwable.message)) {
+                                    promptLoginRecovery(
+                                        mediaId,
+                                        throwable.targetUrl,
+                                    )
+                                }
                                 throw PlaybackException(
                                     context.getString(
                                         R.string.playback_requires_youtube_music_confirmation,
