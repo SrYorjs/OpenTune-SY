@@ -7,7 +7,6 @@ import android.util.Base64
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.net.URI
 import java.security.KeyStore
-import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -109,7 +108,8 @@ class NavidromeAccountStore @Inject constructor(
 }
 
 internal fun validateNavidromeUrl(url: String): String {
-    val parsed = URI(url.trim())
+    val parsed = runCatching { URI(url.trim()) }
+        .getOrElse { throw IllegalArgumentException("Introduce una dirección HTTPS válida") }
     require(parsed.scheme.equals("https", ignoreCase = true) &&
         !parsed.host.isNullOrBlank() && parsed.userInfo == null &&
         parsed.query == null && parsed.fragment == null) {
