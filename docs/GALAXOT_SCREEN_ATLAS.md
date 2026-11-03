@@ -129,7 +129,7 @@ El catálogo contiene **los 98 archivos Kotlin de `ui/screens/`**, tanto pantall
 | `search/UniversalSearchScreen.kt` | Resultados universales multiproveedor | `search/{query}` |
 | `search/UniversalVersionQualityDialog.kt` | Diálogo de versiones y calidad | `diálogo interno` |
 
-## Ajustes, apariencia y pantallas secundarias (39)
+## Ajustes, apariencia y pantallas secundarias (40)
 
 | Archivo relativo | Qué controla | Ruta en la app |
 | --- | --- | --- |
@@ -143,6 +143,7 @@ El catálogo contiene **los 98 archivos Kotlin de `ui/screens/`**, tanto pantall
 | `settings/ContentSettings.kt` | Idioma, contenido, proveedores | `settings/content` |
 | `settings/CustomizeBackground.kt` | Customize Background | `customize_background` |
 | `settings/DebugSettings.kt` | Debug Settings | `settings/misc` |
+| `settings/MediaBackendDiagnosticsPanel.kt` | Comparación experimental de Piped, InnerTube y NewPipe | `settings/misc` |
 | `settings/DiscordExperimental.kt` | Discord Experimental | `settings/discord/experimental` |
 | `settings/DiscordLoginScreen.kt` | Discord Login Screen | `settings/discord/login` |
 | `settings/DiscordPresenceManager.kt` | Gestión de estado Discord (no pantalla) | `—` |
