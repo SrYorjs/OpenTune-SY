@@ -6,6 +6,9 @@ import com.arturo254.opentune.sources.audius.AudiusMusicSource
 import com.arturo254.opentune.sources.deezer.DeezerCatalogGateway
 import com.arturo254.opentune.sources.deezer.DeezerMusicSource
 import com.arturo254.opentune.sources.deezer.DefaultDeezerCatalogGateway
+import com.arturo254.opentune.sources.navidrome.NavidromeGateway
+import com.arturo254.opentune.sources.navidrome.NavidromeHttpGateway
+import com.arturo254.opentune.sources.navidrome.NavidromeMusicSource
 import com.arturo254.opentune.sources.local.LocalMusicSource
 import com.arturo254.opentune.sources.offline.OfflineMusicSource
 import com.arturo254.opentune.sources.spotify.DefaultSpotifyCatalogGateway
@@ -86,5 +89,12 @@ abstract class MusicSourceModule {
 
     @Binds
     abstract fun bindAudiusCatalogGateway(client: AudiusHttpGateway): AudiusCatalogGateway
+
+    @Binds
+    @IntoSet
+    abstract fun bindNavidromeMusicSource(source: NavidromeMusicSource): MusicSource
+
+    @Binds
+    abstract fun bindNavidromeGateway(gateway: NavidromeHttpGateway): NavidromeGateway
 
 }
