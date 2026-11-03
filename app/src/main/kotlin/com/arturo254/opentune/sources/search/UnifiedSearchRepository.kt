@@ -410,7 +410,6 @@ data class UnifiedSearchRequest(
     val preferredProviderOrder: List<ProviderId> =
         listOf(
             ProviderId.LOCAL,
-            ProviderId.NAVIDROME,
             ProviderId.AUDIUS,
             ProviderId.YOUTUBE_MUSIC,
         ),

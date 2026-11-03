@@ -183,9 +183,8 @@ class SearchResultsQueue(
             .sortedBy { variant ->
                 when (variant.provider) {
                     ProviderId.LOCAL, ProviderId.OPEN_TUNE_OFFLINE -> 0
-                    ProviderId.NAVIDROME -> 1
-                    ProviderId.AUDIUS -> 2
-                    ProviderId.YOUTUBE_MUSIC -> 3
+                    ProviderId.AUDIUS -> 1
+                    ProviderId.YOUTUBE_MUSIC -> 2
                     else -> 3
                 }
             }

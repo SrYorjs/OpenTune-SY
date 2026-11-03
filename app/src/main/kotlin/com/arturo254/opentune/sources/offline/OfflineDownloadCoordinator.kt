@@ -58,11 +58,9 @@ constructor(
             val youtubeVariant =
                 candidates.firstOrNull { it.provider == ProviderId.YOUTUBE_MUSIC }
             if (directVariant == null && youtubeVariant == null &&
-                candidates.all {
-                    it.provider == ProviderId.AUDIUS || it.provider == ProviderId.NAVIDROME
-                }
+                candidates.all { it.provider == ProviderId.AUDIUS }
             ) {
-                error("Esta canción no permite descarga sin conexión")
+                error("Esta canción de Audius no permite descarga sin conexión")
             }
             val discoveryVariant =
                 directVariant
