@@ -12,24 +12,11 @@ import org.junit.Test
 
 class SearchResultCategoriesTest {
     @Test
-    fun categoriesHaveFiveDistinctSearchDestinations() {
+    fun categoriesContainOnlySongsPlaylistsAndAlbums() {
         assertEquals(
-            listOf("Todo", "Canciones", "Artistas", "Listas", "Álbumes"),
+            listOf("Todo", "Canciones", "Listas", "Álbumes"),
             SearchResultCategory.entries.map { it.title },
         )
-    }
-
-    @Test
-    fun artistsAreGroupedCaseInsensitivelyWithoutDuplicatingSongs() {
-        val first = song("Azul", "Zoé", album = "Aztlán")
-        val second = song("Labios Rotos", "ZOÉ", album = "MTV Unplugged")
-        val another = song("Azul", "J Balvin")
-        val groups = groupSearchArtists(listOf(first, first, second, another))
-
-        assertEquals(2, groups.size)
-        assertEquals("Zoé", groups.first().name)
-        assertEquals(2, groups.first().tracks.size)
-        assertEquals(1, groups.last().tracks.size)
     }
 
     @Test
@@ -54,6 +41,8 @@ class SearchResultCategoriesTest {
         assertTrue(screen.contains("SignalCategories(category)"))
         assertTrue(screen.contains("UniversalVersionQualityDialog("))
         assertTrue(screen.contains("playSearchResults("))
+        assertFalse(screen.contains("signal/featured/artists"))
+        assertFalse(screen.contains("SearchResultCategory.ARTISTS"))
         assertTrue(screen.contains("MaterialTheme.typography.displaySmall"))
         assertFalse(screen.contains("SignalQuality("))
         assertFalse(screen.contains("TODOS LOS CATÁLOGOS"))

@@ -6,16 +6,9 @@ import java.util.Locale
 internal enum class SearchResultCategory(val title: String) {
     ALL("Todo"),
     SONGS("Canciones"),
-    ARTISTS("Artistas"),
     PLAYLISTS("Listas"),
     ALBUMS("Álbumes"),
 }
-
-internal data class SearchArtistGroup(
-    val name: String,
-    val artworkUrl: String?,
-    val tracks: List<UnifiedTrackSearchResult>,
-)
 
 internal data class SearchAlbumGroup(
     val title: String,
@@ -28,30 +21,6 @@ internal data class SearchAlbumGroup(
 
 internal fun searchCategoryKey(text: String): String =
     text.trim().lowercase(Locale.ROOT).replace(Regex("\\s+"), " ")
-
-internal fun groupSearchArtists(tracks: List<UnifiedTrackSearchResult>): List<SearchArtistGroup> {
-    val grouped = linkedMapOf<String, MutableList<UnifiedTrackSearchResult>>()
-    val names = linkedMapOf<String, String>()
-    for (track in tracks) {
-        for (artist in track.identity.artists) {
-            val name = artist.name.trim()
-            val key = searchCategoryKey(name)
-            if (key.isBlank()) continue
-            names.putIfAbsent(key, name)
-            grouped.getOrPut(key) { mutableListOf() }.add(track)
-        }
-    }
-    return grouped.map { (key, songs) ->
-        SearchArtistGroup(
-            name = names.getValue(key),
-            artworkUrl = songs.firstNotNullOfOrNull { song ->
-                song.recommendedVariant?.artworkUrl
-                    ?: song.variants.firstNotNullOfOrNull { it.artworkUrl }
-            },
-            tracks = songs.distinct(),
-        )
-    }
-}
 
 internal fun groupSearchAlbums(tracks: List<UnifiedTrackSearchResult>): List<SearchAlbumGroup> {
     val grouped = linkedMapOf<String, MutableList<UnifiedTrackSearchResult>>()

@@ -13,11 +13,11 @@ class AudiusDiscoveryIntegrationTest {
         File(root, "com/arturo254/opentune/$path").readText()
 
     @Test
-    fun searchTabsDisplayRealAudiusArtistsAndPlaylists() {
+    fun searchTabsDisplayAudiusPlaylistsWithoutArtistProfiles() {
         val screen = source("ui/screens/search/UniversalSearchScreen.kt")
-        assertTrue(screen.contains("audiusState.artists"))
         assertTrue(screen.contains("audiusState.playlists"))
-        assertTrue(screen.contains("viewModel.openAudiusArtist(artist)"))
+        assertFalse(screen.contains("viewModel.openAudiusArtist(artist)"))
+        assertFalse(screen.contains("SearchResultCategory.ARTISTS"))
         assertTrue(screen.contains("viewModel.openAudiusPlaylist(playlist)"))
         assertFalse(screen.contains("La búsqueda de listas de Audius estará disponible"))
     }
@@ -29,7 +29,7 @@ class AudiusDiscoveryIntegrationTest {
         assertTrue(screen.contains("selectedCollection.description"))
         assertTrue(screen.contains("viewModel.closeAudiusCollection()"))
         assertTrue(screen.contains("viewModel.playAudiusCollection("))
-        assertTrue(screen.contains("viewModel::loadMoreAudiusTracks"))
+        assertFalse(screen.contains("signal/featured/artists"))
         assertTrue(coordinator.contains("ListQueue(title = queueTitle, items = playable"))
     }
 

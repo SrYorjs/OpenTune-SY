@@ -23,7 +23,6 @@ import com.arturo254.opentune.sources.resolution.UniversalVersionQualityPolicy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -245,18 +244,12 @@ constructor(
             return
         }
         _audiusState.value = AudiusDiscoveryUiState(query = normalized, loading = true)
-        val (artists, playlists) = coroutineScope {
-            val a = async { audiusDiscovery.searchArtists(normalized) }
-            val p = async { audiusDiscovery.searchPlaylists(normalized) }
-            a.await() to p.await()
-        }
+        val playlists = audiusDiscovery.searchPlaylists(normalized)
         if (query.value.trim() != normalized) return
         _audiusState.update {
             it.copy(
-                artists = artists.getOrDefault(emptyList()),
                 playlists = playlists.getOrDefault(emptyList()),
                 loading = false,
-                artistError = artists.exceptionOrNull()?.message,
                 playlistError = playlists.exceptionOrNull()?.message,
             )
         }
