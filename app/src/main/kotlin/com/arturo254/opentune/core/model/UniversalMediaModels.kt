@@ -21,6 +21,7 @@ value class ProviderId(
         val TIDAL = ProviderId("tidal")
         val APPLE_MUSIC = ProviderId("apple_music")
         val AUDIUS = ProviderId("audius")
+        val NAVIDROME = ProviderId("navidrome")
         val OPEN_TUNE_OFFLINE = ProviderId("open_tune_offline")
         val LOCAL = ProviderId("local")
     }
