@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="prism_results_title">Encuentra tu sonido</string>
+    <string name="prism_results_eyebrow">TU ESPACIO PARA DESCUBRIR</string>
+    <string name="prism_results_count">%1$d coincidencias</string>
+    <string name="prism_results_all">Todo</string>
+    <string name="prism_results_songs">Canciones</string>
+    <string name="prism_results_albums">Álbumes</string>
+    <string name="prism_results_playlists">Listas</string>
+    <string name="prism_results_searching">Encontrando tu música…</string>
+    <string name="prism_results_loading">Cargando más música…</string>
+    <string name="prism_results_hint">Empieza con una canción, un artista o un álbum.</string>
+    <string name="prism_results_empty">Tu próxima canción sigue ahí</string>
+    <string name="prism_results_empty_detail">Prueba con menos palabras o con otro artista.</string>
+    <string name="prism_results_error">No pudimos completar la búsqueda</string>
+    <string name="prism_results_error_detail">Comprueba tu conexión y vuelve a intentarlo.</string>
+    <string name="prism_results_retry">Reintentar</string>
+    <string name="prism_results_sources">Disponibilidad de fuentes</string>
+    <string name="prism_results_sources_detail">%1$d fuentes no respondieron. Los resultados disponibles están listos para escuchar.</string>
+    <string name="prism_results_more">Mostrar más</string>
+    <string name="prism_results_collection_empty">Sin canciones disponibles</string>
+    <string name="prism_results_collection_empty_detail">Esta colección no contiene pistas que puedan reproducirse públicamente.</string>
+    <string name="prism_results_collection_error">No se pudo cargar esta colección</string>
+    <string name="prism_results_no_playlists">No encontramos listas</string>
+    <string name="prism_results_no_albums">No encontramos álbumes</string>
+    <string name="prism_results_album_detail">Aquí aparecen los álbumes que proporcionan las fuentes de música disponibles.</string>
+    <string name="prism_results_playlist_detail">Prueba otra búsqueda para descubrir listas públicas de Audius.</string>
+    <string name="prism_results_play_all">Escuchar colección</string>
+    <string name="prism_results_play">Escuchar</string>
+    <string name="prism_results_pause">Pausar</string>
+    <string name="prism_results_download">Descargar %1$s</string>
+    <string name="prism_results_versions">Versiones</string>
+    <string name="prism_results_offline">Guardada sin conexión</string>
+    <string name="prism_results_downloading">Preparando descarga…</string>
+    <string name="prism_results_resolving">Buscando una versión reproducible</string>
+    <string name="prism_results_quality_summary">Grabaciones: %1$d · Fuentes: %2$d</string>
+    <string name="prism_results_quality_auto">Selección automática</string>
+    <string name="prism_results_quality_manual">Tu versión elegida</string>
+    <string name="prism_results_audio_title">Elige cómo escuchar</string>
+</resources>

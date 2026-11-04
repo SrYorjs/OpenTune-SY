@@ -68,15 +68,16 @@ class GalaxAetherAtlasRebuildTest {
     }
 
     @Test
-    fun searchIsNowAnIndependentAtlasNotAnOldDiscoveryWrapper() {
-        val screen = source("ui/screens/GalaxDiscoverExperience.kt")
+    fun searchHasItsOwnCompositionWithoutReusingTheHomeFeature() {
+        val screen = source("ui/screens/PrismDiscoveryScreen.kt")
         val host = source("ui/screens/GalaxMainPages.kt")
         assertTrue(host.contains("GalaxDiscoverScreen("))
-        assertTrue(screen.contains("ObservatoryLens("))
-        assertTrue(screen.contains("ObservatorySpectrum("))
-        assertTrue(screen.contains("ObservatoryDestination("))
-        assertFalse(screen.contains("GalaxDiscoveryHero("))
-        assertFalse(screen.contains("GalaxDiscoveryCategory("))
+        assertTrue(screen.contains("PrismScreenFrame("))
+        assertTrue(screen.contains("PrismGenreTile("))
+        assertTrue(screen.contains("charts_screen"))
+        assertTrue(screen.contains("new_release"))
+        assertFalse(screen.contains("PulseFeature("))
+        assertFalse(screen.contains("ObservatoryLens("))
     }
 
     @Test
@@ -85,7 +86,7 @@ class GalaxAetherAtlasRebuildTest {
             (0 until 150).map { galaxDiscoveryGenreRowKey(it, true) }
         assertEquals(300, keys.distinct().size)
         assertNotEquals(galaxDiscoveryGenreRowKey(5, false), galaxDiscoveryGenreRowKey(5, true))
-        val screen = source("ui/screens/GalaxDiscoverExperience.kt")
+        val screen = source("ui/screens/PrismDiscoveryScreen.kt")
         assertTrue(screen.contains("distinctBy { it.endpoint.browseId +"))
         assertTrue(screen.contains("key = { index, _ -> galaxDiscoveryGenreRowKey("))
     }
@@ -103,13 +104,12 @@ class GalaxAetherAtlasRebuildTest {
     }
 
     @Test
-    fun searchHasNewAudioSpectrumLoadingAndOfflineStates() {
-        val header = source("ui/screens/search/GalaxSearchExperience.kt")
-        val frames = source("ui/screens/search/GalaxAtlasResultsFrame.kt")
-        val card = source("ui/screens/search/GalaxUniversalResultCard.kt")
-        assertTrue(header.contains("SearchFrequencySpectrum("))
-        assertTrue(frames.contains("AtlasResultsSkeleton("))
-        assertTrue(frames.contains("AtlasResultsWarning("))
+    fun searchKeepsLoadingWarningsAndOfflineStatesInItsNewPresentation() {
+        val screen = source("ui/screens/search/UniversalSearchScreen.kt")
+        val card = source("ui/screens/search/PrismResultComponents.kt")
+        assertTrue(screen.contains("PrismResultLoading("))
+        assertTrue(screen.contains("PrismSourceNotice("))
+        assertTrue(screen.contains("PrismRecordingRow("))
         assertTrue(card.contains("downloaded ->"))
         assertTrue(card.contains("downloading ->"))
         assertTrue(card.contains("onClick = onVersions"))
@@ -117,12 +117,11 @@ class GalaxAetherAtlasRebuildTest {
 
     @Test
     fun liquidGlassComesFromExistingEngineWithoutCustomGlassShaders() {
-        val visuals = source("ui/screens/GalaxAetherVisuals.kt")
-        val results = source("ui/screens/search/GalaxUniversalResultCard.kt")
-        assertTrue(visuals.contains("galaxLiquidChrome("))
-        assertTrue(results.contains("galaxLiquidChrome("))
+        val visuals = source("ui/screens/search/PrismSearchDesign.kt")
+        val results = source("ui/screens/search/PrismResultComponents.kt")
+        assertTrue(visuals.contains("galaxLiquidEffect("))
+        assertTrue(visuals.contains("LocalGalaxLiquidBackdrop provides"))
         assertFalse(visuals.contains("RenderEffect.createBlurEffect"))
-        assertFalse(visuals.contains("rememberLayerBackdrop("))
         assertFalse(results.contains("rememberLayerBackdrop("))
     }
 
@@ -151,8 +150,11 @@ class GalaxAetherAtlasRebuildTest {
     @Test
     fun searchBackgroundStillProtectsMiniBarAgainstTransparentNavigation() {
         val search = source("ui/screens/search/UniversalSearchScreen.kt")
+        val frame = source("ui/screens/search/PrismSearchDesign.kt")
         val pages = source("ui/screens/GalaxMainPages.kt")
-        assertTrue(search.contains("if (pureBlack) Color.Black else MaterialTheme.colorScheme.background"))
+        assertTrue(search.contains("PrismScreenFrame("))
+        assertTrue(frame.contains("Color.Black"))
+        assertTrue(frame.contains(".background("))
         assertTrue(pages.contains(".background(MaterialTheme.colorScheme.background)"))
         assertTrue(search.contains("pureBlack = pureBlack"))
     }

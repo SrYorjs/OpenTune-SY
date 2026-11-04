@@ -50,7 +50,11 @@ class GalaxArchiveRebuildTest {
 
     @Test fun searchRootsAreOpaqueAndKeepUniversalPlayback() {
         val screen = read("ui/screens/search/UniversalSearchScreen.kt")
-        assertTrue(screen.contains("if (pureBlack) Color.Black else MaterialTheme.colorScheme.background"))
+        val frame = read("ui/screens/search/PrismSearchDesign.kt")
+        assertTrue(screen.contains("PrismScreenFrame("))
+        assertTrue(screen.contains("pureBlack = pureBlack"))
+        assertTrue(frame.contains("Color.Black"))
+        assertTrue(frame.contains(".background("))
         assertTrue(screen.contains("viewModel.playSearchResults("))
         assertTrue(screen.contains("UniversalVersionQualityDialog("))
         val pages = read("ui/screens/GalaxMainPages.kt")

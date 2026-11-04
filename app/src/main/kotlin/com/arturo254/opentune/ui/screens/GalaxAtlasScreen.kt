@@ -15,5 +15,5 @@ fun GalaxDiscoverScreen(
     home: HomeViewModel = hiltViewModel(),
     ambientActive: Boolean = true,
 ) {
-    NovaDiscoveryExperience(navController, onOpenSearch, genresModel, home, ambientActive)
+    PrismDiscoveryScreen(navController, onOpenSearch, genresModel, home, ambientActive)
 }

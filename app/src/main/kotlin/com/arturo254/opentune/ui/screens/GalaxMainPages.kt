@@ -62,7 +62,8 @@ fun GalaxMainPages(navController: NavController, pager: PagerState, onOpenSearch
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
     ) { page ->
         // Only the settled visible page spends frames on ambient animation.
-        val active = pager.settledPage == page && !pager.isScrollInProgress
+        val active = pager.settledPage == page && !pager.isScrollInProgress &&
+            com.arturo254.opentune.ui.screens.search.LocalPrismSceneActive.current
         when (page) {
             0 -> HomeScreen(navController, ambientActive = active,
                 onOpenSearchTab = onOpenSearch, onOpenLibraryTab = { open(2) })

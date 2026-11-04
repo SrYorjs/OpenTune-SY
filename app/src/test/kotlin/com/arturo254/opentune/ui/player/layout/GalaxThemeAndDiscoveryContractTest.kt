@@ -106,14 +106,16 @@ class GalaxThemeAndDiscoveryContractTest {
     @Test
     fun searchNeverReintroducesProviderSwitching() {
         val search = source("ui/screens/search/UniversalSearchScreen.kt")
-        val experience = source("ui/screens/search/GalaxSearchExperience.kt")
-        assertTrue(search.contains("SignalHeader("))
-        assertTrue(search.contains("SignalCategories("))
+        val experience = source("ui/screens/search/UniversalVersionQualityDialog.kt")
+        assertTrue(search.contains("PrismHeading("))
+        assertTrue(search.contains("PrismResultCategories("))
         assertFalse(search.contains("SignalQuality("))
         assertTrue(search.contains("state.result.tracks"))
         assertTrue(search.contains("viewModel.selectVariant"))
         assertTrue(search.contains("viewModel.loadMore()"))
-        assertFalse(experience.contains("ProviderId.SPOTIFY"))
+        val categories = source("ui/screens/search/PrismResultComponents.kt")
+            .substringAfter("fun PrismResultCategories(").substringBefore("@Composable")
+        assertFalse(categories.contains("ProviderId."))
         assertTrue(search.contains("itemsIndexed("))
         assertFalse(search.contains("viewModel.openAudiusArtist(artist)"))
         assertFalse(search.contains("SearchResultCategory.ARTISTS"))
@@ -125,15 +127,15 @@ class GalaxThemeAndDiscoveryContractTest {
 
     @Test
     fun discoveryRetainsGenreNavigationAndSearchLaunch() {
-        val main = source("ui/screens/GalaxDiscoverExperience.kt")
-        val experience = source("ui/screens/GalaxDiscoverExperience.kt")
-        assertTrue(main.contains("ObservatoryLens("))
-        assertTrue(main.contains("ObservatorySpectrum("))
+        val main = source("ui/screens/PrismDiscoveryScreen.kt")
+        val experience = source("ui/screens/search/PrismSearchDesign.kt")
+        assertTrue(main.contains("PrismScreenFrame("))
+        assertTrue(main.contains("PrismGenreTile("))
         assertTrue(main.contains("onClick = onOpenSearch"))
         assertTrue(main.contains("youtube_browse/"))
         assertTrue(main.contains("itemsIndexed("))
         assertTrue(main.contains("galaxDiscoveryGenreRowKey("))
-        assertTrue(experience.contains("fun ObservatorySpectrum("))
+        assertTrue(experience.contains("fun PrismGenreTile("))
     }
 
     @Test

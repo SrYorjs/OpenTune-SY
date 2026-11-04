@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="prism_results_title">Find your sound</string>
+    <string name="prism_results_eyebrow">YOUR DISCOVERY SPACE</string>
+    <string name="prism_results_count">%1$d matches</string>
+    <string name="prism_results_all">All</string>
+    <string name="prism_results_songs">Songs</string>
+    <string name="prism_results_albums">Albums</string>
+    <string name="prism_results_playlists">Playlists</string>
+    <string name="prism_results_searching">Finding your music…</string>
+    <string name="prism_results_loading">Loading more music…</string>
+    <string name="prism_results_hint">Start with a song, an artist or an album.</string>
+    <string name="prism_results_empty">A different search could be the one</string>
+    <string name="prism_results_empty_detail">Try fewer words or another artist.</string>
+    <string name="prism_results_error">The search could not finish</string>
+    <string name="prism_results_error_detail">Check your connection and try again.</string>
+    <string name="prism_results_retry">Try again</string>
+    <string name="prism_results_sources">Source availability</string>
+    <string name="prism_results_sources_detail">%1$d sources did not respond. Available results are ready to play.</string>
+    <string name="prism_results_more">Show more</string>
+    <string name="prism_results_collection_empty">No tracks available</string>
+    <string name="prism_results_collection_empty_detail">This collection does not contain publicly playable tracks.</string>
+    <string name="prism_results_collection_error">This collection could not load</string>
+    <string name="prism_results_no_playlists">No playlists yet</string>
+    <string name="prism_results_no_albums">No albums yet</string>
+    <string name="prism_results_album_detail">Albums supplied by the available music sources appear here.</string>
+    <string name="prism_results_playlist_detail">Try another search to discover public Audius playlists.</string>
+    <string name="prism_results_play_all">Play collection</string>
+    <string name="prism_results_play">Play</string>
+    <string name="prism_results_pause">Pause</string>
+    <string name="prism_results_download">Download %1$s</string>
+    <string name="prism_results_versions">Versions</string>
+    <string name="prism_results_offline">Saved offline</string>
+    <string name="prism_results_downloading">Preparing download…</string>
+    <string name="prism_results_resolving">Finding a playable version</string>
+    <string name="prism_results_quality_summary">Recordings: %1$d · Sources: %2$d</string>
+    <string name="prism_results_quality_auto">Automatic selection</string>
+    <string name="prism_results_quality_manual">Your selected version</string>
+    <string name="prism_results_audio_title">Choose your sound</string>
+</resources>

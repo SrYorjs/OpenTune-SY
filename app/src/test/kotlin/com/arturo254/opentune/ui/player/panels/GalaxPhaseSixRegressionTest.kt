@@ -69,16 +69,16 @@ class GalaxPhaseSixRegressionTest {
     @Test
     fun universalQualityDialogRetainsMultisourceSelection() {
         val picker = source("ui/screens/search/UniversalVersionQualityDialog.kt")
-        val header = source("ui/screens/search/GalaxQualitySelectionHeader.kt")
-        assertTrue(picker.contains("GalaxQualitySelectionHeader("))
-        assertTrue(picker.contains("recordings.flatMap { it.variants }"))
+        assertTrue(picker.contains("Dialog("))
+        assertTrue(picker.contains("LazyColumn("))
+        assertTrue(Regex("recordings\\s*\\.flatMap \\{ it\\.variants }").containsMatchIn(picker))
         assertTrue(picker.contains("onQualityModeChange(mode)"))
         assertTrue(picker.contains("onSelectVariant(recording.recording, variant)"))
         assertTrue(picker.contains("onClearManual"))
         assertTrue(picker.contains("AudioSelectionMode.BEST_QUALITY"))
         assertTrue(picker.contains("AudioSelectionMode.DATA_SAVER"))
-        assertTrue(header.contains("galax_quality_versions"))
-        assertFalse(header.contains("LOSSLESS GUARANTEED"))
+        assertTrue(picker.contains("prism_results_quality_summary"))
+        assertFalse(picker.contains("LOSSLESS GUARANTEED"))
     }
 
     @Test

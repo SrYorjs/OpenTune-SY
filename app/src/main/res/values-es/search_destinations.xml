@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="prism_dest_explore">EXPLORAR</string>
+    <string name="prism_dest_genres_detail">Un sonido diferente para cada momento de tu día.</string>
+    <string name="prism_dest_collection_detail">Sigue un sonido. Encuentra algo inesperado.</string>
+    <string name="prism_dest_chart_detail">Las canciones que mueven al mundo, en un solo lugar.</string>
+    <string name="prism_dest_release_detail">Álbumes, sencillos y EPs recién llegados.</string>
+    <string name="prism_dest_unavailable">No pudimos cargar esta colección</string>
+    <string name="prism_dest_retry_detail">Revisa tu conexión y vuelve a intentarlo.</string>
+    <string name="prism_dest_empty_releases">Aquí aparecerán los nuevos lanzamientos</string>
+    <string name="prism_dest_all_releases">Todos</string>
+    <string name="prism_dest_eps">EPs</string>
+    <string name="prism_dest_count">%1$d lanzamientos</string>
+    <string name="prism_dest_catalogue">COLECCIÓN</string>
+    <string name="prism_dest_no_category">Aún no hay lanzamientos en esta categoría</string>
+</resources>

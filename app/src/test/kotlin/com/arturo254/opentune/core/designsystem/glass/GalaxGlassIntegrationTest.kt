@@ -35,14 +35,16 @@ class GalaxGlassIntegrationTest {
         assertFalse(shell.contains("LocalLiquidBackdrop provides liveLiquidBackdrop"))
     }
 
-    @Test fun searchResultsCaptureForegroundWithoutChangingGlassOptics() {
+    @Test fun searchControlsSampleTheirBackgroundSiblingAndNotTheirOwnViewport() {
         val scaffold = source("MainActivityScaffold.kt")
         val search = source("MainActivityChrome.kt")
         assertTrue(scaffold.contains("searchOverlayCapturesGlass = navigationState.active"))
         assertTrue(scaffold.contains("liveLiquidBackdrop != null && !searchOverlayCapturesGlass"))
-        assertTrue(scaffold.contains("searchBackdropModifier ="))
+        val portal = source("ui/screens/search/PrismSearchBar.kt")
+        assertTrue(portal.contains("PrismAtmosphere(true, pureBlack, Modifier.matchParentSize().layerBackdrop(backdrop))"))
         assertTrue(scaffold.contains("Modifier.layerBackdrop(liveLiquidBackdrop)"))
-        assertTrue(search.contains(".then(searchBackdropModifier)"))
+        assertTrue(portal.contains("LocalPrismBackdrop provides (if (active) backdrop else null)"))
+        assertFalse(search.contains(".then(searchBackdropModifier)"))
         assertTrue(search.contains("UniversalSearchScreen("))
         assertTrue(source("ui/component/FloatingNavigationToolbar.kt").contains(".galaxGlassEffect("))
     }

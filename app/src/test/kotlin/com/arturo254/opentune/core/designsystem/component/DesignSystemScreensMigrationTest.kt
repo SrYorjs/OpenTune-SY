@@ -21,8 +21,8 @@ class DesignSystemScreensMigrationTest {
     @Test
     fun searchUsesCanonicalLoadingAndEmptyStatesWithoutChangingPaging() {
         val s = source("ui/screens/search/UniversalSearchScreen.kt")
-        assertTrue(s.contains("NovaLoading("))
-        assertTrue(s.contains("NovaMessage("))
+        assertTrue(s.contains("PrismResultLoading("))
+        assertTrue(s.contains("PrismStatus("))
         assertTrue(s.contains("viewModel.loadMore()"))
         assertTrue(s.contains("UniversalVersionQualityDialog("))
     }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="prism_dest_explore">EXPLORE</string>
+    <string name="prism_dest_genres_detail">A different sound for every part of your day.</string>
+    <string name="prism_dest_collection_detail">Follow a sound. Find something unexpected.</string>
+    <string name="prism_dest_chart_detail">The tracks moving the world, in one place.</string>
+    <string name="prism_dest_release_detail">Fresh albums, singles and EPs to discover.</string>
+    <string name="prism_dest_unavailable">We could not load this collection</string>
+    <string name="prism_dest_retry_detail">Check your connection and try again.</string>
+    <string name="prism_dest_empty_releases">New releases will appear here</string>
+    <string name="prism_dest_all_releases">All releases</string>
+    <string name="prism_dest_eps">EPs</string>
+    <string name="prism_dest_count">%1$d releases</string>
+    <string name="prism_dest_catalogue">COLLECTION</string>
+    <string name="prism_dest_no_category">No releases in this category yet</string>
+</resources>

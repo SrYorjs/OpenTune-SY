@@ -316,7 +316,6 @@ internal fun MainActivityScaffold(
     playerUiState: MainActivityPlayerUiState,
     useRail: Boolean,
     bottomInset: Dp,
-    searchBarAlignmentModifier: Modifier,
 ) {
     val (liquidGlassNavBar) = rememberPreference(LiquidGlassNavBarKey, defaultValue = false)
     val (storedGalaxGlassMode) = rememberPreference(GalaxGlassModeKey, defaultValue = "")
@@ -452,14 +451,7 @@ internal fun MainActivityScaffold(
                                         )
                                         MainActivitySearchBar(
                                             pureBlack = pureBlack,
-                                            database = database,
                                             navigationState = navigationState,
-                                            playerUiState = playerUiState,
-                                            searchBarAlignmentModifier = searchBarAlignmentModifier,
-                                            searchBackdropModifier =
-                                                if (searchOverlayCapturesGlass && liveLiquidBackdrop != null)
-                                                    Modifier.layerBackdrop(liveLiquidBackdrop)
-                                                else Modifier,
                                         )
                                     },
                                     bottomBar = {
@@ -476,6 +468,7 @@ internal fun MainActivityScaffold(
                                 ) {
                                     CompositionLocalProvider(
                                         LocalGalaxLiquidBackdrop provides null,
+                                        com.arturo254.opentune.ui.screens.search.LocalPrismSceneActive provides !active,
                                     ) {
                                     com.arturo254.opentune.core.designsystem.theme.GalaxDestinationTheme {
                                     NavHost(

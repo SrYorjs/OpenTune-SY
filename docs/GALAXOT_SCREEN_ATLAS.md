@@ -2,14 +2,14 @@
 
 Rama: `opentune-rebuild-v1` · Inventario verificado: 3 de noviembre de 2026.
 
-El catálogo contiene **los 114 archivos Kotlin de `ui/screens/`**, tanto pantallas navegables como subcomponentes. Un guion significa que el archivo no tiene una ruta propia en `NavigationBuilder.kt`; puede ser visible a través de una pantalla principal. No todos los `Screen.kt` son entradas independientes.
+El catálogo contiene **los 112 archivos Kotlin de `ui/screens/`**, tanto pantallas navegables como subcomponentes. Un guion significa que el archivo no tiene una ruta propia en `NavigationBuilder.kt`; puede ser visible a través de una pantalla principal. No todos los `Screen.kt` son entradas independientes.
 
 ## Encuentra rápidamente la pantalla que quieres editar
 
 | Interfaz | Archivo principal |
 | --- | --- |
 | Inicio | `ui/screens/HomeScreen.kt`, `ui/screens/PulseHomeDesign.kt`, `ui/screens/GalaxMainPages.kt` |
-| Buscar | `ui/screens/GalaxMainPages.kt`, `ui/screens/search/GalaxSearchExperience.kt`, `ui/screens/search/UniversalSearchScreen.kt` |
+| Buscar | `ui/screens/PrismDiscoveryScreen.kt`, `ui/screens/search/PrismSearchDesign.kt`, `ui/screens/search/UniversalSearchScreen.kt` |
 | Biblioteca | `ui/screens/library/LibraryScreen.kt`, `ui/screens/library/GalaxArchiveDesign.kt` |
 | Ajustes | `ui/screens/settings/SettingsScreen.kt`, `ui/screens/settings/SettingsLayout.kt` |
 | Apariencia | `ui/screens/settings/AppearanceSettings.kt` |
@@ -28,29 +28,25 @@ El catálogo contiene **los 114 archivos Kotlin de `ui/screens/`**, tanto pantal
 | `AccountScreen.kt` | Account Screen | `account` |
 | `AlbumScreen.kt` | Album Screen | `album/{albumId}` |
 | `AlwaysOnDisplayScreen.kt` | Always On Display Screen | `always_on_display` |
-| `BrowseScreen.kt` | Browse Screen | `browse/{browseId}` |
-| `ChartsScreen.kt` | Charts Screen | `charts_screen` |
+| `BrowseScreen.kt` | Colecciones remotas Prism, distribución adaptable y acciones musicales | `browse/{browseId}` |
+| `ChartsScreen.kt` | Tendencias Prism, posiciones y continuación del catálogo | `charts_screen` |
 | `DownloadQueueScreen.kt` | Download Queue Screen | `download_queue` |
 | `ExploreScreen.kt` | Exploración alternativa/auxiliar | `—` |
-| `GalaxDiscoverExperience.kt` | Descubrimiento galáctico | `—` |
+| `PrismDiscoveryScreen.kt` | Buscar Prism: exploración, mosaicos de géneros y accesos a tendencias y novedades | `search` |
 | `GalaxFeaturedTrack.kt` | Canción destacada | `—` |
 | `GalaxHomeActions.kt` | Acciones de Inicio | `—` |
 | `GalaxHomeCatalogControl.kt` | Expansión de catálogos | `—` |
 | `GalaxHomeExperience.kt` | Mosaicos destacados de Inicio | `—` |
 | `GalaxHomeZones.kt` | Secciones editoriales de Inicio | `—` |
 | `GalaxListeningDeck.kt` | Panel de escucha | `—` |
-| `GalaxDiscoverEditorial.kt` | Nuevo diseño inmersivo de descubrimiento | `search` |
 | `GalaxEditorialAtmosphere.kt` | Capas estelares y materiales compartidos | `—` |
 | `GalaxHomeEditorial.kt` | Nueva composición editorial de Inicio | `home` |
 | `library/GalaxArchiveDesign.kt` | Nueva biblioteca: portada, tarjetas y listas | `library` |
-| `search/GalaxUniversalResultCard.kt` | Nueva tarjeta de resultados multiproveedor | `search/{query}` |
 | `GalaxAetherHome.kt` | Portadas, disco y filas de Inicio | `home` |
 | `GalaxAetherVisuals.kt` | Estrellas, ondas, cristal y movimiento | `home` |
-| `GalaxAtlasDiscovery.kt` | Componentes propios del atlas musical | `search` |
-| `GalaxAtlasScreen.kt` | Nueva pestaña de descubrimiento y géneros | `search` |
+| `GalaxAtlasScreen.kt` | Entrada estable de la pestaña Buscar; delega en Prism | `search` |
 | `GalaxAetherCatalog.kt` | Nuevas colecciones editoriales con navegación y menús de YouTube Music | `home` |
 | `GalaxCollectionTileCompat.kt` | API conservada para pantallas secundarias de la colección | `—` |
-| `search/GalaxAtlasResultsFrame.kt` | Carga, avisos y métricas visuales de resultados | `search/{query}` |
 | `GalaxMainPages.kt` | Contenedor de tres pestañas | `home · search · library` |
 | `GalaxMediaHeader.kt` | Cabecera de álbum/artista/playlist | `—` |
 | `GalaxRemoteShelf.kt` | Estantes remotos | `—` |
@@ -62,13 +58,13 @@ El catálogo contiene **los 114 archivos Kotlin de `ui/screens/`**, tanto pantal
 | `PulseHomeDesign.kt` | Inicio Pulse: búsqueda en cristal, carátulas protagonistas, jerarquía editorial, partículas discretas y distribución según ancho, alto y tamaño de texto | `home` |
 | `HomeScreenComponents.kt` | Tarjetas comunes de Inicio | `—` |
 | `LoginScreen.kt` | Login Screen | `login?url={url}` |
-| `MoodAndGenresScreen.kt` | Mood And Genres Screen | `mood_and_genres` |
+| `MoodAndGenresScreen.kt` | Catálogo completo de géneros y estados de ánimo en mosaicos adaptables | `mood_and_genres` |
 | `NavigationBuilder.kt` | Registro de rutas | `—` |
-| `NewReleaseScreen.kt` | New Release Screen | `new_release` |
+| `NewReleaseScreen.kt` | Novedades Prism, filtros, álbumes y acciones de reproducción | `new_release` |
 | `Screens.kt` | Declaraciones de pestañas | `—` |
 | `StatsScreen.kt` | Stats Screen | `stats` |
 | `YearInMusicScreen.kt` | Year In Music Screen | `year_in_music` |
-| `YouTubeBrowseScreen.kt` | You Tube Browse Screen | `youtube_browse/{browseId}?params={params}` |
+| `YouTubeBrowseScreen.kt` | Detalle de género Prism con canciones, colecciones y menús | `youtube_browse/{browseId}?params={params}` |
 
 ## Artistas (4)
 
@@ -119,16 +115,20 @@ El catálogo contiene **los 114 archivos Kotlin de `ui/screens/`**, tanto pantal
 | `playlist/SpotifyPlaylistScreen.kt` | Spotify Playlist Screen | `spotify_playlist/{playlistId}` |
 | `playlist/TopPlaylistScreen.kt` | Top Playlist Screen | `top_playlist/{top}` |
 
-## Búsqueda (6)
+## Búsqueda (7)
 
 | Archivo relativo | Qué controla | Ruta en la app |
 | --- | --- | --- |
-| `search/GalaxQualitySelectionHeader.kt` | Cabecera del selector de calidad | `—` |
-| `search/GalaxSearchExperience.kt` | Búsqueda en pestaña principal | `search (pestaña)` |
-| `search/SearchResultCategories.kt` | Categorías, agrupación de artistas y álbumes | `search/{query}` |
+| `search/PrismSearchBar.kt` | Entrada de búsqueda, teclado y fondo continuo de los resultados | `search/{query} · búsqueda superpuesta` |
+| `search/PrismSearchDesign.kt` | Fondo continuo, partículas, cristal y distribución según las restricciones de la ventana | `—` |
+| `search/PrismResultComponents.kt` | Filas de grabaciones, categorías, colecciones, carga y avisos de proveedores | `search/{query} · búsqueda superpuesta` |
+| `search/PrismRemoteItems.kt` | Presentación de elementos remotos con navegación, reproducción y menús | `—` |
+| `search/SearchResultCategories.kt` | Categorías y agrupación de álbumes | `search/{query}` |
 | `search/VersionDisplayOptions.kt` | Opciones únicas por grabación y calidad real | `diálogo interno` |
-| `search/UniversalSearchScreen.kt` | Resultados universales multiproveedor | `search/{query}` |
-| `search/UniversalVersionQualityDialog.kt` | Diálogo de versiones y calidad | `diálogo interno` |
+| `search/UniversalSearchScreen.kt` | Resultados universales Prism, canciones, listas y álbumes con sus vistas de colección | `search/{query} · búsqueda superpuesta` |
+| `search/UniversalVersionQualityDialog.kt` | Selector adaptable de versiones y calidad con desplazamiento | `diálogo interno` |
+
+La sección Buscar utiliza Prism para la exploración, los resultados, las colecciones internas, el selector de versiones y las rutas de géneros, tendencias, novedades y navegación de catálogos. Los detalles generales `album/{albumId}`, `artist/{artistId}` y `online_playlist/{playlistId}` siguen siendo destinos compartidos por Inicio, Buscar y Biblioteca.
 
 ## Ajustes, apariencia y pantallas secundarias (40)
 

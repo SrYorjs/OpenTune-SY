@@ -6,4 +6,4 @@
 - Use the selected Galax liquid variant and tuning. Record only a separate background/artwork layer for refraction; never include consumers in their own backdrop source.
 - Ambient animation must pause when the page is inactive or the lifecycle is not resumed, and honor reduced motion.
 - Preserve real playback, queues, navigation, contextual menus, pagination, loading, and empty states when replacing presentation.
-- For new screens, follow the constraint/inset pattern in `PulseScreenFrame`; validate compact, expanded, short-height, and large-text configurations.
+- For new screens, use the measured layout and content inset pattern in `PulseScreenFrame` (Home) or `PrismScreenFrame` (Search). Validate compact, expanded, short-height, and large-text configurations. An embedded results list starts below the input; a standalone results route reserves the input's space. A dialog owns a separate glass backdrop in its own window.

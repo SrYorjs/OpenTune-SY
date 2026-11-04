@@ -1,51 +1,81 @@
 package com.arturo254.opentune.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.arturo254.opentune.LocalPlayerAwareWindowInsets
 import com.arturo254.opentune.R
-import com.arturo254.opentune.core.designsystem.theme.GalaxScreenHeading
+import com.arturo254.opentune.ui.screens.search.*
 import com.arturo254.opentune.viewmodels.BrowseViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BrowseScreen(navController: NavController, scrollBehavior: TopAppBarScrollBehavior, browseId: String?,
-    viewModel: BrowseViewModel = hiltViewModel()) {
-    val title by viewModel.title.collectAsState()
-    val entries by viewModel.items.collectAsState()
-    val loading by viewModel.isLoading.collectAsState()
-    val failed by viewModel.failed.collectAsState()
-    GalaxScaffold(topBar = { GalaxTopAppBar(title = { Text(title ?: stringResource(R.string.explore)) },
-        scrollBehavior = scrollBehavior, navigationIcon = {
-            IconButton(onClick = { navController.navigateUp() }) {
-                Icon(painterResource(R.drawable.arrow_back), stringResource(R.string.back_button_desc))
+fun BrowseScreen(
+    navController: NavController,
+    scrollBehavior: TopAppBarScrollBehavior,
+    browseId: String?,
+    viewModel: BrowseViewModel = hiltViewModel(),
+) {
+    val title by viewModel.title.collectAsStateWithLifecycle()
+    val catalogue by viewModel.items.collectAsStateWithLifecycle()
+    val loading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val failed by viewModel.failed.collectAsStateWithLifecycle()
+    val entries =
+        remember(catalogue) { catalogue.orEmpty().distinctBy { it.javaClass.simpleName + it.id } }
+    PrismScreenFrame { layout, padding ->
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            contentPadding = padding,
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+        ) {
+            item("heading") {
+                PrismHeading(
+                    title ?: stringResource(R.string.explore),
+                    stringResource(R.string.prism_dest_collection_detail),
+                    eyebrow = stringResource(R.string.prism_dest_catalogue),
+                    onBack = { navController.navigateUp() },
+                )
             }
-        }) }) { padding ->
-        LazyVerticalGrid(columns = GridCells.Adaptive(160.dp), modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp,
-                bottom = LocalPlayerAwareWindowInsets.current.asPaddingValues().calculateBottomPadding()),
-            verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item("intro", span = { GridItemSpan(maxLineSpan) }) {
-                GalaxScreenHeading(title ?: stringResource(R.string.explore), stringResource(R.string.galax_discover_subtitle))
-            }
-            if (loading) item("loading", span = { GridItemSpan(maxLineSpan) }) { LinearProgressIndicator(Modifier.fillMaxWidth()) }
-            if (failed) item("retry", span = { GridItemSpan(maxLineSpan) }) { GalaxRetryPanel(onRetry = viewModel::refresh) }
-            if (!loading && !failed && entries.isNullOrEmpty()) item("empty", span = { GridItemSpan(maxLineSpan) }) {
-                Text(stringResource(R.string.no_results_found), Modifier.padding(24.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            items(entries.orEmpty(), key = { it.id }, contentType = { it::class.simpleName }) { entry ->
-                GalaxRemoteItem(entry, navController, Modifier.fillMaxWidth())
+            if (loading)
+                item("loading") {
+                    LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 24.dp))
+                }
+            if (failed)
+                item("retry") {
+                    PrismStatus(
+                        stringResource(R.string.prism_dest_unavailable),
+                        stringResource(R.string.prism_dest_retry_detail),
+                        stringResource(R.string.retry),
+                        viewModel::refresh,
+                    )
+                }
+            if (!loading && !failed && entries.isEmpty())
+                item("empty") {
+                    PrismStatus(
+                        stringResource(R.string.no_results_found),
+                        actionLabel = stringResource(R.string.refresh),
+                        onAction = viewModel::refresh,
+                    )
+                }
+            itemsIndexed(
+                entries.chunked(layout.columns),
+                key = { index, _ -> "collection/$index" },
+            ) { _, row ->
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    row.forEach { entry ->
+                        PrismRemoteItem(entry, navController, Modifier.weight(1f))
+                    }
+                    repeat(layout.columns - row.size) { Spacer(Modifier.weight(1f)) }
+                }
             }
         }
     }

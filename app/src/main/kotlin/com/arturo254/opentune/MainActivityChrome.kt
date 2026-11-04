@@ -364,7 +364,9 @@ internal fun MainActivityTopBar(
     val searchBarScrollBehavior = navigationEffects.searchBarScrollBehavior
     val topAppBarScrollBehavior = navigationEffects.topAppBarScrollBehavior
 
-                                        if (shouldShowTopBar && navigationState.selectedNavigationRoute != Screens.Home.route) {
+    val ownsHeading = navigationState.selectedNavigationRoute in setOf(Screens.Home.route, Screens.Search.route) ||
+        navBackStackEntry?.destination?.route in setOf(Screens.MoodAndGenres.route, "charts_screen", "new_release", "browse/{browseId}", "youtube_browse/{browseId}?params={params}")
+                                        if (shouldShowTopBar && !navigationState.active && !ownsHeading) {
                                             val shouldUseFloatingTopBar = remember(navBackStackEntry) {
                                                 navBackStackEntry?.destination?.route == Screens.Home.route ||
                                                         navBackStackEntry?.destination?.route == Screens.MoodAndGenres.route ||
@@ -560,145 +562,28 @@ internal fun MainActivityTopBar(
 @Composable
 internal fun MainActivitySearchBar(
     pureBlack: Boolean,
-    database: MusicDatabase,
     navigationState: MainActivityNavigationState,
-    playerUiState: MainActivityPlayerUiState,
-    searchBarAlignmentModifier: Modifier,
-    searchBackdropModifier: Modifier,
 ) {
-    val navController = navigationState.navController
-    val navBackStackEntry = navigationState.navBackStackEntry
-    val navigationItems = navigationState.navigationItems
-    val query = navigationState.query
-    val onQueryChange = navigationState.onQueryChange
-    val onSearch = navigationState.onSearch
     val active = navigationState.active
-    val onActiveChange = navigationState.onActiveChange
-    val searchBarFocusRequester = navigationState.searchBarFocusRequester
-    val playerBottomSheetState = playerUiState.bottomSheetState
-
-                                        androidx.compose.animation.AnimatedVisibility(
-                                            visible = active || navBackStackEntry?.destination?.route?.startsWith("search/") == true,
-                                            enter = fadeIn(animationSpec = tween(durationMillis = 300)),
-                                            exit = fadeOut(animationSpec = tween(durationMillis = 200))
-                                        ) {
-                                            TopSearch(
-                                                query = query,
-                                                onQueryChange = onQueryChange,
-                                                onSearch = onSearch,
-                                                active = active,
-                                                onActiveChange = onActiveChange,
-                                                placeholder = {
-                                                    Text(
-                                                        text = stringResource(R.string.search_all_sources),
-                                                    )
-                                                },
-                                                leadingIcon = {
-                                                    IconButton(
-                                                        onClick = {
-                                                            when {
-                                                                active -> onActiveChange(false)
-                                                                !navigationItems.fastAny { it.route == navBackStackEntry?.destination?.route } -> {
-                                                                    navController.navigateUp()
-                                                                }
-
-                                                                else -> onActiveChange(true)
-                                                            }
-                                                        },
-                                                        onLongClick = {
-                                                            when {
-                                                                active -> {}
-                                                                !navigationItems.fastAny { it.route == navBackStackEntry?.destination?.route } -> {
-                                                                    navController.backToMain()
-                                                                }
-                                                                else -> {}
-                                                            }
-                                                        },
-                                                    ) {
-                                                        Icon(
-                                                            painterResource(
-                                                                if (active ||
-                                                                    !navigationItems.fastAny { it.route == navBackStackEntry?.destination?.route }
-                                                                ) {
-                                                                    R.drawable.arrow_back
-                                                                } else {
-                                                                    R.drawable.search
-                                                                },
-                                                            ),
-                                                            contentDescription = null,
-                                                        )
-                                                    }
-                                                },
-                                                trailingIcon = {
-                                                    Row {
-                                                        if (active) {
-                                                            if (query.text.isNotEmpty()) {
-                                                                IconButton(
-                                                                    onClick = {
-                                                                        onQueryChange(
-                                                                            TextFieldValue(
-                                                                                ""
-                                                                            )
-                                                                        )
-                                                                    },
-                                                                ) {
-                                                                    Icon(
-                                                                        painter = painterResource(R.drawable.close),
-                                                                        contentDescription = null,
-                                                                    )
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                },
-                                                modifier =
-                                                    Modifier
-                                                        .focusRequester(searchBarFocusRequester)
-                                                        .then(searchBarAlignmentModifier)
-                                                        .then(searchBackdropModifier),
-                                                focusRequester = searchBarFocusRequester,
-                                                colors = if (pureBlack && active) {
-                                                    SearchBarDefaults.colors(
-                                                        containerColor = Color.Black,
-                                                        dividerColor = Color.DarkGray,
-                                                        inputFieldColors = TextFieldDefaults.colors(
-                                                            focusedTextColor = Color.White,
-                                                            unfocusedTextColor = Color.Gray,
-                                                            focusedContainerColor = Color.Transparent,
-                                                            unfocusedContainerColor = Color.Transparent,
-                                                            cursorColor = Color.White,
-                                                            focusedIndicatorColor = Color.Transparent,
-                                                            unfocusedIndicatorColor = Color.Transparent,
-                                                        )
-                                                    )
-                                                } else {
-                                                    SearchBarDefaults.colors(
-                                                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                                                    )
-                                                }
-                                            ) {
-                                                Box(
-                                                    modifier =
-                                                        Modifier
-                                                            .fillMaxSize()
-                                                            .padding(
-                                                                bottom =
-                                                                    if (!playerBottomSheetState.isDismissed) {
-                                                                        MiniPlayerHeight
-                                                                    } else {
-                                                                        0.dp
-                                                                    },
-                                                            ).navigationBarsPadding(),
-                                                ) {
-                                                    UniversalSearchScreen(
-                                                        query = query.text,
-                                                        pureBlack = pureBlack,
-                                                    )
-                                                }
-                                            }
-                                        }
+    val route = navigationState.navBackStackEntry?.destination?.route
+    if (active || route?.startsWith("search/") == true) {
+        com.arturo254.opentune.ui.screens.search.PrismSearchBar(
+            query = navigationState.query,
+            onQueryChange = navigationState.onQueryChange,
+            onSearch = navigationState.onSearch,
+            active = active,
+            onActiveChange = navigationState.onActiveChange,
+            onBack = {
+                if (active) navigationState.onActiveChange(false)
+                else navigationState.navController.navigateUp()
+            },
+            focusRequester = navigationState.searchBarFocusRequester,
+            pureBlack = pureBlack,
+        ) {
+            UniversalSearchScreen(query = navigationState.query.text, pureBlack = pureBlack, embedded = true)
+        }
+    }
 }
-
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterial3ExpressiveApi::class,

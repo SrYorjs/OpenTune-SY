@@ -68,7 +68,7 @@ class GalaxEditorialKeysTest {
 
     @Test
     fun sourceListsAreBoundToUniqueRowKeyFactories() {
-        val discover = source("ui/screens/GalaxDiscoverExperience.kt")
+        val discover = source("ui/screens/PrismDiscoveryScreen.kt")
         val home = source("ui/screens/HomeScreen.kt")
         val results = source("ui/screens/search/UniversalSearchScreen.kt")
         assertTrue(discover.contains("key = { index, _ -> galaxDiscoveryGenreRowKey("))
@@ -95,12 +95,13 @@ class GalaxEditorialKeysTest {
     fun newScreenMaterialsReuseOriginalLiquidEngine() {
         val visuals = source("ui/screens/GalaxAetherVisuals.kt")
         val home = source("ui/screens/GalaxAetherHome.kt")
-        val discover = source("ui/screens/GalaxAtlasDiscovery.kt")
-        val search = source("ui/screens/search/GalaxUniversalResultCard.kt")
+        val discover = source("ui/screens/PrismDiscoveryScreen.kt")
+        val search = source("ui/screens/search/PrismSearchDesign.kt")
         assertTrue(visuals.contains("galaxLiquidChrome("))
         assertTrue(home.contains("AetherGlassPlate("))
-        assertTrue(discover.contains("AetherGlassPlate("))
-        assertTrue(search.contains("galaxLiquidChrome("))
+        assertTrue(discover.contains("PrismScreenFrame("))
+        assertTrue(discover.contains("galaxLiquidEffect("))
+        assertTrue(search.contains("galaxLiquidEffect("))
         assertFalse(visuals.contains("rememberLayerBackdrop("))
     }
 

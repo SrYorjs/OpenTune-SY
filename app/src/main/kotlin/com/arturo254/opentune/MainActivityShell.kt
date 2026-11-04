@@ -398,7 +398,6 @@ internal fun MainActivityShell(
                         playerUiState = playerUiState,
                         useRail = useRail,
                         bottomInset = bottomInset,
-                        searchBarAlignmentModifier = Modifier.align(Alignment.TopCenter),
                     )
 
 

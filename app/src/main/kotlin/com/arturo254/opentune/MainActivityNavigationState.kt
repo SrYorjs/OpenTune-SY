@@ -400,7 +400,6 @@ internal fun rememberMainActivityNavigationEffects(
         if (navigationState.active) {
             searchBarScrollBehavior.state.resetHeightOffset()
             topAppBarScrollBehavior.state.resetHeightOffset()
-            navigationState.searchBarFocusRequester.requestFocus()
         }
     }
 
@@ -413,11 +412,6 @@ internal fun rememberMainActivityNavigationEffects(
             navigationState.openSearchImmediately
         ) {
             navigationState.onActiveChange(true)
-            try {
-                delay(100)
-                navigationState.searchBarFocusRequester.requestFocus()
-            } catch (_: Exception) {
-            }
             navigationState.setOpenSearchImmediately(false)
         }
     }

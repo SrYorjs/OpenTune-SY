@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="prism_explore">Explorar</string>
+    <string name="prism_search_label">CATÁLOGO MUSICAL</string>
+    <string name="prism_intro">Sigue tu curiosidad. Encuentra tu sonido.</string>
+    <string name="prism_search_hint">Canciones, artistas, álbumes…</string>
+    <string name="prism_launch_search">Buscar en el catálogo</string>
+    <string name="prism_global_chart">Clasificación global</string>
+    <string name="prism_charts">Tendencias</string>
+    <string name="prism_charts_detail">Lo que escucha el mundo</string>
+    <string name="prism_releases">Novedades</string>
+    <string name="prism_releases_detail">Álbumes y sencillos</string>
+    <string name="prism_recent_searches">Búsquedas recientes</string>
+    <string name="prism_genres">Elige tu ambiente</string>
+    <string name="prism_genres_detail">Géneros y momentos</string>
+    <string name="prism_see_all">Ver todo</string>
+    <string name="prism_unexpected">Algo inesperado</string>
+    <string name="prism_unexpected_detail">Un nuevo rumbo para tu música</string>
+    <string name="prism_catalog_failed">El catálogo no está disponible</string>
+    <string name="prism_catalog_failed_detail">Puedes seguir buscando o explorar un género.</string>
+    <string name="prism_retry">Reintentar</string>
+    <string name="prism_electronic">Electrónica</string>
+    <string name="prism_jazz">Jazz</string>
+    <string name="prism_pop">Pop</string>
+    <string name="prism_rock">Rock</string>
+    <string name="prism_soul">Soul y R&amp;B</string>
+    <string name="prism_hiphop">Hip-hop</string>
+    <string name="prism_input_label">Buscar música</string>
+    <string name="prism_clear">Borrar búsqueda</string>
+</resources>

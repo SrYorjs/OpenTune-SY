@@ -54,11 +54,11 @@ class GalaxHomePlayerRedesignTest {
 
     @Test
     fun searchTabUsesUniqueGenreKeysAndPreservesUniversalPlayback() {
-        val pages = source("ui/screens/GalaxDiscoverExperience.kt")
+        val pages = source("ui/screens/PrismDiscoveryScreen.kt")
         val results = source("ui/screens/search/UniversalSearchScreen.kt")
         val hero = source("ui/screens/search/UniversalSearchScreen.kt")
-        assertTrue(pages.contains("ObservatoryLens("))
-        assertTrue(pages.contains("ObservatorySpectrum("))
+        assertTrue(pages.contains("PrismScreenFrame("))
+        assertTrue(pages.contains("PrismGenreTile("))
         assertTrue(pages.contains("itemsIndexed("))
         assertTrue(pages.contains("galaxDiscoveryGenreRowKey("))
         assertTrue(pages.contains("distinctBy { it.endpoint.browseId +"))
@@ -66,8 +66,8 @@ class GalaxHomePlayerRedesignTest {
         assertTrue(results.contains("UniversalVersionQualityDialog("))
         assertTrue(results.contains(".enqueueOffline(result)"))
         assertTrue(results.contains("itemsIndexed("))
-        assertTrue(hero.contains("SignalHeader("))
-        assertTrue(hero.contains("SignalHeader("))
+        assertTrue(hero.contains("PrismHeading("))
+        assertTrue(hero.contains("PrismResultCategories("))
     }
 
     @Test
