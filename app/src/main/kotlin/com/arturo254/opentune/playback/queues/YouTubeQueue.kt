@@ -40,55 +40,11 @@ class YouTubeQueue(
                     continuation = null,
                 )
 
-            var latest = first
-            val songs =
-                first.items.toMutableList()
-
-            if (recommendationMode) {
-                var attempts = 0
-
-                while (
-                    uniqueUnseenCount(
-                        songs,
-                        emptySet(),
-                    ) < TARGET_BATCH_SIZE &&
-                    latest.continuation != null &&
-                    attempts <
-                        MAX_PAGE_FETCHES_PER_BATCH
-                ) {
-                    val more =
-                        runCatching {
-                            loadNextResilient(
-                                endpoint =
-                                    latest.endpoint,
-                                continuation =
-                                    latest.continuation,
-                            )
-                        }.getOrNull()
-                            ?: break
-
-                    songs += more.items
-                    latest = more
-                    attempts += 1
-                }
-
-                if (
-                    uniqueUnseenCount(
-                        songs,
-                        emptySet(),
-                    ) < TARGET_BATCH_SIZE
-                ) {
-                    songs +=
-                        first.relatedEndpoint
-                            ?.let { relatedEndpoint ->
-                                YouTube
-                                    .related(
-                                        relatedEndpoint,
-                                    ).getOrNull()
-                                    ?.songs
-                            }.orEmpty()
-                }
-            }
+            // Solo una solicitud para iniciar: completar 50 canciones pertenece
+            // a nextPage(), ejecutado en segundo plano por el servicio.
+            // Hacerlo aquí bloqueaba la primera canción con varias llamadas a Innertube.
+            val latest = first
+            val songs = first.items.toMutableList()
 
             endpoint = latest.endpoint
             continuation = latest.continuation
