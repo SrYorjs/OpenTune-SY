@@ -157,7 +157,7 @@ internal class PlaybackEventCoordinator(
      * se obtienen después de preparar el reproductor, sin bloquear el audio.
      * Al llegar a los últimos diez temas se solicitan nuevas páginas.
      */
-    private fun requestNextQueuePageIfNeeded() {
+    internal fun requestNextQueuePageIfNeeded() {
         val requestedQueue = queueController.currentQueue
         if (paginationQueue !== requestedQueue) {
             nextPageLoadJob?.cancel()
