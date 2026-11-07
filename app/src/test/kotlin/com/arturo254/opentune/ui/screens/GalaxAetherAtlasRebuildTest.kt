@@ -106,12 +106,12 @@ class GalaxAetherAtlasRebuildTest {
     @Test
     fun searchKeepsLoadingWarningsAndOfflineStatesInItsNewPresentation() {
         val screen = source("ui/screens/search/UniversalSearchScreen.kt")
-        val card = source("ui/screens/search/PrismResultComponents.kt")
+        val card = source("ui/screens/search/OrbitResultsExperience.kt")
         assertTrue(screen.contains("PrismResultLoading("))
         assertTrue(screen.contains("PrismSourceNotice("))
-        assertTrue(screen.contains("PrismRecordingRow("))
-        assertTrue(card.contains("downloaded ->"))
-        assertTrue(card.contains("downloading ->"))
+        assertTrue(screen.contains("OrbitRecordingRow("))
+        assertTrue(card.contains("if (downloaded)"))
+        assertTrue(card.contains("if (downloading)"))
         assertTrue(card.contains("onClick = onVersions"))
     }
 
