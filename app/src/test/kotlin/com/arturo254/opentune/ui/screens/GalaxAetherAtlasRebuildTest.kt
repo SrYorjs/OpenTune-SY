@@ -96,9 +96,9 @@ class GalaxAetherAtlasRebuildTest {
         val keys = (0 until 85).map { universalResultRowKey(it, "repeated-isrc") }
         assertEquals(keys.size, keys.distinct().size)
         val results = source("ui/screens/search/UniversalSearchScreen.kt")
-        assertTrue(results.contains("viewModel.selectVariant("))
+        assertTrue(results.contains("originalRecordingOptions("))
         assertTrue(results.contains("viewModel.playSearchResults("))
-        assertTrue(results.contains("UniversalVersionQualityDialog("))
+        assertFalse(results.contains("UniversalVersionQualityDialog("))
         assertTrue(results.contains("viewModel.loadMore()"))
         assertTrue(results.contains(".enqueueOffline(result)"))
     }
@@ -108,11 +108,11 @@ class GalaxAetherAtlasRebuildTest {
         val screen = source("ui/screens/search/UniversalSearchScreen.kt")
         val card = source("ui/screens/search/OrbitResultsExperience.kt")
         assertTrue(screen.contains("PrismResultLoading("))
-        assertTrue(screen.contains("PrismSourceNotice("))
+        assertFalse(screen.contains("PrismSourceNotice("))
         assertTrue(screen.contains("OrbitRecordingRow("))
         assertTrue(card.contains("if (downloaded)"))
         assertTrue(card.contains("if (downloading)"))
-        assertTrue(card.contains("onClick = onVersions"))
+        assertTrue(card.contains("onClick = onDownload"))
     }
 
     @Test
