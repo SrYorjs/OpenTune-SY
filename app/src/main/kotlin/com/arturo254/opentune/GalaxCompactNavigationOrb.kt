@@ -26,6 +26,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
+import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 import com.arturo254.opentune.core.designsystem.glass.galaxGlassEffect
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
 import kotlinx.coroutines.launch
