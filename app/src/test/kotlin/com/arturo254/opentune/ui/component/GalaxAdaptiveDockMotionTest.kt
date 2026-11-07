@@ -46,7 +46,7 @@ class GalaxAdaptiveDockMotionTest {
         assertTrue(player.contains("GalaxCompactMiniPlayer("))
         assertTrue(mini.contains("1f - dockMergeProgress"))
         assertTrue(navigation.contains("selectedRoute = selectedNavigationRoute"))
-        assertTrue(toolbar.contains("if (unifiedDock) Modifier"))
+        assertTrue(toolbar.contains(".galaxGlassEffect("))
         assertTrue(shell.contains("LocalGalaxLiquidVariant provides liquidVariant"))
         assertTrue(shell.contains("LocalGalaxLiquidTuning provides liquidTuning"))
     }
