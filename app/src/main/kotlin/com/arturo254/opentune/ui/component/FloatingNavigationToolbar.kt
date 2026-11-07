@@ -115,6 +115,7 @@ fun FloatingNavigationToolbar(
     onMusicRecognitionClick: (() -> Unit)? = null,
     musicRecognitionContentDescription: String = "",
     scrollBehavior: FloatingToolbarScrollBehavior? = null,
+    unifiedDock: Boolean = false,
     selectedRoute: String?,
     pagerState: androidx.compose.foundation.pager.PagerState,
     onItemClick: (Screens, Boolean) -> Unit,
@@ -154,27 +155,30 @@ fun FloatingNavigationToolbar(
                 )
                 .clip(barShape)
                 .background(
-                    if (liquidGlass) {
+                    if (liquidGlass || unifiedDock) {
                         Color.Transparent
                     } else {
                         if (pureBlack) Color.Black.copy(alpha = 0.90f)
                         else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.94f)
                     }
                 )
-                .galaxGlassEffect(
-                    shape = barShape,
-                    pureBlack = pureBlack,
-                    spec = GlassSurfaceSpec(
-                        mode = GlassMode.CLASSIC,
-                        surface = GlassSurfaceType.NAVIGATION,
-                        optics = GlassOptics(
-                            blurRadius = 4,
-                            refraction = 0.045f,
-                            curve = 0.10f,
-                            dispersion = 0.0015f,
-                            edge = 0f,
+                .then(
+                    if (unifiedDock) Modifier
+                    else Modifier.galaxGlassEffect(
+                        shape = barShape,
+                        pureBlack = pureBlack,
+                        spec = GlassSurfaceSpec(
+                            mode = GlassMode.CLASSIC,
+                            surface = GlassSurfaceType.NAVIGATION,
+                            optics = GlassOptics(
+                                blurRadius = 4,
+                                refraction = 0.045f,
+                                curve = 0.10f,
+                                dispersion = 0.0015f,
+                                edge = 0f,
+                            ),
                         ),
-                    ),
+                    )
                 )
                 .padding(
                     horizontal = OpenTuneNavigationDimensions.floatingHorizontalPadding,
