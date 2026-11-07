@@ -56,7 +56,7 @@ class GalaxArchiveRebuildTest {
         assertTrue(frame.contains("Color.Black"))
         assertTrue(frame.contains(".background("))
         assertTrue(screen.contains("viewModel.playSearchResults("))
-        assertTrue(screen.contains("UniversalVersionQualityDialog("))
+        assertTrue(screen.contains("originalRecordingOptions("))
         val pages = read("ui/screens/GalaxMainPages.kt")
         assertTrue(pages.contains("modifier.background(base)"))
         assertTrue(pages.contains("Lifecycle.State.RESUMED"))
