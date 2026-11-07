@@ -1,5 +1,6 @@
 package com.arturo254.opentune.ui.player.host
 
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
@@ -299,6 +300,9 @@ fun PlayerHost(
     lyricsSyncOffset: Int,
     modifier: Modifier = Modifier,
     pureBlack: Boolean,
+    dockMergeProgress: Float = 0f,
+    dockNavigationHeight: Dp = 0.dp,
+    collapsedDockNavigation: (@Composable BoxScope.() -> Unit)? = null,
 ) {
     BottomSheetPlayer(
         state = state,
@@ -306,5 +310,8 @@ fun PlayerHost(
         lyricsSyncOffset = lyricsSyncOffset,
         modifier = modifier,
         pureBlack = pureBlack,
+        dockMergeProgress = dockMergeProgress,
+        dockNavigationHeight = dockNavigationHeight,
+        collapsedDockNavigation = collapsedDockNavigation,
     )
 }
