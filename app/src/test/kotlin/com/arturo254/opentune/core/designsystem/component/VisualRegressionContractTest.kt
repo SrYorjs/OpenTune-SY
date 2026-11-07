@@ -53,7 +53,7 @@ class VisualRegressionContractTest {
         assertTrue(glass.contains("chooseGlassRenderMode("))
         assertTrue(toolbar.contains("onItemClick: (Screens, Boolean) -> Unit"))
         assertTrue(mini.contains(".clip(miniPlayerShape)"))
-        assertTrue(search.contains("UniversalVersionQualityDialog("))
+        assertTrue(search.contains("originalRecordingOptions("))
         assertTrue(search.contains("viewModel.loadMore()"))
         assertEquals(RoundedCornerShape(32.dp), createOpenTuneShapeTokens(Shapes()).miniPlayer)
     }
