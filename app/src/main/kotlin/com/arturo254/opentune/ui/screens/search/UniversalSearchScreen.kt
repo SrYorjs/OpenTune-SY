@@ -382,7 +382,7 @@ fun UniversalSearchScreen(
                                     {
                                         play(
                                             track,
-                                            originalRecordingOptions(track.identity, track.variants),
+                                            originalRecordingOptions(track.identity, listOfNotNull(track.recommendedVariant) + track.variants),
                                         )
                                     }
                                 },
@@ -506,7 +506,7 @@ fun UniversalSearchScreen(
                                 it.provider == ProviderId.OPEN_TUNE_OFFLINE
                             }
                     val choices = remember(result, offline) {
-                        originalRecordingOptions(result.identity, result.variants + listOfNotNull(offline))
+                        originalRecordingOptions(result.identity, listOfNotNull(result.recommendedVariant) + result.variants + listOfNotNull(offline))
                     }
                     val preferred = choices.firstOrNull()
                     val fallbacks = choices.drop(1)
