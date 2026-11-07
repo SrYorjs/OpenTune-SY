@@ -260,8 +260,8 @@ constructor(
                             Download.STATE_COMPLETED ->
                                 CoroutineScope(Dispatchers.IO).launch {
                                     offlineTrackRegistry.markAvailable(download.request.id)
-                                    ensureOfflineBundleByLookup(download.request.id)
                                     userMusicExporter.exportCompleted(download)
+                                    ensureOfflineBundleByLookup(download.request.id)
                                 }
 
                             Download.STATE_FAILED ->
@@ -411,8 +411,8 @@ constructor(
                             offlineTrackRegistry.markAvailable(download.request.id)
                         }
 
-                        ensureOfflineBundleByLookup(download.request.id)
                         userMusicExporter.exportCompleted(download)
+                        ensureOfflineBundleByLookup(download.request.id)
                     }
 
                     Download.STATE_FAILED ->
