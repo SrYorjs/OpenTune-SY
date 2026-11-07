@@ -66,8 +66,8 @@ class GalaxHomePlayerRedesignTest {
         assertTrue(results.contains("UniversalVersionQualityDialog("))
         assertTrue(results.contains(".enqueueOffline(result)"))
         assertTrue(results.contains("itemsIndexed("))
-        assertTrue(hero.contains("PrismHeading("))
-        assertTrue(hero.contains("PrismResultCategories("))
+        assertTrue(hero.contains("OrbitResultsHero("))
+        assertTrue(hero.contains("OrbitResultsCategories("))
     }
 
     @Test
