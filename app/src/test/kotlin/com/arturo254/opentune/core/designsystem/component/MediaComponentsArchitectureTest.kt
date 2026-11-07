@@ -31,7 +31,7 @@ class MediaComponentsArchitectureTest {
             File(sourceRoot, "com/arturo254/opentune/ui/screens/search/UniversalSearchScreen.kt")
                 .readText()
         assertTrue(contents.contains("OrbitRecordingRow("))
-        assertTrue(contents.contains("onVersions"))
+        assertFalse(contents.contains("UniversalVersionQualityDialog("))
         assertTrue(contents.contains("signalQuality"))
         assertTrue(contents.contains("resolving"))
     }
