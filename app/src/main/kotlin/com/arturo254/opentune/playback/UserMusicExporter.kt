@@ -75,8 +75,12 @@ class UserMusicExporter @Inject constructor(
                     .trim()
                     .take(90)
                     .ifBlank { "Canción" }
+                // Los identificadores de fuentes externas pueden incluir separadores de ruta.
+                val safeId = id.filter { it.isLetterOrDigit() || it == '-' || it == '_' }
+                    .take(48)
+                    .ifBlank { "audio" }
                 val values = ContentValues().apply {
-                    put(MediaStore.Audio.Media.DISPLAY_NAME, "$displayTitle - $id.$extension")
+                    put(MediaStore.Audio.Media.DISPLAY_NAME, "$displayTitle - $safeId.$extension")
                     put(MediaStore.Audio.Media.TITLE, displayTitle)
                     put(MediaStore.Audio.Media.MIME_TYPE, mimeType)
                     put(
