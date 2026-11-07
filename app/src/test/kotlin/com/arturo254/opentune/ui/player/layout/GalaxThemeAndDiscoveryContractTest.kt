@@ -107,8 +107,8 @@ class GalaxThemeAndDiscoveryContractTest {
     fun searchNeverReintroducesProviderSwitching() {
         val search = source("ui/screens/search/UniversalSearchScreen.kt")
         val experience = source("ui/screens/search/UniversalVersionQualityDialog.kt")
-        assertTrue(search.contains("PrismHeading("))
-        assertTrue(search.contains("PrismResultCategories("))
+        assertTrue(search.contains("OrbitResultsHero("))
+        assertTrue(search.contains("OrbitResultsCategories("))
         assertFalse(search.contains("SignalQuality("))
         assertTrue(search.contains("state.result.tracks"))
         assertTrue(search.contains("viewModel.selectVariant"))
