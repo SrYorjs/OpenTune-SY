@@ -472,17 +472,9 @@ internal fun MainActivityScaffold(
                                             dockMergeProgress = dockMotion.progress,
                                             dockNavigationHeight = navVisibleHeight,
                                             collapsedDockNavigation = {
-                                                MainActivityFloatingToolbar(
-                                                    pureBlack = pureBlack,
-                                                    useRail = useRail,
-                                                    bottomInset = bottomInset,
-                                                    database = database,
-                                                    playerConnection = playerConnection,
+                                                GalaxCompactNavigationOrb(
                                                     navigationState = navigationState,
-                                                    playerUiState = playerUiState,
-                                                    navigationEffects = navigationEffects,
-                                                    unifiedDock = true,
-                                                    dockMergeProgress = dockMotion.progress,
+                                                    pureBlack = pureBlack,
                                                 )
                                             },
                                         )
