@@ -39,7 +39,7 @@ class SearchResultCategoriesTest {
         val screen = File(root, "com/arturo254/opentune/ui/screens/search/UniversalSearchScreen.kt")
             .readText()
         assertTrue(screen.contains("OrbitResultsCategories("))
-        assertTrue(screen.contains("UniversalVersionQualityDialog("))
+        assertFalse(screen.contains("UniversalVersionQualityDialog("))
         assertTrue(screen.contains("playSearchResults("))
         assertFalse(screen.contains("signal/featured/artists"))
         assertFalse(screen.contains("SearchResultCategory.ARTISTS"))
