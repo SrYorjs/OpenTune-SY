@@ -15,7 +15,6 @@ import com.arturo254.opentune.ui.player.visual.playerVisualGlassEffect
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.height
 import com.arturo254.opentune.constants.MiniPlayerHeight
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
