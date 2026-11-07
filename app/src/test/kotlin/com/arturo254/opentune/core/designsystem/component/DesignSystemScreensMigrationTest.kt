@@ -24,7 +24,7 @@ class DesignSystemScreensMigrationTest {
         assertTrue(s.contains("PrismResultLoading("))
         assertTrue(s.contains("PrismStatus("))
         assertTrue(s.contains("viewModel.loadMore()"))
-        assertTrue(s.contains("UniversalVersionQualityDialog("))
+        assertTrue(s.contains("originalRecordingOptions("))
     }
 
     @Test
