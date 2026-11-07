@@ -42,7 +42,7 @@ class GalaxAdaptiveDockMotionTest {
         assertTrue(shell.contains(".nestedScroll(dockMotion.nestedScrollConnection)"))
         assertTrue(shell.contains("collapsedDockNavigation = {"))
         assertTrue(shell.contains("GalaxCompactNavigationOrb("))
-        assertTrue(player.contains("dockMergeProgress = merge"))
+        assertTrue(player.contains("dockMergeProgress = 0f"))
         assertTrue(player.contains("GalaxCompactMiniPlayer("))
         assertTrue(mini.contains("1f - dockMergeProgress"))
         assertTrue(navigation.contains("selectedRoute = selectedNavigationRoute"))
