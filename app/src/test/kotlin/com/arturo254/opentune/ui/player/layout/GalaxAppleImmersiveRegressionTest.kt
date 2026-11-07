@@ -89,7 +89,7 @@ class GalaxAppleImmersiveRegressionTest {
         val header = source("ui/player/panels/GalaxPanelTimelineHeader.kt")
         assertTrue(queue.contains("GalaxPanelTimelineHeader("))
         assertTrue(queue.contains("queueActions.select("))
-        assertTrue(lyrics.contains("GalaxPanelTimelineHeader("))
+        assertFalse(lyrics.contains("GalaxPanelTimelineHeader("))
         assertTrue(lyrics.contains("LyricsV2("))
         assertTrue(header.contains("MaterialTheme.colorScheme"))
         assertFalse(header.contains("now_playing"))
