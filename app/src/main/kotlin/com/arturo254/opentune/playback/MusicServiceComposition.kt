@@ -525,6 +525,11 @@ internal object MusicServiceComposition {
                 },
             )
 
+        // No esperar a que cambie la canción para completar la primera tanda.
+        queueController.onInitialQueueReady = {
+            playbackEventCoordinator.requestNextQueuePageIfNeeded()
+        }
+
         return Components(
             player = player,
             sleepTimer = sleepTimer,
