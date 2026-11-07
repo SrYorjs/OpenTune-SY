@@ -41,6 +41,9 @@ internal class QueueController(
     internal var queueTitle: String? = null
 
     @Volatile
+    internal var initialQueueReady: Boolean = true
+
+    @Volatile
     internal var suppressAutoPlayback: Boolean = false
 
     suspend fun restorePersistentQueue(persistedQueue: PersistQueue) {
@@ -70,6 +73,7 @@ internal class QueueController(
             player.prepare()
             player.playWhenReady = false
             onCurrentMetadataChanged()
+            initialQueueReady = true
             onQueueRestored()
 
             scheduleDeferredQueueLoad(
@@ -88,6 +92,7 @@ internal class QueueController(
         suppressAutoPlayback = false
         currentQueue = queue
         queueTitle = null
+        initialQueueReady = false
 
         if (!permanentShuffleProvider()) {
             player.shuffleModeEnabled = false
@@ -112,7 +117,10 @@ internal class QueueController(
 
             if (currentQueue !== queue) return@launch
             initialStatus.title?.let { queueTitle = it }
-            if (initialStatus.items.isEmpty()) return@launch
+            if (initialStatus.items.isEmpty()) {
+                initialQueueReady = true
+                return@launch
+            }
 
             if (queue.preloadItem != null) {
                 val safeIndex =
@@ -133,6 +141,7 @@ internal class QueueController(
                 if (player.shuffleModeEnabled) {
                     applyCurrentFirstShuffleOrder()
                 }
+                initialQueueReady = true
                 return@launch
             }
 
@@ -157,6 +166,7 @@ internal class QueueController(
                 allItems = items,
                 window = window,
             )
+            initialQueueReady = true
         }
     }
 
@@ -183,6 +193,7 @@ internal class QueueController(
         suppressAutoPlayback: Boolean,
     ) {
         activePlayQueueJob?.cancel()
+        initialQueueReady = false
         this.suppressAutoPlayback = suppressAutoPlayback
         currentQueue = EmptyQueue
         queueTitle = null
