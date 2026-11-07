@@ -565,63 +565,70 @@ fun BottomSheetPlayer(
         },
         collapsedContent = {
             val merge = dockMergeProgress.coerceIn(0f, 1f)
-            if (merge > 0.002f && collapsedDockNavigation != null) {
-                val liquidEnabled = LocalEnableLiquidGlass.current
-                val liquidRadius = LocalGalaxLiquidTuning.current?.cornerRadiusDp
-                val dockShape = androidx.compose.foundation.shape.RoundedCornerShape(
-                    if (liquidEnabled) (liquidRadius ?: 36f).dp else 28.dp
-                )
-                // Exactly one optical shell expands from the song capsule
-                // around the navigation row. This reuses the selected glass
-                // variant, including its refraction and tuning, never a shader
-                // specific to the merging animation.
+            val dockBottomSpace = WindowInsets.systemBars.asPaddingValues()
+                .calculateBottomPadding() + com.arturo254.opentune.constants.FloatingToolbarBottomPadding
+            val travel = (state.collapsedBound - dockBottomSpace - 62.dp).coerceAtLeast(0.dp)
+
+            // The existing musicminibar moves toward the nav while dissolving.
+            // During the overlap a purpose-built one-line layout fades in;
+            // it does NOT resize the original two-row controls into a slab.
+            if (merge < .96f) {
                 Box(
-                    Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(horizontal = 12.dp)
+                    Modifier.align(Alignment.TopCenter)
                         .fillMaxWidth()
-                        .height(MiniPlayerHeight + (MiniPlayerBottomSpacing + dockNavigationHeight) * merge)
-                        .graphicsLayer { alpha = merge }
-                        .clip(dockShape)
-                        .background(
-                            if (liquidEnabled) Color.Transparent
-                            else if (pureBlack) Color.Black.copy(alpha = .92f)
-                            else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = .96f)
-                        )
-                        .playerVisualGlassEffect(shape = dockShape, pureBlack = pureBlack)
-                        .then(
-                            if (liquidEnabled) Modifier
-                            else Modifier.border(
-                                1.dp,
-                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = .38f),
-                                dockShape,
-                            )
-                        )
-                )
-                // A thin dividing glint provides hierarchy without creating a
-                // second floating surface or interfering with hit targets.
-                Box(
-                    Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(horizontal = 30.dp)
-                        .offset(y = MiniPlayerHeight + MiniPlayerBottomSpacing / 2)
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .graphicsLayer { alpha = merge * .32f }
-                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = .5f))
-                )
+                        .graphicsLayer {
+                            alpha = (1f - merge * 1.85f).coerceIn(0f, 1f)
+                            translationY = merge * travel.toPx()
+                            scaleX = 1f - merge * .06f
+                            scaleY = 1f - merge * .035f
+                        }
+                ) {
+                    MiniPlayer(
+                        playerState = playerState,
+                        playbackIndex = currentWindowIndex,
+                        queueSize = queueWindows.size,
+                        pureBlack = pureBlack,
+                        navController = navController,
+                        state = state,
+                        dockMergeProgress = 0f,
+                    )
+                }
             }
-            MiniPlayer(
-                playerState = playerState,
-                playbackIndex = currentWindowIndex,
-                queueSize = queueWindows.size,
-                pureBlack = pureBlack,
-                navController = navController,
-                state = state,
-                dockMergeProgress = merge,
-            )
-            if (merge > 0.002f) {
-                collapsedDockNavigation?.invoke(this)
+
+            if (merge > .025f && collapsedDockNavigation != null) {
+                Row(
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .padding(
+                            start = 12.dp,
+                            end = 12.dp,
+                            bottom = dockBottomSpace,
+                        )
+                        .graphicsLayer {
+                            val reveal = ((merge - .21f) / .72f).coerceIn(0f, 1f)
+                            alpha = reveal
+                            translationY = (1f - merge) * (-12.dp.toPx())
+                            scaleX = .965f + .035f * merge
+                            scaleY = .955f + .045f * merge
+                        },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    // The active page becomes one circular, selectable orb.
+                    Box(Modifier.size(62.dp), contentAlignment = Alignment.Center) {
+                        collapsedDockNavigation.invoke(this)
+                    }
+                    // Artwork, title, play and skip are in the SAME horizontal
+                    // line, in a compact capsule with the selected glass optics.
+                    GalaxCompactMiniPlayer(
+                        state = playerState,
+                        pureBlack = pureBlack,
+                        onOpen = state::expandSoft,
+                        onPlayPause = playerActions::playPause,
+                        onNext = playerActions::next,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         },
     ) {
