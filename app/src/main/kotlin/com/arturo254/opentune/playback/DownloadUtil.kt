@@ -79,6 +79,7 @@ constructor(
     private val lyricsHelper: LyricsHelper,
     private val offlineAssets: OfflineMediaAssetStore,
     private val offlineTrackRegistry: OfflineTrackRegistry,
+    private val userMusicExporter: UserMusicExporter,
 ) {
     private val connectivityManager = context.getSystemService<ConnectivityManager>()!!
     private val audioQuality by enumPreference(context, AudioQualityKey, AudioQuality.AUTO)
@@ -94,7 +95,7 @@ constructor(
             maxRequestsPerHost = 12
         }
 
-    private val downloadExecutor = Executors.newFixedThreadPool(4)
+    private val downloadExecutor = Executors.newFixedThreadPool(6)
 
     private val mediaOkHttpClient: OkHttpClient by lazy {
         OkHttpClient
@@ -241,7 +242,7 @@ constructor(
             dataSourceFactory,
             downloadExecutor
         ).apply {
-            maxParallelDownloads = 4
+            maxParallelDownloads = 6
             addListener(
                 object : DownloadManager.Listener {
                     override fun onDownloadChanged(
@@ -260,6 +261,7 @@ constructor(
                                 CoroutineScope(Dispatchers.IO).launch {
                                     offlineTrackRegistry.markAvailable(download.request.id)
                                     ensureOfflineBundleByLookup(download.request.id)
+                                    userMusicExporter.exportCompleted(download)
                                 }
 
                             Download.STATE_FAILED ->
@@ -410,6 +412,7 @@ constructor(
                         }
 
                         ensureOfflineBundleByLookup(download.request.id)
+                        userMusicExporter.exportCompleted(download)
                     }
 
                     Download.STATE_FAILED ->
