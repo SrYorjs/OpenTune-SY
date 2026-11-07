@@ -246,6 +246,7 @@ import com.arturo254.opentune.ui.component.LocalBottomSheetPageState
 import com.arturo254.opentune.ui.component.LocalMenuState
 import com.arturo254.opentune.ui.component.LocalSky
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
+import com.arturo254.opentune.ui.component.rememberGalaxAdaptiveDockMotion
 import com.arturo254.opentune.ui.component.LiquidGlassControlCluster
 import com.mikepenz.markdown.m3.Markdown
 import com.arturo254.opentune.constants.TogetherDisplayNameKey
@@ -403,6 +404,14 @@ internal fun MainActivityScaffold(
         label = "",
     )
 
+    val currentMedia = playerConnection?.mediaMetadata?.collectAsState()?.value
+    val dockMotion = rememberGalaxAdaptiveDockMotion(
+        enabled = currentMedia != null && shouldShowNavigationBar && !useRail &&
+            playerBottomSheetState.isCollapsed,
+        resetKey = "$currentRoute:${navigationState.pagerState.currentPage}",
+        reducedMotion = galaxMotion.reducedMotion,
+    )
+
     val coroutineScope = rememberCoroutineScope()
     var showAccountDialog by remember { mutableStateOf(false) }
     val searchOverlayCapturesGlass = navigationState.active
@@ -460,10 +469,27 @@ internal fun MainActivityScaffold(
                                             navController = navController,
                                             pureBlack = pureBlack,
                                             lyricsSyncOffset = lyricsSyncOffset,
+                                            dockMergeProgress = dockMotion.progress,
+                                            dockNavigationHeight = navVisibleHeight,
+                                            collapsedDockNavigation = {
+                                                MainActivityFloatingToolbar(
+                                                    pureBlack = pureBlack,
+                                                    useRail = useRail,
+                                                    bottomInset = bottomInset,
+                                                    database = database,
+                                                    playerConnection = playerConnection,
+                                                    navigationState = navigationState,
+                                                    playerUiState = playerUiState,
+                                                    navigationEffects = navigationEffects,
+                                                    unifiedDock = true,
+                                                    dockMergeProgress = dockMotion.progress,
+                                                )
+                                            },
                                         )
                                     },
                                     modifier = Modifier
                                         .fillMaxSize()
+                                        .nestedScroll(dockMotion.nestedScrollConnection)
                                         .nestedScroll(searchBarScrollBehavior.nestedScrollConnection)
                                 ) {
                                     CompositionLocalProvider(
@@ -592,6 +618,7 @@ internal fun MainActivityScaffold(
                                     navigationState = navigationState,
                                     playerUiState = playerUiState,
                                     navigationEffects = navigationEffects,
+                                    dockMergeProgress = dockMotion.progress,
                                 )
                             }
                         }
