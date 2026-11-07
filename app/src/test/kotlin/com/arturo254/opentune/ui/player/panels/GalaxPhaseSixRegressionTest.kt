@@ -89,7 +89,7 @@ class GalaxPhaseSixRegressionTest {
         assertTrue(queue.contains("GalaxPanelTimelineHeader("))
         assertTrue(queue.contains("ReorderableItem("))
         assertTrue(queue.contains("queueActions.removeAt("))
-        assertTrue(lyrics.contains("GalaxPanelTimelineHeader("))
+        assertFalse(lyrics.contains("GalaxPanelTimelineHeader("))
         assertTrue(lyrics.contains("LyricsV2("))
         assertTrue(lyrics.contains("GalaxLyricsControls("))
     }
