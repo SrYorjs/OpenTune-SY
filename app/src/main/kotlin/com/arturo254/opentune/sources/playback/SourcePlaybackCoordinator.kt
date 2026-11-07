@@ -21,6 +21,7 @@ import com.arturo254.opentune.playback.queues.ListQueue
 import com.arturo254.opentune.playback.PlaybackGateClassifier
 import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.sources.SourceRegistry
+import com.arturo254.opentune.sources.resolution.originalRecordingOptions
 import com.arturo254.opentune.sources.StreamMusicSource
 import com.arturo254.opentune.sources.search.UnifiedSearchRepository
 import com.arturo254.opentune.sources.search.UnifiedSearchResult
@@ -134,10 +135,10 @@ constructor(
         preferredVariants: List<SourceVariant>,
         queueTitle: String,
     ): Boolean {
-        val choices = preferredVariants
-            .ifEmpty { listOfNotNull(selected.recommendedVariant) + selected.variants }
-            .distinctBy { it.provider to it.sourceId }
-            .sortedBy { searchPlaybackPriority(it.provider) }
+        val choices = originalRecordingOptions(
+            selected.identity,
+            preferredVariants.ifEmpty { listOfNotNull(selected.recommendedVariant) + selected.variants },
+        )
         var ageRestricted = false
         for (choice in choices) {
             if (ageRestricted && choice.playbackRoute() == SourcePlaybackRoute.CATALOG_BRIDGE) continue
@@ -165,6 +166,11 @@ constructor(
 
     internal suspend fun resolveMediaItem(variant: SourceVariant): MediaItem? =
         try {
+            // The canonical Media3 YouTube source resolves its stream on demand.
+            // Do not resolve that same URL here before dispatching playback.
+            if (variant.playbackRoute() == SourcePlaybackRoute.YOUTUBE_QUEUE) {
+                return variant.toOpenTuneMetadata().toMediaItem()
+            }
             val direct = (sourceRegistry[variant.provider] as? StreamMusicSource)
                 ?.resolvePlayback(variant)
             if (direct != null) direct else when (variant.playbackRoute()) {
