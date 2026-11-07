@@ -271,6 +271,14 @@ class App : Application(), SingletonImageLoader.Factory {
         }
         applicationScope.launch(Dispatchers.IO) {
             dataStore.data
+                .map { (it[OwnResolverUrlKey] ?: "") to (it[OwnResolverApiKeyKey] ?: "") }
+                .distinctUntilChanged()
+                .collect { (url, key) ->
+                    com.arturo254.opentune.playback.OwnResolverClient.configure(url, key)
+                }
+        }
+        applicationScope.launch(Dispatchers.IO) {
+            dataStore.data
                 .map { it[LastFMSessionKey] }
                 .distinctUntilChanged()
                 .collect { sessionKey ->

@@ -13,6 +13,9 @@ import androidx.media3.common.PlaybackException
 import com.arturo254.opentune.constants.AudioQuality
 import com.arturo254.opentune.constants.PlayerStreamClient
 import com.arturo254.opentune.innertube.NewPipeUtils
+import com.arturo254.opentune.playback.OwnResolverClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.arturo254.opentune.innertube.YouTube
 import com.arturo254.opentune.innertube.models.YouTubeClient
 import com.arturo254.opentune.innertube.models.YouTubeClient.Companion.IOS
@@ -183,6 +186,15 @@ object YTPlayerUtils {
         networkMetered: Boolean? = null,
         avoidCodecs: Set<String> = emptySet(),
     ): Result<PlaybackData> = runCatching {
+        // 1) Servidor propio (yt-dlp). Si no está configurado o falla, seguimos con la resolución en el dispositivo.
+        if (OwnResolverClient.isUsable()) {
+            val own = withContext(Dispatchers.IO) {
+                OwnResolverClient.resolve(videoId, audioQuality, avoidCodecs)
+            }
+            if (own != null) return@runCatching own
+            Timber.tag(logTag).w("Own resolver unavailable for $videoId, falling back to on-device resolution")
+        }
+
         val attempts =
             when (audioQuality) {
                 AudioQuality.HIGHEST -> listOf(AudioQuality.HIGHEST, AudioQuality.HIGH)

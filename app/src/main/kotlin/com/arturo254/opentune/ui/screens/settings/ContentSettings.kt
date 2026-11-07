@@ -142,6 +142,15 @@ fun ContentSettings(
         defaultValue = true
     )
 
+    val (ownResolverUrl, onOwnResolverUrlChange) = rememberPreference(
+        key = OwnResolverUrlKey,
+        defaultValue = ""
+    )
+    val (ownResolverKey, onOwnResolverKeyChange) = rememberPreference(
+        key = OwnResolverApiKeyKey,
+        defaultValue = ""
+    )
+
     var showLanguageSelector by remember { mutableStateOf(false) }
 
     val languageOptions = remember {
@@ -412,6 +421,22 @@ fun ContentSettings(
             icon = { Icon(painterResource(R.drawable.cloud_off), null) },
             checked = jossRedEnabled,
             onCheckedChange = onJossRedEnabledChange,
+        )
+
+        EditTextPreference(
+            title = { Text("Servidor propio: URL") },
+            icon = { Icon(painterResource(R.drawable.cloud_off), null) },
+            value = ownResolverUrl,
+            isInputValid = { true },
+            onValueChange = onOwnResolverUrlChange,
+        )
+
+        EditTextPreference(
+            title = { Text("Servidor propio: clave") },
+            icon = { Icon(painterResource(R.drawable.cloud_off), null) },
+            value = ownResolverKey,
+            isInputValid = { true },
+            onValueChange = onOwnResolverKeyChange,
         )
 
         PreferenceGroupTitle(title = stringResource(R.string.misc))

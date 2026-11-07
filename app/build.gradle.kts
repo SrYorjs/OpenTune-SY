@@ -115,6 +115,18 @@ android {
         buildConfigField("String", "TOGETHER_BEARER_TOKEN", "\"$togetherBearerToken\"")
 
         buildConfigField("String", "GIT_COMMIT", "\"$gitCommit\"")
+
+        // Servidor propio (OpenTune Resolver): se guarda en local.properties, que NO se sube a git.
+        val ownResolverUrl =
+            localProperties.getProperty("OWN_RESOLVER_URL")
+                ?: System.getenv("OWN_RESOLVER_URL")
+                ?: ""
+        val ownResolverKey =
+            localProperties.getProperty("OWN_RESOLVER_KEY")
+                ?: System.getenv("OWN_RESOLVER_KEY")
+                ?: ""
+        buildConfigField("String", "OWN_RESOLVER_URL", "\"$ownResolverUrl\"")
+        buildConfigField("String", "OWN_RESOLVER_KEY", "\"$ownResolverKey\"")
     }
 
     flavorDimensions += "abi"

@@ -689,3 +689,6 @@ val ShowSpotifyPlaylistsKey = booleanPreferencesKey("show_spotify_playlists")
 val SpotifyLibraryPlaylistsCacheKey = stringPreferencesKey("spotify_library_playlists_cache")
 
 val JossRedMultimediaKey = booleanPreferencesKey("JossRedMultimedia")
+
+val OwnResolverUrlKey = stringPreferencesKey("own_resolver_url")
+val OwnResolverApiKeyKey = stringPreferencesKey("own_resolver_api_key")
