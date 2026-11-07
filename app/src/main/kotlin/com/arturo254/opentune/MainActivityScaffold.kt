@@ -435,7 +435,7 @@ internal fun MainActivityScaffold(
                         LocalBottomSheetPageState provides bottomSheetPageState,
                         LocalMenuState provides menuState,
                     ) {
-                        Box(modifier = Modifier.fillMaxSize()) {
+                        Box(modifier = Modifier.fillMaxSize().nestedScroll(dockMotion.nestedScrollConnection)) {
                         Row rowScope@ {
                             MainActivityNavigationRail(
                                 useRail = useRail,
@@ -489,7 +489,6 @@ internal fun MainActivityScaffold(
                                     },
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .nestedScroll(dockMotion.nestedScrollConnection)
                                         .nestedScroll(searchBarScrollBehavior.nestedScrollConnection)
                                 ) {
                                     CompositionLocalProvider(
