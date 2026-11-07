@@ -1,0 +1,13 @@
+services:
+  opentune-resolver:
+    build: .
+    container_name: opentune-resolver
+    restart: unless-stopped
+    ports:
+      # Atado a una sola IP (la de Tailscale). Docker ignora ufw, así que NO uses 0.0.0.0 en internet.
+      - "${BIND_IP:-127.0.0.1}:8787:8787"
+    environment:
+      API_KEY: "${API_KEY:?define API_KEY en el archivo .env}"
+      # COOKIES_FILE: /data/cookies.txt     # opcional (cuenta Premium)
+    # volumes:
+    #   - ./data:/data
