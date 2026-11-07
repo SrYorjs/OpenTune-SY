@@ -114,7 +114,14 @@ fun UniversalSearchScreen(
                 if (activeAlbum == null) albums.size else selectedTracks.size
             else -> selectedTracks.size
         }
-    val visibleEntries = selectedTracks.take(visibleCount)
+    val visibleEntries = remember(selectedTracks, visibleCount) {
+        selectedTracks.take(visibleCount)
+    }
+    val offlineByDiscovery = remember(offlineAssets) {
+        offlineAssets.flatMap { asset ->
+            asset.discoverySources.map { (it.provider to it.sourceId) to asset }
+        }.toMap()
+    }
     val failedSources =
         if (sameQuery && !state.isLoading) {
             state.result.sources.values.filter { it.error != null }
@@ -244,7 +251,7 @@ fun UniversalSearchScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item("prism/results/header") {
-                PrismHeading(
+                OrbitResultsHero(
                     title = query.ifBlank { stringResource(R.string.prism_results_title) },
                     eyebrow = stringResource(R.string.prism_results_eyebrow),
                     subtitle =
@@ -257,7 +264,7 @@ fun UniversalSearchScreen(
                 )
             }
             item("prism/results/categories") {
-                PrismResultCategories(category) { selected ->
+                OrbitResultsCategories(category) { selected ->
                     category = selected
                     activeAlbum = null
                     viewModel.closeAudiusCollection()
@@ -508,11 +515,9 @@ fun UniversalSearchScreen(
                     contentType = { _, _ -> "prism/recording" },
                 ) { index, result ->
                     val key = result.signalKey()
-                    val sources = result.variants.map { it.provider to it.sourceId }.toSet()
-                    val asset =
-                        offlineAssets.firstOrNull { asset ->
-                            asset.discoverySources.any { (it.provider to it.sourceId) in sources }
-                        }
+                    val asset = result.variants.firstNotNullOfOrNull {
+                        offlineByDiscovery[it.provider to it.sourceId]
+                    }
                     val offline =
                         asset?.takeIf { it.state == OfflineTrackState.AVAILABLE }?.toSourceVariant()
                             ?: result.variants.firstOrNull {
@@ -563,7 +568,8 @@ fun UniversalSearchScreen(
                                     else -> true
                                 }
                             }
-                    PrismRecordingRow(
+                    OrbitRecordingRow(
+                        index = index,
                         result = result,
                         preferred = preferred,
                         active = active,
