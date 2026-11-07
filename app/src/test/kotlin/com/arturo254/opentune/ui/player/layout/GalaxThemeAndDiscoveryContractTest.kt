@@ -111,7 +111,7 @@ class GalaxThemeAndDiscoveryContractTest {
         assertTrue(search.contains("OrbitResultsCategories("))
         assertFalse(search.contains("SignalQuality("))
         assertTrue(search.contains("state.result.tracks"))
-        assertTrue(search.contains("viewModel.selectVariant"))
+        assertTrue(search.contains("originalRecordingOptions("))
         assertTrue(search.contains("viewModel.loadMore()"))
         val categories = source("ui/screens/search/PrismResultComponents.kt")
             .substringAfter("fun PrismResultCategories(").substringBefore("@Composable")
