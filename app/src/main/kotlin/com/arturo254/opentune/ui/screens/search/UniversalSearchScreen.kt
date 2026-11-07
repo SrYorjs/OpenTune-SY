@@ -15,18 +15,15 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
-import com.arturo254.opentune.constants.UniversalAudioSelectionModeKey
 import com.arturo254.opentune.core.model.ArtistIdentity
 import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.core.model.TrackIdentity
 import com.arturo254.opentune.extensions.togglePlayPause
 import com.arturo254.opentune.sources.offline.OfflineTrackState
-import com.arturo254.opentune.sources.resolution.AudioSelectionMode
-import com.arturo254.opentune.sources.resolution.SourceVariantKey
+import com.arturo254.opentune.sources.resolution.originalRecordingOptions
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
 import com.arturo254.opentune.ui.screens.*
-import com.arturo254.opentune.utils.rememberEnumPreference
 import com.arturo254.opentune.viewmodels.UniversalSearchViewModel
 import java.util.Locale
 import kotlinx.coroutines.CancellationException
@@ -58,16 +55,11 @@ fun UniversalSearchScreen(
     var resolving by remember { mutableStateOf<String?>(null) }
     var playbackJob by remember { mutableStateOf<Job?>(null) }
     var downloading by remember { mutableStateOf<String?>(null) }
-    var dialog by remember(query) { mutableStateOf<String?>(null) }
-    val manual = remember { mutableStateMapOf<String, SourceVariantKey>() }
-    var quality by
-        rememberEnumPreference(UniversalAudioSelectionModeKey, AudioSelectionMode.AUTOMATIC)
     // During the debounce interval do not relabel the previous query's results.
     val sameQuery = state.query == query.trim()
     val entries = if (sameQuery) state.result.tracks else emptyList()
     var visibleCount by remember(query) { mutableIntStateOf(50) }
     var lastPageRequest by remember(query) { mutableStateOf("") }
-    var sourceDetails by remember(query) { mutableStateOf(false) }
     var category by remember(query) { mutableStateOf(SearchResultCategory.ALL) }
     var activeAlbum by remember(query) { mutableStateOf<String?>(null) }
     val albums = remember(entries) { groupSearchAlbums(entries) }
@@ -273,16 +265,13 @@ fun UniversalSearchScreen(
                     scope.launch { list.animateScrollToItem(0) }
                 }
             }
-            if (failedSources.isNotEmpty())
+            if (failedSources.isNotEmpty() && entries.isEmpty())
                 item("prism/results/sources") {
-                    PrismSourceNotice(
-                        sources =
-                            failedSources.map {
-                                variantProviderName(it.provider) to sourceFailureLabel(it.error)
-                            },
-                        expanded = sourceDetails,
-                        onExpand = { sourceDetails = !sourceDetails },
-                        onRetry = viewModel::retrySearch,
+                    PrismStatus(
+                        title = stringResource(R.string.prism_results_error),
+                        detail = stringResource(R.string.prism_results_error_detail),
+                        actionLabel = stringResource(R.string.prism_results_retry),
+                        onAction = viewModel::retrySearch,
                     )
                 }
             if ((loading || discoveryLoading) && entries.isEmpty() && discoveredPlaylists.isEmpty())
@@ -393,14 +382,7 @@ fun UniversalSearchScreen(
                                     {
                                         play(
                                             track,
-                                            listOfNotNull(
-                                                viewModel.selectVariant(
-                                                    track,
-                                                    track.variants,
-                                                    quality,
-                                                    manual[track.signalKey()],
-                                                )
-                                            ),
+                                            originalRecordingOptions(track.identity, track.variants),
                                         )
                                     }
                                 },
@@ -523,28 +505,11 @@ fun UniversalSearchScreen(
                             ?: result.variants.firstOrNull {
                                 it.provider == ProviderId.OPEN_TUNE_OFFLINE
                             }
-                    val preferred =
-                        viewModel.selectVariant(
-                            result,
-                            result.variants + listOfNotNull(offline),
-                            quality,
-                            manual[key],
-                        )
-                    val fallbacks =
-                        (result.variants + listOfNotNull(offline))
-                            .filterNot {
-                                it.provider == preferred?.provider &&
-                                    it.sourceId == preferred?.sourceId
-                            }
-                            .sortedBy { variant ->
-                                when (variant.provider) {
-                                    ProviderId.OPEN_TUNE_OFFLINE,
-                                    ProviderId.LOCAL -> 0
-                                    ProviderId.AUDIUS -> 1
-                                    ProviderId.YOUTUBE_MUSIC -> 2
-                                    else -> 3
-                                }
-                            }
+                    val choices = remember(result, offline) {
+                        originalRecordingOptions(result.identity, result.variants + listOfNotNull(offline))
+                    }
+                    val preferred = choices.firstOrNull()
+                    val fallbacks = choices.drop(1)
                     val active =
                         (current != null &&
                             (result.variants + listOfNotNull(offline)).any {
@@ -578,7 +543,6 @@ fun UniversalSearchScreen(
                         downloaded = offline != null,
                         downloading = pending,
                         modifier = Modifier.animateItem(),
-                        onVersions = { dialog = key },
                         onPlay =
                             if (
                                 player != null &&
@@ -665,26 +629,6 @@ fun UniversalSearchScreen(
         }
     }
 
-    val selected = (entries + collectionEntries).firstOrNull { it.signalKey() == dialog }
-    if (selected != null) {
-        UniversalVersionQualityDialog(
-            selected = selected,
-            relatedVersions = viewModel.relatedVersions(selected),
-            qualityMode = quality,
-            manualVariant = manual[selected.signalKey()],
-            onQualityModeChange = { quality = it },
-            onSelectVariant = { result, variant ->
-                manual[result.signalKey()] = SourceVariantKey(variant.provider, variant.sourceId)
-                dialog = null
-                play(result, listOf(variant))
-            },
-            onClearManual = {
-                manual.remove(selected.signalKey())
-                dialog = null
-            },
-            onDismiss = { dialog = null },
-        )
-    }
 }
 
 /** Includes version traits and album so alternate recordings cannot share choices. */
