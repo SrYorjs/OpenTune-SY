@@ -14,6 +14,8 @@ import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
 import com.arturo254.opentune.ui.player.visual.playerVisualGlassEffect
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.height
 import com.arturo254.opentune.constants.MiniPlayerHeight
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
@@ -47,7 +49,8 @@ fun MiniPlayer(
     modifier: Modifier = Modifier,
     pureBlack: Boolean,
     navController: NavController,
-    state: BottomSheetState
+    state: BottomSheetState,
+    dockMergeProgress: Float = 0f,
 ) {
     NewMiniPlayer(
         playerState = playerState,
@@ -56,7 +59,8 @@ fun MiniPlayer(
         modifier = modifier,
         pureBlack = pureBlack,
         navController = navController,
-        state = state
+        state = state,
+        dockMergeProgress = dockMergeProgress,
     )
 }
 
@@ -68,7 +72,8 @@ private fun NewMiniPlayer(
     modifier: Modifier = Modifier,
     pureBlack: Boolean,
     navController: NavController,
-    state: BottomSheetState
+    state: BottomSheetState,
+    dockMergeProgress: Float,
 ) {
     val playerConnection = LocalPlayerConnection.current ?: return
     val layoutDirection = LocalLayoutDirection.current
@@ -100,47 +105,43 @@ private fun NewMiniPlayer(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(MiniPlayerHeight)
-                .preferredFrameRate(120f)
-                // Clip independently of the glass shader: the opaque fallback
-                // must retain rounded corners when Liquid Glass is disabled.
-                .clip(miniPlayerShape)
-                .background(
-                    color = if (glassEnabled) {
-                        Color.Transparent
-                    } else {
-                        if (pureBlack) Color.Black.copy(alpha = surfaceTokens.opacity.miniPlayerPureBlack)
+                .preferredFrameRate(120f),
+        ) {
+            // Fade ONLY the old optical surface. Artwork, transport and swipe
+            // gestures remain composed throughout the shared-dock morph.
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .graphicsLayer { alpha = (1f - dockMergeProgress).coerceIn(0f, 1f) }
+                    .clip(miniPlayerShape)
+                    .background(
+                        color = if (glassEnabled) Color.Transparent
+                        else if (pureBlack) Color.Black.copy(alpha = surfaceTokens.opacity.miniPlayerPureBlack)
                         else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = surfaceTokens.opacity.miniPlayerOpaque)
-                    }
-                )
-                .playerVisualGlassEffect(
-                    shape = miniPlayerShape,
-                    pureBlack = pureBlack,
-                )
-                .then(
-                    if (!glassEnabled) {
-                        Modifier.border(
+                    )
+                    .playerVisualGlassEffect(
+                        shape = miniPlayerShape,
+                        pureBlack = pureBlack,
+                    )
+                    .then(
+                        if (!glassEnabled) Modifier.border(
                             width = surfaceTokens.borders.miniPlayerOpaqueWidth,
                             color = surfaceTokens.borders.miniPlayerOpaqueColor,
                             shape = miniPlayerShape,
-                        )
-                    } else {
-                        Modifier
-                    }
-                )
-        ) {
+                        ) else Modifier
+                    ),
+            )
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(MiniPlayerHeight)
-                    .graphicsLayer {
-                        translationX = offsetX
-                    }
+                    .fillMaxSize()
+                    .clip(miniPlayerShape)
+                    .graphicsLayer { translationX = offsetX },
             ) {
                 NewMiniPlayerContent(
                     pureBlack = pureBlack,
                     playerState = playerState,
                     playerConnection = playerConnection,
-                navController = navController,
+                    navController = navController,
                     state = state,
                     transitionDirection = transitionDirection,
                 )
