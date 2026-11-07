@@ -600,7 +600,6 @@ internal fun BoxScope.MainActivityFloatingToolbar(
     navigationState: MainActivityNavigationState,
     playerUiState: MainActivityPlayerUiState,
     navigationEffects: MainActivityNavigationEffects,
-    unifiedDock: Boolean = false,
     dockMergeProgress: Float = 0f,
 ) {
     val navigationItems = navigationState.navigationItems
@@ -628,24 +627,20 @@ internal fun BoxScope.MainActivityFloatingToolbar(
         label = "",
     )
 
-                                if (!useRail && (!unifiedDock || navigationState.shouldShowNavigationBar) &&
-                                    (unifiedDock || dockMergeProgress < .997f)) {
+                                if (!useRail && dockMergeProgress < .997f) {
                                     val navSlideDistance =
                                         bottomInset + floatingBarsBottomPadding + navVisibleHeight
-                                    val fusedDockHeight = MiniPlayerHeight + MiniPlayerBottomSpacing + navVisibleHeight
 
                                     Box(
                                         modifier =
                                             Modifier
-                                                .align(if (unifiedDock) Alignment.TopCenter else Alignment.BottomCenter)
-                                                .height(if (unifiedDock) fusedDockHeight else navSlideDistance)
+                                                .align(Alignment.BottomCenter)
+                                                .height(navSlideDistance)
                                                 .graphicsLayer {
-                                                    alpha = (if (unifiedDock) dockMergeProgress else 1f - dockMergeProgress)
-                                                        .coerceIn(0f, 1f)
+                                                    alpha = (1f - dockMergeProgress).coerceIn(0f, 1f)
                                                 }
                                                 .offset {
-                                                    if (unifiedDock) IntOffset.Zero
-                                                    else if (bottomNavigationBarHeight == 0.dp) {
+                                                    if (bottomNavigationBarHeight == 0.dp) {
                                                         IntOffset(
                                                             x = 0,
                                                             y = navSlideDistance.roundToPx(),
@@ -677,10 +672,9 @@ internal fun BoxScope.MainActivityFloatingToolbar(
                                                 .padding(
                                                     start = FloatingToolbarHorizontalPadding,
                                                     end = FloatingToolbarHorizontalPadding,
-                                                    bottom = if (unifiedDock) 0.dp else bottomInset + floatingBarsBottomPadding,
+                                                    bottom = bottomInset + floatingBarsBottomPadding,
                                                 )
                                                 .height(navVisibleHeight),
-                                            unifiedDock = unifiedDock,
                                             onShuffleClick = if (shouldShowHomeShuffleButton) {
                                                 {
                                                     val useLocalSource = when {
