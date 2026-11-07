@@ -169,17 +169,18 @@ constructor(
             // The canonical Media3 YouTube source resolves its stream on demand.
             // Do not resolve that same URL here before dispatching playback.
             if (variant.playbackRoute() == SourcePlaybackRoute.YOUTUBE_QUEUE) {
-                return variant.toOpenTuneMetadata().toMediaItem()
-            }
-            val direct = (sourceRegistry[variant.provider] as? StreamMusicSource)
-                ?.resolvePlayback(variant)
-            if (direct != null) direct else when (variant.playbackRoute()) {
-                SourcePlaybackRoute.YOUTUBE_QUEUE -> variant.toOpenTuneMetadata().toMediaItem()
-                SourcePlaybackRoute.LOCAL_OR_OFFLINE -> variant.toPlayableMediaItem()
-                SourcePlaybackRoute.CATALOG_BRIDGE ->
-                    CatalogPlaybackResolver.resolveToMediaItem(variant.toCatalogPlaybackReference())
-                SourcePlaybackRoute.AUDIUS_DIRECT,
-                SourcePlaybackRoute.UNSUPPORTED -> null
+                variant.toOpenTuneMetadata().toMediaItem()
+            } else {
+                val direct = (sourceRegistry[variant.provider] as? StreamMusicSource)
+                    ?.resolvePlayback(variant)
+                if (direct != null) direct else when (variant.playbackRoute()) {
+                    SourcePlaybackRoute.YOUTUBE_QUEUE -> variant.toOpenTuneMetadata().toMediaItem()
+                    SourcePlaybackRoute.LOCAL_OR_OFFLINE -> variant.toPlayableMediaItem()
+                    SourcePlaybackRoute.CATALOG_BRIDGE ->
+                        CatalogPlaybackResolver.resolveToMediaItem(variant.toCatalogPlaybackReference())
+                    SourcePlaybackRoute.AUDIUS_DIRECT,
+                    SourcePlaybackRoute.UNSUPPORTED -> null
+                }
             }
         } catch (cancelled: CancellationException) {
             throw cancelled
