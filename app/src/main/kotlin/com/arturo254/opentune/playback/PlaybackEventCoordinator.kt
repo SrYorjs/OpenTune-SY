@@ -55,6 +55,7 @@ internal class PlaybackEventCoordinator(
     private val updateWidgets: () -> Unit,
 ) {
     private var nextPageLoadJob: Job? = null
+    private var paginationQueue: com.arturo254.opentune.playback.queues.Queue? = null
 
     fun onMediaItemTransition(
         mediaItem: MediaItem?,
@@ -137,69 +138,7 @@ internal class PlaybackEventCoordinator(
                         .hasNextPage(),
             )
 
-        if (
-            !queueController
-                .suppressAutoPlayback &&
-            !timelineEmpty &&
-            dataStore.get(
-                AutoLoadMoreKey,
-                true,
-            ) &&
-            reason !=
-                Player.MEDIA_ITEM_TRANSITION_REASON_REPEAT &&
-            player.mediaItemCount -
-                player.currentMediaItemIndex <=
-                    PAGE_PREFETCH_THRESHOLD &&
-            queueController.hasNextPage() &&
-            player.repeatMode ==
-                Player.REPEAT_MODE_OFF &&
-            nextPageLoadJob?.isActive != true
-        ) {
-            nextPageLoadJob =
-                scopeProvider().launch(
-                    SilentHandler,
-                ) {
-                    val requestedQueue = queueController.currentQueue
-                    val mediaItems =
-                        queueController
-                            .nextPage()
-                    if (queueController.currentQueue !== requestedQueue) {
-                        return@launch
-                    }
-
-                    if (
-                        player.playbackState !=
-                        Player.STATE_IDLE
-                    ) {
-                        val existingIds =
-                            (0 until
-                                player.mediaItemCount)
-                                .map {
-                                    player
-                                        .getMediaItemAt(
-                                            it,
-                                        ).mediaId
-                                }.toSet()
-
-                        val newItems =
-                            mediaItems.filter {
-                                it.mediaId !in
-                                    existingIds
-                            }
-
-                        if (
-                            newItems.isNotEmpty()
-                        ) {
-                            player.addMediaItems(
-                                newItems,
-                            )
-                        }
-                    } else {
-                        presenceHistoryController
-                            .stopActivity()
-                    }
-                }
-        }
+        requestNextQueuePageIfNeeded()
 
         presenceHistoryController
             .onMediaItemTransition()
@@ -213,10 +152,62 @@ internal class PlaybackEventCoordinator(
         updateWidgets()
     }
 
+    /**
+     * La primera canción puede comenzar con un único elemento; las recomendaciones
+     * se obtienen después de preparar el reproductor, sin bloquear el audio.
+     * Al llegar a los últimos diez temas se solicitan nuevas páginas.
+     */
+    private fun requestNextQueuePageIfNeeded() {
+        val requestedQueue = queueController.currentQueue
+        if (paginationQueue !== requestedQueue) {
+            nextPageLoadJob?.cancel()
+            nextPageLoadJob = null
+            paginationQueue = requestedQueue
+        }
+
+        if (!queueController.initialQueueReady ||
+            player.playbackState == Player.STATE_IDLE ||
+            player.currentTimeline.isEmpty ||
+            nextPageLoadJob?.isActive == true
+        ) return
+
+        fun shouldLoad(): Boolean = QueuePrefetchPolicy.shouldLoad(
+            currentIndex = player.currentMediaItemIndex,
+            totalItems = player.mediaItemCount,
+            hasNextPage = queueController.hasNextPage(),
+            autoLoadEnabled = dataStore.get(AutoLoadMoreKey, true),
+            repeatEnabled = player.repeatMode != Player.REPEAT_MODE_OFF,
+            suppressed = queueController.suppressAutoPlayback,
+        )
+
+        if (!shouldLoad()) return
+        nextPageLoadJob = scopeProvider().launch(SilentHandler) {
+            repeat(MAX_PAGE_FETCHES_PER_EVENT) {
+                if (paginationQueue !== requestedQueue ||
+                    queueController.currentQueue !== requestedQueue ||
+                    !queueController.initialQueueReady ||
+                    player.playbackState == Player.STATE_IDLE ||
+                    !shouldLoad()
+                ) return@launch
+
+                val page = queueController.nextPage()
+                if (queueController.currentQueue !== requestedQueue) return@launch
+
+                val ids = (0 until player.mediaItemCount)
+                    .map { player.getMediaItemAt(it).mediaId }
+                    .toMutableSet()
+                val newItems = page.filter { ids.add(it.mediaId) }
+                if (newItems.isEmpty()) return@launch
+                player.addMediaItems(newItems)
+            }
+        }
+    }
+
     fun onPlaybackStateChanged(
         playbackState: Int,
     ) {
         updateWidgets()
+        if (playbackState == Player.STATE_READY) requestNextQueuePageIfNeeded()
 
         errorRecoveryController
             .onPlaybackStateChanged(
@@ -254,6 +245,7 @@ internal class PlaybackEventCoordinator(
     fun onEvents(
         events: Player.Events,
     ) {
+        if (events.contains(Player.EVENT_TIMELINE_CHANGED)) requestNextQueuePageIfNeeded()
         if (
             events.contains(
                 Player.EVENT_MEDIA_METADATA_CHANGED,
@@ -423,6 +415,6 @@ internal class PlaybackEventCoordinator(
     }
 
     private companion object {
-        const val PAGE_PREFETCH_THRESHOLD = 10
+        const val MAX_PAGE_FETCHES_PER_EVENT = 4
     }
 }
