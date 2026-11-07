@@ -110,9 +110,6 @@ fun LyricsScreen(
                             Icon(painterResource(R.drawable.more_horiz), stringResource(R.string.more_options))
                         }
                     }
-                    com.arturo254.opentune.ui.player.panels.GalaxPanelTimelineHeader(
-                        title = stringResource(R.string.lyrics),
-                    )
                     BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
                         val lyricContent: @Composable () -> Unit = {
                             if (useLyricsV2) LyricsV2(sliderPositionProvider = { sliderPosition.value })
