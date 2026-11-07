@@ -28,17 +28,32 @@ class YouTubeQueue(
     private var currentPagingSeedMediaId: String? =
         fallbackSeedMediaId
     private var consecutiveEmptyPageLoads = 0
+    private var nextApiUnavailable = false
+    private var fallbackSearchCursor: String? = null
+    private var fallbackSearchQueryIndex = 0
 
     private val recommendationMode: Boolean
         get() = preloadItem != null
 
     override suspend fun getInitialStatus(): Queue.Status =
         withContext(IO) {
-            val first =
-                loadNextResilient(
-                    endpoint = endpoint,
-                    continuation = null,
+            val first = runCatching {
+                loadNextResilient(endpoint = endpoint, continuation = null)
+            }.getOrNull()
+
+            if (first == null) {
+                // La VPS puede reproducir audio incluso si Innertube /next deja de funcionar.
+                // Nunca bloqueamos el tema seleccionado por culpa de las recomendaciones.
+                nextApiUnavailable = true
+                val selected = preloadItem
+                    ?: return@withContext Queue.Status(title = null, items = emptyList(), mediaItemIndex = 0)
+                seenMediaIds += selected.id
+                return@withContext Queue.Status(
+                    title = null,
+                    items = listOf(selected.toMediaItem()),
+                    mediaItemIndex = 0,
                 )
+            }
 
             // Solo una solicitud para iniciar: completar 50 canciones pertenece
             // a nextPage(), ejecutado en segundo plano por el servicio.
@@ -124,7 +139,7 @@ class YouTubeQueue(
             val collected =
                 LinkedHashMap<String, MediaItem>()
 
-            if (continuation != null) {
+            if (!nextApiUnavailable && continuation != null) {
                 loadContinuationBatch()
                     .forEach { item ->
                         if (
@@ -142,6 +157,7 @@ class YouTubeQueue(
 
             if (
                 recommendationMode &&
+                !nextApiUnavailable &&
                 collected.size <
                     TARGET_BATCH_SIZE
             ) {
@@ -169,6 +185,13 @@ class YouTubeQueue(
                             )
                     }
                 }
+            }
+
+            if (recommendationMode && collected.size < TARGET_BATCH_SIZE) {
+                loadSearchFallbackBatch(
+                    excludedMediaIds = seenMediaIds + collected.keys,
+                    limit = TARGET_BATCH_SIZE - collected.size,
+                ).forEach { collected.putIfAbsent(it.mediaId, it) }
             }
 
             val nextItems =
@@ -382,6 +405,57 @@ class YouTubeQueue(
         return collected.values.toList()
     }
 
+    /**
+     * Si /next o las radios fallan, utiliza la búsqueda de canciones por artista
+     * con paginación independiente. Esto no reemplaza recomendaciones personales,
+     * pero sí evita quedarse con una sola canción cuando falla el feed de radio.
+     */
+    private suspend fun loadSearchFallbackBatch(
+        excludedMediaIds: Set<String>,
+        limit: Int,
+    ): List<MediaItem> {
+        if (limit <= 0) return emptyList()
+        val queries = buildList {
+            preloadItem?.artists?.map { it.name }?.filter(String::isNotBlank)?.let(::addAll)
+            preloadItem?.title?.takeIf(String::isNotBlank)?.let(::add)
+        }.distinct()
+        val output = LinkedHashMap<String, MediaItem>()
+        var attempts = 0
+
+        while (output.size < limit &&
+            fallbackSearchQueryIndex < queries.size &&
+            attempts < MAX_SEARCH_FALLBACK_PAGES
+        ) {
+            val page = runCatching {
+                val continuation = fallbackSearchCursor
+                if (continuation != null) {
+                    YouTube.searchContinuation(continuation).getOrThrow()
+                } else {
+                    YouTube.search(
+                        query = queries[fallbackSearchQueryIndex],
+                        filter = YouTube.SearchFilter.FILTER_SONG,
+                    ).getOrThrow()
+                }
+            }.getOrNull()
+
+            attempts++
+            if (page == null) {
+                fallbackSearchCursor = null
+                fallbackSearchQueryIndex++
+                continue
+            }
+
+            page.items.filterIsInstance<SongItem>().forEach { song ->
+                if (song.id !in excludedMediaIds) {
+                    output.putIfAbsent(song.id, song.toMediaItem())
+                }
+            }
+            fallbackSearchCursor = page.continuation
+            if (fallbackSearchCursor == null) fallbackSearchQueryIndex++
+        }
+        return output.values.take(limit)
+    }
+
     private suspend fun loadNextResilient(
         endpoint: WatchEndpoint,
         continuation: String?,
@@ -402,7 +476,10 @@ class YouTubeQueue(
                 endpoint = endpoint,
                 continuation = continuation,
                 followAutomixPreview = false,
-            ).getOrThrow()
+            ).getOrElse { error ->
+                nextApiUnavailable = true
+                throw error
+            }
     }
 
     private fun buildInitialMediaItems(
@@ -471,6 +548,7 @@ class YouTubeQueue(
         private const val MAX_FALLBACK_SEEDS = 6
         private const val RECENT_SEED_CANDIDATES = 12
         private const val MAX_CONSECUTIVE_EMPTY_LOADS = 3
+        private const val MAX_SEARCH_FALLBACK_PAGES = 4
 
         fun radio(
             song: MediaMetadata,
