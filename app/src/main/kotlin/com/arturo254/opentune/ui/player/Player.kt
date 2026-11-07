@@ -52,6 +52,8 @@ import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.arturo254.opentune.ui.player.visual.PlayerArtworkAtmosphere
 import com.arturo254.opentune.ui.component.LocalEnableLiquidGlass
+import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidTuning
+import com.arturo254.opentune.ui.player.visual.playerVisualGlassEffect
 import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidBackdrop
 import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxCanvasLive
 import androidx.compose.runtime.CompositionLocalProvider
@@ -105,6 +107,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
@@ -157,6 +160,8 @@ import com.arturo254.opentune.constants.DisableBlurKey
 import com.arturo254.opentune.constants.PlayerButtonsStyle
 import com.arturo254.opentune.constants.PlayerButtonsStyleKey
 import com.arturo254.opentune.constants.QueuePeekHeight
+import com.arturo254.opentune.constants.MiniPlayerHeight
+import com.arturo254.opentune.constants.MiniPlayerBottomSpacing
 import com.arturo254.opentune.constants.SliderStyle
 import com.arturo254.opentune.constants.SliderStyleKey
 import com.arturo254.opentune.extensions.togglePlayPause
@@ -203,6 +208,9 @@ fun BottomSheetPlayer(
     lyricsSyncOffset: Int,
     modifier: Modifier = Modifier,
     pureBlack: Boolean,
+    dockMergeProgress: Float = 0f,
+    dockNavigationHeight: Dp = 0.dp,
+    collapsedDockNavigation: (@Composable BoxScope.() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -554,14 +562,65 @@ fun BottomSheetPlayer(
             playerConnection.service.stopAndClearPlayback()
         },
         collapsedContent = {
+            val merge = dockMergeProgress.coerceIn(0f, 1f)
+            if (merge > 0.002f && collapsedDockNavigation != null) {
+                val liquidEnabled = LocalEnableLiquidGlass.current
+                val liquidRadius = LocalGalaxLiquidTuning.current?.cornerRadiusDp
+                val dockShape = androidx.compose.foundation.shape.RoundedCornerShape(
+                    if (liquidEnabled) (liquidRadius ?: 36f).dp else 28.dp
+                )
+                // Exactly one optical shell expands from the song capsule
+                // around the navigation row. This reuses the selected glass
+                // variant, including its refraction and tuning, never a shader
+                // specific to the merging animation.
+                Box(
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(horizontal = 12.dp)
+                        .fillMaxWidth()
+                        .height(MiniPlayerHeight + (MiniPlayerBottomSpacing + dockNavigationHeight) * merge)
+                        .graphicsLayer { alpha = merge }
+                        .clip(dockShape)
+                        .background(
+                            if (liquidEnabled) Color.Transparent
+                            else if (pureBlack) Color.Black.copy(alpha = .92f)
+                            else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = .96f)
+                        )
+                        .playerVisualGlassEffect(shape = dockShape, pureBlack = pureBlack)
+                        .then(
+                            if (liquidEnabled) Modifier
+                            else Modifier.border(
+                                1.dp,
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = .38f),
+                                dockShape,
+                            )
+                        )
+                )
+                // A thin dividing glint provides hierarchy without creating a
+                // second floating surface or interfering with hit targets.
+                Box(
+                    Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(horizontal = 30.dp)
+                        .offset(y = MiniPlayerHeight + MiniPlayerBottomSpacing / 2)
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .graphicsLayer { alpha = merge * .32f }
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = .5f))
+                )
+            }
             MiniPlayer(
                 playerState = playerState,
                 playbackIndex = currentWindowIndex,
                 queueSize = queueWindows.size,
                 pureBlack = pureBlack,
                 navController = navController,
-                state = state
+                state = state,
+                dockMergeProgress = merge,
             )
+            if (merge > 0.002f) {
+                collapsedDockNavigation?.invoke(this)
+            }
         },
     ) {
         CompositionLocalProvider(
