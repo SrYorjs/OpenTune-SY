@@ -119,6 +119,7 @@ El catálogo contiene **los 112 archivos Kotlin de `ui/screens/`**, tanto pantal
 
 | Archivo relativo | Qué controla | Ruta en la app |
 | --- | --- | --- |
+| `search/OrbitResultsExperience.kt` | Búsqueda Órbita: cabecera editorial, categorías segmentadas y canciones numeradas con reproducción, versiones y descarga | `search/{query}` |
 | `search/PrismSearchBar.kt` | Entrada de búsqueda, teclado y fondo continuo de los resultados | `search/{query} · búsqueda superpuesta` |
 | `search/PrismSearchDesign.kt` | Fondo continuo, partículas, cristal y distribución según las restricciones de la ventana | `—` |
 | `search/PrismResultComponents.kt` | Filas de grabaciones, categorías, colecciones, carga y avisos de proveedores | `search/{query} · búsqueda superpuesta` |
@@ -128,7 +129,7 @@ El catálogo contiene **los 112 archivos Kotlin de `ui/screens/`**, tanto pantal
 | `search/UniversalSearchScreen.kt` | Resultados universales Prism, canciones, listas y álbumes con sus vistas de colección | `search/{query} · búsqueda superpuesta` |
 | `search/UniversalVersionQualityDialog.kt` | Selector adaptable de versiones y calidad con desplazamiento | `diálogo interno` |
 
-La sección Buscar utiliza Prism para la exploración, los resultados, las colecciones internas, el selector de versiones y las rutas de géneros, tendencias, novedades y navegación de catálogos. Los detalles generales `album/{albumId}`, `artist/{artistId}` y `online_playlist/{playlistId}` siguen siendo destinos compartidos por Inicio, Buscar y Biblioteca.
+La sección Buscar conserva Prism para exploración y fondos, mientras Órbita presenta los resultados de canciones y filtros. Las colecciones internas, el selector de versiones y las rutas de géneros, tendencias, novedades y navegación de catálogos. Los detalles generales `album/{albumId}`, `artist/{artistId}` y `online_playlist/{playlistId}` siguen siendo destinos compartidos por Inicio, Buscar y Biblioteca.
 
 ## Ajustes, apariencia y pantallas secundarias (40)
 
