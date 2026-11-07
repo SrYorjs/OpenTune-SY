@@ -39,6 +39,12 @@ internal class QueueController(
     internal var currentQueue: Queue = EmptyQueue
     private var activePlayQueueJob: Job? = null
     internal var queueTitle: String? = null
+    internal var onInitialQueueReady: (() -> Unit)? = null
+
+    private fun notifyInitialQueueReady() {
+        initialQueueReady = true
+        onInitialQueueReady?.invoke()
+    }
 
     @Volatile
     internal var initialQueueReady: Boolean = true
@@ -73,7 +79,7 @@ internal class QueueController(
             player.prepare()
             player.playWhenReady = false
             onCurrentMetadataChanged()
-            initialQueueReady = true
+            notifyInitialQueueReady()
             onQueueRestored()
 
             scheduleDeferredQueueLoad(
@@ -118,7 +124,7 @@ internal class QueueController(
             if (currentQueue !== queue) return@launch
             initialStatus.title?.let { queueTitle = it }
             if (initialStatus.items.isEmpty()) {
-                initialQueueReady = true
+                notifyInitialQueueReady()
                 return@launch
             }
 
@@ -141,7 +147,7 @@ internal class QueueController(
                 if (player.shuffleModeEnabled) {
                     applyCurrentFirstShuffleOrder()
                 }
-                initialQueueReady = true
+                notifyInitialQueueReady()
                 return@launch
             }
 
@@ -166,7 +172,7 @@ internal class QueueController(
                 allItems = items,
                 window = window,
             )
-            initialQueueReady = true
+            notifyInitialQueueReady()
         }
     }
 
