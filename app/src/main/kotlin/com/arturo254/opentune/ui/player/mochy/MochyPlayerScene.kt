@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.arturo254.opentune.R
+import com.arturo254.opentune.ui.component.MochyOdometer
 import com.arturo254.opentune.ui.player.state.PlayerState
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -359,7 +360,7 @@ private fun MochyStyleArtwork(
                 }
                 if (style == MochyPlayerStyle.BEDSIDE) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(clock, fontWeight = FontWeight.Light, fontSize = 69.sp, color = ink, letterSpacing = -4.sp)
+                        MochyOdometer(value = clock, fontSize = 56.sp, color = ink)
                         Spacer(Modifier.height(8.dp))
                         Text(state.title.orEmpty(), color = ink.copy(alpha = .67f),
                             style = MaterialTheme.typography.titleSmall, maxLines = 1)
@@ -373,7 +374,7 @@ private fun MochyStyleArtwork(
                         }
                         Box(Modifier.weight(1f).height(dimension * .70f).clip(RoundedCornerShape(23.dp))
                             .background(Color.White.copy(alpha = .09f)), contentAlignment = Alignment.Center) {
-                            Text(clock, fontWeight = FontWeight.Light, fontSize = 28.sp, color = ink)
+                            MochyOdometer(value = clock, fontSize = 26.sp, color = ink)
                         }
                     }
                 }
