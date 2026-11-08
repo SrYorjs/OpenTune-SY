@@ -2,6 +2,8 @@ package com.arturo254.opentune.ui.screens.search
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -238,9 +240,9 @@ fun UniversalSearchScreen(
         insets ->
         LazyColumn(
             state = list,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().background(Color.Black),
             contentPadding = insets,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item("prism/results/header") {
                 OrbitResultsHero(
