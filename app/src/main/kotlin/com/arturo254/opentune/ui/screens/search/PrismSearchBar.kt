@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.R
+import com.arturo254.opentune.ui.mochy.search.SearchField
 import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidBackdrop
 import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidEffect
 import com.kyant.backdrop.backdrops.layerBackdrop
@@ -64,66 +65,37 @@ internal fun PrismSearchBar(
                         .padding(horizontal = 20.dp, vertical = 10.dp),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Row(
-                        Modifier.widthIn(max = 1072.dp)
-                            .fillMaxWidth()
-                            .galaxLiquidEffect(
-                                pureBlack = pureBlack,
-                                shapeOverride = RoundedCornerShape(22.dp),
-                            )
-                            .heightIn(min = 56.dp)
-                            .padding(horizontal = 4.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                painterResource(R.drawable.arrow_back),
-                                stringResource(R.string.back_button_desc),
-                            )
-                        }
-                        BasicTextField(
-                            value = query,
-                            onValueChange = onQueryChange,
-                            modifier =
-                                Modifier.weight(1f)
-                                    .padding(vertical = 8.dp)
-                                    .focusRequester(focusRequester)
-                                    .onFocusChanged {
-                                        if (it.isFocused && !active) onActiveChange(true)
-                                    }
-                                    .semantics { contentDescription = inputLabel },
-                            textStyle =
-                                MaterialTheme.typography.bodyLarge.copy(
-                                    color = MaterialTheme.colorScheme.onSurface
-                                ),
-                            singleLine = true,
-                            cursorBrush = SolidColor(MaterialTheme.colorScheme.tertiary),
-                            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                            keyboardActions = KeyboardActions(onSearch = { onSearch(query.text) }),
-                            decorationBox = { input ->
-                                Box {
-                                    if (query.text.isEmpty())
-                                        Text(
-                                            stringResource(R.string.prism_search_hint),
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                        )
-                                    input()
-                                }
-                            },
-                        )
-                        if (query.text.isNotEmpty())
-                            IconButton(onClick = { onQueryChange(TextFieldValue()) }) {
+                    SearchField(
+                        value = query,
+                        onValueChange = onQueryChange,
+                        onSearch = onSearch,
+                        placeholder = stringResource(R.string.prism_search_hint),
+                        modifier = Modifier.widthIn(max = 1072.dp).fillMaxWidth(),
+                        focused = active,
+                        focusRequester = focusRequester,
+                        onFocusChanged = { focused ->
+                            if (focused && !active) onActiveChange(true)
+                        },
+                        leading = {
+                            IconButton(onClick = onBack) {
                                 Icon(
-                                    painterResource(R.drawable.close),
-                                    stringResource(R.string.prism_clear),
-                                    Modifier.size(20.dp),
+                                    painterResource(R.drawable.arrow_back),
+                                    stringResource(R.string.back_button_desc),
                                 )
                             }
-                        else Spacer(Modifier.width(16.dp))
-                    }
+                        },
+                        trailing = {
+                            if (query.text.isNotBlank()) {
+                                IconButton(onClick = { onQueryChange(TextFieldValue()) }) {
+                                    Icon(
+                                        painterResource(R.drawable.close),
+                                        stringResource(R.string.prism_clear),
+                                        modifier = Modifier.size(20.dp),
+                                    )
+                                }
+                            }
+                        },
+                    )
                 }
                 if (active) Box(Modifier.weight(1f)) { content() }
             }
