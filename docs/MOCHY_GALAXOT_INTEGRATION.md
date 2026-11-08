@@ -6,6 +6,14 @@ Mochy Music: https://github.com/realidkroo/Mochy-Music (realidkroo y colaborador
 
 Mochy Music usa GNU General Public License, versión 3. La integración debe conservar atribuciones y avisos de copyright de cualquier archivo trasplantado, y respetar las licencias de sus dependencias. GalaxOT también mantiene un archivo LICENSE con GPL-3.0.
 
+## Componentes de código adaptados
+
+- `ui/component/MochyPress3D.kt`: adaptación del gesto de inclinación y rebote `ui/component/Press3D.kt` de Mochy Music. Aplicado a tarjetas de selección de tema y resultados de búsqueda.
+- `ui/component/MochyOdometer.kt`: adaptación del desplazamiento vertical de dígitos de `ui/component/OdometerText.kt` de Mochy Music. Usado en las escenas Bedside.
+- `ui/player/mochy/`: implementaciones de diseño y adaptación de metadatos/control al host de GalaxOT, basadas en las categorías de estilos definidas en Mochy Music, sin importar sus servicios de reproducción.
+
+Enlace al código de origen: https://github.com/realidkroo/Mochy-Music/tree/main/app/src/main/kotlin/com/mochyy/mochymusic/ui
+
 ## Límites de la integración
 
 La barra inferior flotante, la musicminibar, las transiciones del dock, el motor GalaxLiquid/GalaxGlass, los estilos originales V1–V17, la cola dinámica, la VPS y los resolutores de audio continúan bajo la arquitectura GalaxOT. No se reemplazan los servicios Media3, la base de datos ni las credenciales guardadas.
