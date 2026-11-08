@@ -44,6 +44,9 @@ import com.arturo254.opentune.ui.mochy.component.SmoothCornerShape
 import com.arturo254.opentune.ui.mochy.component.press3D
 import com.arturo254.opentune.ui.mochy.component.revealOnAppear
 import com.arturo254.opentune.ui.mochy.component.rememberRevealSeenState
+import com.arturo254.opentune.ui.mochy.home.HomeTrackRow
+import com.arturo254.opentune.ui.mochy.home.HomeCoverCard
+import com.arturo254.opentune.ui.mochy.home.HomeSectionTitle
 import com.arturo254.opentune.ui.menu.*
 import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.viewmodels.HomeViewModel
@@ -190,7 +193,7 @@ fun HomeScreen(
         }
     }
     PulseScreenFrame(active = ambientActive) { layout, safePadding ->
-        Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().background(Color.Black)) {
             val featuredArtworks = remember(feature?.thumbnailUrl, featuredRemote?.thumbnail, featuredSource?.artworkUrl, recent) {
                 listOfNotNull(
                     feature?.thumbnailUrl,
@@ -295,7 +298,7 @@ fun HomeScreen(
                     }
                 }
             if (recent.isNotEmpty()) {
-                item("pulse/recent-heading") { PulseHeading(stringResource(R.string.pulse_recent)) }
+                item("pulse/recent-heading") { HomeSectionTitle(stringResource(R.string.pulse_recent)) }
                 item("pulse/recent") {
                     LazyRow(
                         contentPadding = PaddingValues(horizontal = 24.dp),
@@ -316,9 +319,9 @@ fun HomeScreen(
             }
             if (trends.isNotEmpty() && chip == null) {
                 item("pulse/trends-heading") {
-                    PulseHeading(
-                        stringResource(R.string.pulse_trending),
-                        stringResource(R.string.pulse_trending_detail),
+                    HomeSectionTitle(
+                        title = stringResource(R.string.pulse_trending),
+                        label = stringResource(R.string.pulse_trending_detail),
                     )
                 }
                 item("pulse/trends") {
@@ -345,7 +348,7 @@ fun HomeScreen(
                 }
             }
             if (selection.isNotEmpty()) {
-                item("pulse/picks-heading") { PulseHeading(stringResource(R.string.pulse_picks)) }
+                item("pulse/picks-heading") { HomeSectionTitle(stringResource(R.string.pulse_picks)) }
                 itemsIndexed(
                     selection.take(6).chunked(layout.columns),
                     key = { index, _ -> "pulse/picks/$index" },
@@ -369,14 +372,14 @@ fun HomeScreen(
                 }
             }
             if (dial.isNotEmpty()) {
-                item("pulse/dial-heading") { PulseHeading(stringResource(R.string.speed_dial)) }
+                item("pulse/dial-heading") { HomeSectionTitle(stringResource(R.string.speed_dial)) }
                 item("pulse/dial") {
                     PulseShelf(dial.distinctBy { it.id }.take(16), current?.id, playing, play, menu)
                 }
             }
             if (!forgotten.isNullOrEmpty()) {
                 item("pulse/favorites-heading") {
-                    PulseHeading(stringResource(R.string.forgotten_favorites))
+                    HomeSectionTitle(stringResource(R.string.forgotten_favorites))
                 }
                 item("pulse/favorites") {
                     PulseShelf(
@@ -391,7 +394,7 @@ fun HomeScreen(
             catalog?.sections.orEmpty().forEachIndexed { index, section ->
                 item(galaxHomeSectionRowKey(index, true)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.weight(1f)) { PulseHeading(section.title, section.label) }
+                        Box(Modifier.weight(1f)) { HomeSectionTitle(title = section.title, label = section.label) }
                         if (section.endpoint?.browseId != null)
                             TextButton(
                                 onClick = {
@@ -463,56 +466,18 @@ private fun PulseTrackRow(
     onMenu: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier
-            .press3D(maxTilt = 3f, pressedScale = .975f)
-            .clip(SmoothCornerShape(22.dp))
-            .background(
-                MaterialTheme.colorScheme.surfaceContainerHigh.copy(
-                    alpha = if (active) .85f else .5f
-                )
-            )
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(start = 10.dp, top = 10.dp, bottom = 10.dp, end = 2.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        Box(Modifier.size(54.dp).clip(RoundedCornerShape(14.dp))) {
-            PulseCoverArt(song.thumbnailUrl, Modifier.fillMaxSize())
-            if (active && playing)
-                Icon(
-                    painterResource(R.drawable.pause),
-                    null,
-                    Modifier.align(Alignment.BottomEnd)
-                        .size(22.dp)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape)
-                        .padding(3.dp),
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                )
-        }
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                song.title,
-                style = MaterialTheme.typography.titleSmall,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                song.artists.joinToString { it.name },
-                style = MaterialTheme.typography.bodySmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        IconButton(onClick = onMenu) {
-            Icon(
-                painterResource(R.drawable.more_vert),
-                stringResource(R.string.pulse_options),
-                Modifier.size(20.dp),
-            )
-        }
-    }
+    HomeTrackRow(
+        thumbnailUrl = song.thumbnailUrl,
+        title = song.title,
+        subtitle = song.artists.joinToString { it.name },
+        isActive = active,
+        isPlaying = playing,
+        onClick = onClick,
+        onLongClick = onMenu,
+        onMoreClick = onMenu,
+        modifier = modifier,
+        songId = song.id,
+    )
 }
 
 @Composable
@@ -558,57 +523,25 @@ private fun PulseCover(
     circular: Boolean = false,
 ) {
     Column(
-        Modifier.width(coverWidth)
-            .press3D(maxTilt = 4f, pressedScale = .965f)
-            .combinedClickable(
-                role = Role.Button,
-                onClick = onClick,
-                onLongClick = onMenu,
-                onLongClickLabel = stringResource(R.string.pulse_options),
-            ),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.width(coverWidth).combinedClickable(
+            role = Role.Button,
+            onClick = onClick,
+            onLongClick = onMenu,
+            onLongClickLabel = stringResource(R.string.pulse_options),
+        ),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Box {
-            PulseCoverArt(
-                artwork,
-                Modifier.fillMaxWidth()
-                    .aspectRatio(1f)
-                    .clip(if (circular) CircleShape else SmoothCornerShape(22.dp)),
-            )
-            if (busy)
-                CircularProgressIndicator(
-                    Modifier.align(Alignment.Center).size(28.dp),
-                    strokeWidth = 2.dp,
-                )
-            if (selected)
-                Box(
-                    Modifier.align(Alignment.BottomEnd)
-                        .padding(8.dp)
-                        .size(32.dp)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        painterResource(R.drawable.pause),
-                        null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
+        HomeCoverCard(
+            title = title,
+            subtitle = subtitle,
+            thumbnailUrl = artwork,
+            circular = circular,
+            isActive = selected,
+            isPlaying = selected && !busy,
+        )
+        if (busy) {
+            LinearProgressIndicator(Modifier.fillMaxWidth())
         }
-        Text(
-            title,
-            style = MaterialTheme.typography.titleSmall,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Text(
-            subtitle,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 
