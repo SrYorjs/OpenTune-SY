@@ -1,47 +1,30 @@
 package com.arturo254.opentune.ui.screens.search
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -49,12 +32,14 @@ import androidx.compose.ui.unit.sp
 import com.arturo254.opentune.R
 import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
+import com.arturo254.opentune.ui.mochy.component.RoundedHighlight
+import com.arturo254.opentune.ui.mochy.search.SearchArtwork
+import com.arturo254.opentune.ui.mochy.search.SearchCategoryRow
+import com.arturo254.opentune.ui.mochy.search.SearchColors
+import com.arturo254.opentune.ui.mochy.search.SearchHorizontalPadding
+import com.arturo254.opentune.ui.mochy.search.SearchRule
+import com.arturo254.opentune.ui.mochy.search.SearchSectionHeader
 
-/**
- * ÓRBITA / Refined search. The content is the hero, not the glass container.
- * Subtle layered highlights inherit the album-reactive Material scheme and the
- * Prism atmosphere; no new optical renderer, provider badges or version picker.
- */
 @Composable
 internal fun OrbitResultsHero(
     title: String,
@@ -62,60 +47,33 @@ internal fun OrbitResultsHero(
     subtitle: String,
     onBack: (() -> Unit)? = null,
 ) {
-    val colors = MaterialTheme.colorScheme
     Column(
-        Modifier.fillMaxWidth()
-            .padding(start = 24.dp, end = 24.dp, top = 18.dp, bottom = 6.dp),
-        verticalArrangement = Arrangement.spacedBy(13.dp),
+        modifier = Modifier.fillMaxWidth()
+            .background(SearchColors.page(true))
+            .padding(top = 20.dp, bottom = 3.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (onBack != null) {
-            TextButton(onClick = onBack, contentPadding = PaddingValues(0.dp)) {
-                Text("‹", style = MaterialTheme.typography.headlineSmall)
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(R.string.close))
-            }
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(6.dp).clip(CircleShape).background(colors.primary))
-            Spacer(Modifier.width(9.dp))
-            Text(
-                eyebrow.uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                color = colors.primary,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 2.sp,
-            )
-            Spacer(Modifier.weight(1f))
-            // Small kinetic-inspired motif; deliberately static while scrolling.
-            Canvas(Modifier.size(27.dp)) {
-                val center = center
-                drawCircle(colors.primary.copy(alpha = .32f), style = Stroke(1.dp.toPx()))
-                drawCircle(colors.primary.copy(alpha = .57f), radius = size.minDimension * .29f, style = Stroke(1.dp.toPx()))
-                drawCircle(colors.primary, radius = 2.5.dp.toPx(), center = center)
+            TextButton(onClick = onBack, modifier = Modifier.padding(horizontal = 13.dp)) {
+                Text("‹  " + stringResource(R.string.close), color = SearchColors.Primary)
             }
         }
         Text(
-            title,
-            color = colors.onSurface,
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            lineHeight = 38.sp,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
+            text = eyebrow.uppercase(),
+            modifier = Modifier.padding(horizontal = SearchHorizontalPadding),
+            color = SearchColors.Secondary,
+            style = MaterialTheme.typography.labelSmall,
+            letterSpacing = 2.sp,
         )
+        SearchSectionHeader(title = title, ruleAbove = false, large = true)
         Text(
-            subtitle,
-            color = colors.onSurfaceVariant,
+            text = subtitle,
+            modifier = Modifier.padding(horizontal = SearchHorizontalPadding),
+            color = SearchColors.Secondary,
             style = MaterialTheme.typography.bodySmall,
             maxLines = 2,
         )
-        Box(
-            Modifier.fillMaxWidth().height(1.dp).background(
-                Brush.horizontalGradient(
-                    listOf(colors.primary.copy(alpha = .52f), colors.outlineVariant.copy(alpha = .36f), Color.Transparent)
-                )
-            )
-        )
+        Spacer(Modifier.size(5.dp))
     }
 }
 
@@ -124,57 +82,24 @@ internal fun OrbitResultsCategories(
     selected: SearchResultCategory,
     onSelect: (SearchResultCategory) -> Unit,
 ) {
-    val colors = MaterialTheme.colorScheme
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 3.dp),
-        horizontalArrangement = Arrangement.spacedBy(7.dp),
-    ) {
-        items(SearchResultCategory.entries, key = { it.name }) { category ->
-            val label = stringResource(when (category) {
+    val categories = SearchResultCategory.entries
+    val labels = categories.map { category ->
+        stringResource(
+            when (category) {
                 SearchResultCategory.ALL -> R.string.prism_results_all
                 SearchResultCategory.SONGS -> R.string.prism_results_songs
                 SearchResultCategory.PLAYLISTS -> R.string.prism_results_playlists
                 SearchResultCategory.ALBUMS -> R.string.prism_results_albums
-            })
-            val active = selected == category
-            val surface by animateColorAsState(
-                if (active) colors.primary.copy(alpha = .15f) else colors.surfaceContainer.copy(alpha = .35f),
-                animationSpec = spring(dampingRatio = .88f, stiffness = 450f),
-                label = "Orbit category surface",
-            )
-            val textColor by animateColorAsState(
-                if (active) colors.primary else colors.onSurfaceVariant,
-                label = "Orbit category text",
-            )
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(100.dp))
-                    .background(surface)
-                    .border(
-                        1.dp,
-                        if (active) colors.primary.copy(alpha = .38f)
-                        else colors.outlineVariant.copy(alpha = .20f),
-                        RoundedCornerShape(100.dp),
-                    )
-                    .clickable(role = Role.Tab) { onSelect(category) }
-                    .padding(horizontal = 17.dp, vertical = 10.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    label,
-                    color = textColor,
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
-                )
             }
-        }
+        )
     }
+    SearchCategoryRow(
+        categories = labels,
+        selectedIndex = categories.indexOf(selected).coerceAtLeast(0),
+        onSelect = { index -> categories.getOrNull(index)?.let(onSelect) },
+    )
 }
 
-/**
- * A single-line, artwork-first music library row. All actionable controls have
- * dedicated hit targets; the source is resolved silently and automatically.
- */
 @Composable
 internal fun OrbitRecordingRow(
     index: Int,
@@ -189,113 +114,100 @@ internal fun OrbitRecordingRow(
     onDownload: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val colors = MaterialTheme.colorScheme
-    val displayed = preferred ?: result.recommendedVariant
-    val artwork = displayed?.artworkUrl ?: result.variants.firstNotNullOfOrNull { it.artworkUrl }
-    val activeTint by animateColorAsState(
-        targetValue = if (active) colors.primary.copy(alpha = .12f) else Color.Transparent,
-        label = "Orbit active recording",
-    )
-    BoxWithConstraints(modifier.fillMaxWidth().padding(horizontal = 13.dp)) {
-        val compact = maxWidth / LocalDensity.current.fontScale < 350.dp
+    val thumbnail = preferred?.artworkUrl
+        ?: result.recommendedVariant?.artworkUrl
+        ?: result.variants.firstNotNullOfOrNull { it.artworkUrl }
+    val indication = remember { RoundedHighlight(cornerRadius = 100.dp, spillX = (-10).dp) }
+    val interaction = remember { MutableInteractionSource() }
+    val subtitle = result.identity.artists.joinToString { it.name }
+    Column(modifier = modifier.fillMaxWidth()) {
         Row(
-            Modifier.fillMaxWidth()
-                .clip(RoundedCornerShape(17.dp))
-                .background(activeTint)
-                .heightIn(min = 73.dp)
-                .padding(start = 7.dp, end = 4.dp, top = 7.dp, bottom = 7.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(9.dp),
-        ) {
-            if (!compact) {
-                Text(
-                    (index + 1).toString().padStart(2, '0'),
-                    modifier = Modifier.width(27.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (active) colors.primary else colors.onSurfaceVariant.copy(alpha = .63f),
-                    fontWeight = FontWeight.Medium,
+            modifier = Modifier.fillMaxWidth()
+                .clickable(
+                    enabled = onPlay != null,
+                    interactionSource = interaction,
+                    indication = indication,
+                    onClick = { onPlay?.invoke() },
                 )
-            }
-            Box(
-                Modifier.size(if (compact) 49.dp else 55.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-            ) {
-                PrismArtwork(artwork, Modifier.matchParentSize())
+                .padding(horizontal = SearchHorizontalPadding, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box {
+                SearchArtwork(url = thumbnail, size = 46.dp)
                 if (resolving) {
-                    Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = .30f)))
-                    CircularProgressIndicator(
-                        Modifier.align(Alignment.Center).size(22.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp,
-                    )
+                    Box(Modifier.size(46.dp), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp,
+                        )
+                    }
                 }
             }
-            Column(
-                Modifier.weight(1f).clickable(enabled = onPlay != null, role = Role.Button) {
-                    onPlay?.invoke()
-                }.padding(vertical = 6.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
                 Text(
-                    result.identity.title,
-                    color = if (active) colors.primary else colors.onSurface,
-                    fontWeight = FontWeight.SemiBold,
-                    style = MaterialTheme.typography.titleSmall,
+                    text = result.identity.title,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    ),
+                    color = if (active) Color(0xFF7FD1FF) else SearchColors.Primary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    result.identity.artists.joinToString { it.name },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.onSurfaceVariant,
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                    color = SearchColors.Secondary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 if (downloaded) {
                     Text(
                         stringResource(R.string.prism_results_offline),
+                        color = Color(0xFF7FD1FF),
                         style = MaterialTheme.typography.labelSmall,
-                        color = colors.primary,
-                        maxLines = 1,
                     )
                 }
             }
-            if (onPlay != null) {
-                IconButton(onClick = onPlay, modifier = Modifier.size(39.dp)) {
-                    Box(
-                        Modifier.size(35.dp)
-                            .clip(CircleShape)
-                            .background(colors.primary.copy(alpha = if (active) .18f else .09f)),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            painterResource(if (active && playing) R.drawable.pause else R.drawable.play),
-                            stringResource(if (active && playing) R.string.prism_results_pause else R.string.prism_results_play),
-                            tint = colors.primary,
-                            modifier = Modifier.size(19.dp),
-                        )
-                    }
+            if (resolving) {
+                CircularProgressIndicator(
+                    Modifier.size(21.dp),
+                    strokeWidth = 1.8.dp,
+                    color = SearchColors.Primary,
+                )
+            } else if (onPlay != null) {
+                IconButton(onClick = onPlay, modifier = Modifier.size(35.dp)) {
+                    Icon(
+                        painter = painterResource(
+                            if (active && playing) R.drawable.pause else R.drawable.play
+                        ),
+                        contentDescription = stringResource(
+                            if (active && playing) R.string.prism_results_pause else R.string.prism_results_play
+                        ),
+                        tint = SearchColors.Primary,
+                        modifier = Modifier.size(20.dp),
+                    )
                 }
             }
             if (downloading) {
-                Box(Modifier.size(37.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(Modifier.size(19.dp), strokeWidth = 2.dp)
-                }
+                CircularProgressIndicator(
+                    modifier = Modifier.padding(7.dp).size(18.dp),
+                    color = SearchColors.Secondary,
+                    strokeWidth = 2.dp,
+                )
             } else if (onDownload != null) {
-                IconButton(onClick = onDownload, modifier = Modifier.size(37.dp)) {
+                IconButton(onClick = onDownload, modifier = Modifier.size(34.dp)) {
                     Icon(
-                        painterResource(R.drawable.download),
-                        stringResource(R.string.prism_results_download, result.identity.title),
-                        tint = colors.onSurfaceVariant,
-                        modifier = Modifier.size(19.dp),
+                        painter = painterResource(R.drawable.download),
+                        contentDescription = stringResource(R.string.prism_results_download, result.identity.title),
+                        tint = SearchColors.Secondary,
+                        modifier = Modifier.size(18.dp),
                     )
                 }
             }
         }
-        HorizontalDivider(
-            modifier = Modifier.align(Alignment.BottomCenter).padding(horizontal = 15.dp),
-            color = colors.outlineVariant.copy(alpha = if (active) .11f else .25f),
-            thickness = .5.dp,
-        )
+        SearchRule()
     }
 }
