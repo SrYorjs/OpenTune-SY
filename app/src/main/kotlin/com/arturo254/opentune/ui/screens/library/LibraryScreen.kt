@@ -29,6 +29,7 @@ import com.arturo254.opentune.LocalDatabase
 import com.arturo254.opentune.LocalPlayerAwareWindowInsets
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
+import com.arturo254.opentune.ui.mochy.theme.MochyTheme
 import com.arturo254.opentune.constants.*
 import com.arturo254.opentune.db.entities.*
 import com.arturo254.opentune.extensions.toMediaItem
@@ -185,6 +186,7 @@ fun LibraryScreen(
     LaunchedEffect(canReorder) { if (!canReorder) reorder = false }
     if (create) CreatePlaylistDialog(onDismiss = { create = false })
 
+    MochyTheme {
     Box(Modifier.fillMaxSize().background(SearchColors.page(true))) {
         LazyColumn(state = list, contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
             verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxSize()
@@ -373,5 +375,6 @@ fun LibraryScreen(
         }
         Indicator(isRefreshing = refreshing, state = refresh,
             modifier = Modifier.align(Alignment.TopCenter).padding(LocalPlayerAwareWindowInsets.current.asPaddingValues()))
+    }
     }
 }
