@@ -17,6 +17,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
+import com.arturo254.opentune.ui.mochy.theme.MochyTheme
 import com.arturo254.opentune.core.model.ArtistIdentity
 import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.core.model.SourceVariant
@@ -235,6 +236,7 @@ fun UniversalSearchScreen(
         visibleCount = 50
         scope.launch { list.animateScrollToItem(0) }
     }
+    MochyTheme {
     PrismScreenFrame(pureBlack = pureBlack, reserveAppBar = !embedded, insetTop = !embedded) {
         layout,
         insets ->
@@ -629,6 +631,7 @@ fun UniversalSearchScreen(
                     }
                 }
         }
+    }
     }
 
 }
