@@ -169,7 +169,6 @@ fun BonesHost(
         modifier = modifier
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
 
-            .damageBoundary()
             .drawWithContent {
                 drawContent()
                 val h = size.height
