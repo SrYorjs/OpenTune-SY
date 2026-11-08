@@ -75,6 +75,7 @@ import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.arturo254.opentune.R
 import com.arturo254.opentune.ui.mochy.component.containerTransformSource
+import com.arturo254.opentune.ui.mochy.component.RemoteFocus
 
 val SearchHorizontalPadding = 24.dp
 
@@ -99,6 +100,92 @@ object SearchColors {
     fun page(pureBlack: Boolean): Color = Color.Black
 }
 
+
+@Composable
+fun SearchField(
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
+    onSearch: (String) -> Unit,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    focused: Boolean = false,
+    leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+    enabled: Boolean = true,
+    readOnlyClick: (() -> Unit)? = null,
+
+    focusRequester: FocusRequester? = null,
+    onFocusChanged: ((Boolean) -> Unit)? = null,
+) {
+    var fieldHasFocus by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(SearchFieldHeight)
+            .clip(RoundedCornerShape(50))
+            .background(if (focused) SearchColors.FieldFocused else SearchColors.Field)
+            .then(
+                if (readOnlyClick != null) {
+                    Modifier.clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = RemoteFocus,
+                        onClick = readOnlyClick,
+                    )
+                } else {
+                    Modifier
+                }
+            )
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (leading != null) {
+            leading()
+            Spacer(modifier = Modifier.width(10.dp))
+        }
+        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+            if (value.text.isEmpty()) {
+                Text(
+                    text = placeholder,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp),
+                    color = SearchColors.Placeholder,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (enabled) {
+                BasicTextField(
+                    value = value,
+                    onValueChange = onValueChange,
+                    singleLine = true,
+                    textStyle = LocalTextStyle.current.merge(
+                        TextStyle(color = SearchColors.Primary, fontSize = 15.sp)
+                    ),
+                    cursorBrush = SolidColor(SearchColors.Primary),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { onSearch(value.text) }),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (focusRequester != null) {
+                                Modifier.focusRequester(focusRequester)
+                            } else {
+                                Modifier
+                            }
+                        )
+                        .onFocusChanged {
+                            fieldHasFocus = it.isFocused
+                            onFocusChanged?.invoke(it.isFocused)
+                        },
+                )
+            }
+        }
+        if (trailing != null) {
+            Spacer(modifier = Modifier.width(10.dp))
+            trailing()
+        }
+    }
+}
 
 @Composable
 fun SearchSectionHeader(
