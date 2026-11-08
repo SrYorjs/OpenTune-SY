@@ -28,6 +28,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.R
+import com.arturo254.opentune.ui.mochy.theme.MochyTheme
 import com.arturo254.opentune.constants.ShowHomeCategoryChipsKey
 import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.db.entities.Song
@@ -192,6 +193,7 @@ fun HomeScreen(
             else -> onOpenSearchTab()
         }
     }
+    MochyTheme {
     PulseScreenFrame(active = ambientActive) { layout, safePadding ->
         Box(Modifier.fillMaxSize().background(Color.Black)) {
             val featuredArtworks = remember(feature?.thumbnailUrl, featuredRemote?.thumbnail, featuredSource?.artworkUrl, recent) {
@@ -454,6 +456,7 @@ fun HomeScreen(
                     .padding(top = safePadding.calculateTopPadding()),
         )
         }
+    }
     }
 }
 
