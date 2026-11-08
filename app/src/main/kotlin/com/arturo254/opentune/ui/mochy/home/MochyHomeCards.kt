@@ -185,7 +185,7 @@ fun HomeSectionTitle(
 @Composable
 private fun SectionChevron() {
     Icon(
-        painter = painterResource(R.drawable.ic_chevron_right),
+        painter = painterResource(R.drawable.chevron_right),
         contentDescription = null,
         tint = Color.White.copy(alpha = 0.55f),
         modifier = Modifier.size(18.dp),
