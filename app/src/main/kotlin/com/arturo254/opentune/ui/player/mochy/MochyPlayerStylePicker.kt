@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arturo254.opentune.constants.PlayerDesignStyle
+import com.arturo254.opentune.ui.component.mochyPress3D
 import com.arturo254.opentune.ui.player.preferences.GalaxPlayerStyleGallery
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -153,7 +154,8 @@ private fun MochyStylePreview(
         label = "Mochy picker scale",
     )
     Column(
-        modifier.graphicsLayer { scaleX = scale; scaleY = scale }
+        modifier.mochyPress3D(maxTilt = 5f, pressedScale = .96f)
+            .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(shape)
             .background(surface)
             .border(1.dp, if (selected) accent else colors.outlineVariant.copy(alpha = .34f), shape)
