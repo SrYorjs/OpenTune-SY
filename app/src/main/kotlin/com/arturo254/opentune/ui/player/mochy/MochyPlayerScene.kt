@@ -245,7 +245,7 @@ private fun MochyTransport(
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
             IconButton(onClick = onFavorite) {
-                Icon(painterResource(if (state.isLiked) R.drawable.favorite else R.drawable.favorite_border),
+                Icon(painterResource(R.drawable.favorite),
                     "Favorito", tint = if (state.isLiked) accent else softInk, modifier = Modifier.size(21.dp))
             }
             IconButton(onClick = onPrevious, enabled = state.canSkipPrevious) {
