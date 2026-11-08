@@ -2,6 +2,12 @@ package com.arturo254.opentune.ui.screens.library
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Color
+import com.arturo254.opentune.ui.mochy.library.LibraryCategoryCard
+import com.arturo254.opentune.ui.mochy.library.LibraryWideCard
+import com.arturo254.opentune.ui.mochy.library.LibrarySectionTitle
+import com.arturo254.opentune.ui.mochy.search.SearchColors
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -179,8 +185,7 @@ fun LibraryScreen(
     LaunchedEffect(canReorder) { if (!canReorder) reorder = false }
     if (create) CreatePlaylistDialog(onDismiss = { create = false })
 
-    Box(Modifier.fillMaxSize()) {
-        NovaBackdrop(NovaSpace.COLLECTION, ambientActive, Modifier.fillMaxSize())
+    Box(Modifier.fillMaxSize().background(SearchColors.page(true))) {
         LazyColumn(state = list, contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
             verticalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxSize()
                 .pullToRefresh(isRefreshing = refreshing, state = refresh, onRefresh = viewModel::syncAllLibrary)) {
@@ -202,7 +207,65 @@ fun LibraryScreen(
                     if (showTop) item { CollectionShortcut("Mi top $topSize", R.drawable.trending_up) { navController.navigate("top_playlist/$topSize") } }
                 }
             }
-            item("collection/categories") { CollectionTabs(category, showSpotify, counts, select) }
+            item("collection/categories") {
+                if (category == LibraryFilter.LIBRARY) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            LibraryCategoryCard(
+                                title = "Canciones",
+                                count = counts[LibraryFilter.SONGS] ?: 0,
+                                covers = visibleSongs.take(2).map { it.thumbnailUrl },
+                                onClick = { select(LibraryFilter.SONGS) },
+                                modifier = Modifier.weight(1f),
+                            )
+                            LibraryCategoryCard(
+                                title = "Listas",
+                                count = counts[LibraryFilter.PLAYLISTS] ?: 0,
+                                covers = visiblePlaylists.flatMap { it.thumbnails }.take(2),
+                                onClick = { select(LibraryFilter.PLAYLISTS) },
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            LibraryCategoryCard(
+                                title = "Álbumes",
+                                count = counts[LibraryFilter.ALBUMS] ?: 0,
+                                covers = visibleAlbums.take(2).map { it.thumbnailUrl },
+                                onClick = { select(LibraryFilter.ALBUMS) },
+                                modifier = Modifier.weight(1f),
+                            )
+                            LibraryCategoryCard(
+                                title = "Artistas",
+                                count = counts[LibraryFilter.ARTISTS] ?: 0,
+                                covers = visibleArtists.take(2).map { it.thumbnailUrl },
+                                onClick = { select(LibraryFilter.ARTISTS) },
+                                modifier = Modifier.weight(1f),
+                                roundCovers = true,
+                            )
+                        }
+                        if (showLiked) {
+                            LibraryWideCard(
+                                title = "Me gusta",
+                                count = visibleSongs.count { it.song.liked },
+                                covers = visibleSongs.filter { it.song.liked }
+                                    .take(2).map { it.thumbnailUrl },
+                                onClick = { navController.navigate("auto_playlist/liked") },
+                            )
+                        }
+                    }
+                } else {
+                    CollectionTabs(category, showSpotify, counts, select)
+                }
+            }
             item("collection/external-filters") { filterContent() }
             item("collection/tools") {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
