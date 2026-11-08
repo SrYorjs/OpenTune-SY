@@ -39,6 +39,11 @@ import com.arturo254.opentune.models.toMediaMetadata
 import com.arturo254.opentune.playback.queues.ListQueue
 import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.ui.component.LocalMenuState
+import com.arturo254.opentune.ui.mochy.component.HomeTopGlow
+import com.arturo254.opentune.ui.mochy.component.SmoothCornerShape
+import com.arturo254.opentune.ui.mochy.component.press3D
+import com.arturo254.opentune.ui.mochy.component.revealOnAppear
+import com.arturo254.opentune.ui.mochy.component.rememberRevealSeenState
 import com.arturo254.opentune.ui.menu.*
 import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.viewmodels.HomeViewModel
@@ -62,6 +67,7 @@ fun HomeScreen(
     val menus = LocalMenuState.current
     val scope = rememberCoroutineScope()
     val list = rememberLazyListState()
+    val mochyReveal = rememberRevealSeenState()
     val refresh = rememberPullToRefreshState()
     val picks by viewModel.quickPicks.collectAsStateWithLifecycle()
     val recentItems by viewModel.keepListening.collectAsStateWithLifecycle()
@@ -184,7 +190,27 @@ fun HomeScreen(
         }
     }
     PulseScreenFrame(active = ambientActive) { layout, safePadding ->
-        LazyColumn(
+        Box(Modifier.fillMaxSize()) {
+            val featuredArtworks = remember(feature?.thumbnailUrl, featuredRemote?.thumbnail, featuredSource?.artworkUrl, recent) {
+                listOfNotNull(
+                    feature?.thumbnailUrl,
+                    featuredRemote?.thumbnail,
+                    recent.firstOrNull()?.thumbnailUrl,
+                    featuredSource?.artworkUrl,
+                ).distinct().take(2)
+            }
+            HomeTopGlow(
+                coverUrls = featuredArtworks,
+                depth = 340.dp,
+                visibility = {
+                    if (list.firstVisibleItemIndex != 0) 0f
+                    else (1f - list.firstVisibleItemScrollOffset / 450f).coerceIn(0f, 1f)
+                },
+                modifier = Modifier.align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .height(340.dp),
+            )
+            LazyColumn(
             state = list,
             modifier =
                 Modifier.fillMaxSize()
@@ -197,10 +223,13 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item("pulse/header") {
-                PulseHeader(account, onNavigate = { navController.navigate(it) })
+                Box(Modifier.revealOnAppear("mochy-home-header", mochyReveal, enabled = ambientActive)) {
+                    PulseHeader(account, onNavigate = { navController.navigate(it) })
+                }
             }
             item("pulse/search") { PulseSearch(onOpenSearchTab) }
             item("pulse/feature") {
+                Box(Modifier.revealOnAppear("mochy-home-feature", mochyReveal, enabled = ambientActive)) {
                 PulseFeature(
                     title = feature?.title ?: featuredRemote?.title ?: featuredSource?.title,
                     subtitle =
@@ -231,6 +260,7 @@ fun HomeScreen(
                             else -> null
                         },
                 )
+                }
             }
             item("pulse/shortcuts") {
                 PulseShortcuts(
@@ -420,6 +450,7 @@ fun HomeScreen(
                     .wrapContentWidth(Alignment.CenterHorizontally)
                     .padding(top = safePadding.calculateTopPadding()),
         )
+        }
     }
 }
 
@@ -434,7 +465,8 @@ private fun PulseTrackRow(
 ) {
     Row(
         modifier
-            .clip(RoundedCornerShape(22.dp))
+            .press3D(maxTilt = 3f, pressedScale = .975f)
+            .clip(SmoothCornerShape(22.dp))
             .background(
                 MaterialTheme.colorScheme.surfaceContainerHigh.copy(
                     alpha = if (active) .85f else .5f
@@ -527,6 +559,7 @@ private fun PulseCover(
 ) {
     Column(
         Modifier.width(coverWidth)
+            .press3D(maxTilt = 4f, pressedScale = .965f)
             .combinedClickable(
                 role = Role.Button,
                 onClick = onClick,
@@ -540,7 +573,7 @@ private fun PulseCover(
                 artwork,
                 Modifier.fillMaxWidth()
                     .aspectRatio(1f)
-                    .clip(if (circular) CircleShape else RoundedCornerShape(22.dp)),
+                    .clip(if (circular) CircleShape else SmoothCornerShape(22.dp)),
             )
             if (busy)
                 CircularProgressIndicator(
