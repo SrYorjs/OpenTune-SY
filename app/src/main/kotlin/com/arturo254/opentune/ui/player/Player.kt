@@ -151,10 +151,6 @@ import com.arturo254.opentune.ui.player.host.rememberPlayerContentLifecycle
 import com.arturo254.opentune.constants.DarkModeKey
 import com.arturo254.opentune.constants.PlayerDesignStyle
 import com.arturo254.opentune.constants.PlayerDesignStyleKey
-import com.arturo254.opentune.constants.MochyPlayerStyleKey
-import com.arturo254.opentune.ui.player.mochy.MochyPlayerStyle
-import com.arturo254.opentune.ui.player.mochy.MochyPlayerScene
-import com.arturo254.opentune.ui.player.mochy.MochyPlayerStylePicker
 import com.arturo254.opentune.constants.UseNewMiniPlayerDesignKey
 import com.arturo254.opentune.constants.PlayerBackgroundStyle
 import com.arturo254.opentune.constants.PlayerBackgroundStyleKey
@@ -229,15 +225,6 @@ fun BottomSheetPlayer(
 
     val presentation = rememberPlayerPresentationPreferences()
     val playerDesignStyle = presentation.designStyle
-    val (mochyStyle, onMochyStyleChange) = rememberEnumPreference(
-        MochyPlayerStyleKey,
-        MochyPlayerStyle.NONE,
-    )
-    val (_, onNativeStyleChange) = rememberEnumPreference(
-        PlayerDesignStyleKey,
-        PlayerDesignStyle.V8,
-    )
-    var showPlayerStylePicker by remember { mutableStateOf(false) }
     val playerBackground = presentation.backgroundStyle
     val playerButtonsStyle = presentation.buttonStyle
     val sliderStyle = presentation.sliderStyle
@@ -728,7 +715,7 @@ fun BottomSheetPlayer(
             )
         }
 
-        if (mochyStyle == MochyPlayerStyle.NONE && !state.isCollapsed && resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop) {
+        if (!state.isCollapsed && resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop) {
             if (activePlayerGlass) {
                 PlayerArtworkAtmosphere(
                     artworkUrl = playerVisuals.artworkUrl,
@@ -813,23 +800,6 @@ fun BottomSheetPlayer(
             )
         }
 
-        if (mochyStyle != MochyPlayerStyle.NONE) {
-            MochyPlayerScene(
-                style = mochyStyle,
-                state = playerState,
-                accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
-                queuePeekHeight = queueSheetState.collapsedBound,
-                onCollapse = state::collapseSoft,
-                onStyles = { showPlayerStylePicker = true },
-                onPlayPause = playerActions::playPause,
-                onNext = playerActions::next,
-                onPrevious = playerActions::previous,
-                onFavorite = playerActions::toggleFavorite,
-                onSeek = { playerActions.seekTo(it, displayedTrackId = mediaMetadata?.id) },
-                onQueue = { queueSheetState.expandSoft() },
-                onLyrics = { lyricsSheetState.expandSoft() },
-            )
-        } else {
         PlayerLayout(
             style = playerDesignStyle,
             applePortrait = {
@@ -1198,30 +1168,6 @@ fun BottomSheetPlayer(
                 )
             },
         )
-        }
-
-        if (mochyStyle == MochyPlayerStyle.NONE && !state.isCollapsed) {
-            Box(
-                modifier = Modifier.align(Alignment.TopEnd)
-                    .padding(
-                        top = WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 14.dp,
-                        end = 12.dp,
-                    ),
-            ) {
-                androidx.compose.material3.IconButton(
-                    onClick = { showPlayerStylePicker = true },
-                    modifier = Modifier.size(48.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surfaceContainer.copy(alpha = .86f)),
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.palette),
-                        contentDescription = "Elegir estilo del reproductor",
-                        tint = MaterialTheme.colorScheme.primary,
-                    )
-                }
-            }
-        }
 
         val queueOnBackgroundColor = visualSkin.queueOnBackgroundColor
         val queueSurfaceColor = visualSkin.queueSurfaceColor
@@ -1253,15 +1199,6 @@ fun BottomSheetPlayer(
             lyricsSyncOffset = lyricsSyncOffset,
             modifier = modifier,
         )
-        if (showPlayerStylePicker) {
-            MochyPlayerStylePicker(
-                native = playerDesignStyle,
-                mochy = mochyStyle,
-                onNative = onNativeStyleChange,
-                onMochy = onMochyStyleChange,
-                onDismiss = { showPlayerStylePicker = false },
-            )
-        }
         }
     }
 }

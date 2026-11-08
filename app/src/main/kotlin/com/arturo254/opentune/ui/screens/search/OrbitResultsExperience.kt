@@ -47,7 +47,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arturo254.opentune.R
-import com.arturo254.opentune.ui.component.mochyPress3D
 import com.arturo254.opentune.core.model.SourceVariant
 import com.arturo254.opentune.sources.search.UnifiedTrackSearchResult
 
@@ -201,7 +200,6 @@ internal fun OrbitRecordingRow(
         val compact = maxWidth / LocalDensity.current.fontScale < 350.dp
         Row(
             Modifier.fillMaxWidth()
-                .mochyPress3D(maxTilt = 1.5f, pressedScale = .987f)
                 .clip(RoundedCornerShape(17.dp))
                 .background(activeTint)
                 .heightIn(min = 73.dp)

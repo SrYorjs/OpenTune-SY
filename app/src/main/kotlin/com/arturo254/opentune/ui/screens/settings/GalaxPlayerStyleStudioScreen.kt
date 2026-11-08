@@ -40,8 +40,6 @@ import androidx.navigation.NavController
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.PlayerDesignStyle
 import com.arturo254.opentune.constants.PlayerDesignStyleKey
-import com.arturo254.opentune.constants.MochyPlayerStyleKey
-import com.arturo254.opentune.ui.player.mochy.MochyPlayerStyle
 import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import com.arturo254.opentune.ui.player.preferences.GalaxPlayerStyleGallery
 import com.arturo254.opentune.ui.player.preferences.playerLayoutLabel
@@ -76,11 +74,6 @@ fun GalaxPlayerStyleStudioScreen(navController: NavController) {
         PlayerDesignStyleKey,
         PlayerDesignStyle.V8,
     )
-    val (_, onMochySelected) = rememberEnumPreference(MochyPlayerStyleKey, MochyPlayerStyle.NONE)
-    val activateNative: (PlayerDesignStyle) -> Unit = { style ->
-        onMochySelected(MochyPlayerStyle.NONE)
-        onSelected(style)
-    }
     val scheme = MaterialTheme.colorScheme
     LazyColumn(
         modifier = Modifier.fillMaxSize().galaxScreenBackground(),
@@ -159,7 +152,7 @@ fun GalaxPlayerStyleStudioScreen(navController: NavController) {
             }
         }
         item("studio_carousel") {
-            GalaxPlayerStyleGallery(selected = selected, onSelected = activateNative)
+            GalaxPlayerStyleGallery(selected = selected, onSelected = onSelected)
         }
         item("studio_detail_heading") {
             Column(Modifier.padding(horizontal = 23.dp), verticalArrangement = Arrangement.spacedBy(7.dp)) {
@@ -182,7 +175,7 @@ fun GalaxPlayerStyleStudioScreen(navController: NavController) {
                     StudioStyleCard(
                         style = style,
                         selected = style == selected,
-                        onSelect = { activateNative(style) },
+                        onSelect = { onSelected(style) },
                         modifier = Modifier.weight(1f),
                     )
                 }
