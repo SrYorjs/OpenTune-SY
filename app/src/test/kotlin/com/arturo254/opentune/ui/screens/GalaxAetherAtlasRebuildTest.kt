@@ -33,7 +33,9 @@ class GalaxAetherAtlasRebuildTest {
     fun newHomeCatalogDoesNotRenderTheOldHomePageSections() {
         val home = source("ui/screens/HomeScreen.kt")
         val catalog = source("ui/screens/HomeScreen.kt")
-        assertTrue(home.contains("PulseHeading("))
+        assertTrue(home.contains("HomeSectionTitle("))
+        assertTrue(home.contains("HomeTrackRow("))
+        assertTrue(home.contains("HomeCoverCard("))
         assertTrue(home.contains("PulseCatalog("))
         assertFalse(home.contains("HomePageSectionTitle("))
         assertFalse(home.contains("HomePageSectionContent("))
