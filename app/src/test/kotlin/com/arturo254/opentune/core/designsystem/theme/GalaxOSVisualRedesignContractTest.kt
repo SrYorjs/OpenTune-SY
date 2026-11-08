@@ -51,7 +51,8 @@ class GalaxOSVisualRedesignContractTest {
         assertTrue(discovery.contains("PrismDiscoveryMasthead("))
         assertTrue(discovery.contains("onClick = onOpenSearch"))
         val portal = source("ui/screens/search/PrismSearchBar.kt")
-        assertTrue(portal.contains("onSearch(query.text)"))
+        assertTrue(portal.contains("SearchField("))
+        assertTrue(portal.contains("onSearch = onSearch"))
         assertTrue(discovery.contains("galaxDiscoveryGenreRowKey("))
     }
 
