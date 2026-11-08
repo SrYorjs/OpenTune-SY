@@ -728,7 +728,7 @@ fun BottomSheetPlayer(
             )
         }
 
-        if (!state.isCollapsed && resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop) {
+        if (mochyStyle == MochyPlayerStyle.NONE && !state.isCollapsed && resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop) {
             if (activePlayerGlass) {
                 PlayerArtworkAtmosphere(
                     artworkUrl = playerVisuals.artworkUrl,
