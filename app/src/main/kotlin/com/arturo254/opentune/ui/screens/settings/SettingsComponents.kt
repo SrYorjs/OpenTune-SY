@@ -6,6 +6,8 @@
 
 package com.arturo254.opentune.ui.screens.settings
 
+import com.arturo254.opentune.ui.mochy.settings.MochyCategoryBubble
+
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -357,20 +359,16 @@ fun SettingsGroupCard(
             ),
         )
 
-        Card(
-            shape = RoundedCornerShape(SettingsDimensions.GroupCardCornerRadius),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        ) {
-            Column {
-                group.items.forEachIndexed { index, item ->
-                    SettingsRow(
-                        item = item,
-                        showDivider = index < group.items.size - 1,
-                    )
-                }
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            group.items.forEach { item ->
+                MochyCategoryBubble(
+                    title = item.title,
+                    icon = item.icon,
+                    subtitle = item.subtitle,
+                    badge = item.badge,
+                    selected = item.showUpdateIndicator,
+                    onClick = item.onClick,
+                )
             }
         }
     }
