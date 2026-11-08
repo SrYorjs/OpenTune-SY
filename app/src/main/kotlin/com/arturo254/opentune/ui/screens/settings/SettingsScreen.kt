@@ -42,6 +42,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.arturo254.opentune.BuildConfig
 import com.arturo254.opentune.R
+import com.arturo254.opentune.ui.mochy.theme.MochyTheme
 import com.arturo254.opentune.ui.component.IconButton
 import com.arturo254.opentune.ui.component.TopSearch
 import com.arturo254.opentune.ui.utils.backToMain
@@ -173,6 +174,7 @@ fun SettingsScreen(
         onPaletteClick = { navController.navigate("settings/appearance/palette_picker") },
     )
 
+    MochyTheme {
     Scaffold(
         topBar = {
             if (!showSearchBar) {
@@ -287,6 +289,7 @@ fun SettingsScreen(
                 }
             }
         }
+    }
     }
 }
 
