@@ -30,24 +30,22 @@ class GalaxAdaptiveDockMotionTest {
     }
 
     @Test
-    fun appShellRetainsSingleGlassEngineAndBothNavigationEntryPoints() {
+    fun appShellUsesOriginalPhoneAndWideNavigationWithSharedGlass() {
         val root = listOf(File("src/main/kotlin"), File("app/src/main/kotlin"))
             .firstOrNull(File::isDirectory) ?: error("Kotlin sources missing")
         fun source(name: String) = File(root, "com/arturo254/opentune/$name").readText()
         val shell = source("MainActivityScaffold.kt")
-        val player = source("ui/player/Player.kt")
         val navigation = source("MainActivityChrome.kt")
-        val toolbar = source("ui/component/FloatingNavigationToolbar.kt")
         val mini = source("ui/player/MiniPlayer.kt")
-        assertTrue(shell.contains(".nestedScroll(dockMotion.nestedScrollConnection)"))
-        assertTrue(shell.contains("collapsedDockNavigation = {"))
-        assertTrue(shell.contains("GalaxCompactNavigationOrb("))
-        assertTrue(player.contains("dockMergeProgress = 0f"))
-        assertTrue(player.contains("GalaxCompactMiniPlayer("))
-        assertTrue(mini.contains("1f - dockMergeProgress"))
-        assertTrue(navigation.contains("selectedRoute = selectedNavigationRoute"))
-        assertTrue(toolbar.contains(".galaxGlassEffect("))
-        assertTrue(shell.contains("LocalGalaxLiquidVariant provides liquidVariant"))
-        assertTrue(shell.contains("LocalGalaxLiquidTuning provides liquidTuning"))
+        val wide = source("ui/visual/component/WideBar.kt")
+        assertTrue(shell.contains("LocalOriginalGlassState provides originalGlassState"))
+        assertTrue(shell.contains("LocalMiniPillFrame provides"))
+        assertTrue(shell.contains(".glassRoot(originalGlassState)"))
+        assertTrue(navigation.contains("AppNavigationBar("))
+        assertTrue(navigation.contains("WideBarBackground("))
+        assertTrue(navigation.contains("WideBarTabs("))
+        assertTrue(wide.contains("fun WideBarTabs("))
+        assertTrue(mini.contains("OriginalMiniPlayer("))
+        assertTrue(shell.contains("LocalPlayerConnection provides playerConnection"))
     }
 }
