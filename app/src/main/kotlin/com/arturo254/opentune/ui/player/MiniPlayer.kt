@@ -103,6 +103,7 @@ private fun NewMiniPlayer(
             onOpen = state::expandSoft,
             onPlayPause = playerActions::playPause,
             onNext = playerActions::next,
+            onPrevious = playerActions::previous,
         )
     }
 }
