@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -124,7 +123,7 @@ fun MochyTurntableScene(
         ) {
             val side = minOf(maxWidth, maxHeight)
             val labelSide = side * DiscRadius * LabelFraction * 2f
-            Box(Modifier.size(side).clip(CircleShape)) {
+            Box(Modifier.size(side)) {
                 Canvas(Modifier.fillMaxSize()) {
                     val u = size.width
                     drawArmBase(u)
