@@ -52,6 +52,7 @@ import com.arturo254.opentune.ui.visual.component.ChromeHighlightColor
 import com.arturo254.opentune.ui.visual.component.ChromeShadow
 import com.arturo254.opentune.ui.visual.component.FrostedChromeGlass
 import com.arturo254.opentune.ui.visual.component.GlassState
+import com.arturo254.opentune.ui.visual.component.LocalMiniPillFrame
 import com.arturo254.opentune.ui.visual.component.LocalOriginalGlassState
 import com.arturo254.opentune.ui.visual.component.RoundedHighlight
 import com.arturo254.opentune.ui.visual.component.drawChromeOutline
@@ -80,29 +81,37 @@ fun OriginalMiniPlayer(
     onOpen: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
+    onPrevious: () -> Unit,
 ) {
     val glassState = LocalOriginalGlassState.current ?: remember { GlassState() }
     val accentWash = rememberChromeAccentWash()
     val scope = rememberCoroutineScope()
     val skipCycle = remember { SkipCycleState() }
+    val previousCycle = remember { SkipCycleState() }
+    val pillFrame = LocalMiniPillFrame.current
     val metadata = playerState.mediaMetadata
 
-    Box(modifier = modifier.fillMaxWidth().height(64.dp).padding(horizontal = 24.dp)) {
+    Box(modifier = modifier.fillMaxWidth().height(64.dp).padding(start = pillFrame.start, end = pillFrame.end)) {
         Box(
             Modifier.fillMaxSize()
-                .dropShadow(PillShape, ChromeShadow)
-                .clip(PillShape)
-                .drawWithContent {
-                    drawContent()
-                    drawChromeOutline(Offset.Zero, size, cornerRadius = size.height * 20f / 64f)
-                }
+                .then(
+                    if (pillFrame.merged) Modifier else Modifier
+                        .dropShadow(PillShape, ChromeShadow)
+                        .clip(PillShape)
+                        .drawWithContent {
+                            drawContent()
+                            drawChromeOutline(Offset.Zero, size, cornerRadius = size.height * 20f / 64f)
+                        }
+                )
         ) {
-            FrostedChromeGlass(
-                state = glassState,
-                pureBlack = pureBlack,
-                accentWash = accentWash,
-                modifier = Modifier.fillMaxSize(),
-            )
+            if (!pillFrame.merged) {
+                FrostedChromeGlass(
+                    state = glassState,
+                    pureBlack = pureBlack,
+                    accentWash = accentWash,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
             Row(
                 modifier = Modifier.fillMaxSize()
                     .graphicsLayer { translationX = horizontalOffset }
@@ -146,6 +155,23 @@ fun OriginalMiniPlayer(
                                 artist = metadata?.artists?.joinToString(", ") { it.name }.orEmpty(),
                                 album = metadata?.album?.title.orEmpty(),
                                 modifier = Modifier,
+                            )
+                        }
+                    }
+                }
+                if (pillFrame.withPrevious) {
+                    Box(Modifier.size(36.dp)) {
+                        MiniPlayerButton(
+                            onClick = {
+                                scope.launch { previousCycle.step() }
+                                onPrevious()
+                            }
+                        ) {
+                            AnimatedSkipGlyph(
+                                cycle = previousCycle,
+                                backwards = true,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                width = MiniSkipWidth,
                             )
                         }
                     }
