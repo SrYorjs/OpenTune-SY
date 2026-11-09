@@ -40,6 +40,7 @@ import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.ui.player.state.PlayerState
 import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.ui.visual.player.OriginalMiniPlayer
+import com.arturo254.opentune.ui.visual.component.LocalMiniPillFrame
 import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
 
 @Composable
@@ -94,7 +95,9 @@ private fun NewMiniPlayer(
         queueSize = queueSize,
         isPlayerExpanded = state.isExpanded,
         pureBlack = pureBlack,
-        useLegacyBackground = false
+        useLegacyBackground = false,
+        contentOwnsSurface = true,
+        applyHorizontalInsets = !LocalMiniPillFrame.current.withPrevious,
     ) { offsetX, _ ->
         OriginalMiniPlayer(
             playerState = playerState,
