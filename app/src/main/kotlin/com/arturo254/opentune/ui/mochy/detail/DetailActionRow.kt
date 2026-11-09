@@ -65,7 +65,7 @@ fun DetailActionRow(
             )
             androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp))
             Text(
-                text = stringResource(if (isPlaying) R.string.pause else R.string.play),
+                text = if (isPlaying) "Pausar" else stringResource(R.string.play),
                 style = MaterialTheme.typography.labelLarge,
             )
         }
