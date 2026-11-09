@@ -217,6 +217,7 @@ import com.arturo254.opentune.ui.visual.component.AppNavigationBar
 import com.arturo254.opentune.ui.visual.component.WideBar
 import com.arturo254.opentune.ui.visual.component.WideBarBackground
 import com.arturo254.opentune.ui.visual.component.WideBarTabs
+import com.arturo254.opentune.ui.visual.component.navigateToTab
 import com.arturo254.opentune.ui.component.IconButton
 import com.arturo254.opentune.ui.component.LocalBottomSheetPageState
 import com.arturo254.opentune.ui.component.LocalMenuState
@@ -670,8 +671,17 @@ internal fun BoxScope.MainActivityFloatingToolbar(
                                                     }
                                                 },
                                     ) {
-                                        val onNavTap: (Screens, Boolean) -> Unit = { screen, _ ->
+                                        val selectedTab = selectedNavigationRoute
+                                            ?.takeIf { route -> navigationItems.any { it.route == route } }
+                                            ?: navigationItems.getOrNull(navigationState.pagerState.currentPage)?.route
+                                            ?: navigationItems.first().route
+                                        val onNavTap: (Screens, Boolean) -> Unit = { screen, isSelected ->
                                             onActiveChange(false)
+                                            if (navigationState.currentRoute !in navigationItems.map { it.route }) {
+                                                navController.navigateToTab(screen.route)
+                                            } else if (isSelected) {
+                                                navController.currentBackStackEntry?.savedStateHandle?.set("scrollToTop", true)
+                                            }
                                             coroutineScope.launch {
                                                 navigationState.pagerState.animateScrollToPage(navigationItems.indexOf(screen))
                                             }
@@ -692,7 +702,7 @@ internal fun BoxScope.MainActivityFloatingToolbar(
                                                 bar = wideBar,
                                                 withPlayer = { withPlayer },
                                                 navigationItems = navigationItems,
-                                                selectedTabRoute = selectedNavigationRoute ?: navigationItems.first().route,
+                                                selectedTabRoute = selectedTab,
                                                 onItemClick = onNavTap,
                                                 onSearchDoubleTap = { onActiveChange(true) },
                                                 modifier = Modifier.fillMaxSize(),
@@ -701,7 +711,7 @@ internal fun BoxScope.MainActivityFloatingToolbar(
                                             AppNavigationBar(
                                                 navigationItems = navigationItems,
                                                 currentRoute = navigationState.currentRoute,
-                                                selectedTabRoute = selectedNavigationRoute ?: navigationItems.first().route,
+                                                selectedTabRoute = selectedTab,
                                                 onItemClick = onNavTap,
                                                 onSearchDoubleTap = { onActiveChange(true) },
                                                 pureBlack = pureBlack,
