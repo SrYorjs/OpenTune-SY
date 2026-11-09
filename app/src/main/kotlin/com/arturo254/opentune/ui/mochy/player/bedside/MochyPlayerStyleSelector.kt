@@ -9,6 +9,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +21,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -39,6 +44,11 @@ import com.arturo254.opentune.ui.mochy.player.turntable.drawTonearm
 import com.arturo254.opentune.ui.mochy.player.ipod.IpodBodyPaint
 import com.arturo254.opentune.ui.mochy.player.ipod.deviceGeometry
 import com.arturo254.opentune.ui.mochy.player.ipod.rememberIpodLook
+import com.arturo254.opentune.ui.mochy.player.ipod.IpodTheme
+import com.arturo254.opentune.ui.mochy.player.ipod.IpodWheelColor
+import com.arturo254.opentune.ui.mochy.player.ipod.IpodThemeKey
+import com.arturo254.opentune.ui.mochy.player.ipod.IpodWheelColorKey
+import com.arturo254.opentune.utils.rememberEnumPreference
 import androidx.compose.ui.graphics.drawscope.Stroke
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -136,6 +146,12 @@ fun MochyPlayerStyleSelector(
                         style = MaterialTheme.typography.labelMedium)
                 }
                 val ipodLook = rememberIpodLook()
+                val (ipodTheme, setIpodTheme) = rememberEnumPreference(
+                    IpodThemeKey, IpodTheme.SILVER
+                )
+                val (ipodWheelColor, setIpodWheelColor) = rememberEnumPreference(
+                    IpodWheelColorKey, IpodWheelColor.THEME
+                )
                 Column(
                     Modifier.fillMaxWidth().padding(horizontal = 22.dp)
                         .clip(RoundedCornerShape(24.dp))
@@ -191,6 +207,52 @@ fun MochyPlayerStyleSelector(
                         color = Color.White.copy(alpha = .65f),
                         style = MaterialTheme.typography.labelMedium,
                     )
+                    Text(
+                        "ACABADO",
+                        color = Color.White.copy(alpha = .6f),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                        items(IpodTheme.entries) { option ->
+                            FilterChip(
+                                selected = ipodTheme == option,
+                                onClick = { setIpodTheme(option) },
+                                label = {
+                                    Text(
+                                        when (option) {
+                                            IpodTheme.SILVER -> "Plata"
+                                            IpodTheme.BLACK -> "Negro"
+                                            IpodTheme.U2 -> "U2"
+                                            IpodTheme.TRUE_DARK -> "Oscuro"
+                                        }
+                                    )
+                                },
+                            )
+                        }
+                    }
+                    Text(
+                        "RUEDA",
+                        color = Color.White.copy(alpha = .6f),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                        items(IpodWheelColor.entries) { option ->
+                            FilterChip(
+                                selected = ipodWheelColor == option,
+                                onClick = { setIpodWheelColor(option) },
+                                label = {
+                                    Text(
+                                        when (option) {
+                                            IpodWheelColor.THEME -> "Automática"
+                                            IpodWheelColor.WHITE -> "Blanca"
+                                            IpodWheelColor.BLACK -> "Negra"
+                                            IpodWheelColor.RED -> "Roja"
+                                        }
+                                    )
+                                },
+                            )
+                        }
+                    }
                 }
                 GalaxPlayerStyleGallery(
                     selected = native,
