@@ -33,8 +33,8 @@ fun Modifier.homeSharedElement(
     }
 }
 
-fun coverTransitionKey(item: com.music.innertube.models.YTItem): String? = when (item) {
-    is com.music.innertube.models.AlbumItem -> "album-${item.id}"
-    is com.music.innertube.models.PlaylistItem -> "playlist-${item.id}"
+fun coverTransitionKey(item: com.arturo254.opentune.innertube.models.YTItem): String? = when (item) {
+    is com.arturo254.opentune.innertube.models.AlbumItem -> "album-${item.id}"
+    is com.arturo254.opentune.innertube.models.PlaylistItem -> "playlist-${item.id}"
     else -> null
 }
