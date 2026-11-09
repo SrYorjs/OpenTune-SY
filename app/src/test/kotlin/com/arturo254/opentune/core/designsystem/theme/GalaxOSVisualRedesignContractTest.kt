@@ -42,8 +42,9 @@ class GalaxOSVisualRedesignContractTest {
     fun musicCollectionsKeepTheirFunctionalRoutesWhileReceivingNewHeader() {
         val media = source("ui/screens/GalaxMediaHeader.kt")
         val discovery = source("ui/screens/PrismDiscoveryScreen.kt")
-        assertTrue(media.contains("val wide = maxWidth >= 560.dp"))
-        assertTrue(media.contains("GalaxMediaCoverStage(artworkUrls, artist") && media.contains("GalaxCoverMosaic("))
+        assertTrue(media.contains("MochyArtistHeader("))
+        assertTrue(media.contains("PlaylistScreenHeader("))
+        assertTrue(media.contains("GalaxCoverMosaic("))
         assertTrue(media.contains("if (artist) CircleShape"))
         assertTrue(media.contains("GalaxMediaFacts(facts)"))
         assertTrue(media.contains("supporting()"))
