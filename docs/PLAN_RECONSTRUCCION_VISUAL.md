@@ -80,6 +80,7 @@ La aceptación de una fase exige **copiar el código real, conectar datos y acci
 5. El gesto de deslizamiento horizontal existente se conserva mediante `SwipeableMiniPlayerBox`; la nueva opción `contentOwnsSurface` evita márgenes dobles. Los insets horizontales del sistema los aplica el contenedor únicamente en la distribución móvil.
 6. `LibraryDownloadIcon.kt` toma `DownloadUtil.downloads` para estado, avance y pila de descargas, sin inventar un gestor o un progreso ficticio.
 7. `PlayerHost.kt` reserva los anclajes originales: 80 dp de navegación y 64 dp de minirreproductor en móvil; distribución compartida de 72 dp en horizontal. Se preservan los listeners y restauración de estado del reproductor.
-8. Se actualizan las pruebas de contrato de presentación para comprobar los componentes originales sin eliminar las comprobaciones de gestos, estado compartido, límites de Glass ni acciones de reproducción.
+8. El `NavHost` utiliza las transiciones originales de un octavo de ancho y fundido de 200 ms, con `TabOwnership` para elegir dirección al entrar, salir y regresar. `SharedTransitionLayout` proporciona el contexto de transiciones de carátulas para las pantallas posteriores.
+9. Se actualizan las pruebas de contrato de presentación para comprobar los componentes originales sin eliminar las comprobaciones de gestos, estado compartido, límites de Glass ni acciones de reproducción.
 
 **Verificaciones:** pruebas unitarias, lint y ensamblado universal desde `.github/workflows/rebuild-safety.yml` en la rama de trabajo. La validación de tacto, diseño en dispositivo y transiciones a pantalla expandida todavía no se declara realizada. El traslado completo del reproductor expandido corresponde a la operación 06.

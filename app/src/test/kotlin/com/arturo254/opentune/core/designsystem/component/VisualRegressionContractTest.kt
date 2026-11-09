@@ -53,6 +53,10 @@ class VisualRegressionContractTest {
         assertTrue(mini.contains("RoundedCornerShape(20.dp)"))
         assertTrue(mini.contains("FrostedChromeGlass("))
         assertTrue(shell.contains(".glassRoot(originalGlassState)"))
+        assertTrue(shell.contains("SharedTransitionLayout {"))
+        assertTrue(shell.contains("LocalSharedTransitionScope provides this"))
+        assertTrue(shell.contains("tabOwnership.indexOf(targetState, stack)"))
+        assertTrue(shell.contains("slideInHorizontally { it / 8 } + fadeIn(tween(200))"))
         assertTrue(search.contains("originalRecordingOptions("))
         assertTrue(search.contains("viewModel.loadMore()"))
     }
