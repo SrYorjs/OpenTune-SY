@@ -119,6 +119,15 @@ fun NavGraphBuilder.navigationBuilder(
     composable("history") {
         HistoryScreen(navController)
     }
+    composable(
+        route = "section_detail/{sectionId}",
+        arguments = listOf(navArgument("sectionId") { type = NavType.StringType }),
+    ) { entry ->
+        OriginalHomeSectionDetailScreen(
+            navController = navController,
+            sectionId = entry.arguments?.getString("sectionId").orEmpty(),
+        )
+    }
     composable("stats") {
         StatsScreen(navController)
     }

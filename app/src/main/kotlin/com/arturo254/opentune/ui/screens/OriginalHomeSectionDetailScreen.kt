@@ -163,7 +163,7 @@ fun OriginalHomeSectionDetailScreen(
             modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 24.dp, top = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(onClick = navController::navigateUp) {
+            IconButton(onClick = { navController.navigateUp() }) {
                 Icon(
                     painter = painterResource(R.drawable.arrow_back),
                     contentDescription = "Back",

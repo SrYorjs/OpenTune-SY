@@ -56,6 +56,7 @@ El catálogo contiene **los 112 archivos Kotlin de `ui/screens/`**, tanto pantal
 | `HistoryScreen.kt` | History Screen | `history` |
 | `HomeScreen.kt` | Inicio anterior, conservado como referencia | `—` |
 | `OriginalHomeScreen.kt` | Inicio trasladado desde Mochy, tres modos y recomendaciones existentes | `home` |
+| `OriginalHomeSectionDetailScreen.kt` | Detalles navegables de listas de Inicio, búsqueda local y reproducción | `section_detail/{sectionId}` |
 | `PulseHomeDesign.kt` | Inicio Pulse: búsqueda en cristal, carátulas protagonistas, jerarquía editorial, partículas discretas y distribución según ancho, alto y tamaño de texto | `home` |
 | `HomeScreenComponents.kt` | Tarjetas comunes de Inicio | `—` |
 | `LoginScreen.kt` | Login Screen | `login?url={url}` |

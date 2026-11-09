@@ -55,7 +55,8 @@ La aceptación de una fase exige **copiar el código real, conectar datos y acci
 - [x] Fase 00: crear rama a partir de la base limpia y registrar ruta de migración.
 - [x] Fase 01: cimientos visuales originales integrados y verificados mediante tests, lint y APK universal.
 - [x] Fase 02: navegación inferior, vidrio, indicador de descargas, cápsula mini y distribución horizontal originales conectados a la infraestructura existente; validación automatizada en ejecución.
-- [ ] Fases 03–10: pendientes. La pantalla ampliada del reproductor y su transición de portada pertenecen a la fase 06.
+- [ ] Fase 03: Inicio original activado y enlazado a los datos existentes; verificación automatizada en curso, faltan efectos complementarios del carrusel.
+- [ ] Fases 04–10: pendientes. La pantalla ampliada del reproductor y su transición de portada pertenecen a la fase 06.
 
 **Prohibido:** añadir pantallas de apariencia semejante, renombrar un tema vacío como terminado, inventar proveedores, romper los enlaces a la VPS o realizar fusiones automáticas a otras ramas.
 
@@ -84,3 +85,13 @@ La aceptación de una fase exige **copiar el código real, conectar datos y acci
 9. Se actualizan las pruebas de contrato de presentación para comprobar los componentes originales sin eliminar las comprobaciones de gestos, estado compartido, límites de Glass ni acciones de reproducción.
 
 **Verificaciones:** pruebas unitarias, lint y ensamblado universal desde `.github/workflows/rebuild-safety.yml` en la rama de trabajo. La validación de tacto, diseño en dispositivo y transiciones a pantalla expandida todavía no se declara realizada. El traslado completo del reproductor expandido corresponde a la operación 06.
+
+## Operación 03 · Inicio original
+
+- La pantalla activa es `OriginalHomeScreen.kt` desde `GalaxMainPages.kt`. La pantalla anterior permanece como referencia y no se llama desde la pestaña principal.
+- `HomeCards.kt`, `OnDeviceMarks.kt`, `HomeTopGlow.kt`, `PageWipe.kt`, `ScrollAwayCover.kt`, `RevealOnAppear.kt` y el ajuste original de cuadrículas aportan las medidas, portadas, colores, desvanecimiento y movimientos.
+- Los modos `MOCHYY`, `LISTEN_NOW` y `HOP_IN` son composiciones separadas del original, ligadas a la preferencia `homeStyle`; la selección desde ajustes se completará al trasladar Ajustes.
+- Las secciones de reproducción frecuente, historial y favoritos consumen `MusicDatabase`; los accesos directos, listas, contenidos remotos y tendencias usan `HomeViewModel`. Menús y colas utilizan los servicios existentes.
+- `OriginalHomeSectionDetailScreen.kt` registra la ruta `section_detail/{sectionId}` que faltaba en el grafo de OpenTune-SY. Usa las tarjetas, búsqueda, gestos y colas existentes y mantiene la navegación sin pantallas fingidas.
+- Se conservan los componentes visuales del origen; la ruleta Gacha y el vídeo Canvas del carrusel original requieren adaptar recursos y datos de otros módulos antes de poder afirmar equivalencia total. No se declara que estén implementados.
+- Validación exigida para cierre técnico: tests, lint y APK universal de la rama, más verificación manual de toques y diseño en dispositivo.
