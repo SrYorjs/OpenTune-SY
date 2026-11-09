@@ -444,7 +444,7 @@ fun OriginalHomeScreen(
                                 is SongItem -> item.artists.joinToString(", ") { it.name }
                                 is AlbumItem -> item.artists.orEmpty().joinToString(", ") { it.name }
                                 is ArtistItem -> null
-                                is PlaylistItem -> item.author?.name,
+                                is PlaylistItem -> item.author?.name
                             },
                             thumbnailUrl = item.thumbnail,
                             circular = item is ArtistItem,
