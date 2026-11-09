@@ -17,8 +17,8 @@ enum class IpodWheelColor { WHITE, BLACK, RED, THEME }
 
 private val IpodShadowKey = booleanPreferencesKey("mochyIpodShadow")
 private val IpodTallScreenKey = booleanPreferencesKey("mochyIpodTallScreen")
-private val IpodThemeKey = stringPreferencesKey("mochyIpodTheme")
-private val IpodWheelColorKey = stringPreferencesKey("mochyIpodWheelColor")
+val IpodThemeKey = stringPreferencesKey("mochyIpodTheme")
+val IpodWheelColorKey = stringPreferencesKey("mochyIpodWheelColor")
 
 @Immutable
 class IpodLook(
