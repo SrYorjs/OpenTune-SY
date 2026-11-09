@@ -140,6 +140,8 @@ class HomeViewModel @Inject constructor(
     val quickPicks = MutableStateFlow<List<Song>?>(null)
     val speedDialSongs = MutableStateFlow<List<Song>>(emptyList())
     val forgottenFavorites = MutableStateFlow<List<Song>?>(null)
+    val mostPlayedSongsForHome = MutableStateFlow<List<Song>?>(null)
+    val recentHistorySongs = MutableStateFlow<List<Song>?>(null)
     val keepListening = MutableStateFlow<List<LocalItem>?>(null)
     val similarRecommendations = MutableStateFlow<List<SimilarRecommendation>?>(null)
     val accountPlaylists = MutableStateFlow<List<PlaylistItem>?>(null)
@@ -263,6 +265,17 @@ class HomeViewModel @Inject constructor(
                 launch { loadSpeedDialSongs() }
                 launch { loadGlobalCatalogTrending() }
                 launch { forgottenFavorites.value = database.forgottenFavorites().first().shuffled().take(20) }
+                launch {
+                    mostPlayedSongsForHome.value = database.mostPlayedSongs(
+                        fromTimeStamp = System.currentTimeMillis() - 86400000L * 30L,
+                        limit = 20,
+                    ).first().distinctBy { it.id }
+                }
+                launch {
+                    recentHistorySongs.value = database.recentlyPlayedSongs(limit = 18)
+                        .first()
+                        .distinctBy { it.id }
+                }
                 
                 launch {
                     val keepListeningSongs = database.mostPlayedSongs(fromTimeStamp, limit = 15, offset = 5)
