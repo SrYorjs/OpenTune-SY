@@ -16,6 +16,7 @@ import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -213,6 +214,9 @@ import com.arturo254.opentune.ui.component.DISMISSED_ANCHOR
 import com.arturo254.opentune.ui.component.EXPANDED_ANCHOR
 import com.arturo254.opentune.ui.component.FloatingNavigationToolbar
 import com.arturo254.opentune.ui.visual.component.AppNavigationBar
+import com.arturo254.opentune.ui.visual.component.WideBar
+import com.arturo254.opentune.ui.visual.component.WideBarBackground
+import com.arturo254.opentune.ui.visual.component.WideBarTabs
 import com.arturo254.opentune.ui.component.IconButton
 import com.arturo254.opentune.ui.component.LocalBottomSheetPageState
 import com.arturo254.opentune.ui.component.LocalMenuState
@@ -602,6 +606,7 @@ internal fun BoxScope.MainActivityFloatingToolbar(
     playerUiState: MainActivityPlayerUiState,
     navigationEffects: MainActivityNavigationEffects,
     dockMergeProgress: Float = 0f,
+    wideBar: WideBar? = null,
 ) {
     val navigationItems = navigationState.navigationItems
     val navController = navigationState.navController
@@ -619,7 +624,7 @@ internal fun BoxScope.MainActivityFloatingToolbar(
     val navVisibleHeight = 80.dp
     val bottomNavigationBarHeight by animateDpAsState(
         targetValue =
-            if (navigationState.shouldShowNavigationBar && !useRail) {
+            if (navigationState.shouldShowNavigationBar) {
                 navVisibleHeight
             } else {
                 0.dp
@@ -628,7 +633,7 @@ internal fun BoxScope.MainActivityFloatingToolbar(
         label = "",
     )
 
-                                if (!useRail && dockMergeProgress < .997f) {
+                                if (dockMergeProgress < .997f) {
                                     val navSlideDistance =
                                         bottomInset + floatingBarsBottomPadding + navVisibleHeight
 
@@ -665,24 +670,45 @@ internal fun BoxScope.MainActivityFloatingToolbar(
                                                     }
                                                 },
                                     ) {
-                                        AppNavigationBar(
-                                            navigationItems = navigationItems,
-                                            currentRoute = navigationState.currentRoute,
-                                            selectedTabRoute = selectedNavigationRoute ?: navigationItems.first().route,
-                                            onItemClick = { screen, _ ->
-                                                onActiveChange(false)
-                                                coroutineScope.launch {
-                                                    navigationState.pagerState.animateScrollToPage(navigationItems.indexOf(screen))
-                                                }
-                                            },
-                                            onSearchDoubleTap = { onActiveChange(true) },
-                                            pureBlack = pureBlack,
-                                            slimNav = false,
-                                            modifier = Modifier
-                                                .align(Alignment.BottomCenter)
-                                                .padding(bottom = bottomInset)
-                                                .height(navVisibleHeight),
-                                        )
+                                        val onNavTap: (Screens, Boolean) -> Unit = { screen, _ ->
+                                            onActiveChange(false)
+                                            coroutineScope.launch {
+                                                navigationState.pagerState.animateScrollToPage(navigationItems.indexOf(screen))
+                                            }
+                                        }
+                                        if (wideBar != null) {
+                                            val withPlayer by animateFloatAsState(
+                                                targetValue = if (playerBottomSheetState.isDismissed) 0f else 1f,
+                                                animationSpec = spring(dampingRatio = 0.86f, stiffness = 380f),
+                                                label = "wideBarWithPlayer",
+                                            )
+                                            WideBarBackground(
+                                                bar = wideBar,
+                                                withPlayer = { withPlayer },
+                                                pureBlack = pureBlack,
+                                                modifier = Modifier.fillMaxSize(),
+                                            )
+                                            WideBarTabs(
+                                                bar = wideBar,
+                                                withPlayer = { withPlayer },
+                                                navigationItems = navigationItems,
+                                                selectedTabRoute = selectedNavigationRoute ?: navigationItems.first().route,
+                                                onItemClick = onNavTap,
+                                                onSearchDoubleTap = { onActiveChange(true) },
+                                                modifier = Modifier.fillMaxSize(),
+                                            )
+                                        } else {
+                                            AppNavigationBar(
+                                                navigationItems = navigationItems,
+                                                currentRoute = navigationState.currentRoute,
+                                                selectedTabRoute = selectedNavigationRoute ?: navigationItems.first().route,
+                                                onItemClick = onNavTap,
+                                                onSearchDoubleTap = { onActiveChange(true) },
+                                                pureBlack = pureBlack,
+                                                slimNav = false,
+                                                modifier = Modifier.fillMaxSize(),
+                                            )
+                                        }
                                     }
                                 }
 }
