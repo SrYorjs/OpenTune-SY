@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.shape.CircleShape
@@ -569,7 +570,7 @@ private fun <T> OriginalHomeTrackGrid(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxWidth().height((54.dp + 8.dp) * rows),
     ) {
-        itemsIndexed(elements, key = { _, element -> element.hashCode() }) { index, element ->
+        gridItemsIndexed(elements, key = { _, element -> element.hashCode() }) { index, element ->
             Box(Modifier.width(295.dp)) { content(index, element) }
         }
     }
