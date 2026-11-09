@@ -173,6 +173,9 @@ import com.arturo254.opentune.ui.player.state.PlayerStateInput
 import com.arturo254.opentune.ui.player.state.rememberPlayerState
 import com.arturo254.opentune.ui.mochy.player.bedside.MochyBedsideScene
 import com.arturo254.opentune.ui.mochy.player.bedside.MochyPlayerStyleSelector
+import com.arturo254.opentune.ui.mochy.player.turntable.MochyTurntableScene
+import com.arturo254.opentune.ui.mochy.player.MochyPlayerMode
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.arturo254.opentune.ui.player.preferences.rememberPlayerPresentationPreferences
 import com.arturo254.opentune.ui.component.BottomSheet
 import com.arturo254.opentune.ui.component.BottomSheetState
@@ -227,8 +230,9 @@ fun BottomSheetPlayer(
 
     val presentation = rememberPlayerPresentationPreferences()
     val playerDesignStyle = presentation.designStyle
-    val (mochyBedsideEnabled, onMochyBedsideChange) =
-        rememberPreference(MochyBedsideModeKey, false)
+    val (mochyMode, onMochyModeChange) = rememberEnumPreference(
+        MochyPlayerModeKey, MochyPlayerMode.NONE
+    )
     val (_, onNativeDesignStyleChange) = rememberEnumPreference(
         PlayerDesignStyleKey, PlayerDesignStyle.V8
     )
@@ -808,8 +812,21 @@ fun BottomSheetPlayer(
             )
         }
 
-        if (mochyBedsideEnabled) {
+        if (mochyMode == MochyPlayerMode.BEDSIDE) {
             MochyBedsideScene(
+                state = playerState,
+                queuePeekHeight = queueSheetState.collapsedBound,
+                onClose = state::collapseSoft,
+                onStyles = { showMochyStyleSelector = true },
+                onPlayPause = playerActions::playPause,
+                onPrevious = playerActions::previous,
+                onNext = playerActions::next,
+                onQueue = { queueSheetState.expandSoft() },
+                onLyrics = { lyricsSheetState.expandSoft() },
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else if (mochyMode == MochyPlayerMode.TURNTABLE) {
+            MochyTurntableScene(
                 state = playerState,
                 queuePeekHeight = queueSheetState.collapsedBound,
                 onClose = state::collapseSoft,
@@ -1191,7 +1208,7 @@ fun BottomSheetPlayer(
             },
         )
         }
-        if (!mochyBedsideEnabled && !state.isCollapsed) {
+        if (mochyMode == MochyPlayerMode.NONE && !state.isCollapsed) {
             Box(
                 modifier = Modifier.align(Alignment.TopEnd)
                     .padding(
@@ -1242,14 +1259,14 @@ fun BottomSheetPlayer(
             MochyPlayerStyleSelector(
                 state = playerState,
                 native = playerDesignStyle,
-                bedsideEnabled = mochyBedsideEnabled,
+                selectedMochy = mochyMode,
                 onNative = { style ->
-                    onMochyBedsideChange(false)
+                    onMochyModeChange(MochyPlayerMode.NONE)
                     onNativeDesignStyleChange(style)
                     showMochyStyleSelector = false
                 },
-                onBedside = {
-                    onMochyBedsideChange(true)
+                onMochy = { mode ->
+                    onMochyModeChange(mode)
                     showMochyStyleSelector = false
                 },
                 onDismiss = { showMochyStyleSelector = false },
@@ -1259,4 +1276,4 @@ fun BottomSheetPlayer(
     }
 }
 
-private val MochyBedsideModeKey = booleanPreferencesKey("mochyBedsideMode")
+private val MochyPlayerModeKey = stringPreferencesKey("mochyPlayerMode")
