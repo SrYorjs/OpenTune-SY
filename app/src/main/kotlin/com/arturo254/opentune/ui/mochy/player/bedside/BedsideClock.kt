@@ -83,7 +83,7 @@ internal class BedsideInk(private val color: Color) {
 
 internal fun DrawScope.drawCover(painter: Painter, filter: ColorFilter?) {
     val source = painter.intrinsicSize
-    if (source.isUnspecified || source.width <= 0f || source.height <= 0f) {
+    if (source == Size.Unspecified || source.width <= 0f || source.height <= 0f) {
         with(painter) { draw(size, colorFilter = filter) }
         return
     }
