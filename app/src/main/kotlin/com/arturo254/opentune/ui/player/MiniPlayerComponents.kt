@@ -122,6 +122,8 @@ fun SwipeableMiniPlayerBox(
     isPlayerExpanded: Boolean,
     pureBlack: Boolean = false,
     useLegacyBackground: Boolean = false,
+    contentOwnsSurface: Boolean = false,
+    applyHorizontalInsets: Boolean = true,
     content: @Composable (Float, Int) -> Unit
 ) {
     var offsetX by remember { mutableFloatStateOf(0f) }
@@ -187,15 +189,20 @@ fun SwipeableMiniPlayerBox(
         modifier = modifier
             .fillMaxWidth()
             .height(MiniPlayerHeight)
-            .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
-            .let { baseModifier ->
-                if (useLegacyBackground) {
-                    baseModifier.background(
-                        if (pureBlack) Color.Black
-                        else MaterialTheme.colorScheme.surfaceContainer
-                    )
+            .then(
+                if (applyHorizontalInsets) {
+                    Modifier.windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
                 } else {
-                    baseModifier.padding(horizontal = 12.dp)
+                    Modifier
+                }
+            )
+            .let { baseModifier ->
+                when {
+                    useLegacyBackground -> baseModifier.background(
+                        if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer
+                    )
+                    contentOwnsSurface -> baseModifier
+                    else -> baseModifier.padding(horizontal = 12.dp)
                 }
             }
             .let { baseModifier ->
