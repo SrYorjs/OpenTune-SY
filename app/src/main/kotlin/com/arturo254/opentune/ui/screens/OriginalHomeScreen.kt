@@ -95,6 +95,7 @@ import com.arturo254.opentune.ui.visual.component.HomeSectionBones
 import com.arturo254.opentune.ui.visual.component.HomeSectionTitle
 import com.arturo254.opentune.ui.visual.component.HomeTopGlow
 import com.arturo254.opentune.ui.visual.component.HomeTrackRow
+import com.arturo254.opentune.ui.visual.component.HomeVideoCard
 import com.arturo254.opentune.ui.visual.component.OriginalHomeHero
 import com.arturo254.opentune.ui.visual.component.OriginalHomeHeroItem
 import com.arturo254.opentune.ui.visual.component.rememberRevealSeenState
@@ -426,6 +427,54 @@ fun OriginalHomeScreen(
                     }
                 }
             }
+            if (trends.isNotEmpty()) {
+                homeSectionItem("original/allTimeHitsTitle", seen) {
+                    HomeSectionTitle("All-time hits")
+                }
+                homeSectionItem("original/allTimeHits", seen) {
+                    OriginalHomeCardRow("all_time_hits", trends.distinctBy { it.sourceId }.take(18), seen, { it.sourceId }) { track ->
+                        HomeCoverCard(
+                            title = track.title,
+                            subtitle = track.artists.joinToString(", "),
+                            thumbnailUrl = track.artworkUrl,
+                            isPlaying = playing,
+                            modifier = Modifier.combinedClickable(
+                                interactionSource = null,
+                                indication = HomeCardHighlight,
+                                onClick = {
+                                    if (player != null) scope.launch {
+                                        viewModel.playSourceVariant(player, track, "Home")
+                                    }
+                                },
+                                onLongClick = {},
+                            ),
+                        )
+                    }
+                }
+            }
+            val artists = remoteItems.filterIsInstance<ArtistItem>()
+            if (artists.isNotEmpty()) {
+                homeSectionItem("original/artistListTitle", seen) {
+                    HomeSectionTitle("Artists")
+                }
+                homeSectionItem("original/artistList", seen) {
+                    OriginalHomeCardRow("artist_list", artists, seen, { it.id }) { artist ->
+                        HomeCoverCard(
+                            title = artist.title,
+                            subtitle = null,
+                            thumbnailUrl = artist.thumbnail,
+                            circular = true,
+                            isPlaying = playing,
+                            modifier = Modifier.combinedClickable(
+                                interactionSource = null,
+                                indication = HomeCardHighlight,
+                                onClick = { openRemote(artist) },
+                                onLongClick = { remoteMenu(artist) },
+                            ),
+                        )
+                    }
+                }
+            }
             homePage?.sections.orEmpty().forEachIndexed { index, section ->
                 homeSectionItem("original/sectionTitle/$index", seen) {
                     HomeSectionTitle(
@@ -437,6 +486,33 @@ fun OriginalHomeScreen(
                     )
                 }
                 homeSectionItem("original/section/$index", seen) {
+                    val videoRow = section.title.contains("video", ignoreCase = true) ||
+                        section.title.contains("concert", ignoreCase = true) ||
+                        section.title.contains("live show", ignoreCase = true)
+                    if (videoRow && section.items.any { it is SongItem }) {
+                        OriginalHomeCardRow(
+                            "homeSectionVideo/$index",
+                            section.items.filterIsInstance<SongItem>().distinctBy { it.id },
+                            seen,
+                            { it.id },
+                        ) { song ->
+                            HomeVideoCard(
+                                title = song.title,
+                                subtitle = song.artists.joinToString(", ") { it.name },
+                                videoId = song.id,
+                                fallbackThumbnailUrl = song.thumbnail,
+                                width = 314.dp,
+                                isActive = song.id == latestSongId,
+                                isPlaying = playing,
+                                modifier = Modifier.combinedClickable(
+                                    interactionSource = null,
+                                    indication = HomeCardHighlight,
+                                    onClick = { playRemote(song) },
+                                    onLongClick = { remoteMenu(song) },
+                                ),
+                            )
+                        }
+                    } else {
                     OriginalHomeCardRow("homeSection/$index", section.items.distinctBy { it.id }, seen, { it.id }) { item ->
                         HomeCoverCard(
                             title = item.title,
@@ -461,6 +537,7 @@ fun OriginalHomeScreen(
                                 onLongClick = { remoteMenu(item) },
                             ),
                         )
+                    }
                     }
                 }
             }
