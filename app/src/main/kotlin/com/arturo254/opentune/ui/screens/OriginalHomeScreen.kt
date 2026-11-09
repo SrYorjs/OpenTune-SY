@@ -128,6 +128,8 @@ fun OriginalHomeScreen(
     val recentActivity by viewModel.recentActivity.collectAsStateWithLifecycle()
     val speedDial by viewModel.speedDialSongs.collectAsStateWithLifecycle()
     val forgotten by viewModel.forgottenFavorites.collectAsStateWithLifecycle()
+    val mostPlayed by viewModel.mostPlayedSongsForHome.collectAsStateWithLifecycle()
+    val history by viewModel.recentHistorySongs.collectAsStateWithLifecycle()
     val accountPlaylists by viewModel.accountPlaylists.collectAsStateWithLifecycle()
     val homePage by viewModel.homePage.collectAsStateWithLifecycle()
     val trends by viewModel.globalCatalogTrending.collectAsStateWithLifecycle()
@@ -321,12 +323,12 @@ fun OriginalHomeScreen(
                     }
                 }
             }
-            if (songs.isNotEmpty()) {
+            if (!mostPlayed.isNullOrEmpty()) {
                 homeSectionItem("original/mostPlayedTitle", seen) {
                     HomeSectionTitle("Most played", onClick = { navController.navigate("section_detail/most_played") })
                 }
                 homeSectionItem("original/mostPlayed", seen) {
-                    OriginalHomeTrackGrid(songs.take(18)) { index, song ->
+                    OriginalHomeTrackGrid(mostPlayed.orEmpty().take(18)) { index, song ->
                         HomeTrackRow(
                             thumbnailUrl = song.thumbnailUrl,
                             songId = song.id,
@@ -335,7 +337,7 @@ fun OriginalHomeScreen(
                             isActive = song.id == latestSongId,
                             isPlaying = playing,
                             rank = index + 1,
-                            onClick = { play(song, songs) },
+                            onClick = { play(song, mostPlayed.orEmpty()) },
                             onLongClick = { menu(song) },
                             onMoreClick = { menu(song) },
                         )
@@ -364,11 +366,26 @@ fun OriginalHomeScreen(
                     }
                 }
             }
-            if (recentSongs.isNotEmpty()) {
+            if (recentSongs.isNotEmpty() || !history.isNullOrEmpty()) {
                 homeSectionItem("original/historyTitle", seen) {
                     HomeSectionTitle("History", onClick = { navController.navigate("history") })
                 }
                 homeSectionItem("original/history", seen) {
+                    if (!history.isNullOrEmpty()) {
+                        OriginalHomeTrackGrid(history.orEmpty().take(18)) { _, song ->
+                            HomeTrackRow(
+                                thumbnailUrl = song.thumbnailUrl,
+                                title = song.title,
+                                subtitle = song.artists.joinToString(", ") { it.name },
+                                songId = song.id,
+                                isActive = song.id == latestSongId,
+                                isPlaying = playing,
+                                onClick = { play(song, history.orEmpty()) },
+                                onLongClick = { menu(song) },
+                                onMoreClick = { menu(song) },
+                            )
+                        }
+                    } else {
                     OriginalHomeCardRow("history", recentSongs, seen, { it.id }) { song ->
                         HomeCoverCard(
                             title = song.title,
@@ -383,6 +400,7 @@ fun OriginalHomeScreen(
                                 onLongClick = { remoteMenu(song) },
                             ),
                         )
+                    }
                     }
                 }
             }
