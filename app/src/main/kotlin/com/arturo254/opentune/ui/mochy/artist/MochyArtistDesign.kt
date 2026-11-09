@@ -110,7 +110,7 @@ internal fun ArtistName(
     Box(modifier = modifier.animateContentSize(spring(dampingRatio = 0.9f, stiffness = 380f))) {
         if (logoUrl != null) {
             val aspect = (logoAspect ?: 3f).coerceIn(0.6f, 12f)
-            val width = min(260.dp, 72.dp * aspect)
+            val width = minOf(260.dp, 72.dp * aspect)
             AsyncImage(
                 model = logoUrl,
                 contentDescription = name,
