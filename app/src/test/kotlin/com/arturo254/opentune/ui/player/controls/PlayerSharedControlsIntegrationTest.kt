@@ -50,15 +50,20 @@ class PlayerSharedControlsIntegrationTest {
         assertTrue(controls.contains("sharePlayerTrack(context, mediaMetadata.id)"))
     }
 
-    @Test fun miniPlayerUsesTheSameGlyphRulesAndOwnSurface() {
-        val mini = source("ui/player/MiniPlayerComponents.kt")
-        val surface = source("ui/player/MiniPlayer.kt")
-        assertTrue(mini.contains("playerPlaybackIconRes("))
-        assertTrue(mini.contains("playerFavoriteIconRes("))
-        assertTrue(mini.contains("playerSkipIconRes("))
-        assertTrue(mini.contains("playerActions.playPause()"))
-        assertTrue(surface.contains("playerVisualGlassEffect("))
-        assertTrue(surface.contains(".clip(miniPlayerShape)"))
+    @Test fun miniPlayerUsesOriginalAnimatedGlyphsAndSharedPlaybackActions() {
+        val mini = source("ui/player/MiniPlayer.kt")
+        val surface = source("ui/visual/player/OriginalMiniPlayer.kt")
+        val icons = source("ui/visual/player/TransportIcons.kt")
+        assertTrue(mini.contains("SwipeableMiniPlayerBox("))
+        assertTrue(mini.contains("OriginalMiniPlayer("))
+        assertTrue(mini.contains("onPlayPause = playerActions::playPause"))
+        assertTrue(mini.contains("onNext = playerActions::next"))
+        assertTrue(mini.contains("onPrevious = playerActions::previous"))
+        assertTrue(surface.contains("AnimatedPlayGlyph("))
+        assertTrue(surface.contains("AnimatedSkipGlyph("))
+        assertTrue(surface.contains("FrostedChromeGlass("))
+        assertTrue(icons.contains("fun AnimatedPlayGlyph("))
+        assertTrue(icons.contains("fun AnimatedSkipGlyph("))
     }
 
     @Test fun sharedControlKitDoesNotOwnThePlayerOrItsStyles() {
