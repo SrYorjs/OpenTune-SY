@@ -8,6 +8,7 @@ import com.arturo254.opentune.ui.mochy.detail.DetailActionRow
 import com.arturo254.opentune.ui.mochy.detail.DetailCircleButton
 import com.arturo254.opentune.ui.mochy.detail.DetailSecondaryAction
 import com.arturo254.opentune.ui.mochy.detail.DetailTrackRow
+import com.arturo254.opentune.ui.mochy.detail.PlaylistScreenHeader
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -474,42 +475,60 @@ fun AlbumScreen(
             if (hasSongs) {
 
                 item(key = "header") {
-GalaxMediaHeader(
-    title = albumWithSongs.album.title,
-    label = stringResource(R.string.galax_album_label),
-    artworkUrls = listOf(albumWithSongs.album.thumbnailUrl),
-    accent = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
-    modifier = Modifier.padding(top = systemBarsTopPadding + AppBarHeight),
-    facts = listOfNotNull(
-        albumWithSongs.album.year?.toString(),
-        pluralStringResource(R.plurals.n_song, wrappedSongs.size, wrappedSongs.size),
-        albumWithSongs.songs.sumOf { it.song.duration }.takeIf { it > 0 }?.let { makeTimeString(it * 1000L) },
-    ),
-    details = {Text(
-                            text = buildAnnotatedString {
-                                withStyle(
-                                    style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Normal,
-                                        color = MaterialTheme.colorScheme.primary
-                                    ).toSpanStyle()
-                                ) {
-                                    albumWithSongs.artists.fastForEachIndexed { index, artist ->
-                                        val link = LinkAnnotation.Clickable(artist.id) {
-                                            navController.navigate("artist/${artist.id}")
-                                        }
-                                        withLink(link) {
-                                            append(artist.name)
-                                        }
-                                        if (index != albumWithSongs.artists.lastIndex) {
-                                            append(", ")
-                                        }
-                                    }
-                                }
-                            },
-                            textAlign = TextAlign.Start,
-                            modifier = Modifier.padding(horizontal = 0.dp)
-                        )},
-    actions = {
+Column(
+    modifier = Modifier.fillMaxWidth().padding(bottom = 14.dp),
+    verticalArrangement = Arrangement.spacedBy(14.dp),
+) {
+    PlaylistScreenHeader(
+        thumbnailUrl = albumWithSongs.album.thumbnailUrl,
+        title = albumWithSongs.album.title,
+        userName = albumWithSongs.artists.joinToString { it.name },
+        description = null,
+        isPlaying = isPlaying && mediaMetadata?.album?.id == albumWithSongs.album.id,
+        onPlayClick = {
+            playerConnection.service.getAutomix(playlistId)
+            playerConnection.playQueue(LocalAlbumRadio(albumWithSongs))
+        },
+        onShuffleClick = {
+            playerConnection.service.getAutomix(playlistId)
+            playerConnection.playQueue(
+                LocalAlbumRadio(albumWithSongs.copy(songs = albumWithSongs.songs.shuffled()))
+            )
+        },
+        onMoreClick = {
+            menuState.show {
+                AlbumMenu(
+                    originalAlbum = Album(albumWithSongs.album, albumWithSongs.artists),
+                    navController = navController,
+                    onDismiss = menuState::dismiss,
+                )
+            }
+        },
+        accentColor = gradientColors.firstOrNull(),
+        showActions = false,
+        modifier = Modifier.padding(top = systemBarsTopPadding + AppBarHeight),
+    )
+    Text(
+        text = listOfNotNull(
+            albumWithSongs.album.year?.toString(),
+            pluralStringResource(R.plurals.n_song, wrappedSongs.size, wrappedSongs.size),
+            albumWithSongs.songs.sumOf { it.song.duration }.takeIf { it > 0 }
+                ?.let { makeTimeString(it * 1000L) },
+        ).joinToString("  ·  "),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 24.dp),
+    )
+    Row(modifier = Modifier.padding(horizontal = 24.dp)) {
+        albumWithSongs.artists.forEachIndexed { index, artist ->
+            Text(
+                text = artist.name + if (index == albumWithSongs.artists.lastIndex) "" else ", ",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.clickable { navController.navigate("artist/${artist.id}") },
+            )
+        }
+    }
         DetailActionRow(
             isPlaying = isPlaying && mediaMetadata?.album?.id == albumWithSongs.album.id,
             onPlayClick = {
@@ -577,9 +596,7 @@ GalaxMediaHeader(
         TextButton(onClick = { showQualityDialog = true }, modifier = Modifier.align(Alignment.End)) {
             Text(stringResource(R.string.download))
         }
-    },
-)
-}
+}}
 
                 item(key = "songs_header") {
                     NavigationTitle(
