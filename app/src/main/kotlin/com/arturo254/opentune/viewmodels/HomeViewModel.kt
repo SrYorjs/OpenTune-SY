@@ -272,9 +272,11 @@ class HomeViewModel @Inject constructor(
                     ).first().distinctBy { it.id }
                 }
                 launch {
-                    recentHistorySongs.value = database.recentlyPlayedSongs(limit = 18)
+                    recentHistorySongs.value = database.events()
                         .first()
+                        .map { it.song }
                         .distinctBy { it.id }
+                        .take(18)
                 }
                 
                 launch {
