@@ -171,6 +171,8 @@ import com.arturo254.opentune.extensions.metadata
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.ui.player.state.PlayerStateInput
 import com.arturo254.opentune.ui.player.state.rememberPlayerState
+import com.arturo254.opentune.ui.mochy.player.bedside.MochyBedsideScene
+import com.arturo254.opentune.ui.mochy.player.bedside.MochyPlayerStyleSelector
 import com.arturo254.opentune.ui.player.preferences.rememberPlayerPresentationPreferences
 import com.arturo254.opentune.ui.component.BottomSheet
 import com.arturo254.opentune.ui.component.BottomSheetState
@@ -225,6 +227,12 @@ fun BottomSheetPlayer(
 
     val presentation = rememberPlayerPresentationPreferences()
     val playerDesignStyle = presentation.designStyle
+    val (mochyBedsideEnabled, onMochyBedsideChange) =
+        rememberPreference(MochyBedsideModeKey, false)
+    val (_, onNativeDesignStyleChange) = rememberEnumPreference(
+        PlayerDesignStyleKey, PlayerDesignStyle.V8
+    )
+    var showMochyStyleSelector by remember { mutableStateOf(false) }
     val playerBackground = presentation.backgroundStyle
     val playerButtonsStyle = presentation.buttonStyle
     val sliderStyle = presentation.sliderStyle
@@ -800,6 +808,20 @@ fun BottomSheetPlayer(
             )
         }
 
+        if (mochyBedsideEnabled) {
+            MochyBedsideScene(
+                state = playerState,
+                queuePeekHeight = queueSheetState.collapsedBound,
+                onClose = state::collapseSoft,
+                onStyles = { showMochyStyleSelector = true },
+                onPlayPause = playerActions::playPause,
+                onPrevious = playerActions::previous,
+                onNext = playerActions::next,
+                onQueue = { queueSheetState.expandSoft() },
+                onLyrics = { lyricsSheetState.expandSoft() },
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else {
         PlayerLayout(
             style = playerDesignStyle,
             applePortrait = {
@@ -1168,6 +1190,23 @@ fun BottomSheetPlayer(
                 )
             },
         )
+        }
+        if (!mochyBedsideEnabled && !state.isCollapsed) {
+            Box(
+                modifier = Modifier.align(Alignment.TopEnd)
+                    .padding(
+                        top = WindowInsets.systemBars.asPaddingValues()
+                            .calculateTopPadding() + 8.dp,
+                        end = 14.dp,
+                    ),
+            ) {
+                androidx.compose.material3.TextButton(onClick = {
+                    showMochyStyleSelector = true
+                }) {
+                    Text("Estilos", color = MaterialTheme.colorScheme.onSurface)
+                }
+            }
+        }
 
         val queueOnBackgroundColor = visualSkin.queueOnBackgroundColor
         val queueSurfaceColor = visualSkin.queueSurfaceColor
@@ -1199,6 +1238,25 @@ fun BottomSheetPlayer(
             lyricsSyncOffset = lyricsSyncOffset,
             modifier = modifier,
         )
+        if (showMochyStyleSelector) {
+            MochyPlayerStyleSelector(
+                state = playerState,
+                native = playerDesignStyle,
+                bedsideEnabled = mochyBedsideEnabled,
+                onNative = { style ->
+                    onMochyBedsideChange(false)
+                    onNativeDesignStyleChange(style)
+                    showMochyStyleSelector = false
+                },
+                onBedside = {
+                    onMochyBedsideChange(true)
+                    showMochyStyleSelector = false
+                },
+                onDismiss = { showMochyStyleSelector = false },
+            )
+        }
         }
     }
 }
+
+private val MochyBedsideModeKey = booleanPreferencesKey("mochyBedsideMode")
