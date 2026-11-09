@@ -76,8 +76,8 @@ internal fun MainActivityThemeHost(
             }
         }
 
-    LaunchedEffect(useDarkTheme) {
-        systemUiController.setSystemBarAppearance(useDarkTheme)
+    LaunchedEffect(Unit) {
+        systemUiController.setSystemBarAppearance(true)
     }
 
     val pureBlackEnabled by rememberPreference(PureBlackKey, defaultValue = false)
