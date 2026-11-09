@@ -35,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.arturo254.opentune.core.designsystem.component.Artwork
+import com.arturo254.opentune.ui.mochy.theme.MochyTheme
+import com.arturo254.opentune.ui.mochy.detail.PlaylistScreenHeader
 import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidBackdrop
 import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidChrome
 import com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle
@@ -54,6 +56,36 @@ fun GalaxMediaHeader(
     supporting: @Composable ColumnScope.() -> Unit = {},
     actions: @Composable ColumnScope.() -> Unit = {},
 ) {
+    if (!artist) {
+        MochyTheme {
+            Column(
+                modifier = modifier.fillMaxWidth().background(Color.Black),
+                verticalArrangement = Arrangement.spacedBy(13.dp),
+            ) {
+                PlaylistScreenHeader(
+                    thumbnailUrl = artworkUrls.firstOrNull { !it.isNullOrBlank() },
+                    title = title,
+                    userName = label,
+                    description = null,
+                    isPlaying = false,
+                    onPlayClick = {},
+                    onShuffleClick = {},
+                    onMoreClick = {},
+                    accentColor = accent,
+                    showActions = false,
+                )
+                Column(
+                    Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    details()
+                    GalaxMediaFacts(facts)
+                    supporting()
+                    actions()
+                }
+            }
+        }
+    } else {
     val backdrop = rememberLayerBackdrop()
     val scheme = MaterialTheme.colorScheme
     Box(modifier.fillMaxWidth()) {
@@ -137,6 +169,7 @@ fun GalaxMediaHeader(
                 actions()
             }
         }
+    }
     }
 }
 
