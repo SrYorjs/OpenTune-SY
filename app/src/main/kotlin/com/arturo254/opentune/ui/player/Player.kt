@@ -175,6 +175,7 @@ import com.arturo254.opentune.ui.player.state.rememberPlayerState
 import com.arturo254.opentune.ui.mochy.player.bedside.MochyBedsideScene
 import com.arturo254.opentune.ui.mochy.player.bedside.MochyPlayerStyleSelector
 import com.arturo254.opentune.ui.mochy.player.turntable.MochyTurntableScene
+import com.arturo254.opentune.ui.mochy.player.ipod.MochyIpodScene
 import com.arturo254.opentune.ui.mochy.player.MochyPlayerMode
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.arturo254.opentune.ui.player.preferences.rememberPlayerPresentationPreferences
@@ -837,6 +838,18 @@ fun BottomSheetPlayer(
                 onNext = playerActions::next,
                 onQueue = { queueSheetState.expandSoft() },
                 onLyrics = { lyricsSheetState.expandSoft() },
+                modifier = Modifier.fillMaxSize(),
+            )
+        } else if (mochyMode == MochyPlayerMode.IPOD) {
+            MochyIpodScene(
+                state = playerState,
+                queuePeekHeight = queueSheetState.collapsedBound,
+                onClose = state::collapseSoft,
+                onStyles = { showMochyStyleSelector = true },
+                onPlayPause = playerActions::playPause,
+                onPrevious = playerActions::previous,
+                onNext = playerActions::next,
+                onSeek = { playerActions.seekTo(it, displayedTrackId = mediaMetadata?.id) },
                 modifier = Modifier.fillMaxSize(),
             )
         } else {
