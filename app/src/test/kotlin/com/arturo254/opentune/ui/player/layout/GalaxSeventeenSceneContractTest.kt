@@ -117,7 +117,8 @@ class GalaxSeventeenSceneContractTest {
         assertTrue(appearance.contains("navController.navigate(\"settings/appearance/player_studio\")"))
         assertTrue(studio.contains("PlayerDesignStyleKey"))
         assertTrue(studio.contains("PlayerDesignStyle.entries"))
-        assertTrue(studio.contains("onSelected(style)"))
+        assertTrue(studio.contains("onSelected(it)"))
+        assertTrue(studio.contains("setMochyMode(MochyPlayerMode.NONE)"))
         assertTrue(studio.contains("VINJAX"))
         assertTrue(studio.contains("GALAXTHEME"))
     }
