@@ -4,4 +4,5 @@ enum class MochyPlayerMode {
     NONE,
     BEDSIDE,
     TURNTABLE,
+    IPOD,
 }
