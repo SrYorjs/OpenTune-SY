@@ -117,7 +117,8 @@ fun OriginalHomeSectionDetailScreen(
         }
     }
     val localSongs = remember(items) { items.filterIsInstance<Song>() }
-    val isCurrentQueue = metadata?.id in localSongs.map { it.id }
+    val queueTitle by player?.queueTitle?.collectAsState() ?: remember { mutableStateOf(null) }
+    val isCurrentQueue = queueTitle == title
     val playAll: (Song?, Boolean) -> Unit = { start, shuffle ->
         val ordered = if (shuffle) localSongs.shuffled() else localSongs
         if (ordered.isNotEmpty()) {

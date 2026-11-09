@@ -7,6 +7,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -29,6 +30,8 @@ import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.LazyListPrefetchStrategy
+import androidx.compose.foundation.lazy.grid.LazyGridPrefetchStrategy
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -51,6 +54,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
@@ -97,6 +101,7 @@ import com.arturo254.opentune.ui.visual.component.HomeSectionBones
 import com.arturo254.opentune.ui.visual.component.HomeSectionTitle
 import com.arturo254.opentune.ui.visual.component.HomeTopGlow
 import com.arturo254.opentune.ui.visual.component.HomeTrackRow
+import com.arturo254.opentune.ui.visual.component.homeRowHeight
 import com.arturo254.opentune.ui.visual.component.HomeVideoCard
 import com.arturo254.opentune.ui.visual.component.OriginalHomeHero
 import com.arturo254.opentune.ui.visual.component.OriginalHomeHeroItem
@@ -370,7 +375,8 @@ fun OriginalHomeScreen(
                 }
                 HomeStyle.HOP_IN -> {
                     homeSectionItem("original/hopIn", seen) {
-                        val gridItems = (recent.orEmpty() + songs).distinctBy { it.id }.take(6)
+                        val columns = if (LocalConfiguration.current.screenWidthDp >= 600) 3 else 2
+                        val gridItems = (recent.orEmpty() + songs).distinctBy { it.id }.take(columns * 2)
                         Box {
                             HomeTopGlow(
                                 coverUrls = gridItems.mapNotNull { it.thumbnailUrl }.take(2),
@@ -388,7 +394,7 @@ fun OriginalHomeScreen(
                                         verticalArrangement = Arrangement.spacedBy(10.dp),
                                         modifier = Modifier.fillMaxWidth().padding(horizontal = HomeContentInset),
                                     ) {
-                                        gridItems.chunked(2).forEach { rowItems ->
+                                        gridItems.chunked(columns).forEach { rowItems ->
                                             Row(
                                                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                                                 modifier = Modifier.fillMaxWidth(),
@@ -415,7 +421,7 @@ fun OriginalHomeScreen(
                                                         modifier = Modifier.weight(1f),
                                                     )
                                                 }
-                                                repeat(2 - rowItems.size) { Spacer(Modifier.weight(1f)) }
+                                                repeat(columns - rowItems.size) { Spacer(Modifier.weight(1f)) }
                                             }
                                         }
                                     }
@@ -761,7 +767,9 @@ private fun <T> OriginalHomeCardRow(
     content: @Composable (T) -> Unit,
 ) {
     LazyRow(
-        state = rememberLazyListState(),
+        state = rememberLazyListState(
+            prefetchStrategy = remember { LazyListPrefetchStrategy(nestedPrefetchItemCount = 4) },
+        ),
         contentPadding = PaddingValues(horizontal = HomeContentInset),
         horizontalArrangement = Arrangement.spacedBy(HomeCardSpacing),
     ) {
@@ -785,23 +793,29 @@ private fun <T> OriginalHomeTrackGrid(
     elements: List<T>,
     content: @Composable (Int, T) -> Unit,
 ) {
-    val state = rememberLazyGridState()
+    val state = rememberLazyGridState(
+        prefetchStrategy = remember { LazyGridPrefetchStrategy(nestedPrefetchItemCount = 6) },
+    )
     val rows = min(3, elements.size)
     if (rows == 0) return
     val snap = remember(state) {
         SnapLayoutInfoProvider(lazyGridState = state, positionInLayout = { _, _ -> 0f })
     }
-    LazyHorizontalGrid(
-        state = state,
-        rows = GridCells.Fixed(rows),
-        flingBehavior = rememberSnapFlingBehavior(snap),
-        contentPadding = PaddingValues(horizontal = HomeContentInset),
-        horizontalArrangement = Arrangement.spacedBy(39.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.fillMaxWidth().height((54.dp + 8.dp) * rows),
-    ) {
-        gridItemsIndexed(elements, key = { _, element -> element.hashCode() }) { index, element ->
-            Box(Modifier.width(295.dp)) { content(index, element) }
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val columnWidth = if (maxWidth * 0.475f >= 320.dp) maxWidth * 0.475f else maxWidth * 0.76f
+        val rowSpacing = 6.dp
+        LazyHorizontalGrid(
+            state = state,
+            rows = GridCells.Fixed(rows),
+            flingBehavior = rememberSnapFlingBehavior(snap),
+            contentPadding = PaddingValues(horizontal = HomeContentInset),
+            horizontalArrangement = Arrangement.spacedBy(39.dp),
+            verticalArrangement = Arrangement.spacedBy(rowSpacing),
+            modifier = Modifier.fillMaxWidth().height(homeRowHeight() * rows + rowSpacing * (rows - 1)),
+        ) {
+            gridItemsIndexed(elements, key = { _, element -> element.hashCode() }) { index, element ->
+                Box(Modifier.width(columnWidth)) { content(index, element) }
+            }
         }
     }
 }
