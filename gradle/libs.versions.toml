@@ -6,6 +6,7 @@ kotlin = "2.3.20"
 compose = "1.11.0-rc01"
 lifecycle = "2.10.0"
 material3 = "1.5.0-alpha18"
+materialKolor = "4.1.1"
 media3 = "1.10.0"
 room = "2.8.4"
 hilt = "2.59.2"
@@ -84,6 +85,7 @@ viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose",
 lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
+materialKolor = { module = "com.materialkolor:material-kolor", version.ref = "materialKolor" }
 
 coil = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
