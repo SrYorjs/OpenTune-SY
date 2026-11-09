@@ -53,7 +53,17 @@ La aceptación de una fase exige **copiar el código real, conectar datos y acci
 ## Estado
 
 - [x] Fase 00: crear rama a partir de la base limpia y registrar ruta de migración.
-- [ ] Fase 01: iniciar el trasplante literal del sistema visual y sus dependencias.
+- [x] Fase 01: trasladados los cimientos visuales originales, fuentes, tema, extracción cromática, componentes de superficie, movimiento, máscaras y motor de vidrio. Validación Android en ejecución.
 - [ ] Fases 02–10: pendientes, sin fingir completitud.
 
 **Prohibido:** añadir pantallas de apariencia semejante, renombrar un tema vacío como terminado, inventar proveedores, romper los enlaces a la VPS o realizar fusiones automáticas a otras ramas.
+
+## Operación 01 · Integración realizada
+
+- Código visual original copiado a `ui/visual/theme`, `ui/visual/component` y `ui/visual/utils`, separado de los servicios musicales. Se han conservado las animaciones, expresiones de dibujo y motores de desenfoque de la fuente y se han ajustado únicamente las referencias necesarias para compilar en este proyecto.
+- Tipografía general Inter en siete pesos y fuente adicional BBH Bartle, originales de los recursos; tema Material oscuro, estilos de texto originales, paleta tonal de carátulas, color de fondo extraído de la parte inferior de las cubiertas y extracción original con Material Kolor 4.1.1.
+- Superficies e interacción: `SmoothCornerShape`, `Press3D`, `TouchFeedback`, `DeviceTilt`, `RevealOnAppear`, `OdometerText`, `HomeTopGlow`, `ContainerTransform`, `SharedElementTransition` y `PageWipe`.
+- Vidrio: `GlassKit`, `BlurEffectCache`, `FrostedGlass`, `ProgressiveBlur` y `AgslShader`, con `RenderNode`, captura de fondo, máscaras, desenfoque descendente y grano originales. Preferencias de apariencia, calidad y acento adaptadas sin modificar Media3 ni sus fuentes.
+- La paleta oscura y la tipografía se suministran desde `MainActivityThemeHost`. Se fuerza apariencia de iconos clara sobre barras del sistema por coherencia con la interfaz oscura original.
+- Las barras, pantallas y superficies que consumen `glassRoot` se incorporarán desde el código original al sustituir el árbol de navegación en la fase 02. La implementación adicional `ModuleChromeGlass`, ligada a `ActiveSkin` de los estilos externos, se traslada con el sistema de estilos en la fase 07, no mediante un efecto ficticio.
+- La compilación, lint y tests se ejecutan por GitHub Actions en esta rama, gracias a su incorporación explícita a `rebuild-safety.yml`. El resultado de CI no se da por aprobado antes de concluir los tres pasos.
