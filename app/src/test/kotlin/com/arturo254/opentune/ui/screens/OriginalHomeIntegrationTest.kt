@@ -41,6 +41,8 @@ class OriginalHomeIntegrationTest {
         assertTrue(home.contains("HomeHopInCard("))
         assertTrue(hero.contains("ScrollAwayCover("))
         assertTrue(hero.contains("PageWipe("))
+        assertTrue(hero.contains("HeroBlurBand(mediaLayer, atTop = true"))
+        assertTrue(hero.contains("HeroBlurBand(mediaLayer, atTop = false"))
         assertTrue(hero.contains("curve = { wipeCurve }"))
         assertTrue(hero.contains("HeroBones()"))
         assertTrue(home.contains("opensPage = true"))

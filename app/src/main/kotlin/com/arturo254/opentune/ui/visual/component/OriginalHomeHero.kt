@@ -53,6 +53,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -176,12 +179,28 @@ fun OriginalHomeHero(
                     blur = edgeBlur,
                     peek = peek,
                 ) {
-                    AsyncImage(
-                        model = entry.artwork,
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                    )
+                    val mediaLayer = rememberGraphicsLayer()
+                    Box(Modifier.fillMaxSize()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize().then(
+                                if (edgeBlur && !peek) Modifier.drawWithContent {
+                                    mediaLayer.record { this@drawWithContent.drawContent() }
+                                    drawLayer(mediaLayer)
+                                } else Modifier
+                            ),
+                        ) {
+                            AsyncImage(
+                                model = entry.artwork,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                        }
+                        if (edgeBlur && !peek) {
+                            HeroBlurBand(mediaLayer, atTop = true, heightFraction = 0.46f, radius = 22f)
+                            HeroBlurBand(mediaLayer, atTop = false, heightFraction = 0.5f, radius = 30f)
+                        }
+                    }
                     HeroScrims()
                     Box(modifier = Modifier.matchParentSize()) {
                         HeroText(
