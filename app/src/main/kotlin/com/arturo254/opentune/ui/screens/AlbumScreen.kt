@@ -3,6 +3,11 @@ package com.arturo254.opentune.ui.screens
 import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import com.arturo254.opentune.ui.component.LiquidGlassIconButton
 import com.arturo254.opentune.ui.screens.GalaxMediaHeader
+import com.arturo254.opentune.ui.mochy.theme.MochyTheme
+import com.arturo254.opentune.ui.mochy.detail.DetailActionRow
+import com.arturo254.opentune.ui.mochy.detail.DetailCircleButton
+import com.arturo254.opentune.ui.mochy.detail.DetailSecondaryAction
+import com.arturo254.opentune.ui.mochy.detail.DetailTrackRow
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -453,10 +458,11 @@ fun AlbumScreen(
         }
     }
 
+    MochyTheme {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .galaxScreenBackground(),
+            .background(Color.Black),
     ) {
 
         LazyColumn(
@@ -504,184 +510,70 @@ GalaxMediaHeader(
                             modifier = Modifier.padding(horizontal = 0.dp)
                         )},
     actions = {
-Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                ,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-
-                            LiquidGlassIconButton(
-                                onClick = {
-                                    database.query {
-                                        update(albumWithSongs.album.toggleLike())
-                                    }
-                                },
-                                size = 48.dp
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        painter = painterResource(
-                                            if (albumWithSongs.album.bookmarkedAt != null)
-                                                R.drawable.favorite
-                                            else
-                                                R.drawable.favorite_border
-                                        ),
-                                        contentDescription = null,
-                                        tint = if (albumWithSongs.album.bookmarkedAt != null)
-                                            MaterialTheme.colorScheme.error
-                                        else
-                                            MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
-                            }
-
-                            Button(
-                                onClick = {
-                                    playerConnection.service.getAutomix(playlistId)
-                                    playerConnection.playQueue(
-                                        LocalAlbumRadio(albumWithSongs),
-                                    )
-                                },
-                                shape = RoundedCornerShape(24.dp),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(48.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.play),
-                                    contentDescription = stringResource(R.string.play),
-                                    modifier = Modifier.size(24.dp)
+        DetailActionRow(
+            isPlaying = isPlaying && mediaMetadata?.album?.id == albumWithSongs.album.id,
+            onPlayClick = {
+                if (mediaMetadata?.album?.id == albumWithSongs.album.id) {
+                    playerConnection.player.togglePlayPause()
+                } else {
+                    playerConnection.service.getAutomix(playlistId)
+                    playerConnection.playQueue(LocalAlbumRadio(albumWithSongs))
+                }
+            },
+            onShuffleClick = {
+                playerConnection.service.getAutomix(playlistId)
+                playerConnection.playQueue(
+                    LocalAlbumRadio(albumWithSongs.copy(songs = albumWithSongs.songs.shuffled()))
+                )
+            },
+            secondaryAction = DetailSecondaryAction.DownloadAction(
+                state = downloadState,
+                onClick = {
+                    when (downloadState) {
+                        Download.STATE_COMPLETED, Download.STATE_DOWNLOADING -> {
+                            albumWithSongs.songs.forEach { song ->
+                                DownloadService.sendRemoveDownload(
+                                    context, ExoDownloadService::class.java, song.id, false
                                 )
-                            }
-
-                            Button(
-                                onClick = {
-                                    playerConnection.service.getAutomix(playlistId)
-                                    playerConnection.playQueue(
-                                        LocalAlbumRadio(albumWithSongs.copy(songs = albumWithSongs.songs.shuffled())),
-                                    )
-                                },
-                                shape = RoundedCornerShape(24.dp),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(48.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(R.drawable.shuffle),
-                                    contentDescription = stringResource(R.string.shuffle),
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-
-                            LiquidGlassIconButton(
-                                onClick = {
-                                    when (downloadState) {
-                                        Download.STATE_COMPLETED -> {
-                                            albumWithSongs.songs.forEach { song ->
-                                                DownloadService.sendRemoveDownload(
-                                                    context,
-                                                    ExoDownloadService::class.java,
-                                                    song.id,
-                                                    false,
-                                                )
-                                            }
-                                        }
-                                        Download.STATE_DOWNLOADING -> {
-                                            albumWithSongs.songs.forEach { song ->
-                                                DownloadService.sendRemoveDownload(
-                                                    context,
-                                                    ExoDownloadService::class.java,
-                                                    song.id,
-                                                    false,
-                                                )
-                                            }
-                                        }
-                                        else -> {
-                                            albumWithSongs.songs.forEach { song ->
-                                                val downloadRequest =
-                                                    DownloadRequest
-                                                        .Builder(song.id, song.id.toUri())
-                                                        .setCustomCacheKey(song.id)
-                                                        .setData(song.song.title.toByteArray())
-                                                        .build()
-                                                DownloadService.sendAddDownload(
-                                                    context,
-                                                    ExoDownloadService::class.java,
-                                                    downloadRequest,
-                                                    false,
-                                                )
-                                            }
-                                        }
-                                    }
-                                },
-                                size = 48.dp
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    when (downloadState) {
-                                        Download.STATE_COMPLETED -> {
-                                            Icon(
-                                                painter = painterResource(R.drawable.offline),
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(24.dp)
-                                            )
-                                        }
-                                        Download.STATE_DOWNLOADING -> {
-                                            CircularProgressIndicator(
-                                                strokeWidth = 2.dp,
-                                                modifier = Modifier.size(24.dp),
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
-                                        else -> {
-                                            Icon(
-                                                painter = painterResource(R.drawable.download),
-                                                contentDescription = null,
-                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                modifier = Modifier.size(24.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            LiquidGlassIconButton(
-                                onClick = {
-                                    menuState.show {
-                                        AlbumMenu(
-                                            originalAlbum = Album(
-                                                albumWithSongs.album,
-                                                albumWithSongs.artists
-                                            ),
-                                            navController = navController,
-                                            onDismiss = menuState::dismiss,
-                                        )
-                                    }
-                                },
-                                size = 48.dp
-                            ) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        painter = painterResource(R.drawable.more_vert),
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
                             }
                         }
+                        else -> {
+                            albumWithSongs.songs.forEach { song ->
+                                val request = DownloadRequest.Builder(song.id, song.id.toUri())
+                                    .setCustomCacheKey(song.id)
+                                    .setData(song.song.title.toByteArray())
+                                    .build()
+                                DownloadService.sendAddDownload(
+                                    context, ExoDownloadService::class.java, request, false
+                                )
+                            }
+                        }
+                    }
+                }
+            ),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+            extraAction = {
+                DetailCircleButton(
+                    icon = if (albumWithSongs.album.bookmarkedAt != null)
+                        R.drawable.favorite else R.drawable.favorite_border,
+                    contentDescription = stringResource(R.string.save),
+                    onClick = { database.query { update(albumWithSongs.album.toggleLike()) } },
+                )
+                DetailCircleButton(
+                    icon = R.drawable.more_vert,
+                    contentDescription = null,
+                    onClick = {
+                        menuState.show {
+                            AlbumMenu(
+                                originalAlbum = Album(albumWithSongs.album, albumWithSongs.artists),
+                                navController = navController,
+                                onDismiss = menuState::dismiss,
+                            )
+                        }
+                    },
+                )
+            },
+        )
         TextButton(onClick = { showQualityDialog = true }, modifier = Modifier.align(Alignment.End)) {
             Text(stringResource(R.string.download))
         }
@@ -699,6 +591,41 @@ Row(
                     items = wrappedSongs,
                     key = { _, song -> song.item.id },
                 ) { index, songWrapper ->
+                    if (!selection) {
+                        DetailTrackRow(
+                            thumbnailUrl = songWrapper.item.thumbnailUrl,
+                            title = songWrapper.item.title,
+                            subtitle = songWrapper.item.artists.joinToString { it.name },
+                            isActive = songWrapper.item.id == mediaMetadata?.id,
+                            isPlaying = isPlaying,
+                            onClick = {
+                                if (songWrapper.item.id == mediaMetadata?.id) {
+                                    playerConnection.player.togglePlayPause()
+                                } else {
+                                    playerConnection.service.getAutomix(playlistId)
+                                    playerConnection.playQueue(
+                                        LocalAlbumRadio(albumWithSongs, startIndex = index)
+                                    )
+                                }
+                            },
+                            onLongClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                selection = true
+                                wrappedSongs.forEach { it.isSelected = false }
+                                songWrapper.isSelected = true
+                            },
+                            onMenuClick = {
+                                menuState.show {
+                                    SongMenu(
+                                        originalSong = songWrapper.item,
+                                        navController = navController,
+                                        onDismiss = menuState::dismiss,
+                                    )
+                                }
+                            },
+                            modifier = Modifier.animateItem(),
+                        )
+                    } else {
                     SongListItem(
                         song = songWrapper.item,
                         albumIndex = index + 1,
@@ -752,6 +679,7 @@ Row(
                                 },
                             ),
                     )
+                    }
                 }
 
                 if (otherVersions.isNotEmpty()) {
@@ -1076,6 +1004,7 @@ Row(
                 }
             )
         }
+    }
     }
 }
 
