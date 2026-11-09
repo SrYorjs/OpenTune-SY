@@ -73,7 +73,7 @@ fun OriginalHomeSectionDetailScreen(
 ) {
     val speedDial by viewModel.speedDialSongs.collectAsState()
     val quickPicks by viewModel.quickPicks.collectAsState()
-    val keepListening by viewModel.keepListening.collectAsState()
+    val recentlyPlayed by viewModel.recentlyPlayedForHome.collectAsState()
     val mostPlayed by viewModel.mostPlayedSongsForHome.collectAsState()
     val forgotten by viewModel.forgottenFavorites.collectAsState()
     val recentHistory by viewModel.recentHistorySongs.collectAsState()
@@ -100,7 +100,7 @@ fun OriginalHomeSectionDetailScreen(
         "speed_dial" -> speedDial
         "quick_picks" -> quickPicks.orEmpty()
         "forgotten_favorites" -> forgotten.orEmpty()
-        "recently_played" -> keepListening.orEmpty()
+        "recently_played" -> recentlyPlayed.orEmpty()
         "most_played" -> mostPlayed.orEmpty()
         "history" -> recentHistory.orEmpty()
         else -> emptyList()

@@ -142,6 +142,8 @@ class HomeViewModel @Inject constructor(
     val forgottenFavorites = MutableStateFlow<List<Song>?>(null)
     val mostPlayedSongsForHome = MutableStateFlow<List<Song>?>(null)
     val recentHistorySongs = MutableStateFlow<List<Song>?>(null)
+    val recentlyPlayedForHome = MutableStateFlow<List<LocalItem>?>(null)
+    val localPlaylistsForHome = MutableStateFlow<List<Playlist>?>(null)
     val keepListening = MutableStateFlow<List<LocalItem>?>(null)
     val similarRecommendations = MutableStateFlow<List<SimilarRecommendation>?>(null)
     val accountPlaylists = MutableStateFlow<List<PlaylistItem>?>(null)
@@ -272,11 +274,18 @@ class HomeViewModel @Inject constructor(
                     ).first().distinctBy { it.id }
                 }
                 launch {
-                    recentHistorySongs.value = database.events()
+                    val latest = database.events()
                         .first()
                         .map { it.song }
                         .distinctBy { it.id }
-                        .take(18)
+                    recentHistorySongs.value = latest.take(18)
+                    recentlyPlayedForHome.value = latest.take(8)
+                }
+                launch {
+                    localPlaylistsForHome.value = database.editablePlaylistsByCreateDateAsc()
+                        .first()
+                        .filter { it.songCount > 0 && it.id != "liked" }
+                        .take(12)
                 }
                 
                 launch {

@@ -133,7 +133,9 @@ fun OriginalHomeScreen(
     val listState = rememberLazyListState()
     val seen = rememberRevealSeenState()
     val quickPicks by viewModel.quickPicks.collectAsStateWithLifecycle()
-    val recent by viewModel.keepListening.collectAsStateWithLifecycle()
+    val recent by viewModel.recentlyPlayedForHome.collectAsStateWithLifecycle()
+    val keepListening by viewModel.keepListening.collectAsStateWithLifecycle()
+    val localPlaylists by viewModel.localPlaylistsForHome.collectAsStateWithLifecycle()
     val recentActivity by viewModel.recentActivity.collectAsStateWithLifecycle()
     val speedDial by viewModel.speedDialSongs.collectAsStateWithLifecycle()
     val forgotten by viewModel.forgottenFavorites.collectAsStateWithLifecycle()
@@ -235,7 +237,7 @@ fun OriginalHomeScreen(
     val remoteItems = remember(homePage) {
         homePage?.sections.orEmpty().flatMap { it.items }.distinctBy { it.id }
     }
-    val heroItems = remember(songs, remoteItems, recent, accountPlaylists, latestSongId, playing) {
+    val heroItems = remember(songs, remoteItems, recent, keepListening, localPlaylists, accountPlaylists, latestSongId, playing) {
         val own = songs.take(3).map { song ->
             OriginalHomeHeroItem(
                 id = song.id,
@@ -260,10 +262,10 @@ fun OriginalHomeScreen(
                 onOpen = { playRemote(song) },
             )
         }
-        val localCollections = recent.orEmpty()
-            .filter { it is Album || it is Playlist }
-            .take(2)
-            .map { item ->
+        val localCollections = buildList<LocalItem> {
+            addAll(localPlaylists.orEmpty())
+            addAll(keepListening.orEmpty().filterIsInstance<Album>())
+        }.distinctBy { it.id }.take(2).map { item ->
                 OriginalHomeHeroItem(
                     id = "${item.javaClass.simpleName}_${item.id}",
                     title = item.title,
@@ -376,7 +378,12 @@ fun OriginalHomeScreen(
                 HomeStyle.HOP_IN -> {
                     homeSectionItem("original/hopIn", seen) {
                         val columns = if (LocalConfiguration.current.screenWidthDp >= 600) 3 else 2
-                        val gridItems = (recent.orEmpty() + songs).distinctBy { it.id }.take(columns * 2)
+                        val gridItems = buildList<LocalItem> {
+                            addAll(recent.orEmpty())
+                            addAll(keepListening.orEmpty())
+                            addAll(localPlaylists.orEmpty())
+                            addAll(songs)
+                        }.distinctBy { it.id }.take(columns * 2)
                         Box {
                             HomeTopGlow(
                                 coverUrls = gridItems.mapNotNull { it.thumbnailUrl }.take(2),
@@ -545,25 +552,50 @@ fun OriginalHomeScreen(
                     }
                 }
             }
-            if (accountPlaylists.orEmpty().isNotEmpty()) {
+            if (accountPlaylists.orEmpty().isNotEmpty() || localPlaylists.orEmpty().isNotEmpty()) {
                 homeSectionItem("original/playlistsTitle", seen) {
                     HomeSectionTitle("Your playlists", onClick = onOpenLibraryTab)
                 }
                 homeSectionItem("original/playlists", seen) {
-                    OriginalHomeCardRow("playlists", accountPlaylists.orEmpty(), seen, { it.id }) { item ->
-                        HomeCoverCard(
-                            title = item.title,
-                            subtitle = item.author?.name,
-                            thumbnailUrl = item.thumbnail,
-                            isPlaying = playing,
-                            modifier = Modifier.combinedClickable(
-                                interactionSource = null,
-                                indication = HomeCardHighlight,
-                                onClick = { openRemote(item) },
-                                onLongClick = { remoteMenu(item) },
-                            ),
-                            sharedElementKey = "playlist-${item.id}",
-                        )
+                    val entries = buildList<Any> {
+                        addAll(localPlaylists.orEmpty())
+                        addAll(accountPlaylists.orEmpty())
+                    }
+                    OriginalHomeCardRow("playlists", entries, seen, { item ->
+                        when (item) {
+                            is Playlist -> "local_${item.id}"
+                            is PlaylistItem -> "remote_${item.id}"
+                            else -> item.hashCode().toString()
+                        }
+                    }) { item ->
+                        when (item) {
+                            is Playlist -> HomeCoverCard(
+                                title = item.title,
+                                subtitle = "${item.songCount} songs",
+                                thumbnailUrl = item.thumbnails.firstOrNull() ?: item.thumbnailUrl,
+                                isPlaying = playing,
+                                modifier = Modifier.combinedClickable(
+                                    interactionSource = null,
+                                    indication = HomeCardHighlight,
+                                    onClick = { openLocal(item) },
+                                    onLongClick = { localMenu(item) },
+                                ),
+                                sharedElementKey = "playlist-${item.id}",
+                            )
+                            is PlaylistItem -> HomeCoverCard(
+                                title = item.title,
+                                subtitle = item.author?.name,
+                                thumbnailUrl = item.thumbnail,
+                                isPlaying = playing,
+                                modifier = Modifier.combinedClickable(
+                                    interactionSource = null,
+                                    indication = HomeCardHighlight,
+                                    onClick = { openRemote(item) },
+                                    onLongClick = { remoteMenu(item) },
+                                ),
+                                sharedElementKey = "playlist-${item.id}",
+                            )
+                        }
                     }
                 }
             }
@@ -758,6 +790,7 @@ private fun LazyListScope.homeSectionItem(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun <T> OriginalHomeCardRow(
     key: String,

@@ -57,6 +57,19 @@ class OriginalHomeIntegrationTest {
     }
 
     @Test
+    fun actualRecentHistoryAndLocalCollectionsAreUsed() {
+        val model = source("viewmodels/HomeViewModel.kt")
+        val home = source("ui/screens/OriginalHomeScreen.kt")
+        val detail = source("ui/screens/OriginalHomeSectionDetailScreen.kt")
+        assertTrue(model.contains("database.events()"))
+        assertTrue(model.contains("recentlyPlayedForHome.value = latest.take(8)"))
+        assertTrue(model.contains("database.editablePlaylistsByCreateDateAsc()"))
+        assertTrue(home.contains("val recent by viewModel.recentlyPlayedForHome"))
+        assertTrue(home.contains("localPlaylists.orEmpty()"))
+        assertTrue(detail.contains("val recentlyPlayed by viewModel.recentlyPlayedForHome"))
+    }
+
+    @Test
     fun noSecondPlayerProviderOrFakeSectionIsCreated() {
         val home = source("ui/screens/OriginalHomeScreen.kt")
         val detail = source("ui/screens/OriginalHomeSectionDetailScreen.kt")
