@@ -39,6 +39,8 @@ import com.arturo254.opentune.constants.SwipeSensitivityKey
 import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.ui.player.state.PlayerState
 import com.arturo254.opentune.utils.rememberPreference
+import com.arturo254.opentune.ui.visual.player.OriginalMiniPlayer
+import com.arturo254.opentune.ui.player.actions.rememberPlayerActions
 
 @Composable
 fun MiniPlayer(
@@ -77,15 +79,9 @@ private fun NewMiniPlayer(
     val playerConnection = LocalPlayerConnection.current ?: return
     val layoutDirection = LocalLayoutDirection.current
     val coroutineScope = rememberCoroutineScope()
+    val playerActions = rememberPlayerActions(playerConnection)
     val swipeSensitivity by rememberPreference(SwipeSensitivityKey, 0.73f)
     val swipeThumbnail by rememberPreference(com.arturo254.opentune.constants.SwipeThumbnailKey, true)
-    val glassEnabled = LocalEnableLiquidGlass.current
-    val configuredLiquidRadius = com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidTuning.current?.cornerRadiusDp
-    val miniPlayerShape = if (glassEnabled && configuredLiquidRadius != null) {
-        androidx.compose.foundation.shape.RoundedCornerShape(configuredLiquidRadius.dp)
-    } else OpenTuneDesignSystem.shapes.miniPlayer
-    val surfaceTokens = OpenTuneDesignSystem.surfaces
-
     SwipeableMiniPlayerBox(
         modifier = modifier,
         swipeSensitivity = swipeSensitivity,
@@ -99,52 +95,14 @@ private fun NewMiniPlayer(
         isPlayerExpanded = state.isExpanded,
         pureBlack = pureBlack,
         useLegacyBackground = false
-    ) { offsetX, transitionDirection ->
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(MiniPlayerHeight)
-                .preferredFrameRate(120f),
-        ) {
-            // Fade ONLY the old optical surface. Artwork, transport and swipe
-            // gestures remain composed throughout the shared-dock morph.
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .graphicsLayer { alpha = (1f - dockMergeProgress).coerceIn(0f, 1f) }
-                    .clip(miniPlayerShape)
-                    .background(
-                        color = if (glassEnabled) Color.Transparent
-                        else if (pureBlack) Color.Black.copy(alpha = surfaceTokens.opacity.miniPlayerPureBlack)
-                        else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = surfaceTokens.opacity.miniPlayerOpaque)
-                    )
-                    .playerVisualGlassEffect(
-                        shape = miniPlayerShape,
-                        pureBlack = pureBlack,
-                    )
-                    .then(
-                        if (!glassEnabled) Modifier.border(
-                            width = surfaceTokens.borders.miniPlayerOpaqueWidth,
-                            color = surfaceTokens.borders.miniPlayerOpaqueColor,
-                            shape = miniPlayerShape,
-                        ) else Modifier
-                    ),
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clip(miniPlayerShape)
-                    .graphicsLayer { translationX = offsetX },
-            ) {
-                NewMiniPlayerContent(
-                    pureBlack = pureBlack,
-                    playerState = playerState,
-                    playerConnection = playerConnection,
-                    navController = navController,
-                    state = state,
-                    transitionDirection = transitionDirection,
-                )
-            }
-        }
+    ) { offsetX, _ ->
+        OriginalMiniPlayer(
+            playerState = playerState,
+            pureBlack = pureBlack,
+            horizontalOffset = offsetX,
+            onOpen = state::expandSoft,
+            onPlayPause = playerActions::playPause,
+            onNext = playerActions::next,
+        )
     }
 }
