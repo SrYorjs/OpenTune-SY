@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
@@ -91,6 +92,7 @@ import com.arturo254.opentune.ui.visual.component.HomeCardHighlight
 import com.arturo254.opentune.ui.visual.component.HomeCardSpacing
 import com.arturo254.opentune.ui.visual.component.HomeContentInset
 import com.arturo254.opentune.ui.visual.component.HomeCoverCard
+import com.arturo254.opentune.ui.visual.component.HomeCompactTopBones
 import com.arturo254.opentune.ui.visual.component.HomeHopInCard
 import com.arturo254.opentune.ui.visual.component.HomeSectionBones
 import com.arturo254.opentune.ui.visual.component.HomeSectionTitle
@@ -103,6 +105,9 @@ import com.arturo254.opentune.ui.visual.component.rememberRevealSeenState
 import com.arturo254.opentune.ui.visual.component.revealOnAppear
 import com.arturo254.opentune.ui.visual.utils.SnapLayoutInfoProvider
 import com.arturo254.opentune.viewmodels.HomeViewModel
+import com.arturo254.opentune.ui.visual.HomeStyle
+import com.arturo254.opentune.ui.visual.HomeStyleKey
+import com.arturo254.opentune.utils.rememberPreference
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -135,6 +140,10 @@ fun OriginalHomeScreen(
     val trends by viewModel.globalCatalogTrending.collectAsStateWithLifecycle()
     val loading by viewModel.isLoading.collectAsStateWithLifecycle()
     val accountImage by viewModel.accountImageUrl.collectAsStateWithLifecycle()
+    val (homeStyleValue) = rememberPreference(HomeStyleKey, HomeStyle.MOCHYY.name)
+    val homeStyle = remember(homeStyleValue) {
+        runCatching { HomeStyle.valueOf(homeStyleValue) }.getOrDefault(HomeStyle.MOCHYY)
+    }
     val metadataMap by viewModel.allItemsMetadata.collectAsStateWithLifecycle()
     val current by player?.mediaMetadata?.collectAsStateWithLifecycle()
         ?: remember { androidx.compose.runtime.mutableStateOf(null) }
@@ -283,12 +292,105 @@ fun OriginalHomeScreen(
             contentPadding = PaddingValues(bottom = 156.dp),
             verticalArrangement = Arrangement.spacedBy(29.dp),
         ) {
-            homeSectionItem("original/hero", seen) {
-                OriginalHomeHero(
-                    items = heroItems,
-                    active = ambientActive,
-                    scrollProgress = { collapsedScroll },
-                )
+            when (homeStyle) {
+                HomeStyle.MOCHYY -> {
+                    homeSectionItem("original/hero", seen) {
+                        OriginalHomeHero(
+                            items = heroItems,
+                            active = ambientActive,
+                            scrollProgress = { collapsedScroll },
+                        )
+                    }
+                }
+                HomeStyle.LISTEN_NOW -> {
+                    homeSectionItem("original/listenNow", seen) {
+                        Box {
+                            HomeTopGlow(
+                                coverUrls = songs.mapNotNull { it.thumbnailUrl }.take(2),
+                                depth = 185.dp,
+                                visibility = { 1f - collapsedScroll },
+                                modifier = Modifier.matchParentSize(),
+                            )
+                            Column {
+                                Spacer(Modifier.height(WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 85.dp))
+                                HomeSectionTitle("Start listening")
+                                if (songs.isEmpty() && loading) {
+                                    HomeCompactTopBones(isHopIn = false)
+                                } else if (songs.isNotEmpty()) {
+                                    OriginalHomeTrackGrid(songs.take(15)) { _, song ->
+                                        HomeTrackRow(
+                                            thumbnailUrl = song.thumbnailUrl,
+                                            title = song.title,
+                                            subtitle = song.artists.joinToString(", ") { it.name },
+                                            isActive = song.id == latestSongId,
+                                            isPlaying = playing,
+                                            songId = song.id,
+                                            onClick = { play(song, songs) },
+                                            onLongClick = { menu(song) },
+                                            onMoreClick = { menu(song) },
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                HomeStyle.HOP_IN -> {
+                    homeSectionItem("original/hopIn", seen) {
+                        val gridItems = (recent.orEmpty() + songs).distinctBy { it.id }.take(6)
+                        Box {
+                            HomeTopGlow(
+                                coverUrls = gridItems.mapNotNull { it.thumbnailUrl }.take(2),
+                                depth = 185.dp,
+                                visibility = { 1f - collapsedScroll },
+                                modifier = Modifier.matchParentSize(),
+                            )
+                            Column {
+                                Spacer(Modifier.height(WindowInsets.systemBars.asPaddingValues().calculateTopPadding() + 85.dp))
+                                HomeSectionTitle("Hop in")
+                                if (gridItems.isEmpty() && loading) {
+                                    HomeCompactTopBones(isHopIn = true)
+                                } else {
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = HomeContentInset),
+                                    ) {
+                                        gridItems.chunked(2).forEach { rowItems ->
+                                            Row(
+                                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                                modifier = Modifier.fillMaxWidth(),
+                                            ) {
+                                                rowItems.forEach { item ->
+                                                    HomeHopInCard(
+                                                        title = item.title,
+                                                        subtitle = when (item) {
+                                                            is Song -> item.artists.joinToString(", ") { it.name }
+                                                            is Album -> item.artists.joinToString(", ") { it.name }
+                                                            is Artist -> null
+                                                            is Playlist -> item.songCount.toString() + " songs"
+                                                        },
+                                                        thumbnailUrl = (item as? Playlist)?.thumbnails?.firstOrNull() ?: item.thumbnailUrl,
+                                                        isActive = item.id == latestSongId,
+                                                        isPlaying = { playing },
+                                                        onClick = { openLocal(item) },
+                                                        onLongClick = { localMenu(item) },
+                                                        sharedElementKey = when (item) {
+                                                            is Album -> "album-${item.id}"
+                                                            is Playlist -> "playlist-${item.id}"
+                                                            else -> null
+                                                        },
+                                                        modifier = Modifier.weight(1f),
+                                                    )
+                                                }
+                                                repeat(2 - rowItems.size) { Spacer(Modifier.weight(1f)) }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
             if (recent.orEmpty().isNotEmpty()) {
                 homeSectionItem("original/recentTitle", seen) {
