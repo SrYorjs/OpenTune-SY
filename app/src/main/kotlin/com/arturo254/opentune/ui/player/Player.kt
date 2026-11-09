@@ -151,6 +151,7 @@ import com.arturo254.opentune.ui.player.host.rememberPlayerContentLifecycle
 import com.arturo254.opentune.constants.DarkModeKey
 import com.arturo254.opentune.constants.PlayerDesignStyle
 import com.arturo254.opentune.constants.PlayerDesignStyleKey
+import com.arturo254.opentune.constants.MochyPlayerModeKey
 import com.arturo254.opentune.constants.UseNewMiniPlayerDesignKey
 import com.arturo254.opentune.constants.PlayerBackgroundStyle
 import com.arturo254.opentune.constants.PlayerBackgroundStyleKey
@@ -1276,4 +1277,3 @@ fun BottomSheetPlayer(
     }
 }
 
-private val MochyPlayerModeKey = stringPreferencesKey("mochyPlayerMode")
