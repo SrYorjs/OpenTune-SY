@@ -8,7 +8,7 @@ El catálogo contiene **los 112 archivos Kotlin de `ui/screens/`**, tanto pantal
 
 | Interfaz | Archivo principal |
 | --- | --- |
-| Inicio | `ui/screens/HomeScreen.kt`, `ui/screens/PulseHomeDesign.kt`, `ui/screens/GalaxMainPages.kt` |
+| Inicio | `ui/screens/OriginalHomeScreen.kt` (actual), `ui/screens/HomeScreen.kt` (anterior), `ui/screens/GalaxMainPages.kt` |
 | Buscar | `ui/screens/PrismDiscoveryScreen.kt`, `ui/screens/search/PrismSearchDesign.kt`, `ui/screens/search/UniversalSearchScreen.kt` |
 | Biblioteca | `ui/screens/library/LibraryScreen.kt`, `ui/screens/library/GalaxArchiveDesign.kt` |
 | Ajustes | `ui/screens/settings/SettingsScreen.kt`, `ui/screens/settings/SettingsLayout.kt` |
@@ -54,7 +54,8 @@ El catálogo contiene **los 112 archivos Kotlin de `ui/screens/`**, tanto pantal
 | `GalaxSourceDiscoveryCard.kt` | Tarjeta de fuentes | `—` |
 | `GalaxTopAppBar.kt` | Barra superior reutilizable | `—` |
 | `HistoryScreen.kt` | History Screen | `history` |
-| `HomeScreen.kt` | Inicio y recomendaciones | `home` |
+| `HomeScreen.kt` | Inicio anterior, conservado como referencia | `—` |
+| `OriginalHomeScreen.kt` | Inicio trasladado desde Mochy, tres modos y recomendaciones existentes | `home` |
 | `PulseHomeDesign.kt` | Inicio Pulse: búsqueda en cristal, carátulas protagonistas, jerarquía editorial, partículas discretas y distribución según ancho, alto y tamaño de texto | `home` |
 | `HomeScreenComponents.kt` | Tarjetas comunes de Inicio | `—` |
 | `LoginScreen.kt` | Login Screen | `login?url={url}` |
