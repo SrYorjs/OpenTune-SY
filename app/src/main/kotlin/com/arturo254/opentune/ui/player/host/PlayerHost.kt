@@ -76,16 +76,11 @@ internal fun rememberPlayerHostState(
     val playerBottomSheetState =
         rememberBottomSheetState(
             dismissedBound = 0.dp,
-            collapsedBound =
-                bottomInset +
-                    (if (shouldShowNavigationBar && !useRail) {
-                        FloatingToolbarBottomPadding
-                    } else {
-                        0.dp
-                    }) +
-                    bottomNavPadding +
-                    (if (useNewMiniPlayerDesign) MiniPlayerBottomSpacing else 0.dp) +
-                    MiniPlayerHeight,
+            collapsedBound = when {
+                shouldShowNavigationBar && useRail -> bottomInset + 72.dp
+                shouldShowNavigationBar -> bottomInset + 80.dp + MiniPlayerHeight
+                else -> bottomInset + MiniPlayerHeight
+            },
             expandedBound = maxHeight,
         )
 
@@ -254,6 +249,7 @@ internal fun rememberPlayerHostState(
     val playerAwareWindowInsets =
         remember(
             useRail,
+            shouldShowNavigationBar,
             bottomInset,
             bottomNavPadding,
             windowsInsets,
@@ -261,17 +257,13 @@ internal fun rememberPlayerHostState(
         ) {
             var bottom = bottomInset
             bottom += bottomNavPadding
-            if (!playerBottomSheetState.isDismissed) {
+            if (!playerBottomSheetState.isDismissed && !(useRail && shouldShowNavigationBar)) {
                 bottom += MiniPlayerHeight
             }
 
             windowsInsets
                 .only(
-                    (if (useRail) {
-                        WindowInsetsSides.Right
-                    } else {
-                        WindowInsetsSides.Horizontal
-                    }) + WindowInsetsSides.Top,
+                    WindowInsetsSides.Horizontal + WindowInsetsSides.Top,
                 )
                 .add(
                     WindowInsets(
