@@ -33,6 +33,7 @@ import com.arturo254.opentune.ui.screens.settings.ThemePalettes
 import com.arturo254.opentune.ui.theme.ColorSaver
 import com.arturo254.opentune.ui.theme.DefaultThemeColor
 import com.arturo254.opentune.ui.theme.OpenTuneTheme
+import com.arturo254.opentune.ui.visual.theme.OriginalVisualTheme
 import com.arturo254.opentune.ui.theme.ThemeSeedPalette
 import com.arturo254.opentune.ui.theme.ThemeSeedPaletteCodec
 import com.arturo254.opentune.ui.theme.extractThemeColor
@@ -175,9 +176,14 @@ internal fun MainActivityThemeHost(
         artworkCornerRadiusDp = artworkCornerRadius,
         reduceMotion = reduceMotion,
     ) {
-        content(
-            pureBlack,
-            lyricsSyncOffset,
-        )
+        OriginalVisualTheme(
+            darkTheme = true,
+            pureBlack = pureBlack,
+        ) {
+            content(
+                pureBlack,
+                lyricsSyncOffset,
+            )
+        }
     }
 }
