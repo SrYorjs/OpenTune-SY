@@ -1,5 +1,7 @@
 package com.arturo254.opentune
 
+import com.arturo254.opentune.ui.visual.component.rememberWideBar
+
 import android.annotation.SuppressLint
 import android.Manifest
 import android.content.Intent
@@ -309,9 +311,10 @@ internal fun MainActivityShell(
                             activity = activity,
                             database = database,
                         )
+                    val wideBar = if (useRail) rememberWideBar(maxWidth, navigationState.navigationItems.size) else null
 
                     val bottomNavPadding =
-                        if (navigationState.shouldShowNavigationBar && !useRail) {
+                        if (navigationState.shouldShowNavigationBar) {
                             80.dp
                         } else {
                             0.dp
@@ -393,6 +396,7 @@ internal fun MainActivityShell(
                         navigationEffects = navigationEffects,
                         playerUiState = playerUiState,
                         useRail = useRail,
+                        wideBar = wideBar,
                         bottomInset = bottomInset,
                     )
 
