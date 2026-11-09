@@ -1,5 +1,9 @@
 package com.arturo254.opentune
 
+import com.arturo254.opentune.ui.visual.component.WideBar
+import com.arturo254.opentune.ui.visual.component.LocalMiniPillFrame
+import com.arturo254.opentune.ui.visual.component.PhoneMiniPill
+
 import com.arturo254.opentune.ui.visual.component.GlassState
 import com.arturo254.opentune.ui.visual.component.LocalOriginalGlassState
 import com.arturo254.opentune.ui.visual.component.glassRoot
@@ -320,6 +324,7 @@ internal fun MainActivityScaffold(
     navigationEffects: MainActivityNavigationEffects,
     playerUiState: MainActivityPlayerUiState,
     useRail: Boolean,
+    wideBar: WideBar?,
     bottomInset: Dp,
 ) {
     val (liquidGlassNavBar) = rememberPreference(LiquidGlassNavBarKey, defaultValue = false)
@@ -422,6 +427,11 @@ internal fun MainActivityScaffold(
 
                     CompositionLocalProvider(
                         LocalOriginalGlassState provides originalGlassState,
+                        LocalMiniPillFrame provides when {
+                            wideBar == null -> PhoneMiniPill
+                            shouldShowNavigationBar -> wideBar.miniFrame
+                            else -> wideBar.miniAloneFrame
+                        },
                         LocalDatabase provides database,
                         LocalContentColor provides if (pureBlack) Color.White else contentColorFor(MaterialTheme.colorScheme.surface),
                         LocalHapticFeedback provides customHaptic,
@@ -442,13 +452,15 @@ internal fun MainActivityScaffold(
                     ) {
                         Box(modifier = Modifier.fillMaxSize().nestedScroll(dockMotion.nestedScrollConnection)) {
                         Row rowScope@ {
-                            MainActivityNavigationRail(
-                                useRail = useRail,
-                                pureBlack = pureBlack,
-                                navigationState = navigationState,
-                                playerUiState = playerUiState,
-                                navigationEffects = navigationEffects,
-                            )
+                            if (wideBar == null) {
+                                MainActivityNavigationRail(
+                                    useRail = useRail,
+                                    pureBlack = pureBlack,
+                                    navigationState = navigationState,
+                                    playerUiState = playerUiState,
+                                    navigationEffects = navigationEffects,
+                                )
+                            }
 
                             Box(
                                 modifier = Modifier.fillMaxSize()
@@ -616,6 +628,7 @@ internal fun MainActivityScaffold(
                                     playerUiState = playerUiState,
                                     navigationEffects = navigationEffects,
                                     dockMergeProgress = 0f,
+                                    wideBar = wideBar,
                                 )
                             }
                         }
