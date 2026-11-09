@@ -36,6 +36,10 @@ import com.arturo254.opentune.ui.mochy.player.MochyPlayerMode
 import com.arturo254.opentune.ui.mochy.player.turntable.drawVinyl
 import com.arturo254.opentune.ui.mochy.player.turntable.drawArmBase
 import com.arturo254.opentune.ui.mochy.player.turntable.drawTonearm
+import com.arturo254.opentune.ui.mochy.player.ipod.IpodBodyPaint
+import com.arturo254.opentune.ui.mochy.player.ipod.deviceGeometry
+import com.arturo254.opentune.ui.mochy.player.ipod.rememberIpodLook
+import androidx.compose.ui.graphics.drawscope.Stroke
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,6 +134,63 @@ fun MochyPlayerStyleSelector(
                         "Seleccionado" else "Vinilo y brazo vectoriales originales de Mochy",
                         color = Color.White.copy(alpha = .65f),
                         style = MaterialTheme.typography.labelMedium)
+                }
+                val ipodLook = rememberIpodLook()
+                Column(
+                    Modifier.fillMaxWidth().padding(horizontal = 22.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color(0xFF1C1C1E))
+                        .clickable { onMochy(MochyPlayerMode.IPOD) }
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Box(
+                        Modifier.fillMaxWidth().height(170.dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(Color.Black),
+                    ) {
+                        Canvas(Modifier.fillMaxWidth().height(170.dp)) {
+                            val geometry = deviceGeometry(size.width, size.height, 0f, 0f, false)
+                            with(IpodBodyPaint(geometry, ipodLook)) {
+                                draw(onBlack = false)
+                            }
+                            drawRoundRect(
+                                color = ipodLook.screen.background,
+                                topLeft = geometry.screen.topLeft,
+                                size = geometry.screen.size,
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(geometry.screenCorner),
+                            )
+                            drawCircle(
+                                color = ipodLook.wheel.face,
+                                center = geometry.wheel.center,
+                                radius = geometry.wheel.width * .5f,
+                            )
+                            drawCircle(
+                                color = ipodLook.wheel.center,
+                                center = geometry.wheel.center,
+                                radius = geometry.wheel.width * .235f,
+                            )
+                            drawCircle(
+                                color = ipodLook.wheel.edge,
+                                center = geometry.wheel.center,
+                                radius = geometry.wheel.width * .5f,
+                                style = Stroke(1f),
+                            )
+                        }
+                    }
+                    Text(
+                        "Mochy · iPod",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        if (selectedMochy == MochyPlayerMode.IPOD)
+                            "Seleccionado"
+                        else "Rueda táctil, carátula, paletas y geometría originales de Mochy",
+                        color = Color.White.copy(alpha = .65f),
+                        style = MaterialTheme.typography.labelMedium,
+                    )
                 }
                 GalaxPlayerStyleGallery(
                     selected = native,
