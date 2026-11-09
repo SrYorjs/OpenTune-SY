@@ -12,13 +12,21 @@ class GalaxMotionIntegrationTest {
     private fun source(path: String): String =
         File(root, "com/arturo254/opentune/$path").readText()
 
-    @Test fun appNavigationUsesOneSharedMotionSourceForAllTransitions() {
+    @Test fun appNavigationUsesOriginalMotionAndRespectsReducedMotion() {
         val scaffold = source("MainActivityScaffold.kt")
-        assertTrue(scaffold.contains("val galaxMotion = OpenTuneDesignSystem.galaxMotion"))
-        assertTrue(scaffold.contains("animationSpec = galaxMotion.navigationBarSpec"))
-        assertTrue(scaffold.split("galaxEnterTransition(").size == 3)
-        assertTrue(scaffold.split("galaxExitTransition(").size == 3)
-        assertFalse(scaffold.contains("animationSpec = NavigationBarAnimationSpec"))
+        val host = source("MainActivityThemeHost.kt")
+        val originalMotion = source("ui/visual/utils/AppMotion.kt")
+        assertTrue(scaffold.contains("SharedTransitionLayout {"))
+        assertTrue(scaffold.contains("tabOwnership.indexOf(targetState, stack)"))
+        assertTrue(scaffold.split("defaultMotionEnter {").size == 3)
+        assertTrue(scaffold.split("defaultMotionExit {").size == 3)
+        assertTrue(scaffold.contains("slideInHorizontally { it / 8 } + fadeIn(tween(200))"))
+        assertTrue(scaffold.contains("slideOutHorizontally { -it / 8 } + fadeOut(tween(200))"))
+        assertFalse(scaffold.contains("galaxEnterTransition("))
+        assertFalse(scaffold.contains("galaxExitTransition("))
+        assertTrue(originalMotion.contains("if (AppMotion.enabled) transition() else EnterTransition.None"))
+        assertTrue(originalMotion.contains("if (AppMotion.enabled) transition() else ExitTransition.None"))
+        assertTrue(host.contains("AppMotion.enabled = !reduceMotion"))
     }
 
     @Test fun motionPreferenceIsSavedAndMaterialAndGlassRespectIt() {

@@ -33,6 +33,7 @@ import com.arturo254.opentune.ui.screens.settings.ThemePalettes
 import com.arturo254.opentune.ui.theme.ColorSaver
 import com.arturo254.opentune.ui.theme.DefaultThemeColor
 import com.arturo254.opentune.ui.theme.OpenTuneTheme
+import com.arturo254.opentune.ui.visual.utils.AppMotion
 import com.arturo254.opentune.ui.visual.theme.OriginalVisualTheme
 import com.arturo254.opentune.ui.theme.ThemeSeedPalette
 import com.arturo254.opentune.ui.theme.ThemeSeedPaletteCodec
@@ -64,6 +65,9 @@ internal fun MainActivityThemeHost(
     val appFontStyle by rememberEnumPreference(AppFontKey, defaultValue = AppFontStyle.OPEN_TUNE)
     val lyricsSyncOffset by rememberPreference(LyricsSyncOffsetKey, defaultValue = 0)
     val reduceMotion by rememberPreference(GalaxReduceMotionKey, defaultValue = false)
+    LaunchedEffect(reduceMotion) {
+        AppMotion.enabled = !reduceMotion
+    }
     val artworkCornerRadius by rememberPreference(ThumbnailCornerRadiusKey, defaultValue = 16f)
 
     val isSystemInDarkTheme = isSystemInDarkTheme()
