@@ -1,5 +1,6 @@
 package com.arturo254.opentune.ui.mochy.player.bedside
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.rememberAsyncImagePainter
@@ -30,15 +32,19 @@ import com.arturo254.opentune.constants.PlayerDesignStyle
 import com.arturo254.opentune.ui.player.preferences.GalaxPlayerStyleGallery
 import com.arturo254.opentune.ui.player.state.PlayerState
 import com.arturo254.opentune.ui.mochy.theme.MochyTheme
+import com.arturo254.opentune.ui.mochy.player.MochyPlayerMode
+import com.arturo254.opentune.ui.mochy.player.turntable.drawVinyl
+import com.arturo254.opentune.ui.mochy.player.turntable.drawArmBase
+import com.arturo254.opentune.ui.mochy.player.turntable.drawTonearm
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MochyPlayerStyleSelector(
     state: PlayerState,
     native: PlayerDesignStyle,
-    bedsideEnabled: Boolean,
+    selectedMochy: MochyPlayerMode,
     onNative: (PlayerDesignStyle) -> Unit,
-    onBedside: () -> Unit,
+    onMochy: (MochyPlayerMode) -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
@@ -62,7 +68,7 @@ fun MochyPlayerStyleSelector(
                     Text("Elige tu universo", color = Color.White,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold)
-                    Text("El estilo original de Mochy y los 17 reproductores de GalaxOT.",
+                    Text("Los diseños originales de Mochy y los 17 reproductores de GalaxOT.",
                         color = Color.White.copy(alpha = .53f),
                         style = MaterialTheme.typography.bodySmall)
                 }
@@ -74,7 +80,7 @@ fun MochyPlayerStyleSelector(
                     Modifier.fillMaxWidth().padding(horizontal = 22.dp)
                         .clip(RoundedCornerShape(24.dp))
                         .background(Color(0xFF1C1C1E))
-                        .clickable(onClick = onBedside)
+                        .clickable { onMochy(MochyPlayerMode.BEDSIDE) }
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
@@ -88,7 +94,40 @@ fun MochyPlayerStyleSelector(
                     Text("Mochy · Bedside Clock",
                         color = Color.White, fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.titleMedium)
-                    Text(if (bedsideEnabled) "Seleccionado" else "Toca para usar el reloj original de Mochy",
+                    Text(if (selectedMochy == MochyPlayerMode.BEDSIDE) "Seleccionado" else "Toca para usar el reloj original de Mochy",
+                        color = Color.White.copy(alpha = .65f),
+                        style = MaterialTheme.typography.labelMedium)
+                }
+                Column(
+                    Modifier.fillMaxWidth().padding(horizontal = 22.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(Color(0xFF1C1C1E))
+                        .clickable { onMochy(MochyPlayerMode.TURNTABLE) }
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Box(
+                        Modifier.fillMaxWidth().height(170.dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(Color(0xFF09090A)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Canvas(Modifier.fillMaxWidth().height(170.dp)) {
+                            val u = size.minDimension
+                            val x = (size.width - u) / 2f
+                            val y = (size.height - u) / 2f
+                            val origin = Offset(x + u * .162f, y + u * .703f)
+                            drawArmBase(u)
+                            drawVinyl(origin, u * .703f, .526f)
+                            drawTonearm(Offset(x + u * .895f, y + u * .125f),
+                                115f, u, silhouette = false)
+                        }
+                    }
+                    Text("Mochy · Turntable",
+                        color = Color.White, fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleMedium)
+                    Text(if (selectedMochy == MochyPlayerMode.TURNTABLE)
+                        "Seleccionado" else "Vinilo y brazo vectoriales originales de Mochy",
                         color = Color.White.copy(alpha = .65f),
                         style = MaterialTheme.typography.labelMedium)
                 }
