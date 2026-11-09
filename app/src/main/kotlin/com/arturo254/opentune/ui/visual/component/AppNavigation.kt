@@ -329,7 +329,11 @@ internal fun RowScope.NavTab(
             ),
         contentAlignment = Alignment.Center
     ) {
-        TabIcons(screen, unlitIcon, litIcon, iconSize) { lit.value }
+        if (screen == Screens.Library) {
+            LibraryDownloadIcon { TabIcons(screen, unlitIcon, litIcon, iconSize) { lit.value } }
+        } else {
+            TabIcons(screen, unlitIcon, litIcon, iconSize) { lit.value }
+        }
     }
 }
 
