@@ -219,11 +219,19 @@ internal fun rememberMainActivityNavigationState(
 
     val shouldShowNavigationBar =
         remember(navBackStackEntry, active) {
-            navBackStackEntry?.destination?.route == null ||
-                (
-                    navigationItems.fastAny {
-                        it.route == navBackStackEntry?.destination?.route
-                    } && !active
+            val route = navBackStackEntry?.destination?.route
+            !active && (
+                route == null ||
+                    navigationItems.fastAny { it.route == route } ||
+                    route.startsWith("search/") ||
+                    route.startsWith("genre/") ||
+                    route.startsWith("album/") ||
+                    route.startsWith("artist/") ||
+                    route.startsWith("library/") ||
+                    route.startsWith("local_playlist/") ||
+                    route.startsWith("online_playlist/") ||
+                    route.startsWith("auto_playlist/") ||
+                    route.startsWith("settings/")
                 )
         }
 
