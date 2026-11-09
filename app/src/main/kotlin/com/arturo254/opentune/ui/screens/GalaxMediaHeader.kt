@@ -37,6 +37,7 @@ import coil3.compose.AsyncImage
 import com.arturo254.opentune.core.designsystem.component.Artwork
 import com.arturo254.opentune.ui.mochy.theme.MochyTheme
 import com.arturo254.opentune.ui.mochy.detail.PlaylistScreenHeader
+import com.arturo254.opentune.ui.mochy.artist.MochyArtistHeader
 import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidBackdrop
 import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidChrome
 import com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle
@@ -86,91 +87,29 @@ fun GalaxMediaHeader(
             }
         }
     } else {
-    val backdrop = rememberLayerBackdrop()
-    val scheme = MaterialTheme.colorScheme
-    Box(modifier.fillMaxWidth()) {
-        Box(
-            Modifier.matchParentSize()
-                .layerBackdrop(backdrop)
-                .drawWithCache {
-                    val radius = size.width.coerceAtLeast(1f) * 1.13f
-                    val accentCenter = Offset(size.width * .78f, size.height * .22f)
-                    val blue = Brush.radialGradient(
-                        0f to accent.copy(alpha = .20f),
-                        .65f to accent.copy(alpha = .035f),
-                        1f to Color.Transparent,
-                        center = accentCenter,
-                        radius = radius,
-                    )
-                    val purpleCenter = Offset(0f, size.height)
-                    val purpleRadius = size.width * .9f
-                    val purple = Brush.radialGradient(
-                        0f to scheme.tertiary.copy(alpha = .13f),
-                        1f to Color.Transparent,
-                        center = purpleCenter,
-                        radius = purpleRadius,
-                    )
-                    onDrawBehind {
-                        drawCircle(blue, radius = radius, center = accentCenter)
-                        drawCircle(purple, radius = purpleRadius, center = purpleCenter)
-                    }
-                },
-        )
-        CompositionLocalProvider(LocalGalaxLiquidBackdrop provides backdrop) {
+        MochyTheme {
             Column(
-                Modifier.fillMaxWidth().padding(
-                    horizontal = GalaxScreenStyle.pagePadding,
-                    vertical = 30.dp,
-                ),
-                verticalArrangement = Arrangement.spacedBy(23.dp),
+                modifier = modifier.fillMaxWidth().background(Color.Black),
+                verticalArrangement = Arrangement.spacedBy(13.dp),
             ) {
-                BoxWithConstraints(Modifier.fillMaxWidth()) {
-                    val wide = maxWidth >= 560.dp
-                    val cover = if (wide) 220.dp else (maxWidth * .65f).coerceIn(178.dp, 292.dp)
-                    val portraitCover = (maxWidth * .76f).coerceIn(210.dp, 326.dp)
-                    if (wide) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(26.dp),
-                        ) {
-                            GalaxMediaCoverStage(artworkUrls, artist, Modifier.size(cover))
-                            Column(
-                                Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                GalaxMediaTitle(label, title, centered = false)
-                                details()
-                            }
-                        }
-                    } else {
-                        Column(
-                            Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.Start,
-                            verticalArrangement = Arrangement.spacedBy(18.dp),
-                        ) {
-                            GalaxMediaTitle(label, title, centered = false)
-                            Box(
-                                modifier = Modifier.fillMaxWidth()
-                                    .padding(vertical = 4.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                GalaxMediaCoverStage(
-                                    artworkUrls,
-                                    artist,
-                                    Modifier.size(portraitCover),
-                                )
-                            }
-                            details()
-                        }
-                    }
+                MochyArtistHeader(
+                    name = title,
+                    photoUrl = artworkUrls.firstOrNull { !it.isNullOrBlank() },
+                    accent = accent,
+                )
+                Column(
+                    Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    details()
+                    GalaxMediaFacts(facts)
+                    supporting()
+                    actions()
                 }
-                GalaxMediaFacts(facts)
-                supporting()
-                actions()
             }
         }
     }
-    }
+
 }
 
 @Composable
