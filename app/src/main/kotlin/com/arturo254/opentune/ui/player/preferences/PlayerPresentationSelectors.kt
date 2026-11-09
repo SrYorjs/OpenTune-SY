@@ -9,6 +9,9 @@ import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.PlayerBackgroundStyle
 import com.arturo254.opentune.constants.PlayerButtonsStyle
 import com.arturo254.opentune.constants.PlayerDesignStyle
+import com.arturo254.opentune.constants.MochyPlayerModeKey
+import com.arturo254.opentune.ui.mochy.player.MochyPlayerMode
+import com.arturo254.opentune.utils.rememberEnumPreference
 import com.arturo254.opentune.ui.component.EnumListPreference
 
 /**
@@ -21,11 +24,12 @@ fun PlayerLayoutSelector(
     selected: PlayerDesignStyle,
     onSelected: (PlayerDesignStyle) -> Unit,
 ) {
+    val (_, setMochyMode) = rememberEnumPreference(MochyPlayerModeKey, MochyPlayerMode.NONE)
     EnumListPreference(
         title = { Text(stringResource(R.string.player_design_style)) },
         icon = { Icon(painterResource(R.drawable.palette), null) },
         selectedValue = selected,
-        onValueSelected = onSelected,
+        onValueSelected = { setMochyMode(MochyPlayerMode.NONE); onSelected(it) },
         valueText = { playerLayoutLabel(it) },
     )
 }
