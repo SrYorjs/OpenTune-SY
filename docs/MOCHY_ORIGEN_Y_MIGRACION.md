@@ -27,6 +27,21 @@ Se revirtió por completo la integración provisional que introducía reproducto
 | ui/mochy/library/MochyLibraryDesign.kt | ui/screens/library/LibraryDesign.kt | Tarjetas de colecciones y carátulas apiladas |
 | ui/mochy/home/MochyHomeCards.kt | ui/component/HomeCards.kt | Tarjetas y filas de Inicio |
 | ui/mochy/theme/MochyTheme.kt | ui/theme/Theme.kt y ui/theme/Type.kt | Paleta oscura y escala tipográfica |
+| ui/mochy/detail/DetailActionRow.kt | ui/component/detail/DetailActionRow.kt | Acciones de reproducir, mezclar y descargar enlazadas a GalaxOT |
+| ui/mochy/detail/DetailTrackRow.kt | ui/component/detail/DetailTrackRow.kt | Filas de canciones reales en Álbum |
+| ui/mochy/detail/PlaylistScreenHeader.kt | ui/component/detail/PlaylistScreenHeader.kt | Cabecera inmersiva de portadas y degradados en Álbum/Playlists |
+| ui/mochy/artist/MochyArtistDesign.kt | ui/screens/artist/ArtistDesign.kt | Cabeceras reales de artista, avatar, título y scrims |
+| ui/mochy/settings/MochyCategoryBubble.kt | ui/screens/settings/MochySettingsScreen.kt | Tarjetas originales y acciones de Ajustes |
+| ui/mochy/player/bedside/BedsideClock.kt | ui/player/bedside/BedsideClock.kt | Cuatro carátulas originales de reloj |
+| ui/mochy/player/turntable/TurntableArt.kt | ui/player/customize/TurntableArt.kt | Geometría y trazos originales del vinilo y del brazo |
+| ui/mochy/player/ipod/IpodArt.kt | ui/player/ipod/IpodArt.kt | Dibujo original del iPod |
+| ui/mochy/player/ipod/IpodClickWheel.kt | ui/player/ipod/IpodClickWheel.kt | Gestos originales de la rueda |
+| ui/mochy/player/ipod/IpodGeometry.kt | ui/player/ipod/IpodGeometry.kt | Tamaños y disposición original del equipo |
+| ui/mochy/player/ipod/IpodHaptics.kt | ui/player/ipod/IpodHaptics.kt | Respuesta háptica de rueda |
+| ui/mochy/player/ipod/IpodLook.kt | ui/player/ipod/IpodLook.kt | Acabados y colores de rueda |
+
+La integración de los reproductores utiliza escenas puente propias de GalaxOT en `ui/mochy/player/`; estas escenas conectan gráficos y gestos auténticos de Mochy a `PlayerState`, `PlayerActions` y Media3, sin importar la arquitectura de fuentes de Mochy.
+
 
 Las modificaciones a estos archivos se limitan a sus paquetes, dependencias externas y rutas de recursos necesarias para construir dentro de GalaxOT. El servicio musical y los modelos de GalaxOT siguen siendo los originales.
 
@@ -35,6 +50,11 @@ Las modificaciones a estos archivos se limitan a sus paquetes, dependencias exte
 - Inicio: brillo de portadas, tipografía, tarjetas, filas y títulos originales.
 - Buscar: píldora de búsqueda original, fichas de categorías, carátulas y resultados de Mochy.
 - Biblioteca: tarjetas de categorías, carátulas apiladas y vista de colores de Mochy.
+- Ajustes: tarjetas de categorías originales conservando navegación y opciones de GalaxOT.
+- Álbum: cabecera inmersiva, botones y lista de canciones originales de Mochy con las funciones GalaxOT.
+- Playlists: cabecera inmersiva original de Mochy en listas locales y online.
+- Artistas: cabecera, fondos, retrato y título original de Mochy; acciones y secciones de GalaxOT.
+- Reproductor: modos Bedside, Turntable e iPod con código visual original de Mochy, junto a V1–V17; no se reemplaza la barra inferior.
 
 ## Componentes que deben conservarse
 
@@ -45,6 +65,6 @@ Las modificaciones a estos archivos se limitan a sus paquetes, dependencias exte
 
 ## Operaciones no concluidas
 
-La migración visual integral aún requiere portar los módulos de reproduccion originales de Mochy (Flagship, Classic, Turntable, iPod, Poster, Timeline, Lyrics, Bedside), su selector y personalización reales, así como las pantallas de álbum, artista, playlist, ajustes, cola, letras y secundarias. El código original de esos módulos tiene dependencias con el motor de reproducción, rutas y entidades de Mochy que no deben importarse sin adaptadores verificables. No se atribuye a esta primera operación una migración completa.
+La migración integral aún requiere los reproductores originales Flagship, Classic, Poster, Timeline, Lyrics Stage y variantes avanzadas de video; la totalidad del estudio/selector 3D de Mochy, la experiencia completa de menús de iPod, ajustes avanzados por estilo y pantallas secundarias (cola, letras, detalles alternativos). Bedside, Turntable e iPod ya tienen modos visuales funcionales, pero no todas sus funciones del original se han trasladado. El catálogo de fuentes, la VPS y las rutas de navegación importantes se mantienen en GalaxOT por petición expresa. No se debe afirmar que todas las pantallas de Mochy están copiadas o que los modos representan funciones aún ausentes.
 
 Los recursos binarios y tipografías no se trasladan sin verificar primero sus permisos de distribución; la escala tipográfica y colores sí se copiaron.
