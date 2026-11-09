@@ -105,6 +105,7 @@ fun OriginalHomeHero(
     items: List<OriginalHomeHeroItem>,
     active: Boolean,
     scrollProgress: () -> Float,
+    isLoading: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val configuration = LocalConfiguration.current
@@ -147,7 +148,9 @@ fun OriginalHomeHero(
         softFrom = 0.08f,
         modifier = modifier.heroTuck().fillMaxWidth().height(height),
     ) {
-        if (items.isEmpty()) {
+        if (items.isEmpty() && isLoading) {
+            HeroBones()
+        } else if (items.isEmpty()) {
             Box(Modifier.fillMaxSize().background(Color(0xFF161616))) {
                 Column(
                     modifier = Modifier.align(Alignment.BottomStart)
@@ -194,6 +197,27 @@ fun OriginalHomeHero(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeroBones() {
+    BonesHost(modifier = Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier.fillMaxWidth().weight(1f)
+                .background(Brush.verticalGradient(listOf(BoneColor.copy(alpha = 0.12f), Color.Transparent)))
+        ) {
+            Column(
+                modifier = Modifier.align(Alignment.BottomStart)
+                    .padding(start = HomeContentInset, bottom = 64.dp),
+            ) {
+                Bone(width = 72.dp, height = 14.dp)
+                Spacer(Modifier.height(8.dp))
+                Bone(width = 220.dp, height = 22.dp)
+                Spacer(Modifier.height(13.dp))
+                Bone(width = 93.dp, height = 33.dp, shape = RoundedCornerShape(50))
             }
         }
     }

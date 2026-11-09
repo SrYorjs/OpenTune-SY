@@ -230,7 +230,7 @@ fun OriginalHomeScreen(
     val remoteItems = remember(homePage) {
         homePage?.sections.orEmpty().flatMap { it.items }.distinctBy { it.id }
     }
-    val heroItems = remember(songs, remoteItems, latestSongId, playing) {
+    val heroItems = remember(songs, remoteItems, recent, accountPlaylists, latestSongId, playing) {
         val own = songs.take(3).map { song ->
             OriginalHomeHeroItem(
                 id = song.id,
@@ -255,7 +255,40 @@ fun OriginalHomeScreen(
                 onOpen = { playRemote(song) },
             )
         }
-        (own + remote).distinctBy { it.id }.take(5)
+        val localCollections = recent.orEmpty()
+            .filter { it is Album || it is Playlist }
+            .take(2)
+            .map { item ->
+                OriginalHomeHeroItem(
+                    id = "${item.javaClass.simpleName}_${item.id}",
+                    title = item.title,
+                    subtitle = when (item) {
+                        is Album -> item.artists.joinToString(", ") { it.name }
+                        is Playlist -> "${item.songCount} songs"
+                        else -> ""
+                    },
+                    artwork = (item as? Playlist)?.thumbnails?.firstOrNull() ?: item.thumbnailUrl,
+                    label = "Continue",
+                    isCurrent = false,
+                    isPlaying = false,
+                    opensPage = true,
+                    onOpen = { openLocal(item) },
+                )
+            }
+        val playlists = accountPlaylists.orEmpty().filter { !it.thumbnail.isNullOrBlank() }.take(2).map { item ->
+            OriginalHomeHeroItem(
+                id = "remote_playlist_${item.id}",
+                title = item.title,
+                subtitle = item.author?.name.orEmpty(),
+                artwork = item.thumbnail,
+                label = "Your playlists",
+                isCurrent = false,
+                isPlaying = false,
+                opensPage = true,
+                onOpen = { openRemote(item) },
+            )
+        }
+        (own + remote + localCollections + playlists).distinctBy { it.id }.take(7)
     }
     val topEntry by navController.currentBackStackEntryAsState()
     val scrollToTop = topEntry?.savedStateHandle?.getStateFlow("scrollToTop", false)?.collectAsState()
@@ -298,6 +331,7 @@ fun OriginalHomeScreen(
                             items = heroItems,
                             active = ambientActive,
                             scrollProgress = { collapsedScroll },
+                            isLoading = loading,
                         )
                     }
                 }
