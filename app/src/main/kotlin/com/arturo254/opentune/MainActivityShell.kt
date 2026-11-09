@@ -312,11 +312,7 @@ internal fun MainActivityShell(
 
                     val bottomNavPadding =
                         if (navigationState.shouldShowNavigationBar && !useRail) {
-                            if (navigationState.slimNav) {
-                                SlimFloatingToolbarHeight
-                            } else {
-                                FloatingToolbarHeight
-                            }
+                            80.dp
                         } else {
                             0.dp
                         }
