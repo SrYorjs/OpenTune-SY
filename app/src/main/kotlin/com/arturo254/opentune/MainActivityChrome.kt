@@ -212,6 +212,7 @@ import com.arturo254.opentune.ui.component.COLLAPSED_ANCHOR
 import com.arturo254.opentune.ui.component.DISMISSED_ANCHOR
 import com.arturo254.opentune.ui.component.EXPANDED_ANCHOR
 import com.arturo254.opentune.ui.component.FloatingNavigationToolbar
+import com.arturo254.opentune.ui.visual.component.AppNavigationBar
 import com.arturo254.opentune.ui.component.IconButton
 import com.arturo254.opentune.ui.component.LocalBottomSheetPageState
 import com.arturo254.opentune.ui.component.LocalMenuState
@@ -614,8 +615,8 @@ internal fun BoxScope.MainActivityFloatingToolbar(
     val playerBottomSheetState = playerUiState.bottomSheetState
     val searchBarScrollBehavior = navigationEffects.searchBarScrollBehavior
     val coroutineScope = rememberCoroutineScope()
-    val floatingBarsBottomPadding = FloatingToolbarBottomPadding
-    val navVisibleHeight = if (slimNav) SlimFloatingToolbarHeight else FloatingToolbarHeight
+    val floatingBarsBottomPadding = 0.dp
+    val navVisibleHeight = 80.dp
     val bottomNavigationBarHeight by animateDpAsState(
         targetValue =
             if (navigationState.shouldShowNavigationBar && !useRail) {
@@ -664,91 +665,23 @@ internal fun BoxScope.MainActivityFloatingToolbar(
                                                     }
                                                 },
                                     ) {
-                                        FloatingNavigationToolbar(
-                                            items = navigationItems,
-                                            pureBlack = pureBlack,
-                                            modifier = Modifier
-                                                .align(Alignment.BottomCenter)
-                                                .padding(
-                                                    start = FloatingToolbarHorizontalPadding,
-                                                    end = FloatingToolbarHorizontalPadding,
-                                                    bottom = bottomInset + floatingBarsBottomPadding,
-                                                )
-                                                .height(navVisibleHeight),
-                                            onShuffleClick = if (shouldShowHomeShuffleButton) {
-                                                {
-                                                    val useLocalSource = when {
-                                                        allLocalItems.isNotEmpty() && allYtItems.isNotEmpty() -> Random.nextFloat() < 0.5f
-                                                        allLocalItems.isNotEmpty() -> true
-                                                        else -> false
-                                                    }
-
-                                                    coroutineScope.launch(Dispatchers.Main) {
-                                                        if (useLocalSource) {
-                                                            when (val luckyItem = allLocalItems.random()) {
-                                                                is Song -> {
-                                                                    playerConnection?.playQueue(
-                                                                        YouTubeQueue.radio(luckyItem.toMediaMetadata())
-                                                                    )
-                                                                }
-
-                                                                is Album -> {
-                                                                    val albumWithSongs = withContext(Dispatchers.IO) {
-                                                                        database.albumWithSongs(luckyItem.id).first()
-                                                                    }
-
-                                                                    albumWithSongs?.let {
-                                                                        playerConnection?.playQueue(LocalAlbumRadio(it))
-                                                                    }
-                                                                }
-
-                                                                is Artist -> Unit
-                                                                is Playlist -> Unit
-                                                            }
-                                                        } else {
-                                                            when (val luckyItem = allYtItems.random()) {
-                                                                is SongItem -> {
-                                                                    playerConnection?.playQueue(
-                                                                        YouTubeQueue.radio(luckyItem.toMediaMetadata())
-                                                                    )
-                                                                }
-
-                                                                is AlbumItem -> {
-                                                                    playerConnection?.playQueue(
-                                                                        YouTubeAlbumRadio(luckyItem.playlistId)
-                                                                    )
-                                                                }
-
-                                                                is ArtistItem -> {
-                                                                    luckyItem.radioEndpoint?.let {
-                                                                        playerConnection?.playQueue(YouTubeQueue(it))
-                                                                    }
-                                                                }
-
-                                                                is PlaylistItem -> {
-                                                                    luckyItem.playEndpoint?.let {
-                                                                        playerConnection?.playQueue(YouTubeQueue(it))
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            } else null,
-                                            shuffleIconRes = if (shouldShowHomeShuffleButton) R.drawable.shuffle else null,
-                                            shuffleContentDescription = if (shouldShowHomeShuffleButton) stringResource(R.string.shuffle) else "",
-                                            onMusicRecognitionClick = if (shouldShowHomeShuffleButton) {
-                                                { navController.navigate(MusicRecognitionRoute) }
-                                            } else null,
-                                            musicRecognitionContentDescription = if (shouldShowHomeShuffleButton) stringResource(R.string.music_recognition) else "",
-                                            selectedRoute = selectedNavigationRoute,
-                                            pagerState = navigationState.pagerState,
-                                            onItemClick = { screen, isSelected ->
+                                        AppNavigationBar(
+                                            navigationItems = navigationItems,
+                                            currentRoute = navigationState.currentRoute,
+                                            selectedTabRoute = selectedNavigationRoute,
+                                            onItemClick = { screen, _ ->
                                                 onActiveChange(false)
                                                 coroutineScope.launch {
                                                     navigationState.pagerState.animateScrollToPage(navigationItems.indexOf(screen))
                                                 }
                                             },
+                                            onSearchDoubleTap = { onActiveChange(true) },
+                                            pureBlack = pureBlack,
+                                            slimNav = false,
+                                            modifier = Modifier
+                                                .align(Alignment.BottomCenter)
+                                                .padding(bottom = bottomInset)
+                                                .height(navVisibleHeight),
                                         )
                                     }
                                 }
