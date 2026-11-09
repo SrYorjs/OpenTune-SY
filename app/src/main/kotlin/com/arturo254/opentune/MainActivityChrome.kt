@@ -668,7 +668,7 @@ internal fun BoxScope.MainActivityFloatingToolbar(
                                         AppNavigationBar(
                                             navigationItems = navigationItems,
                                             currentRoute = navigationState.currentRoute,
-                                            selectedTabRoute = selectedNavigationRoute,
+                                            selectedTabRoute = selectedNavigationRoute ?: navigationItems.first().route,
                                             onItemClick = { screen, _ ->
                                                 onActiveChange(false)
                                                 coroutineScope.launch {
