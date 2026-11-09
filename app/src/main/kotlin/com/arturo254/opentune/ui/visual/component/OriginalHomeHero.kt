@@ -5,6 +5,15 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.layout
+import kotlinx.coroutines.flow.collect
+import kotlin.math.roundToInt
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -68,6 +77,21 @@ data class OriginalHomeHeroItem(
     val onOpen: () -> Unit,
 )
 
+private object PeekPageSize : PageSize {
+    override fun androidx.compose.ui.unit.Density.calculateMainAxisPageSize(
+        availableSpace: Int,
+        pageSpacing: Int,
+    ): Int = ((availableSpace - pageSpacing) * 0.8f).roundToInt()
+}
+
+private fun Modifier.heroTuck(): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val tuck = 7.dp.roundToPx()
+    layout(placeable.width, (placeable.height - tuck).coerceAtLeast(0)) {
+        placeable.place(0, 0)
+    }
+}
+
 private enum class HeroPillKind { Play, Pause, View }
 private const val HeroAdvanceMillis = 5500L
 private const val HeroDim = 0.36f
@@ -83,21 +107,46 @@ fun OriginalHomeHero(
     scrollProgress: () -> Float,
     modifier: Modifier = Modifier,
 ) {
-    val height = (LocalConfiguration.current.screenHeightDp * 0.6f).dp
+    val configuration = LocalConfiguration.current
+    val peek = configuration.screenWidthDp >= 600
+    val landscape = configuration.screenWidthDp > configuration.screenHeightDp
+    val height = (configuration.screenHeightDp * if (peek && landscape) 0.7f else 0.6f).dp
     val pagerState = rememberPagerState(
         initialPage = if (items.size < 2) 0 else (Int.MAX_VALUE / 2) - (Int.MAX_VALUE / 2) % items.size,
         pageCount = { if (items.size < 2) 1 else Int.MAX_VALUE },
     )
-    LaunchedEffect(items.size, active) {
-        if (!active || items.size < 2) return@LaunchedEffect
+    val dragged by pagerState.interactionSource.collectIsDraggedAsState()
+    var userSwipe by remember { mutableStateOf(false) }
+    LaunchedEffect(dragged) { if (dragged) userSwipe = true }
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.isScrollInProgress }.collect { moving ->
+            if (!moving) userSwipe = false
+        }
+    }
+    val wipeCurve by animateFloatAsState(
+        targetValue = if (userSwipe) 1f else 0f,
+        animationSpec = tween(260),
+        label = "heroWipeCurve",
+    )
+    val edgeBlur = rememberCoverBlurAvailable()
+    LaunchedEffect(items.size, active, dragged) {
+        if (!active || items.size < 2 || dragged) return@LaunchedEffect
         while (true) {
             delay(HeroAdvanceMillis)
             if (scrollProgress() < 0.08f && !pagerState.isScrollInProgress) {
-                pagerState.animateScrollToPage(pagerState.currentPage + 1)
+                pagerState.animateScrollToPage(
+                    pagerState.currentPage + 1,
+                    animationSpec = tween(1150, easing = CubicBezierEasing(0.32f, 0f, 0.15f, 1f)),
+                )
             }
         }
     }
-    Box(modifier = modifier.fillMaxWidth().height(height)) {
+    ScrollAwayCover(
+        progress = scrollProgress,
+        follow = 0.2f,
+        softFrom = 0.08f,
+        modifier = modifier.heroTuck().fillMaxWidth().height(height),
+    ) {
         if (items.isEmpty()) {
             Box(Modifier.fillMaxSize().background(Color(0xFF161616))) {
                 Column(
@@ -113,13 +162,16 @@ fun OriginalHomeHero(
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
+                pageSize = if (peek) PeekPageSize else PageSize.Fill,
+                pageSpacing = if (peek) 14.dp else 0.dp,
                 beyondViewportPageCount = 1,
             ) { page ->
                 val entry = items[page % items.size]
                 PageWipe(
-                    pageOffset = { pagerState.currentPage - page + pagerState.currentPageOffsetFraction },
-                    curve = { 0f },
-                    blur = true,
+                    pageOffset = { (page - pagerState.currentPage) - pagerState.currentPageOffsetFraction },
+                    curve = { wipeCurve },
+                    blur = edgeBlur,
+                    peek = peek,
                 ) {
                     AsyncImage(
                         model = entry.artwork,
