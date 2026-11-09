@@ -65,7 +65,7 @@ fun GalaxMainPages(navController: NavController, pager: PagerState, onOpenSearch
         val active = pager.settledPage == page && !pager.isScrollInProgress &&
             com.arturo254.opentune.ui.screens.search.LocalPrismSceneActive.current
         when (page) {
-            0 -> HomeScreen(navController, ambientActive = active,
+            0 -> OriginalHomeScreen(navController, ambientActive = active,
                 onOpenSearchTab = onOpenSearch, onOpenLibraryTab = { open(2) })
             1 -> GalaxDiscoverScreen(navController, onOpenSearch, ambientActive = active)
             2 -> LibraryScreen(navController, ambientActive = active,
