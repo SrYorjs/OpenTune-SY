@@ -1,5 +1,9 @@
 package com.arturo254.opentune
 
+import com.arturo254.opentune.ui.visual.component.GlassState
+import com.arturo254.opentune.ui.visual.component.LocalOriginalGlassState
+import com.arturo254.opentune.ui.visual.component.glassRoot
+
 import android.annotation.SuppressLint
 import android.Manifest
 import android.content.Intent
@@ -353,6 +357,7 @@ internal fun MainActivityScaffold(
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
     ) rememberLayerBackdrop() else null
     val menuState = remember { MenuState() }
+    val originalGlassState = remember { GlassState() }
 
     val haptic = LocalHapticFeedback.current
     val (enableHapticFeedback) = rememberPreference(EnableHapticFeedbackKey, true)
@@ -397,7 +402,7 @@ internal fun MainActivityScaffold(
 
     val galaxMotion = OpenTuneDesignSystem.galaxMotion
     val floatingBarsBottomPadding = FloatingToolbarBottomPadding
-    val navVisibleHeight = if (slimNav) SlimFloatingToolbarHeight else FloatingToolbarHeight
+    val navVisibleHeight = 80.dp
     val bottomNavigationBarHeight by animateDpAsState(
         targetValue = if (shouldShowNavigationBar && !useRail) navVisibleHeight else 0.dp,
         animationSpec = galaxMotion.navigationBarSpec,
@@ -406,8 +411,7 @@ internal fun MainActivityScaffold(
 
     val currentMedia = playerConnection?.mediaMetadata?.collectAsState()?.value
     val dockMotion = rememberGalaxAdaptiveDockMotion(
-        enabled = currentMedia != null && shouldShowNavigationBar && !useRail &&
-            playerBottomSheetState.isCollapsed,
+        enabled = false,
         resetKey = "$currentRoute:${navigationState.pagerState.currentPage}",
         reducedMotion = galaxMotion.reducedMotion,
     )
@@ -417,6 +421,7 @@ internal fun MainActivityScaffold(
     val searchOverlayCapturesGlass = navigationState.active
 
                     CompositionLocalProvider(
+                        LocalOriginalGlassState provides originalGlassState,
                         LocalDatabase provides database,
                         LocalContentColor provides if (pureBlack) Color.White else contentColorFor(MaterialTheme.colorScheme.surface),
                         LocalHapticFeedback provides customHaptic,
@@ -469,7 +474,7 @@ internal fun MainActivityScaffold(
                                             navController = navController,
                                             pureBlack = pureBlack,
                                             lyricsSyncOffset = lyricsSyncOffset,
-                                            dockMergeProgress = dockMotion.progress,
+                                            dockMergeProgress = 0f,
                                             dockNavigationHeight = navVisibleHeight,
                                             collapsedDockNavigation = {
                                                 GalaxCompactNavigationOrb(
@@ -570,6 +575,7 @@ internal fun MainActivityScaffold(
                                             )
                                         },
                                         modifier = Modifier
+                                            .glassRoot(originalGlassState)
                                             .then(
                                                 if (liveLiquidBackdrop != null && !searchOverlayCapturesGlass)
                                                     Modifier.layerBackdrop(liveLiquidBackdrop)
@@ -609,7 +615,7 @@ internal fun MainActivityScaffold(
                                     navigationState = navigationState,
                                     playerUiState = playerUiState,
                                     navigationEffects = navigationEffects,
-                                    dockMergeProgress = dockMotion.progress,
+                                    dockMergeProgress = 0f,
                                 )
                             }
                         }
