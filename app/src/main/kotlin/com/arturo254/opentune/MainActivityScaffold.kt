@@ -1,5 +1,12 @@
 package com.arturo254.opentune
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import com.arturo254.opentune.ui.visual.component.TabOwnership
+import com.arturo254.opentune.ui.visual.component.LocalSharedTransitionScope
+import com.arturo254.opentune.ui.visual.utils.defaultMotionEnter
+import com.arturo254.opentune.ui.visual.utils.defaultMotionExit
+
 import com.arturo254.opentune.ui.visual.component.WideBar
 import com.arturo254.opentune.ui.visual.component.LocalMiniPillFrame
 import com.arturo254.opentune.ui.visual.component.PhoneMiniPill
@@ -309,6 +316,7 @@ import com.arturo254.opentune.constants.PlayerFullscreenKey
     ExperimentalMaterial3Api::class,
     ExperimentalMaterial3ExpressiveApi::class,
     ExperimentalTextApi::class,
+    ExperimentalSharedTransitionApi::class,
 )
 @Composable
 internal fun MainActivityScaffold(
@@ -383,6 +391,7 @@ internal fun MainActivityScaffold(
     val navBackStackEntry = navigationState.navBackStackEntry
     val currentRoute = navigationState.currentRoute
     val navigationItems = navigationState.navigationItems
+    val tabOwnership = remember(navigationItems) { TabOwnership(navigationItems) }
     val slimNav = navigationState.slimNav
     val defaultOpenTab = navigationState.defaultOpenTab
     val pauseSearchHistory = navigationState.pauseSearchHistory
@@ -505,6 +514,8 @@ internal fun MainActivityScaffold(
                                         com.arturo254.opentune.ui.screens.search.LocalPrismSceneActive provides !active,
                                     ) {
                                     com.arturo254.opentune.core.designsystem.theme.GalaxDestinationTheme {
+                                    SharedTransitionLayout {
+                                    CompositionLocalProvider(LocalSharedTransitionScope provides this) {
                                     NavHost(
                                         navController = navController,
                                         startDestination = when (tabOpenedFromShortcut ?: defaultOpenTab) {
@@ -513,78 +524,48 @@ internal fun MainActivityScaffold(
                                             else -> Screens.Home
                                         }.route,
                                         enterTransition = {
-                                            val topLevel =
-                                                initialState.destination.route in topLevelScreens &&
-                                                    targetState.destination.route in topLevelScreens
-                                            val initialIndex = navigationItems.indexOfFirst {
-                                                it.route == initialState.destination.route
+                                            defaultMotionEnter {
+                                                val stack = navController.currentBackStack.value
+                                                val currentRouteIndex = tabOwnership.indexOf(targetState, stack)
+                                                val previousRouteIndex = tabOwnership.indexOf(initialState, stack)
+                                                if (currentRouteIndex == -1 || currentRouteIndex >= previousRouteIndex)
+                                                    slideInHorizontally { it / 8 } + fadeIn(tween(200))
+                                                else
+                                                    slideInHorizontally { -it / 8 } + fadeIn(tween(200))
                                             }
-                                            val targetIndex = navigationItems.indexOfFirst {
-                                                it.route == targetState.destination.route
-                                            }
-                                            val direction = if (targetIndex >= initialIndex) 1 else -1
-                                            galaxEnterTransition(
-                                                policy = galaxMotion,
-                                                topLevel = topLevel,
-                                                direction = direction,
-                                                popping = false,
-                                            )
                                         },
                                         exitTransition = {
-                                            val topLevel =
-                                                initialState.destination.route in topLevelScreens &&
-                                                    targetState.destination.route in topLevelScreens
-                                            val initialIndex = navigationItems.indexOfFirst {
-                                                it.route == initialState.destination.route
+                                            defaultMotionExit {
+                                                val stack = navController.currentBackStack.value
+                                                val currentRouteIndex = tabOwnership.indexOf(initialState, stack)
+                                                val targetRouteIndex = tabOwnership.indexOf(targetState, stack)
+                                                if (targetRouteIndex == -1 || targetRouteIndex >= currentRouteIndex)
+                                                    slideOutHorizontally { -it / 8 } + fadeOut(tween(200))
+                                                else
+                                                    slideOutHorizontally { it / 8 } + fadeOut(tween(200))
                                             }
-                                            val targetIndex = navigationItems.indexOfFirst {
-                                                it.route == targetState.destination.route
-                                            }
-                                            val direction = if (targetIndex >= initialIndex) 1 else -1
-                                            galaxExitTransition(
-                                                policy = galaxMotion,
-                                                topLevel = topLevel,
-                                                direction = direction,
-                                                popping = false,
-                                            )
                                         },
                                         popEnterTransition = {
-                                            val topLevel =
-                                                (initialState.destination.route in topLevelScreens ||
-                                                    initialState.destination.route?.startsWith("search/") == true) &&
-                                                    targetState.destination.route in topLevelScreens
-                                            val initialIndex = navigationItems.indexOfFirst {
-                                                it.route == initialState.destination.route
+                                            defaultMotionEnter {
+                                                val stack = navController.currentBackStack.value
+                                                val currentRouteIndex = tabOwnership.indexOf(targetState, stack)
+                                                val previousRouteIndex = tabOwnership.indexOf(initialState, stack)
+                                                if (previousRouteIndex != -1 && previousRouteIndex < currentRouteIndex)
+                                                    slideInHorizontally { it / 8 } + fadeIn(tween(200))
+                                                else
+                                                    slideInHorizontally { -it / 8 } + fadeIn(tween(200))
                                             }
-                                            val targetIndex = navigationItems.indexOfFirst {
-                                                it.route == targetState.destination.route
-                                            }
-                                            val direction = if (targetIndex >= initialIndex) 1 else -1
-                                            galaxEnterTransition(
-                                                policy = galaxMotion,
-                                                topLevel = topLevel,
-                                                direction = direction,
-                                                popping = true,
-                                            )
                                         },
                                         popExitTransition = {
-                                            val topLevel =
-                                                (initialState.destination.route in topLevelScreens ||
-                                                    initialState.destination.route?.startsWith("search/") == true) &&
-                                                    targetState.destination.route in topLevelScreens
-                                            val initialIndex = navigationItems.indexOfFirst {
-                                                it.route == initialState.destination.route
+                                            defaultMotionExit {
+                                                val stack = navController.currentBackStack.value
+                                                val currentRouteIndex = tabOwnership.indexOf(initialState, stack)
+                                                val targetRouteIndex = tabOwnership.indexOf(targetState, stack)
+                                                if (currentRouteIndex != -1 && currentRouteIndex < targetRouteIndex)
+                                                    slideOutHorizontally { -it / 8 } + fadeOut(tween(200))
+                                                else
+                                                    slideOutHorizontally { it / 8 } + fadeOut(tween(200))
                                             }
-                                            val targetIndex = navigationItems.indexOfFirst {
-                                                it.route == targetState.destination.route
-                                            }
-                                            val direction = if (targetIndex >= initialIndex) 1 else -1
-                                            galaxExitTransition(
-                                                policy = galaxMotion,
-                                                topLevel = topLevel,
-                                                direction = direction,
-                                                popping = true,
-                                            )
                                         },
                                         modifier = Modifier
                                             .glassRoot(originalGlassState)
@@ -614,6 +595,8 @@ internal fun MainActivityScaffold(
                                             navigationState.pagerState,
                                             { onActiveChange(true) },
                                         )
+                                    }
+                                    }
                                     }
                                     }
                                     }
