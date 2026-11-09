@@ -1,9 +1,6 @@
 package com.arturo254.opentune.ui.player.visual
 
-import com.arturo254.opentune.core.designsystem.glass.GlassOptics
-import com.arturo254.opentune.core.designsystem.glass.GlassPreset
 import java.io.File
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -45,26 +42,23 @@ class PlayerVisualEngineIntegrationTest {
         assertTrue(v7.contains("AnimatedContent("))
     }
 
-    @Test fun miniPlayerGlassUsesTheExactLegacySoftPreset() {
+    @Test fun miniPlayerUsesOriginalCapturedGlassWithoutReplacingPlayerService() {
         val mini = source("ui/player/MiniPlayer.kt")
-        val adapter = source("ui/player/visual/PlayerGlassEffect.kt")
-        assertTrue(mini.contains(".playerVisualGlassEffect("))
-        assertTrue(mini.contains(".clip(miniPlayerShape)"))
-        assertTrue(mini.contains("surfaceTokens.borders.miniPlayerOpaqueWidth"))
-        assertTrue(adapter.contains("galaxGlassEffect("))
-        assertTrue(adapter.contains("GlassSurfaceType.MINI_PLAYER"))
-        assertTrue(source("core/designsystem/glass/GalaxGlassSurface.kt").contains("galaxLiquidEffect("))
-        assertFalse(adapter.contains("liquidGlassSurface("))
-        assertEquals(
-            GlassOptics(
-                blurRadius = 4,
-                refraction = 0.045f,
-                curve = 0.10f,
-                dispersion = 0.0015f,
-                edge = 0f,
-            ),
-            GlassPreset.SOFT.optics,
-        )
+        val pill = source("ui/visual/player/OriginalMiniPlayer.kt")
+        val glass = source("ui/visual/component/GlassKit.kt")
+        val host = source("MainActivityScaffold.kt")
+        assertTrue(mini.contains("OriginalMiniPlayer("))
+        assertTrue(pill.contains("FrostedChromeGlass("))
+        assertTrue(pill.contains("LocalOriginalGlassState.current"))
+        assertTrue(glass.contains("RenderNode"))
+        assertTrue(glass.contains("fun Modifier.glassRoot("))
+        assertTrue(host.contains(".glassRoot(originalGlassState)"))
+        assertTrue(host.contains("LocalOriginalGlassState provides originalGlassState"))
+        assertTrue(mini.contains("onPlayPause = playerActions::playPause"))
+        assertTrue(mini.contains("onNext = playerActions::next"))
+        assertTrue(mini.contains("onPrevious = playerActions::previous"))
+        assertFalse(pill.contains("ExoPlayer.Builder("))
+        assertFalse(pill.contains("MusicService("))
     }
 
     @Test fun canvasVideoRendererStillOwnsAndReleasesItsMutedPlayer() {
