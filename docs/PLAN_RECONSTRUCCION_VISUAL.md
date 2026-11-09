@@ -53,8 +53,9 @@ La aceptación de una fase exige **copiar el código real, conectar datos y acci
 ## Estado
 
 - [x] Fase 00: crear rama a partir de la base limpia y registrar ruta de migración.
-- [x] Fase 01: trasladados los cimientos visuales originales, fuentes, tema, extracción cromática, componentes de superficie, movimiento, máscaras y motor de vidrio. Validación Android en ejecución.
-- [ ] Fases 02–10: pendientes, sin fingir completitud.
+- [x] Fase 01: cimientos visuales originales integrados y verificados mediante tests, lint y APK universal.
+- [x] Fase 02: navegación inferior, vidrio, indicador de descargas, cápsula mini y distribución horizontal originales conectados a la infraestructura existente; validación automatizada en ejecución.
+- [ ] Fases 03–10: pendientes. La pantalla ampliada del reproductor y su transición de portada pertenecen a la fase 06.
 
 **Prohibido:** añadir pantallas de apariencia semejante, renombrar un tema vacío como terminado, inventar proveedores, romper los enlaces a la VPS o realizar fusiones automáticas a otras ramas.
 
@@ -67,3 +68,18 @@ La aceptación de una fase exige **copiar el código real, conectar datos y acci
 - La paleta oscura y la tipografía se suministran desde `MainActivityThemeHost`. Se fuerza apariencia de iconos clara sobre barras del sistema por coherencia con la interfaz oscura original.
 - Las barras, pantallas y superficies que consumen `glassRoot` se incorporarán desde el código original al sustituir el árbol de navegación en la fase 02. La implementación adicional `ModuleChromeGlass`, ligada a `ActiveSkin` de los estilos externos, se traslada con el sistema de estilos en la fase 07, no mediante un efecto ficticio.
 - La compilación, lint y tests se ejecutan por GitHub Actions en esta rama, gracias a su incorporación explícita a `rebuild-safety.yml`. El resultado de CI no se da por aprobado antes de concluir los tres pasos.
+
+## Operación 02 · Navegación y minirreproductor
+
+**Fuente original:** `ui/component/AppNavigation.kt`, `WideBar.kt`, `LibraryDownloadIcon.kt`, `ui/utils/StableInsets.kt`, vectoriales `transport_*.xml` y los componentes animados del minirreproductor.
+
+1. `ui/visual/component/AppNavigation.kt` conserva indicador elástico, gestos y navegación táctil de la fuente. `MainActivityChrome.kt` conecta las pestañas Inicio, Buscar y Biblioteca a `Screens.MainScreens`, `pagerState` y `NavController` reales.
+2. `GlassState` se suministra por `LocalOriginalGlassState` en `MainActivityScaffold.kt`. `glassRoot` captura solamente el contenido de rutas; la cápsula y el minirreproductor lo consumen para evitar autorrefracción.
+3. `WideBar.kt` usa ancho disponible, insets estables y cutouts para conservar la barra horizontal fusionada de la fuente, en lugar del `NavigationRail` previo. `LocalMiniPillFrame` comparte coordenadas entre pestañas y minirreproductor.
+4. `OriginalMiniPlayer.kt` conserva cubierta, título, autor, vidrio, presión, transiciones de iconos, play/pausa/siguiente y anterior en panorámica. Se conecta exclusivamente a `PlayerState` y `rememberPlayerActions` de la aplicación, sin segundo servicio Media3 ni ticker.
+5. El gesto de deslizamiento horizontal existente se conserva mediante `SwipeableMiniPlayerBox`; la nueva opción `contentOwnsSurface` evita márgenes dobles. Los insets horizontales del sistema los aplica el contenedor únicamente en la distribución móvil.
+6. `LibraryDownloadIcon.kt` toma `DownloadUtil.downloads` para estado, avance y pila de descargas, sin inventar un gestor o un progreso ficticio.
+7. `PlayerHost.kt` reserva los anclajes originales: 80 dp de navegación y 64 dp de minirreproductor en móvil; distribución compartida de 72 dp en horizontal. Se preservan los listeners y restauración de estado del reproductor.
+8. Se actualizan las pruebas de contrato de presentación para comprobar los componentes originales sin eliminar las comprobaciones de gestos, estado compartido, límites de Glass ni acciones de reproducción.
+
+**Verificaciones:** pruebas unitarias, lint y ensamblado universal desde `.github/workflows/rebuild-safety.yml` en la rama de trabajo. La validación de tacto, diseño en dispositivo y transiciones a pantalla expandida todavía no se declara realizada. El traslado completo del reproductor expandido corresponde a la operación 06.
