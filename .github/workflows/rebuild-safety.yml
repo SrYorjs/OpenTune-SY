@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - opentune-rebuild-v1
+      - rebuild/trasplante-visual-integral
   pull_request:
     branches:
       - opentune-rebuild-v1
