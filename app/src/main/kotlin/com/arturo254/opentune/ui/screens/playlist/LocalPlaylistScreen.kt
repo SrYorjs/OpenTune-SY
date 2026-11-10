@@ -3,6 +3,12 @@ package com.arturo254.opentune.ui.screens.playlist
 import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import android.annotation.SuppressLint
 import com.arturo254.opentune.ui.visual.detail.OriginalLibraryDetailHeader
+import com.arturo254.opentune.ui.visual.component.GlassState
+import com.arturo254.opentune.ui.visual.component.glassRoot
+import com.arturo254.opentune.ui.visual.detail.DetailCollapsingTopBar
+import com.arturo254.opentune.ui.visual.detail.rememberDetailCollapseProgress
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -405,6 +411,14 @@ fun LocalPlaylistScreen(
         }
     }
     val lazyListState = rememberLazyListState()
+    val originalDetailGlass = remember { GlassState() }
+    val originalDetailHeightPx = with(LocalDensity.current) {
+        (LocalConfiguration.current.screenHeightDp * 0.60f).dp.toPx()
+    }
+    val originalDetailMorph = rememberDetailCollapseProgress(
+        lazyListState,
+        headerHeightPx = originalDetailHeightPx,
+    ).morphProgress
     var dragInfo by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     val reorderableState = rememberReorderableLazyListState(
         lazyListState = lazyListState,
@@ -512,6 +526,7 @@ fun LocalPlaylistScreen(
 
         LazyColumn(
             state = lazyListState,
+            modifier = Modifier.glassRoot(originalDetailGlass, isActive = { originalDetailMorph > 0.01f }),
             contentPadding = LocalPlayerAwareWindowInsets.current.union(WindowInsets.ime).asPaddingValues(),
         ) {
             playlist?.let { playlist ->
