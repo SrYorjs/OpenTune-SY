@@ -80,6 +80,10 @@ constructor(
         viewModelScope.launch {
             _fetchState.value = FetchState.Pending
             val album = database.album(albumId).first()
+            if (album?.album?.isLocal == true) {
+                _fetchState.value = FetchState.Success
+                return@launch
+            }
             YouTube
                 .album(albumId)
                 .onSuccess {
