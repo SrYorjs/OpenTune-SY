@@ -14,13 +14,18 @@ class LegacySearchArchitectureTest {
             ?: error("Unable to locate Android main source root")
 
     @Test
-    fun submittedSearchRouteUsesUniversalSearch() {
+    fun submittedSearchRouteUsesOriginalPresentationAndUnifiedEngine() {
         val navigation =
             source(
                 "com/arturo254/opentune/ui/screens/NavigationBuilder.kt",
             ).readText()
 
-        assertTrue(navigation.contains("UniversalSearchScreen("))
+        assertTrue(navigation.contains("OriginalSearchResultsScreen("))
+        val results = source("com/arturo254/opentune/ui/screens/search/OriginalSearchResultsScreen.kt").readText()
+        assertTrue(results.contains("UniversalSearchViewModel"))
+        assertTrue(results.contains("viewModel.playSearchResults("))
+        assertTrue(results.contains("originalRecordingOptions("))
+        assertFalse(results.contains("UniversalVersionQualityDialog("))
         assertFalse(navigation.contains("OnlineSearchResult("))
     }
 
