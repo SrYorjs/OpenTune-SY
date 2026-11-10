@@ -68,6 +68,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -134,6 +135,99 @@ internal val LocalHeroPeek = staticCompositionLocalOf { false }
 private fun smoothstep(from: Float, to: Float, x: Float): Float {
     val t = ((x - from) / (to - from)).coerceIn(0f, 1f)
     return t * t * (3f - 2f * t)
+}
+
+@Composable
+internal fun OriginalHomeGachaCard(
+    pool: List<MediaMetadata>,
+    pageOffset: () -> Float,
+    wipeCurve: () -> Float,
+    transitionBlur: Boolean,
+    held: () -> Boolean,
+    currentSongId: String?,
+    isPlaying: Boolean,
+    onWinner: (MediaMetadata) -> Unit,
+) {
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
+    val state = remember { GachaState() }
+    val sounds = remember { GachaSounds(context.applicationContext) }
+    DisposableEffect(sounds) { onDispose { sounds.release() } }
+    LaunchedEffect(pool) {
+        if (state.phase != GachaPhase.Idle) return@LaunchedEffect
+        val available = pool.distinctBy { it.id }.size
+        if (state.candidates.isEmpty() || (state.candidates.size < GachaCandidates && available > state.candidates.size)) {
+            state.candidates = pickGachaCandidates(pool)
+        }
+    }
+    LaunchedEffect(state) {
+        var lastBuzz = 0L
+        snapshotFlow { state.reel.value.roundToInt() }
+            .drop(1)
+            .collect {
+                if (state.phase != GachaPhase.Rolling) return@collect
+                sounds.tick()
+                val now = SystemClock.uptimeMillis()
+                if (now - lastBuzz >= 45L) {
+                    lastBuzz = now
+                    haptic.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+                }
+                launch {
+                    state.pointerKick.snapTo(1f)
+                    state.pointerKick.animateTo(0f, spring(dampingRatio = 0.4f, stiffness = 900f))
+                }
+            }
+    }
+    fun roll() {
+        if (state.phase == GachaPhase.Rolling || state.candidates.size < 2) return
+        scope.launch {
+            state.phase = GachaPhase.Rolling
+            sounds.prepare()
+            try {
+                state.candidates = refreshHiddenCandidates(state, pool)
+                val candidates = state.candidates
+                val count = candidates.size
+                val winner = Random.nextInt(count)
+                val duration = Random.nextInt(GachaMinRollMillis, GachaMaxRollMillis + 1)
+                val start = state.reel.value.roundToInt()
+                state.reel.snapTo(start.toFloat())
+                val spins = count * (2 + duration / 2500)
+                val landing = start + spins + (winner - (start + spins)).mod(count)
+                state.reel.animateTo(landing.toFloat(), tween(duration, easing = GachaRollEasing))
+                val won = candidates[winner]
+                state.result = won
+                state.phase = GachaPhase.Landed
+                sounds.win()
+                haptic.performHapticFeedback(HapticFeedbackType.Confirm)
+                launch {
+                    state.landPop.snapTo(1f)
+                    state.landPop.animateTo(1.1f, tween(120))
+                    state.landPop.animateTo(1f, spring(dampingRatio = 0.35f, stiffness = 320f))
+                }
+                launch {
+                    state.burst.snapTo(0.001f)
+                    state.burst.animateTo(1f, tween(1100, easing = CubicBezierEasing(0.2f, 0.7f, 0.3f, 1f)))
+                    state.burst.snapTo(0f)
+                }
+                onWinner(won)
+            } finally {
+                if (state.phase == GachaPhase.Rolling) state.phase = GachaPhase.Idle
+            }
+        }
+    }
+    val latestRoll = rememberUpdatedState { roll() }
+    val onRoll = remember { { latestRoll.value() } }
+    GachaPage(
+        state = state,
+        pageOffset = pageOffset,
+        isResultPlaying = state.result?.id == currentSongId && isPlaying,
+        wipeCurve = wipeCurve,
+        transitionBlur = transitionBlur,
+        held = held,
+        onShown = { sounds.prepare() },
+        onRoll = onRoll,
+    )
 }
 
 private const val GachaDesignHeight = 527f
