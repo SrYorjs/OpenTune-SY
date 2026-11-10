@@ -82,6 +82,7 @@ import com.arturo254.opentune.ui.visual.component.GlassState
 import com.arturo254.opentune.ui.visual.component.ProgressiveGlassBackground
 import com.arturo254.opentune.ui.visual.component.containerTransformSource
 import com.arturo254.opentune.ui.visual.utils.stableStatusBars
+import com.arturo254.opentune.ui.utils.resize
 
 val SearchHorizontalPadding = 24.dp
 
@@ -677,7 +678,7 @@ private fun BoxScope.LayeredCover(
         if (url != null) {
             AsyncImage(
 
-                model = url,
+                model = url.resize(128, 128),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
@@ -836,7 +837,7 @@ fun SearchArtwork(
     ) {
         if (url != null) {
             AsyncImage(
-                model = url,
+                model = url.resize(requestPx, requestPx),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
