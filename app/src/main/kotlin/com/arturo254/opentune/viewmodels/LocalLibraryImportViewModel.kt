@@ -33,6 +33,25 @@ class LocalLibraryImportViewModel @Inject constructor(
         }
     }
 
+    private val _removed = MutableStateFlow<Int?>(null)
+    val removed: StateFlow<Int?> = _removed
+
+    fun removeImported(ids: List<String>) {
+        if (_running.value || ids.isEmpty()) return
+        viewModelScope.launch {
+            _running.value = true
+            try {
+                _removed.value = importer.removeImported(ids)
+            } finally {
+                _running.value = false
+            }
+        }
+    }
+
+    fun consumeRemoved() {
+        _removed.value = null
+    }
+
     fun consumeResult() {
         _result.value = null
     }
