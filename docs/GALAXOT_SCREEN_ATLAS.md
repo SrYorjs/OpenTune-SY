@@ -10,7 +10,7 @@ El catálogo contiene **los 112 archivos Kotlin de `ui/screens/`**, tanto pantal
 | --- | --- |
 | Inicio | `ui/screens/OriginalHomeScreen.kt` (actual), `ui/screens/HomeScreen.kt` (anterior), `ui/screens/GalaxMainPages.kt` |
 | Buscar | `ui/screens/search/OriginalSearchScreen.kt` (actual), `ui/screens/search/OriginalSearchResultsScreen.kt` (actual), `ui/screens/PrismDiscoveryScreen.kt` (anterior), `ui/screens/search/UniversalSearchScreen.kt` (anterior) |
-| Biblioteca | `ui/screens/library/LibraryScreen.kt`, `ui/screens/library/GalaxArchiveDesign.kt` |
+| Biblioteca | `ui/screens/library/OriginalLibraryHomeScreen.kt` (actual), `ui/screens/library/OriginalLibraryCategoryScreen.kt` (actual), `ui/screens/library/LibraryScreen.kt` (anterior) |
 | Ajustes | `ui/screens/settings/SettingsScreen.kt`, `ui/screens/settings/SettingsLayout.kt` |
 | Apariencia | `ui/screens/settings/AppearanceSettings.kt` |
 | Liquid Glass, solo controles de preferencias | `ui/screens/settings/GalaxLiquidSettingsScreen.kt` |
@@ -41,6 +41,8 @@ El catálogo contiene **los 112 archivos Kotlin de `ui/screens/`**, tanto pantal
 | `GalaxListeningDeck.kt` | Panel de escucha | `—` |
 | `GalaxEditorialAtmosphere.kt` | Capas estelares y materiales compartidos | `—` |
 | `GalaxHomeEditorial.kt` | Nueva composición editorial de Inicio | `home` |
+| `library/OriginalLibraryHomeScreen.kt` | Portada original, categorías, búsqueda local, favoritos y colecciones reales | `library` |
+| `library/OriginalLibraryCategoryScreen.kt` | Subpantallas de canciones, playlists, artistas, álbumes y recientes | `library/{category}` |
 | `library/GalaxArchiveDesign.kt` | Nueva biblioteca: portada, tarjetas y listas | `library` |
 | `GalaxAetherHome.kt` | Portadas, disco y filas de Inicio | `home` |
 | `GalaxAetherVisuals.kt` | Estrellas, ondas, cristal y movimiento | `home` |
@@ -83,7 +85,7 @@ El catálogo contiene **los 112 archivos Kotlin de `ui/screens/`**, tanto pantal
 | --- | --- | --- |
 | `downloads/GalaxDownloadOverview.kt` | Resumen y filtros de descargas | `—` |
 
-## Biblioteca (11)
+## Biblioteca (13)
 
 | Archivo relativo | Qué controla | Ruta en la app |
 | --- | --- | --- |
