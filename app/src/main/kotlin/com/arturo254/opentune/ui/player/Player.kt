@@ -807,45 +807,9 @@ fun BottomSheetPlayer(
         }
 
         val lyricPreview = playerLyricPreviewAt(lyricLines, position)
-        if (useOriginalExpandedPlayer) {
-            OriginalExpandedPlayer(
-                sheet = state,
-                player = playerConnection.player,
-                state = playerState,
-                track = enrichedMetadata,
-                actions = playerActions,
-                queueWindows = queueWindows,
-                currentIndex = currentWindowIndex,
-                nextTrack = nextUpMetadata,
-                lyricPreview = lyricPreview,
-                palette = gradientColors,
-                volume = playerVolume.value,
-                onVolumeChange = { newVolume ->
-                    playerConnection.service.playerVolume.value = newVolume
-                },
-                onLyrics = { lyricsSheetState.expandSoft() },
-                onQueue = { queueSheetState.expandSoft() },
-                onMenu = {
-                    enrichedMetadata?.let { metadata ->
-                        menuState.showPlayerPanelMenu(
-                            metadata = metadata,
-                            navController = navController,
-                            playerBottomSheetState = state,
-                            bottomSheetPageState = bottomSheetPageState,
-                        )
-                    }
-                },
-                onSongInfo = {
-                    enrichedMetadata?.let { metadata ->
-                        bottomSheetPageState.show {
-                            ShowMediaInfo(metadata.id)
-                        }
-                    }
-                },
-            )
-        } else {
+        val renderLegacyPlayer: @Composable (PlayerDesignStyle) -> Unit = { renderedStyle ->
         PlayerLayout(
-            style = playerDesignStyle,
+            style = renderedStyle,
             applePortrait = {
                 V8PlayerScene(
                     isLandscape = false,
@@ -914,7 +878,7 @@ fun BottomSheetPlayer(
             isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE,
             galaxPortrait = {
                 StudioVisualScene(
-                    style = playerDesignStyle,
+                    style = renderedStyle,
                     isLandscape = false,
                     isPlaying = isPlaying,
                     colors = gradientColors,
@@ -934,7 +898,7 @@ fun BottomSheetPlayer(
             },
             galaxLandscape = {
                 StudioVisualScene(
-                    style = playerDesignStyle,
+                    style = renderedStyle,
                     isLandscape = true,
                     isPlaying = isPlaying,
                     colors = gradientColors,
@@ -1212,6 +1176,48 @@ fun BottomSheetPlayer(
                 )
             },
         )
+        }
+
+        if (useOriginalExpandedPlayer) {
+            OriginalExpandedPlayer(
+                sheet = state,
+                player = playerConnection.player,
+                state = playerState,
+                track = enrichedMetadata,
+                actions = playerActions,
+                queueWindows = queueWindows,
+                currentIndex = currentWindowIndex,
+                nextTrack = nextUpMetadata,
+                lyricPreview = lyricPreview,
+                palette = gradientColors,
+                volume = playerVolume.value,
+                onVolumeChange = { newVolume ->
+                    playerConnection.service.playerVolume.value = newVolume
+                },
+                onLyrics = { lyricsSheetState.expandSoft() },
+                onQueue = { queueSheetState.expandSoft() },
+                onMenu = {
+                    enrichedMetadata?.let { metadata ->
+                        menuState.showPlayerPanelMenu(
+                            metadata = metadata,
+                            navController = navController,
+                            playerBottomSheetState = state,
+                            bottomSheetPageState = bottomSheetPageState,
+                        )
+                    }
+                },
+                onSongInfo = {
+                    enrichedMetadata?.let { metadata ->
+                        bottomSheetPageState.show {
+                            ShowMediaInfo(metadata.id)
+                        }
+                    }
+                },
+            )
+        } else {
+            Box(Modifier.fillMaxSize().studioSheetLayer(studio)) {
+                renderLegacyPlayer(playerDesignStyle)
+            }
         }
 
         val queueOnBackgroundColor = visualSkin.queueOnBackgroundColor
