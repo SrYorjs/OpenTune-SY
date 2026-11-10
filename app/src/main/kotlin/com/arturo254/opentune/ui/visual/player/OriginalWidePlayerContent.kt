@@ -54,6 +54,7 @@ fun OriginalWidePlayerContent(
     onQueue: () -> Unit,
     onMenu: () -> Unit,
     onStyles: () -> Unit,
+    preview: Boolean,
     onSongInfo: () -> Unit,
     turntable: Boolean = false,
     modifier: Modifier = Modifier,
@@ -73,7 +74,7 @@ fun OriginalWidePlayerContent(
                 .size(artworkSize)
                 .clip(RoundedCornerShape(22.dp))
                 .then(if (turntable) Modifier else Modifier.originalCoverGestures(
-                    enabled = true,
+                    enabled = !preview,
                     carousel = carousel,
                     spacingPx = artPx + with(density) { 20.dp.toPx() },
                     canPrevious = state.canSkipPrevious,
