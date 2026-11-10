@@ -78,6 +78,8 @@ data class OriginalHomeHeroItem(
     val isPlaying: Boolean,
     val opensPage: Boolean = false,
     val onOpen: () -> Unit,
+    val album: String? = null,
+    val canvasEligible: Boolean = false,
 )
 
 private object PeekPageSize : PageSize {
@@ -189,10 +191,17 @@ fun OriginalHomeHero(
                                 } else Modifier
                             ),
                         ) {
-                            AsyncImage(
-                                model = entry.artwork,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
+                            OriginalHomeCanvas(
+                                id = entry.id,
+                                title = entry.title,
+                                artist = entry.subtitle,
+                                album = entry.album,
+                                artwork = entry.artwork,
+                                eligibleForCanvas = entry.canvasEligible,
+                                active = active &&
+                                    !pagerState.isScrollInProgress &&
+                                    pagerState.currentPage == page &&
+                                    scrollProgress() < 0.08f,
                                 modifier = Modifier.fillMaxSize(),
                             )
                         }
