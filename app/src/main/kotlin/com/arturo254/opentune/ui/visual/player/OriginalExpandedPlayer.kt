@@ -64,6 +64,7 @@ import com.arturo254.opentune.ui.component.BottomSheetState
 import com.arturo254.opentune.ui.player.actions.PlayerActions
 import com.arturo254.opentune.ui.player.state.PlayerState
 import com.arturo254.opentune.ui.utils.resize
+import com.arturo254.opentune.ui.visual.turntable.OriginalTurntableArtwork
 
 @Composable
 fun OriginalExpandedPlayer(
@@ -85,6 +86,7 @@ fun OriginalExpandedPlayer(
     onStyles: () -> Unit,
     onSongInfo: () -> Unit,
     classic: Boolean = false,
+    turntable: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val carousel = rememberOriginalSongCarousel(queueWindows, currentIndex, track)
@@ -100,7 +102,7 @@ fun OriginalExpandedPlayer(
         label = "originalCoverMagnification",
     )
     val background = palette.firstOrNull() ?: Color(0xFF202020)
-    val edgeToEdge = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !classic
+    val edgeToEdge = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !classic && !turntable
     val next = nextTrack
 
     BoxWithConstraints(modifier = modifier.fillMaxSize().background(Color.Black)) {
@@ -169,8 +171,33 @@ fun OriginalExpandedPlayer(
                 onMenu = onMenu,
                 onStyles = onStyles,
                 onSongInfo = onSongInfo,
+                turntable = turntable,
             )
         } else {
+        if (turntable) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .height(artRegion)
+                    .graphicsLayer {
+                        alpha = (open / 0.55f).coerceIn(0f, 1f)
+                    },
+            ) {
+                OriginalTurntableArtwork(
+                    mediaId = state.trackId.orEmpty(),
+                    title = state.title.orEmpty(),
+                    artworkUrl = state.artworkUrl,
+                    positionMs = state.positionMs,
+                    durationMs = state.durationMs,
+                    isPlaying = state.isPlaying,
+                    active = open > 0.95f,
+                    actions = actions,
+                    modifier = Modifier.fillMaxSize(),
+                    interactive = open > 0.95f,
+                )
+            }
+        }
         if (edgeToEdge) {
             CarouselPictures(
                 carousel = carousel,
@@ -241,7 +268,7 @@ fun OriginalExpandedPlayer(
                 .padding(top = statusTop + 47.dp, bottom = navigationBottom + 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if (!edgeToEdge) {
+            if (!edgeToEdge && !turntable) {
             Box(
                 modifier = Modifier
                     .size(coverSide)
@@ -298,7 +325,9 @@ fun OriginalExpandedPlayer(
                 menuExpanded = false,
                 modifier = Modifier.padding(bottom = 18.dp),
             )
-            OriginalPlayerProgressSlider(
+            if (turntable) {
+                Spacer(Modifier.height(52.dp))
+            } else OriginalPlayerProgressSlider(
                 player = player,
                 mediaId = state.trackId,
                 positionMs = state.positionMs,
