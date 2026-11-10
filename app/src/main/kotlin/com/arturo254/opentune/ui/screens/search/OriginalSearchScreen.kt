@@ -250,7 +250,7 @@ fun OriginalSearchScreen(
                 } else null,
                 focusRequester = focusRequester,
                 onFocusChanged = { focused -> if (focused) active = true },
-                readOnlyClick = if (!active) {{ active = true }} else null,
+                readOnlyClick = if (!active) ({ active = true }) else null,
             )
         }
     }
@@ -259,7 +259,7 @@ fun OriginalSearchScreen(
 @Composable
 private fun OriginalSearchBrowseContent(
     listState: LazyListState,
-    sections: List<com.arturo254.opentune.innertube.pages.MoodAndGenres>,
+    sections: List<com.arturo254.opentune.innertube.pages.MoodAndGenres.Item>,
     loading: Boolean,
     navController: NavController,
 ) {
@@ -279,13 +279,17 @@ private fun OriginalSearchBrowseContent(
                 }
             }
         }
-        sections.forEachIndexed { sectionIndex, section ->
-            item("header_" + sectionIndex) {
-                SearchSectionHeader(title = section.title, ruleAbove = false, ruleBelow = true)
+        if (sections.isNotEmpty()) {
+            item("genre_header") {
+                SearchSectionHeader(
+                    title = stringResource(R.string.prism_genres),
+                    ruleAbove = false,
+                    ruleBelow = true,
+                )
             }
             itemsIndexed(
-                items = section.items.chunked(2),
-                key = { index, _ -> "mood_" + sectionIndex + "_" + index },
+                items = sections.chunked(2),
+                key = { index, _ -> "mood_" + index },
             ) { _, row ->
                 Row(
                     modifier = Modifier.fillMaxWidth()
@@ -309,7 +313,6 @@ private fun OriginalSearchBrowseContent(
                     if (row.size == 1) Spacer(Modifier.weight(1f))
                 }
             }
-            item("gap_" + sectionIndex) { Spacer(Modifier.height(22.dp)) }
         }
     }
 }
