@@ -87,6 +87,7 @@ fun OriginalExpandedPlayer(
     onSongInfo: () -> Unit,
     classic: Boolean = false,
     turntable: Boolean = false,
+    preview: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val carousel = rememberOriginalSongCarousel(queueWindows, currentIndex, track)
@@ -170,6 +171,7 @@ fun OriginalExpandedPlayer(
                 onQueue = onQueue,
                 onMenu = onMenu,
                 onStyles = onStyles,
+                preview = preview,
                 onSongInfo = onSongInfo,
                 turntable = turntable,
             )
@@ -221,7 +223,7 @@ fun OriginalExpandedPlayer(
                         alpha = (open / 0.5f).coerceIn(0f, 1f)
                     }
                     .originalCoverGestures(
-                        enabled = open > 0.95f,
+                        enabled = !preview && open > 0.95f,
                         carousel = carousel,
                         spacingPx = with(density) { maxWidth.toPx() },
                         canPrevious = state.canSkipPrevious,
@@ -282,7 +284,7 @@ fun OriginalExpandedPlayer(
                     }
                     .clip(RoundedCornerShape(22.dp))
                     .originalCoverGestures(
-                        enabled = open > 0.95f,
+                        enabled = !preview && open > 0.95f,
                         carousel = carousel,
                         spacingPx = coverSidePx + gapPx,
                         canPrevious = state.canSkipPrevious,
@@ -408,7 +410,7 @@ fun OriginalExpandedPlayer(
             )
         }
         }
-        PlayerHandle(
+        if (!preview) PlayerHandle(
             state = handle,
             sheet = sheet,
             statusBarTop = statusTop,
