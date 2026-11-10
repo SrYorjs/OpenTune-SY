@@ -125,7 +125,7 @@ import com.arturo254.opentune.ui.component.HideOnScrollFAB
 import com.arturo254.opentune.ui.component.IconButton
 import com.arturo254.opentune.ui.component.LocalMenuState
 import com.arturo254.opentune.ui.component.NavigationTitle
-import com.arturo254.opentune.ui.component.SongListItem
+import com.arturo254.opentune.ui.visual.detail.OriginalDetailSongRow
 import com.arturo254.opentune.ui.component.YouTubeGridItem
 import com.arturo254.opentune.ui.component.YouTubeListItem
 import com.arturo254.opentune.ui.component.shimmer.ButtonPlaceholder
@@ -648,7 +648,7 @@ Row(
                             items = filteredLibrarySongs.take(5),
                             key = { index, item -> "local_song_${item.id}_$index" }
                         ) { index, song ->
-                            SongListItem(
+                            OriginalDetailSongRow(
                                 song = song,
                                 showInLibraryIcon = true,
                                 isActive = song.id == mediaMetadata?.id,
