@@ -68,6 +68,7 @@ import com.arturo254.opentune.ui.screens.playlist.OnlinePlaylistScreen
 import com.arturo254.opentune.ui.screens.playlist.TopPlaylistScreen
 import com.arturo254.opentune.ui.screens.playlist.CachePlaylistScreen
 import com.arturo254.opentune.ui.screens.search.OriginalSearchResultsScreen
+import com.arturo254.opentune.ui.screens.library.OriginalLibraryCategoryScreen
 import com.arturo254.opentune.ui.screens.settings.AboutScreen
 import com.arturo254.opentune.ui.screens.settings.AccountSettings
 import com.arturo254.opentune.ui.screens.settings.AppearanceSettings
@@ -115,6 +116,15 @@ fun NavGraphBuilder.navigationBuilder(
         composable(screen.route) {
             GalaxMainPages(navController, pagerState, onOpenSearch)
         }
+    }
+    composable(
+        route = "library/{category}",
+        arguments = listOf(navArgument("category") { type = NavType.StringType }),
+    ) { entry ->
+        OriginalLibraryCategoryScreen(
+            navController = navController,
+            category = entry.arguments?.getString("category").orEmpty(),
+        )
     }
     composable("history") {
         HistoryScreen(navController)
