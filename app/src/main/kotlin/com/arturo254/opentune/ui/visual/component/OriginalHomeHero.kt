@@ -97,7 +97,7 @@ private fun Modifier.heroTuck(): Modifier = layout { measurable, constraints ->
     }
 }
 
-private enum class HeroPillKind { Play, Pause, View }
+internal enum class HeroPillKind { Play, Pause, View, Roll, Rolling }
 private const val HeroAdvanceMillis = 5500L
 private const val HeroDim = 0.36f
 private val HeroLabelColor = Color.White.copy(alpha = 0.69f)
@@ -280,12 +280,13 @@ private fun heroScrimBlack(gradient: Float): Color =
     Color.Black.copy(alpha = 1f - (1f - HeroDim) * (1f - gradient))
 
 @Composable
-private fun HeroText(
+internal fun HeroText(
     label: String,
     title: String,
     pill: HeroPillKind,
     onPillClick: () -> Unit,
     modifier: Modifier = Modifier,
+    pillEnabled: Boolean = true,
 ) {
     Column(modifier = modifier.padding(start = HomeContentInset, end = HomeContentInset, bottom = 64.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -305,12 +306,12 @@ private fun HeroText(
             )
         }
         Spacer(Modifier.height(11.dp))
-        HeroPill(kind = pill, onClick = onPillClick)
+        HeroPill(kind = pill, onClick = onPillClick, enabled = pillEnabled)
     }
 }
 
 @Composable
-private fun HeroPill(kind: HeroPillKind, onClick: () -> Unit) {
+private fun HeroPill(kind: HeroPillKind, onClick: () -> Unit, enabled: Boolean) {
     val interaction = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
@@ -318,7 +319,7 @@ private fun HeroPill(kind: HeroPillKind, onClick: () -> Unit) {
             .height(33.dp)
             .clip(RoundedCornerShape(50))
             .background(HeroPillFill)
-            .clickable(interactionSource = interaction, indication = null, onClick = onClick)
+            .clickable(interactionSource = interaction, indication = RemoteFocus, enabled = enabled, onClick = onClick)
     ) {
         AnimatedContent(
             targetState = kind,
@@ -328,24 +329,39 @@ private fun HeroPill(kind: HeroPillKind, onClick: () -> Unit) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.height(33.dp).padding(
-                    start = if (current == HeroPillKind.View) 17.dp else 21.dp,
-                    end = 17.dp,
+                    start = when (current) {
+                        HeroPillKind.Play, HeroPillKind.Pause -> 21.dp
+                        HeroPillKind.View -> 17.dp
+                        HeroPillKind.Roll, HeroPillKind.Rolling -> 11.dp
+                    },
+                    end = if (current == HeroPillKind.Roll || current == HeroPillKind.Rolling) 13.dp else 17.dp,
                 ),
             ) {
-                if (current != HeroPillKind.View) {
-                    Icon(
-                        painter = painterResource(if (current == HeroPillKind.Pause) R.drawable.pause else R.drawable.play),
-                        contentDescription = null,
-                        tint = HeroPillContent,
-                        modifier = Modifier.size(15.dp),
-                    )
-                    Spacer(Modifier.width(9.dp))
+                when (current) {
+                    HeroPillKind.Play, HeroPillKind.Pause -> {
+                        Icon(
+                            painter = painterResource(
+                                if (current == HeroPillKind.Pause) R.drawable.ic_untitled_pause else R.drawable.ic_untitled_play
+                            ),
+                            contentDescription = null,
+                            tint = HeroPillContent,
+                            modifier = Modifier.size(15.dp),
+                        )
+                        Spacer(Modifier.width(9.dp))
+                    }
+                    HeroPillKind.Roll, HeroPillKind.Rolling -> {
+                        GachaDie(spinning = current == HeroPillKind.Rolling)
+                        Spacer(Modifier.width(8.dp))
+                    }
+                    HeroPillKind.View -> Unit
                 }
                 Text(
                     text = when (current) {
                         HeroPillKind.Play -> "Play"
                         HeroPillKind.Pause -> "Pause"
                         HeroPillKind.View -> "View"
+                        HeroPillKind.Roll -> "roll!!"
+                        HeroPillKind.Rolling -> "rolling!!"
                     },
                     style = HomeLabelStyle,
                     color = HeroPillContent,
