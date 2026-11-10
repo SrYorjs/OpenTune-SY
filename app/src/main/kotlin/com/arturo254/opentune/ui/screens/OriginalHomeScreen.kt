@@ -105,6 +105,8 @@ import com.arturo254.opentune.ui.visual.component.homeRowHeight
 import com.arturo254.opentune.ui.visual.component.HomeVideoCard
 import com.arturo254.opentune.ui.visual.component.OriginalHomeHero
 import com.arturo254.opentune.ui.visual.component.OriginalHomeHeroItem
+import com.arturo254.opentune.ui.visual.component.OriginalCommunityPlaylistCard
+import com.arturo254.opentune.ui.visual.component.OriginalAllTimeHitsCard
 import com.arturo254.opentune.ui.visual.component.rememberRevealSeenState
 import com.arturo254.opentune.ui.visual.component.revealOnAppear
 import com.arturo254.opentune.ui.visual.utils.SnapLayoutInfoProvider
@@ -572,19 +574,31 @@ fun OriginalHomeScreen(
                         }
                     }) { item ->
                         when (item) {
-                            is Playlist -> HomeCoverCard(
-                                title = item.title,
-                                subtitle = "${item.songCount} songs",
-                                thumbnailUrl = item.thumbnails.firstOrNull() ?: item.thumbnailUrl,
-                                isPlaying = playing,
-                                modifier = Modifier.combinedClickable(
-                                    interactionSource = null,
-                                    indication = HomeCardHighlight,
-                                    onClick = { openLocal(item) },
-                                    onLongClick = { localMenu(item) },
-                                ),
-                                sharedElementKey = "playlist-${item.id}",
-                            )
+                            is Playlist -> {
+                                if (item.thumbnails.distinct().size >= 3) {
+                                    OriginalCommunityPlaylistCard(
+                                        id = item.id,
+                                        title = item.title,
+                                        subtitle = "${item.songCount} songs",
+                                        covers = item.thumbnails,
+                                        onClick = { openLocal(item) },
+                                    )
+                                } else {
+                                    HomeCoverCard(
+                                        title = item.title,
+                                        subtitle = "${item.songCount} songs",
+                                        thumbnailUrl = item.thumbnails.firstOrNull() ?: item.thumbnailUrl,
+                                        isPlaying = playing,
+                                        modifier = Modifier.combinedClickable(
+                                            interactionSource = null,
+                                            indication = HomeCardHighlight,
+                                            onClick = { openLocal(item) },
+                                            onLongClick = { localMenu(item) },
+                                        ),
+                                        sharedElementKey = "playlist-${item.id}",
+                                    )
+                                }
+                            }
                             is PlaylistItem -> HomeCoverCard(
                                 title = item.title,
                                 subtitle = item.author?.name,
@@ -628,20 +642,15 @@ fun OriginalHomeScreen(
                 }
                 homeSectionItem("original/allTimeHits", seen) {
                     OriginalHomeCardRow("all_time_hits", trends.distinctBy { it.sourceId }.take(18), seen, { it.sourceId }) { track ->
-                        HomeCoverCard(
-                            title = track.title,
-                            subtitle = track.artists.joinToString(", "),
-                            thumbnailUrl = track.artworkUrl,
-                            isPlaying = playing,
-                            modifier = Modifier.clickable(
-                                interactionSource = null,
-                                indication = HomeCardHighlight,
-                                onClick = {
-                                    if (player != null) scope.launch {
-                                        viewModel.playSourceVariant(player, track, "Home")
-                                    }
-                                },
-                            ),
+                        OriginalAllTimeHitsCard(
+                            title = track.artists.joinToString(", ").ifBlank { track.title },
+                            artwork = track.artworkUrl,
+                            onClick = {
+                                if (player != null) scope.launch {
+                                    viewModel.playSourceVariant(player, track, "Home")
+                                }
+                            },
+                            modifier = Modifier.width(246.dp),
                         )
                     }
                 }
