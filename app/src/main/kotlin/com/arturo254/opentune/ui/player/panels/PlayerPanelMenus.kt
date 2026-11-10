@@ -23,6 +23,7 @@ fun MenuState.showPlayerPanelMenu(
     bottomSheetPageState: BottomSheetPageState,
     isQueueTrigger: Boolean = false,
     detailsMediaId: String? = metadata?.id,
+    onOpenStyles: (() -> Unit)? = null,
 ) {
     if (metadata == null) return
     show {
@@ -37,6 +38,7 @@ fun MenuState.showPlayerPanelMenu(
                 }
             },
             onDismiss = this@showPlayerPanelMenu::dismiss,
+            onOpenStyles = onOpenStyles,
         )
     }
 }
