@@ -34,4 +34,12 @@
     <string name="visual_library_imported_music">Música importada</string>
     <string name="visual_library_youtube_playlists">Playlists sincronizadas</string>
     <string name="visual_library_spotify_playlists">Playlists de Spotify</string>
+    <string name="visual_library_import_result">Importadas: %1$d · Existentes: %2$d · Fallidas: %3$d</string>
+    <string name="visual_library_import_running">Importando música local</string>
+    <string name="visual_library_local_subtitle">Archivos de audio de este dispositivo</string>
+    <string name="visual_library_import_subtitle">Archivos guardados en tu Biblioteca</string>
+    <string name="visual_library_manage_downloads">Gestionar descargas</string>
+    <string name="visual_library_cache_explanation">Canciones completas que conserva el reproductor</string>
+    <string name="visual_library_imported_explanation">Colecciones realmente sincronizadas</string>
+    <string name="visual_library_imported_playlist_title">Playlists importadas y sincronizadas</string>
 </resources>
