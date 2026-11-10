@@ -172,6 +172,8 @@ import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.ui.player.state.PlayerStateInput
 import com.arturo254.opentune.ui.player.state.rememberPlayerState
 import com.arturo254.opentune.ui.visual.player.OriginalExpandedPlayer
+import com.arturo254.opentune.ui.visual.player.parsePlayerLyricPreview
+import com.arturo254.opentune.ui.visual.player.playerLyricPreviewAt
 import com.arturo254.opentune.ui.player.preferences.rememberPlayerPresentationPreferences
 import com.arturo254.opentune.ui.component.BottomSheet
 import com.arturo254.opentune.ui.component.BottomSheetState
@@ -243,6 +245,8 @@ fun BottomSheetPlayer(
     var keyboardSkipMultiplier by remember { mutableStateOf(1) }
     var lastKeyboardTapTime by remember { mutableLongStateOf(0L) }
     val mediaMetadata by playerConnection.mediaMetadata.collectAsState()
+    val lyricsEntity by playerConnection.currentLyrics.collectAsState(initial = null)
+    val lyricLines = remember(lyricsEntity?.lyrics) { parsePlayerLyricPreview(lyricsEntity?.lyrics) }
     val downloadUtil = LocalDownloadUtil.current
     val download by downloadUtil
         .getDownload(mediaMetadata?.id ?: "")
@@ -802,6 +806,7 @@ fun BottomSheetPlayer(
             )
         }
 
+        val lyricPreview = playerLyricPreviewAt(lyricLines, position)
         if (useOriginalExpandedPlayer) {
             OriginalExpandedPlayer(
                 sheet = state,
@@ -812,6 +817,7 @@ fun BottomSheetPlayer(
                 queueWindows = queueWindows,
                 currentIndex = currentWindowIndex,
                 nextTrack = nextUpMetadata,
+                lyricPreview = lyricPreview,
                 palette = gradientColors,
                 volume = playerVolume.value,
                 onVolumeChange = { newVolume ->
