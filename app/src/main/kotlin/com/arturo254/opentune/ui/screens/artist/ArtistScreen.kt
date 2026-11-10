@@ -975,77 +975,57 @@ Row(
         )
     }
 
-    TopAppBar(
-        title = {
-            val animatedAlpha by animateFloatAsState(
-                targetValue = if (!transparentAppBar) 1f else 0f,
-                animationSpec = tween(200),
-                label = "titleAlpha"
-            )
-            Text(
-                text = artistPage?.artist?.title ?: libraryArtist?.artist?.name ?: "",
-                modifier = Modifier.alpha(animatedAlpha),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        navigationIcon = {
-            IconButton(
-                onClick = navController::navigateUp,
-                onLongClick = navController::backToMain,
-            ) {
-                Icon(
-                    painterResource(R.drawable.arrow_back),
-                    contentDescription = null,
-                )
-            }
-        },
+    DetailCollapsingTopBar(
+        progress = originalDetailMorph,
+        glassState = originalDetailGlass,
+        thumbnailUrl = thumbnail,
+        title = artistPage?.artist?.title ?: libraryArtist?.artist?.name.orEmpty(),
+        accentColor = gradientColors.firstOrNull(),
+        onBackClick = { navController.navigateUp() },
+        onBackLongClick = { navController.backToMain() },
         actions = {
-
-            IconButton(
-                onClick = {
-                    viewModel.artistPage?.artist?.shareLink?.let { link ->
-                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip = ClipData.newPlainText("Artist Link", link)
-                        clipboard.setPrimaryClip(clip)
-                        Toast.makeText(context, R.string.link_copied, Toast.LENGTH_SHORT).show()
-                    }
-                },
-                onLongClick = {},
-            ) {
-                Icon(
-                    painterResource(R.drawable.link),
-                    contentDescription = null,
-                )
-            }
-
-            IconButton(
-                onClick = {
-                    val shareIntent = Intent().apply {
-                        action = Intent.ACTION_SEND
-                        type = "text/plain"
-                        putExtra(
-                            Intent.EXTRA_TEXT,
-                            viewModel.artistPage?.artist?.shareLink
-                                ?: "https://music.youtube.com/channel/${viewModel.artistId}"
-                        )
-                    }
-                    context.startActivity(Intent.createChooser(shareIntent, null))
-                },
-                onLongClick = {},
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.share),
-                    contentDescription = null
-                )
+            Row {
+                IconButton(
+                    onClick = {
+                        viewModel.artistPage?.artist?.shareLink?.let { link ->
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            clipboard.setPrimaryClip(ClipData.newPlainText("Artist Link", link))
+                            Toast.makeText(context, R.string.link_copied, Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    onLongClick = {},
+                ) {
+                    Icon(
+                        painterResource(R.drawable.link),
+                        contentDescription = null,
+                        tint = Color.White,
+                    )
+                }
+                IconButton(
+                    onClick = {
+                        val shareIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            type = "text/plain"
+                            putExtra(
+                                Intent.EXTRA_TEXT,
+                                viewModel.artistPage?.artist?.shareLink
+                                    ?: "https://music.youtube.com/channel/${viewModel.artistId}"
+                            )
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, null))
+                    },
+                    onLongClick = {},
+                ) {
+                    Icon(
+                        painterResource(R.drawable.share),
+                        contentDescription = null,
+                        tint = Color.White,
+                    )
+                }
             }
         },
-        colors = if (transparentAppBar) {
-            TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
-        } else {
-            TopAppBarDefaults.topAppBarColors()
-        }
     )
+
 }
 
 @Composable
