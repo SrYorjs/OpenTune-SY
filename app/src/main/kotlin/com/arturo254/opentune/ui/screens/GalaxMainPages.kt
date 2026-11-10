@@ -38,6 +38,9 @@ import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.motion.galaxMotion
 import com.arturo254.opentune.ui.screens.library.LibraryScreen
+import com.arturo254.opentune.ui.screens.search.OriginalSearchScreen
+import com.arturo254.opentune.constants.PureBlackKey
+import com.arturo254.opentune.utils.rememberPreference
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -50,6 +53,7 @@ import kotlin.math.sin
 fun GalaxMainPages(navController: NavController, pager: PagerState, onOpenSearch: () -> Unit) {
     val scope = rememberCoroutineScope()
     val reduced = OpenTuneDesignSystem.galaxMotion.reducedMotion
+    val (pureBlack) = rememberPreference(PureBlackKey, false)
     fun open(page: Int) {
         scope.launch {
             if (reduced) pager.scrollToPage(page) else pager.animateScrollToPage(page)
@@ -67,7 +71,7 @@ fun GalaxMainPages(navController: NavController, pager: PagerState, onOpenSearch
         when (page) {
             0 -> OriginalHomeScreen(navController, ambientActive = active,
                 onOpenSearchTab = onOpenSearch, onOpenLibraryTab = { open(2) })
-            1 -> GalaxDiscoverScreen(navController, onOpenSearch, ambientActive = active)
+            1 -> OriginalSearchScreen(navController, pureBlack = pureBlack, ambientActive = active)
             2 -> LibraryScreen(navController, ambientActive = active,
                 onOpenSearchTab = { open(1) })
         }
