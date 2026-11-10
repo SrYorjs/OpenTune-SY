@@ -55,7 +55,7 @@ internal fun OriginalHomeCanvas(
             modifier = Modifier.fillMaxSize(),
         )
         val animated = canvasUrl
-        if (animated != null && eligibleForCanvas) {
+        if (animated != null && eligibleForCanvas && active) {
             CanvasArtworkPlayer(
                 primaryUrl = animated,
                 fallbackUrl = null,
