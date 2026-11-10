@@ -112,6 +112,9 @@ interface DatabaseDao {
 
 
 
+    @Query("SELECT DISTINCT playlistId FROM playlist_song_map WHERE songId IN (:songIds)")
+    fun playlistIdsContainingSongs(songIds: List<String>): Flow<List<String>>
+
     @Transaction
     @Query("SELECT * FROM artist WHERE name = :name")
     fun artistByName(name: String): ArtistEntity?
