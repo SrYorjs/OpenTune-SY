@@ -63,6 +63,21 @@ import com.arturo254.opentune.ui.visual.search.SearchHorizontalPadding
 import com.arturo254.opentune.ui.visual.search.rememberCollapseProgress
 import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.viewmodels.LibraryMixViewModel
+import androidx.media3.exoplayer.offline.Download
+import com.arturo254.opentune.LocalDownloadUtil
+import com.arturo254.opentune.spotify.SpotifyLibraryViewModel
+import com.arturo254.opentune.spotify.SpotifyMapper
+import com.arturo254.opentune.ui.visual.library.LibraryTab
+import com.arturo254.opentune.ui.visual.library.LibraryTabChips
+import com.arturo254.opentune.ui.visual.library.LibraryPinKind
+import com.arturo254.opentune.ui.visual.library.LibraryPinnedTile
+import com.arturo254.opentune.ui.visual.library.LibraryProgressCard
+import com.arturo254.opentune.ui.visual.library.rememberLibraryPins
+import com.arturo254.opentune.ui.visual.library.rememberLibraryImportUi
+import com.arturo254.opentune.ui.visual.library.originalLocalTab
+import com.arturo254.opentune.ui.visual.library.originalCachedTab
+import com.arturo254.opentune.ui.visual.library.originalImportedTab
+import com.arturo254.opentune.viewmodels.CachePlaylistViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -71,6 +86,8 @@ fun OriginalLibraryHomeScreen(
     ambientActive: Boolean,
     onOpenSearchTab: () -> Unit,
     viewModel: LibraryMixViewModel = hiltViewModel(),
+    cacheViewModel: CachePlaylistViewModel = hiltViewModel(),
+    spotifyViewModel: SpotifyLibraryViewModel = hiltViewModel(),
 ) {
     val database = LocalDatabase.current
     val player = LocalPlayerConnection.current
@@ -80,6 +97,62 @@ fun OriginalLibraryHomeScreen(
     val albums by viewModel.albums.collectAsStateWithLifecycle()
     val artists by viewModel.artists.collectAsStateWithLifecycle()
     val playlists by viewModel.playlists.collectAsStateWithLifecycle()
+    val cachedSongs by cacheViewModel.cachedSongs.collectAsStateWithLifecycle()
+    val spotify by spotifyViewModel.playlists.collectAsStateWithLifecycle()
+    val downloads by LocalDownloadUtil.current.downloads.collectAsStateWithLifecycle()
+    val pinsState = rememberLibraryPins()
+    val pins = pinsState.pins
+    val importUi = rememberLibraryImportUi()
+    val downloadedIds = remember(downloads) {
+        downloads.values
+            .filter { it.state == Download.STATE_COMPLETED }
+            .map { it.request.id }
+            .toSet()
+    }
+    val importedSongs = remember(songs) { songs.filter { it.song.isLocal } }
+    val localSongs = remember(songs, downloadedIds) {
+        songs.filter { it.song.isLocal || it.id in downloadedIds }
+    }
+    val syncedPlaylists = remember(playlists) {
+        playlists.filter { it.playlist.browseId != null }
+    }
+    var tab by rememberSaveable { mutableStateOf(LibraryTab.All) }
+    val tabSongs = when (tab) {
+        LibraryTab.All -> songs
+        LibraryTab.Local -> localSongs
+        LibraryTab.Cached -> cachedSongs
+        LibraryTab.Imported -> importedSongs
+    }
+    val tabAlbums = remember(albums, tabSongs, tab) {
+        if (tab == LibraryTab.All) albums
+        else {
+            val ids = tabSongs.mapNotNull { it.song.albumId }.toSet()
+            albums.filter { it.id in ids }
+        }
+    }
+    val tabArtists = remember(artists, tabSongs, tab) {
+        if (tab == LibraryTab.All) artists
+        else {
+            val ids = tabSongs.flatMap { it.artists.map { artist -> artist.id } }.toSet()
+            artists.filter { it.id in ids }
+        }
+    }
+    val tabPlaylists = when (tab) {
+        LibraryTab.All -> playlists
+        LibraryTab.Local -> playlists.filter { it.playlist.isLocal }
+        LibraryTab.Cached -> emptyList()
+        LibraryTab.Imported -> syncedPlaylists
+    }
+    val activeDownloads = remember(downloads) {
+        downloads.values.filter {
+            it.state == Download.STATE_DOWNLOADING ||
+                it.state == Download.STATE_QUEUED ||
+                it.state == Download.STATE_RESTARTING
+        }
+    }
+    val downloadProgress = if (activeDownloads.isEmpty()) 1f else
+        activeDownloads.map { it.percentDownloaded.takeIf { p -> p >= 0f } ?: 0f }
+            .average().toFloat().div(100f).coerceIn(0f, 1f)
     val current = player?.mediaMetadata?.collectAsStateWithLifecycle()?.value
     val playing = player?.isPlaying?.collectAsStateWithLifecycle()?.value == true
     val (pureBlack) = rememberPreference(PureBlackKey, false)
@@ -96,20 +169,20 @@ fun OriginalLibraryHomeScreen(
             .sortedByDescending { it.song.inLibrary }
     }
     val likedSongs = remember(songs) { songs.filter { it.song.liked } }
-    val filteredSongs = remember(songs, query.text) {
-        songs.filter {
+    val filteredSongs = remember(tabSongs, query.text) {
+        tabSongs.filter {
             it.title.contains(query.text.trim(), ignoreCase = true) ||
                 it.artists.any { artist -> artist.name.contains(query.text.trim(), ignoreCase = true) }
         }
     }
-    val filteredAlbums = remember(albums, query.text) {
-        albums.filter { it.title.contains(query.text.trim(), ignoreCase = true) }
+    val filteredAlbums = remember(tabAlbums, query.text) {
+        tabAlbums.filter { it.title.contains(query.text.trim(), ignoreCase = true) }
     }
-    val filteredArtists = remember(artists, query.text) {
-        artists.filter { it.title.contains(query.text.trim(), ignoreCase = true) }
+    val filteredArtists = remember(tabArtists, query.text) {
+        tabArtists.filter { it.title.contains(query.text.trim(), ignoreCase = true) }
     }
-    val filteredPlaylists = remember(playlists, query.text) {
-        playlists.filter { it.title.contains(query.text.trim(), ignoreCase = true) }
+    val filteredPlaylists = remember(tabPlaylists, query.text) {
+        tabPlaylists.filter { it.title.contains(query.text.trim(), ignoreCase = true) }
     }
     val playSong: (Song) -> Unit = { song ->
         if (current?.id == song.id) {
