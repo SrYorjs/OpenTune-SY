@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.media3.exoplayer.offline.Download
 import com.arturo254.opentune.R
 import com.arturo254.opentune.db.entities.Album
 import com.arturo254.opentune.db.entities.Artist
@@ -16,6 +15,7 @@ import com.arturo254.opentune.db.entities.Song
 import com.arturo254.opentune.spotify.SpotifyMapper
 import com.arturo254.opentune.spotify.models.SpotifyPlaylist
 import androidx.compose.ui.res.stringResource
+import com.arturo254.opentune.ui.visual.search.SearchHorizontalPadding
 
 internal fun LazyListScope.originalLocalTab(
     songs: List<Song>,
