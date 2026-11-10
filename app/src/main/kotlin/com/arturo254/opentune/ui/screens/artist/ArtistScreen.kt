@@ -177,6 +177,7 @@ fun ArtistScreen(
 
     val lazyListState = rememberLazyListState()
     val originalDetailGlass = remember { GlassState() }
+    val originalCoverBounds = remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
     val originalDetailHeightPx = with(LocalDensity.current) {
         (LocalConfiguration.current.screenHeightDp * 0.60f).dp.toPx()
     }
@@ -404,6 +405,7 @@ fun ArtistScreen(
 
                 item(key = "header") {
 OriginalLibraryDetailHeader(
+    onCoverPositioned = { originalCoverBounds.value = it },
     listState = lazyListState,
     title = artistPage?.artist?.title ?: libraryArtist?.artist?.name ?: stringResource(R.string.unknown_artist),
     label = stringResource(R.string.galax_artist_label),
@@ -978,6 +980,7 @@ Row(
     DetailCollapsingTopBar(
         progress = originalDetailMorph,
         glassState = originalDetailGlass,
+                coverBoundsInWindow = originalCoverBounds.value,
         thumbnailUrl = thumbnail,
         title = artistPage?.artist?.title ?: libraryArtist?.artist?.name.orEmpty(),
         accentColor = gradientColors.firstOrNull(),
