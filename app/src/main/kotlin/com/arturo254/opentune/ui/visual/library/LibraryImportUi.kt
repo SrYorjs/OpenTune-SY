@@ -15,6 +15,7 @@ import com.arturo254.opentune.viewmodels.LocalLibraryImportViewModel
 data class LibraryImportUi(
     val running: Boolean,
     val openPicker: () -> Unit,
+    val remove: (List<String>) -> Unit,
 )
 
 @Composable
@@ -24,6 +25,7 @@ fun rememberLibraryImportUi(
     val context = LocalContext.current
     val running by viewModel.running.collectAsStateWithLifecycle()
     val result by viewModel.result.collectAsStateWithLifecycle()
+    val removed by viewModel.removed.collectAsStateWithLifecycle()
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenMultipleDocuments(),
     ) { uris ->
@@ -44,7 +46,19 @@ fun rememberLibraryImportUi(
             viewModel.consumeResult()
         }
     }
-    return LibraryImportUi(running) {
-        if (!running) launcher.launch(arrayOf("audio/*"))
+    LaunchedEffect(removed) {
+        removed?.let { count ->
+            Toast.makeText(
+                context,
+                context.getString(R.string.visual_library_removed_result, count),
+                Toast.LENGTH_SHORT,
+            ).show()
+            viewModel.consumeRemoved()
+        }
     }
+    return LibraryImportUi(
+        running = running,
+        openPicker = { if (!running) launcher.launch(arrayOf("audio/*")) },
+        remove = viewModel::removeImported,
+    )
 }
