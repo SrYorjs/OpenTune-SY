@@ -114,6 +114,7 @@ import coil3.request.crossfade
 import coil3.toBitmap
 import com.arturo254.opentune.R
 import com.arturo254.opentune.models.MediaMetadata
+import com.arturo254.opentune.ui.utils.resize
 import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.abs
