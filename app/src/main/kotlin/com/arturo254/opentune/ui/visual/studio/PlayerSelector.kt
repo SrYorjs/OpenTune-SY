@@ -253,7 +253,10 @@ fun PlayerSelectorOverlay(
                                     when {
                                         tappedColumn != focusedColumn -> studio.page.animateTo(tappedColumn.toFloat())
                                         tappedRow != rowPosition.roundToInt() -> studio.rows(tappedColumn).animateTo(tappedRow.toFloat())
-                                        else -> currentOnSet(studio.styleAt(tappedColumn, tappedRow), 0f)
+                                        else -> {
+                                            val tapped = studio.styleAt(tappedColumn, tappedRow)
+                                            if (styles.getOrNull(tapped)?.selectable == true) currentOnSet(tapped, 0f)
+                                        }
                                     }
                                 }
                                 1 -> {
@@ -311,7 +314,10 @@ fun PlayerSelectorOverlay(
                             }
                             .background(Color.Black),
                     ) {
-                        preview(style)
+                        if (
+                            abs(studio.page.value - column) <= 1.6f &&
+                            abs(studio.rows(column).value - row) <= 1.6f
+                        ) preview(style)
                     }
                 }
             }
@@ -461,7 +467,7 @@ fun PlayerSelectorOverlay(
                 ) {
                     val editable = style?.editable == true
                     CardButton("Edit", enabled = active && editable, dimmed = !editable, onClick = { onEdit(focused) }, modifier = Modifier.weight(1f))
-                    CardButton("Set", enabled = active, onClick = { currentOnSet(focused, 0f) }, modifier = Modifier.weight(1f))
+                    CardButton("Set", enabled = active && style?.selectable == true, dimmed = style?.selectable != true, onClick = { currentOnSet(focused, 0f) }, modifier = Modifier.weight(1f))
                 }
             }
         }
