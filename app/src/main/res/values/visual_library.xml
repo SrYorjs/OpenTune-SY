@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="visual_library_recently_added">Agregados recientemente</string>
+    <string name="visual_library_songs_hint">Buscar una canción o artista</string>
+    <string name="visual_library_albums_hint">Buscar un álbum</string>
+    <string name="visual_library_artists_hint">Buscar un artista</string>
+    <string name="visual_library_playlists_hint">Buscar una playlist</string>
+</resources>
