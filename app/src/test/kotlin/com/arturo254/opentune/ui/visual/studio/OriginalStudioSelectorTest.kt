@@ -80,7 +80,7 @@ class OriginalStudioSelectorTest {
         assertTrue(player.contains("studio.settleOn(index, restyled, velocity)"))
         assertTrue(menu.contains("onOpenStyles"))
         assertTrue(selector.contains("studio.page.animateTo("))
-        assertTrue(selector.contains("studio.rows(column).animateTo("))
+        assertTrue(selector.contains("studio.rows(tappedColumn).animateTo("))
         assertTrue(timeline.contains("OriginalTimelineRidingTimes("))
         assertTrue(timeline.contains("OriginalStyleTransportCircles("))
         assertTrue(actions.contains("carousel.release("))
