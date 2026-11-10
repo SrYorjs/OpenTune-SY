@@ -186,7 +186,7 @@ fun PlaylistTrackRow(
             ) {
                 Icon(
                     painter = painterResource(R.drawable.more_horiz),
-                    contentDescription = stringResource(R.string.more_options),
+                    contentDescription = stringResource(R.string.more),
                     tint = Color.White.copy(alpha = 0.78f),
                     modifier = Modifier.size(20.dp),
                 )
