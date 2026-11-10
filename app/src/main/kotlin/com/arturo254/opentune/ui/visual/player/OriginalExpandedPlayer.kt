@@ -74,6 +74,7 @@ fun OriginalExpandedPlayer(
     actions: PlayerActions,
     queueWindows: List<Timeline.Window>,
     currentIndex: Int,
+    nextTrack: MediaMetadata?,
     palette: List<Color>,
     volume: Float,
     onVolumeChange: (Float) -> Unit,
@@ -97,7 +98,7 @@ fun OriginalExpandedPlayer(
     )
     val background = palette.firstOrNull() ?: Color(0xFF202020)
     val edgeToEdge = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    val next = queueWindows.getOrNull(currentIndex + 1)?.mediaItem?.metadata
+    val next = nextTrack
 
     BoxWithConstraints(modifier = modifier.fillMaxSize().background(Color.Black)) {
         val coverSide = (maxWidth - 48.dp).coerceAtMost((maxHeight - 520.dp).coerceAtLeast(140.dp))
@@ -155,7 +156,7 @@ fun OriginalExpandedPlayer(
                 carousel = carousel,
                 actions = actions,
                 queueWindows = queueWindows,
-                currentIndex = currentIndex,
+                nextTrack = nextTrack,
                 width = maxWidth,
                 height = maxHeight,
                 volume = volume,
