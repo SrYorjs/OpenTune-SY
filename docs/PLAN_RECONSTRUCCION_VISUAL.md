@@ -56,8 +56,9 @@ La aceptación de una fase exige **copiar el código real, conectar datos y acci
 - [x] Fase 01: cimientos visuales originales integrados y verificados mediante tests, lint y APK universal.
 - [x] Fase 02: navegación inferior, vidrio, indicador de descargas, cápsula mini y distribución horizontal originales conectados a la infraestructura existente; validación automatizada en ejecución.
 - [x] Fase 03: Inicio activado con sus tres distribuciones, carrusel, ruleta Gacha, Canvas, datos y rutas reales. Suite automatizada aprobada en GitHub Actions; validación visual en dispositivo todavía pendiente.
-- [ ] Fase 04: Buscar y resultados originales activados, con CI y prueba de dispositivo pendientes de cierre.
-- [ ] Fases 05–10: pendientes. La pantalla ampliada del reproductor y su transición de portada pertenecen a la fase 06.
+- [x] Fase 04: Buscar y resultados originales activados; CI con tests, lint y APK aprobados en la ejecución 42746516408. Comprobación de dispositivo pendiente.
+- [ ] Fase 05: portada, cuadrículas y listas de Biblioteca activadas; adaptación de Local/Caché/Importados, pantallas de detalle y pruebas de dispositivo pendientes.
+- [ ] Fases 06–10: pendientes. La pantalla ampliada del reproductor y su transición de portada pertenecen a la fase 06.
 
 **Prohibido:** añadir pantallas de apariencia semejante, renombrar un tema vacío como terminado, inventar proveedores, romper los enlaces a la VPS o realizar fusiones automáticas a otras ramas.
 
@@ -124,3 +125,13 @@ La aceptación de una fase exige **copiar el código real, conectar datos y acci
 - `MainActivitySearchBar` abandona el overlay visual anterior: el doble toque abre la búsqueda original con foco y la ruta de resultados ya no queda cubierta por la barra antigua.
 - Verificaciones pendientes al actualizar este documento: aprobación definitiva de tests, lint y APK universal; validación física del desplazamiento, las transiciones, teclado, vidrio y estado de la mini barra.
 - Diferencias no cerradas: la consulta de sugerencias se sirve desde la búsqueda unificada disponible, no desde un segundo motor; el menú contextual y los gestos especiales de las filas de resultados aún deben contrastarse con las acciones originales y la biblioteca real. No se declaran como trasplantados por el mero hecho de existir las tarjetas.
+
+
+## Operación 05 · Biblioteca, álbumes, artistas y playlists
+
+- `ui/visual/library/LibraryIndex.kt`, `LibraryDesign.kt`, `LibraryScaffold.kt`, `LibraryCardGrid.kt`, `LibraryEntityListScreen.kt`, `LibraryGridScreen.kt` y `LibraryPlayControls.kt` proceden del código visual original, con paquetes y dependencias ajustados; trasladan vidrio colapsable, tarjetas, portadas, controles, listas alfabéticas y rail multiescritura.
+- `OriginalLibraryHomeScreen.kt` reemplaza el contenido de la pestaña Biblioteca, pero deja `LibraryScreen.kt` como respaldo sin fusionar su presentación. Los datos siguen llegando de `MusicDatabase` y `LibraryMixViewModel`, con canciones, álbumes, artistas y playlists existentes; accesos a canciones guardadas, favoritos y añadidos recientemente.
+- Las acciones de reproducción invocan `PlayerConnection.playQueue` y `ListQueue` existentes; las pulsaciones prolongadas abren `SongMenu`, `PlaylistMenu`, `AlbumMenu` o `ArtistMenu`. La creación de listas reutiliza `CreatePlaylistDialog` desde la píldora original de gestión, sin segundo motor musical.
+- `OriginalLibraryCategoryScreen.kt` registra `library/{category}` para `songs`, `playlists`, `artists`, `albums` y `added`. Canciones, artistas y playlists reutilizan la lista original con búsqueda y rail; álbumes y recientes usan la cuadrícula original. Los detalles existentes `album/`, `artist/` y `local_playlist/` conservan sus rutas y servicios, pero sus diseños secundarios completos todavía deben trasplantarse.
+- No se crean fichas vacías de elementos fijados ni servicios importados: el backend de importación y sincronización detallada del origen no existe en la rama actual y debe conectarse de verdad antes de presentar sus pestañas. La operación 05 no se considera cerrada mientras falten Local, Caché, Importados, gestos originales de subpantallas y pruebas en teléfono.
+- Verificación pendiente: suite de tests, lint y APK universal en el commit definitivo, además de pruebas manuales de desplazamiento, gestos, portadas, colas, menús y vistas de detalle.
