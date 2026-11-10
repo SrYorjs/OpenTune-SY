@@ -171,6 +171,7 @@ import com.arturo254.opentune.extensions.metadata
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.ui.player.state.PlayerStateInput
 import com.arturo254.opentune.ui.player.state.rememberPlayerState
+import com.arturo254.opentune.ui.visual.player.OriginalExpandedPlayer
 import com.arturo254.opentune.ui.player.preferences.rememberPlayerPresentationPreferences
 import com.arturo254.opentune.ui.component.BottomSheet
 import com.arturo254.opentune.ui.component.BottomSheetState
@@ -223,6 +224,7 @@ fun BottomSheetPlayer(
     val playerConnection = LocalPlayerConnection.current ?: return
     val playerActions = rememberPlayerActions(playerConnection)
 
+    val (useOriginalExpandedPlayer) = rememberPreference(booleanPreferencesKey("originalExpandedPlayer"), true)
     val presentation = rememberPlayerPresentationPreferences()
     val playerDesignStyle = presentation.designStyle
     val playerBackground = presentation.backgroundStyle
@@ -715,7 +717,7 @@ fun BottomSheetPlayer(
             )
         }
 
-        if (!state.isCollapsed && resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop) {
+        if (!useOriginalExpandedPlayer && !state.isCollapsed && resolvePlayerLayout(playerDesignStyle, false).hasSharedBackdrop) {
             if (activePlayerGlass) {
                 PlayerArtworkAtmosphere(
                     artworkUrl = playerVisuals.artworkUrl,
@@ -800,6 +802,40 @@ fun BottomSheetPlayer(
             )
         }
 
+        if (useOriginalExpandedPlayer) {
+            OriginalExpandedPlayer(
+                sheet = state,
+                player = playerConnection.player,
+                state = playerState,
+                track = enrichedMetadata,
+                actions = playerActions,
+                queueWindows = queueWindows,
+                currentIndex = currentWindowIndex,
+                palette = gradientColors,
+                onLyrics = { lyricsSheetState.expandSoft() },
+                onQueue = { queueSheetState.expandSoft() },
+                onMenu = {
+                    enrichedMetadata?.let { metadata ->
+                        menuState.showPlayerPanelMenu(
+                            metadata = metadata,
+                            navController = navController,
+                            playerBottomSheetState = state,
+                            bottomSheetPageState = bottomSheetPageState,
+                        )
+                    }
+                },
+                onSongInfo = {
+                    enrichedMetadata?.let { metadata ->
+                        menuState.showPlayerPanelMenu(
+                            metadata = metadata,
+                            navController = navController,
+                            playerBottomSheetState = state,
+                            bottomSheetPageState = bottomSheetPageState,
+                        )
+                    }
+                },
+            )
+        } else {
         PlayerLayout(
             style = playerDesignStyle,
             applePortrait = {
@@ -1168,6 +1204,7 @@ fun BottomSheetPlayer(
                 )
             },
         )
+        }
 
         val queueOnBackgroundColor = visualSkin.queueOnBackgroundColor
         val queueSurfaceColor = visualSkin.queueSurfaceColor
