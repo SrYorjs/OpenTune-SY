@@ -107,6 +107,9 @@ internal fun LazyListScope.originalLocalTab(
 
 internal fun LazyListScope.originalCachedTab(
     songs: List<Song>,
+    albums: List<Album>,
+    artists: List<Artist>,
+    playlists: List<Playlist>,
     onOpen: (String) -> Unit,
     onPlay: (Song) -> Unit,
     onSongMenu: (Song) -> Unit,
@@ -122,11 +125,30 @@ internal fun LazyListScope.originalCachedTab(
             LibraryCardGrid(
                 entries = listOf(
                     LibraryCardEntry(
-                        stringResource(R.string.visual_library_cached),
+                        stringResource(R.string.songs),
                         songs.size,
                         songs.take(4).map { it.thumbnailUrl },
                         { onOpen("library/songs?shelf=cached") },
-                    )
+                    ),
+                    LibraryCardEntry(
+                        stringResource(R.string.playlists),
+                        playlists.size,
+                        playlists.take(4).flatMap { it.thumbnails.take(1) },
+                        { onOpen("library/playlists?shelf=cached") },
+                    ),
+                    LibraryCardEntry(
+                        stringResource(R.string.albums),
+                        albums.size,
+                        albums.take(4).map { it.thumbnailUrl },
+                        { onOpen("library/albums?shelf=cached") },
+                    ),
+                    LibraryCardEntry(
+                        stringResource(R.string.artists),
+                        artists.size,
+                        artists.take(4).map { it.thumbnailUrl },
+                        { onOpen("library/artists?shelf=cached") },
+                        roundCovers = true,
+                    ),
                 )
             )
         }
