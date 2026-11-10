@@ -42,6 +42,7 @@ import com.arturo254.opentune.db.entities.Song
 import com.arturo254.opentune.extensions.toMediaItem
 import com.arturo254.opentune.extensions.togglePlayPause
 import com.arturo254.opentune.playback.queues.ListQueue
+import com.arturo254.opentune.ui.component.CreatePlaylistDialog
 import com.arturo254.opentune.ui.component.LocalMenuState
 import com.arturo254.opentune.ui.menu.AlbumMenu
 import com.arturo254.opentune.ui.menu.ArtistMenu
@@ -52,6 +53,7 @@ import com.arturo254.opentune.ui.visual.library.LibraryCardEntry
 import com.arturo254.opentune.ui.visual.library.LibraryCardGrid
 import com.arturo254.opentune.ui.visual.library.LibraryEmptyState
 import com.arturo254.opentune.ui.visual.library.LibraryListRow
+import com.arturo254.opentune.ui.visual.library.LibraryManagePill
 import com.arturo254.opentune.ui.visual.library.LibraryRule
 import com.arturo254.opentune.ui.visual.library.LibraryScaffold
 import com.arturo254.opentune.ui.visual.library.LibrarySectionTitle
@@ -81,6 +83,7 @@ fun OriginalLibraryHomeScreen(
     val current = player?.mediaMetadata?.collectAsStateWithLifecycle()?.value
     val playing = player?.isPlaying?.collectAsStateWithLifecycle()?.value == true
     val (pureBlack) = rememberPreference(PureBlackKey, false)
+    var createPlaylist by rememberSaveable { mutableStateOf(false) }
     var query by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue())
     }
@@ -152,6 +155,7 @@ fun OriginalLibraryHomeScreen(
     BackHandler(ambientActive && query.text.isNotEmpty()) {
         query = TextFieldValue()
     }
+    if (createPlaylist) CreatePlaylistDialog(onDismiss = { createPlaylist = false })
     Box(Modifier.fillMaxSize()) {
         LibraryScaffold(
             title = stringResource(R.string.filter_library),
@@ -254,6 +258,13 @@ fun OriginalLibraryHomeScreen(
                     )
                 }
                 return@LibraryScaffold
+            }
+            item("playlist_create") {
+                LibraryManagePill(
+                    text = stringResource(R.string.visual_library_create_playlist),
+                    onClick = { createPlaylist = true },
+                )
+                Spacer(Modifier.height(16.dp))
             }
             item("categories") {
                 LibraryCardGrid(
