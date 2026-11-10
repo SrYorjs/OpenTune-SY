@@ -76,10 +76,12 @@ fun OriginalLibraryCategoryScreen(
     val shelfArtists = remember(artists, artistIds, shelf) {
         if (shelf == "all") artists else artists.filter { it.id in artistIds }
     }
-    val shelfPlaylists = remember(playlists, shelf) {
+    val playlistIdsInShelf by remember(shelfSongs) {
+        database.playlistIdsContainingSongs(shelfSongs.map { it.id })
+    }.collectAsStateWithLifecycle(emptyList())
+    val shelfPlaylists = remember(playlists, shelf, playlistIdsInShelf) {
         when (shelf) {
-            "local" -> playlists.filter { it.playlist.isLocal }
-            "cached" -> emptyList()
+            "local", "cached" -> playlists.filter { it.id in playlistIdsInShelf }
             "imported" -> playlists.filter { it.playlist.browseId != null }
             else -> playlists
         }
