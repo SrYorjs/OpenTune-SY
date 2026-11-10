@@ -145,6 +145,40 @@ class LocalAudioImporter @Inject constructor(
         LocalAudioImportResult(imported = imported, existing = existing, failed = failed)
     }
 
+    suspend fun removeImported(ids: List<String>): Int = withContext(Dispatchers.IO) {
+        val removed = mutableListOf<String>()
+        database.withTransaction {
+            ids.distinct().forEach { id ->
+                val entry = song(id).firstOrNull() ?: return@forEach
+                if (!entry.song.isLocal) return@forEach
+                val album = entry.song.albumId?.let { album(it).firstOrNull()?.album }
+                delete(entry.song)
+                if (album?.isLocal == true) {
+                    if (album.songCount <= 1) {
+                        delete(album)
+                    } else {
+                        update(
+                            album.copy(
+                                songCount = album.songCount - 1,
+                                duration = (album.duration - entry.song.duration.coerceAtLeast(0)).coerceAtLeast(0),
+                            )
+                        )
+                    }
+                }
+                removed += id
+            }
+        }
+        removed.forEach { id ->
+            runCatching {
+                context.contentResolver.releasePersistableUriPermission(
+                    Uri.parse(id),
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                )
+            }
+        }
+        removed.size
+    }
+
     private fun digest(value: String): String =
         MessageDigest.getInstance("SHA-256")
             .digest(value.toByteArray(Charsets.UTF_8))
