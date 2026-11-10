@@ -10,4 +10,5 @@
     <string name="visual_library_albums_subtitle">Los álbumes que forman tu colección</string>
     <string name="visual_library_artists_subtitle">Los artistas que sigues y guardaste</string>
     <string name="visual_library_added_subtitle">Las canciones más recientes de tu colección</string>
+    <string name="visual_library_create_playlist">Crear playlist</string>
 </resources>
