@@ -70,6 +70,35 @@ class OriginalHomeIntegrationTest {
     }
 
     @Test
+    fun originalCarouselCanvasAndMusicRouletteHaveLiveIntegrations() {
+        val home = source("ui/screens/OriginalHomeScreen.kt")
+        val hero = source("ui/visual/component/OriginalHomeHero.kt")
+        val gacha = source("ui/visual/component/OriginalHomeGacha.kt")
+        val canvas = source("ui/visual/component/OriginalHomeCanvas.kt")
+        val feature = source("ui/visual/component/OriginalHomeFeatureCards.kt")
+        val tints = source("ui/visual/component/CoverTint.kt")
+        assertTrue(home.contains("gachaPool = songs.map { it.toMediaMetadata() }"))
+        assertTrue(home.contains("onGachaWinner = { winner ->"))
+        assertTrue(home.contains("player.playQueue("))
+        assertTrue(hero.contains("OriginalHomeGachaCard("))
+        assertTrue(hero.contains("OriginalHomeCanvas("))
+        assertTrue(gacha.contains("GachaPage("))
+        assertTrue(gacha.contains("createGachaMesh()"))
+        assertTrue(gacha.contains("R.raw.gacha_tick"))
+        assertTrue(gacha.contains("R.raw.gacha_win"))
+        assertTrue(gacha.contains("onWinner(won)"))
+        assertTrue(canvas.contains("AppleMusicCanvasProvider.getBySongArtist("))
+        assertTrue(canvas.contains("CanvasArtworkPlayer("))
+        assertTrue(feature.contains("OriginalCommunityPlaylistCard("))
+        assertTrue(feature.contains("OriginalAllTimeHitsCard("))
+        assertTrue(tints.contains("coverTintBackground("))
+        assertTrue(File(root.parentFile, "res/raw/gacha_tick.wav").isFile)
+        assertTrue(File(root.parentFile, "res/raw/gacha_win.wav").isFile)
+        assertFalse(gacha.contains("ExoPlayer.Builder("))
+        assertFalse(gacha.contains("mockSong"))
+    }
+
+    @Test
     fun noSecondPlayerProviderOrFakeSectionIsCreated() {
         val home = source("ui/screens/OriginalHomeScreen.kt")
         val detail = source("ui/screens/OriginalHomeSectionDetailScreen.kt")
