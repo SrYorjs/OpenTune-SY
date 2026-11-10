@@ -24,6 +24,7 @@ internal fun LazyListScope.originalLocalTab(
     playlists: List<Playlist>,
     importedFileCount: Int,
     onImport: () -> Unit,
+    onManage: () -> Unit,
     onOpen: (String) -> Unit,
     onPlay: (Song) -> Unit,
     onSongMenu: (Song) -> Unit,
@@ -100,7 +101,7 @@ internal fun LazyListScope.originalLocalTab(
         Spacer(Modifier.height(12.dp))
         LibraryManagePill(
             text = stringResource(R.string.visual_library_manage_local),
-            onClick = { onOpen("settings/storage") },
+            onClick = onManage,
         )
     }
 }
