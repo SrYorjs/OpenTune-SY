@@ -43,6 +43,10 @@ class CachePlaylistViewModel @Inject constructor(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             while (true) {
+                if (_cachedSongs.subscriptionCount.value == 0) {
+                    delay(1000)
+                    continue
+                }
                 val hideExplicit = context.dataStore.get(HideExplicitKey, false)
                 val cachedIds = playerCache.keys.toSet()
                 val downloadedIds = downloadCache.keys.toSet()
