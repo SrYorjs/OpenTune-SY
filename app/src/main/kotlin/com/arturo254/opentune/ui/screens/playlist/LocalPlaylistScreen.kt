@@ -146,7 +146,7 @@ import com.arturo254.opentune.ui.component.LocalMenuState
 import com.arturo254.opentune.ui.component.LiquidGlassIconButton
 import com.arturo254.opentune.ui.component.LiquidGlassPillButton
 import com.arturo254.opentune.ui.component.PlaylistMixSheet
-import com.arturo254.opentune.ui.component.SongListItem
+import com.arturo254.opentune.ui.visual.detail.OriginalDetailSongRow
 import com.arturo254.opentune.ui.component.SortHeader
 import com.arturo254.opentune.ui.menu.SelectionSongMenu
 import com.arturo254.opentune.ui.menu.SongMenu
@@ -872,7 +872,7 @@ Row(
                         }
 
                         val content: @Composable () -> Unit = {
-                            SongListItem(
+                            OriginalDetailSongRow(
                                 song = song.song,
                                 viewCountText =
                                     viewCounts[song.song.id]?.let { count -> formatCompactCount(count.toLong()) },
@@ -1002,7 +1002,7 @@ Row(
                         }
 
                         val content: @Composable () -> Unit = {
-                            SongListItem(
+                            OriginalDetailSongRow(
                                 song = songWrapper.item.song,
                                 viewCountText =
                                     viewCounts[songWrapper.item.song.id]?.let { count -> formatCompactCount(count.toLong()) },
