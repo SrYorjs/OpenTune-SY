@@ -1,7 +1,7 @@
 package com.arturo254.opentune.ui.screens.artist
 
 import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
-import com.arturo254.opentune.ui.screens.GalaxMediaHeader
+import com.arturo254.opentune.ui.visual.detail.OriginalLibraryDetailHeader
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -388,7 +388,8 @@ fun ArtistScreen(
             } else {
 
                 item(key = "header") {
-GalaxMediaHeader(
+OriginalLibraryDetailHeader(
+    listState = lazyListState,
     title = artistPage?.artist?.title ?: libraryArtist?.artist?.name ?: stringResource(R.string.unknown_artist),
     label = stringResource(R.string.galax_artist_label),
     artworkUrls = listOf(thumbnail),
