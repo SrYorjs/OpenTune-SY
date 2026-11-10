@@ -22,7 +22,10 @@ import com.arturo254.opentune.LocalDownloadUtil
 import com.arturo254.opentune.R
 import kotlinx.coroutines.flow.map
 
-fun isImportedFile(songId: String): Boolean = songId.startsWith("LOCAL_")
+fun isImportedFile(songId: String): Boolean =
+    songId.startsWith("LOCAL_") ||
+        songId.startsWith("content://") ||
+        songId.startsWith("file://")
 
 @Composable
 fun rememberOnDevice(songId: String?): Boolean {
