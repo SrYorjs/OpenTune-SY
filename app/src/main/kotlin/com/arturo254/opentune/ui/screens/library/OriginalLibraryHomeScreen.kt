@@ -54,6 +54,7 @@ import com.arturo254.opentune.ui.visual.library.LibraryCardGrid
 import com.arturo254.opentune.ui.visual.library.LibraryEmptyState
 import com.arturo254.opentune.ui.visual.library.LibraryListRow
 import com.arturo254.opentune.ui.visual.library.LibraryLocalImportCard
+import com.arturo254.opentune.ui.visual.library.LibraryLocalManageMenu
 import com.arturo254.opentune.ui.visual.library.LibraryManagePill
 import com.arturo254.opentune.ui.visual.library.LibraryRule
 import com.arturo254.opentune.ui.visual.library.LibraryScaffold
@@ -403,6 +404,17 @@ fun OriginalLibraryHomeScreen(
                         playlists = tabPlaylists,
                         importedFileCount = importedSongs.size,
                         onImport = importUi.openPicker,
+                        onManage = {
+                            menu.show {
+                                LibraryLocalManageMenu(
+                                    importedSongs = importedSongs,
+                                    running = importUi.running,
+                                    onImport = importUi.openPicker,
+                                    onRemove = importUi.remove,
+                                    onDismiss = menu::dismiss,
+                                )
+                            }
+                        },
                         onOpen = navController::navigate,
                         onPlay = playSong,
                         onSongMenu = songMenu,
