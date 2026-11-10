@@ -2,7 +2,7 @@ package com.arturo254.opentune.ui.screens.playlist
 
 import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import android.annotation.SuppressLint
-import com.arturo254.opentune.ui.screens.GalaxMediaHeader
+import com.arturo254.opentune.ui.visual.detail.OriginalLibraryDetailHeader
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -526,7 +526,9 @@ fun LocalPlaylistScreen(
                     if (!isSearching) {
 
                         item(key = "header") {
-GalaxMediaHeader(
+OriginalLibraryDetailHeader(
+    sharedElementKey = "playlist-" + playlist.id,
+    listState = lazyListState,
     title = playlist.playlist.name,
     label = stringResource(R.string.galax_playlist_label),
     artworkUrls = playlist.thumbnails,
