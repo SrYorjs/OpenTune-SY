@@ -199,6 +199,7 @@ fun NavGraphBuilder.navigationBuilder(
         val (pureBlack) = rememberPreference(PureBlackKey, false)
 
         OriginalSearchResultsScreen(
+            navController = navController,
             query = query,
             pureBlack = pureBlack,
         )
