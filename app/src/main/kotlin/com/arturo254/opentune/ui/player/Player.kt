@@ -1207,7 +1207,7 @@ fun BottomSheetPlayer(
         )
         }
 
-        if (useOriginalExpandedPlayer) {
+        val renderNativePlayer: @Composable (StudioPlayerStyle, Modifier) -> Unit = { nativeStyle, studioModifier ->
             OriginalExpandedPlayer(
                 sheet = state,
                 player = playerConnection.player,
@@ -1235,6 +1235,9 @@ fun BottomSheetPlayer(
                         )
                     }
                 },
+                onStyles = openPlayerStudio,
+                classic = nativeStyle == StudioPlayerStyle.CLASSIC,
+                modifier = studioModifier,
                 onSongInfo = {
                     enrichedMetadata?.let { metadata ->
                         bottomSheetPageState.show {
@@ -1243,6 +1246,9 @@ fun BottomSheetPlayer(
                     }
                 },
             )
+        }
+        if (useOriginalExpandedPlayer) {
+            renderNativePlayer(activeStudioStyle, Modifier.fillMaxSize().studioSheetLayer(studio))
         } else {
             Box(Modifier.fillMaxSize().studioSheetLayer(studio)) {
                 renderLegacyPlayer(playerDesignStyle)
