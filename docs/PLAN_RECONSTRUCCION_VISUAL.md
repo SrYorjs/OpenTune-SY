@@ -56,7 +56,8 @@ La aceptación de una fase exige **copiar el código real, conectar datos y acci
 - [x] Fase 01: cimientos visuales originales integrados y verificados mediante tests, lint y APK universal.
 - [x] Fase 02: navegación inferior, vidrio, indicador de descargas, cápsula mini y distribución horizontal originales conectados a la infraestructura existente; validación automatizada en ejecución.
 - [x] Fase 03: Inicio activado con sus tres distribuciones, carrusel, ruleta Gacha, Canvas, datos y rutas reales. Suite automatizada aprobada en GitHub Actions; validación visual en dispositivo todavía pendiente.
-- [ ] Fases 04–10: pendientes. La pantalla ampliada del reproductor y su transición de portada pertenecen a la fase 06.
+- [ ] Fase 04: Buscar y resultados originales activados, con CI y prueba de dispositivo pendientes de cierre.
+- [ ] Fases 05–10: pendientes. La pantalla ampliada del reproductor y su transición de portada pertenecen a la fase 06.
 
 **Prohibido:** añadir pantallas de apariencia semejante, renombrar un tema vacío como terminado, inventar proveedores, romper los enlaces a la VPS o realizar fusiones automáticas a otras ramas.
 
@@ -112,3 +113,14 @@ La aceptación de una fase exige **copiar el código real, conectar datos y acci
 **Diferencias condicionadas por el backend existente:** los canales propios de contenido comunitario, recomendaciones diarias y clasificaciones enriquecidas que la versión original obtiene mediante su `HomeViewModel` no se pueden declarar equivalentes cuando OpenTune-SY no dispone de esas señales. Se usan los datos y secciones reales disponibles, sin copiar proveedores ni crear resultados ficticios. El selector gráfico de estilos de Inicio se conectará desde Ajustes en la operación 09. La validación de composición, gestos y vídeo en un dispositivo físico sigue pendiente.
 
 **Criterio de verificación:** `testUniversalDebugUnitTest`, `lintUniversalDebug` y `assembleUniversalDebug` deben aprobarse en un mismo run correspondiente al commit final de esta operación.
+
+## Operación 04 · Buscar y resultados originales
+
+- Se traslada `SearchDesign.kt` como `ui/visual/search/OriginalSearchDesign.kt`, conservando los composables originales de barra Glass, colapso, campo, avatar, tarjetas Mood, encabezados, filas, carátulas y estados de carga; adaptaciones de paquete y dependencias de vidrio existentes.
+- `OriginalSearchScreen.kt` sustituye la pestaña de búsqueda previa. Conserva transición entre exploración y entrada activa, historial real, teclado y doble toque desde la navegación. No crea un motor de búsquedas paralelo: consulta `UniversalSearchViewModel` y abre `search/{query}`.
+- `MoodAndGenresViewModel` recupera el patrón original de cachear hasta dos carátulas por género con un semáforo de tres solicitudes, utilizando `YouTube.browse` existente. El backend vigente entrega una lista plana de géneros; por eso se preservan las tarjetas dobles originales, pero no se inventan encabezados de secciones no recibidos.
+- `OriginalSearchResultsScreen.kt` usa la composición Glass de resultados, categorías originales adaptadas a Todo, Canciones, Álbumes y Playlists, tarjeta principal y filas de la fuente. Las variantes se ordenan por `originalRecordingOptions`, y las acciones se conectan a `playSearchResults`, `playAudiusCollection` y `enqueueOffline` existentes.
+- Las pistas se agrupan mediante `groupSearchAlbums`; las playlists vienen de la búsqueda Audius que ya existía. No hay selector visible de proveedores, versiones, fuentes o artistas, ni resultados ficticios.
+- `MainActivitySearchBar` abandona el overlay visual anterior: el doble toque abre la búsqueda original con foco y la ruta de resultados ya no queda cubierta por la barra antigua.
+- Verificaciones pendientes al actualizar este documento: aprobación definitiva de tests, lint y APK universal; validación física del desplazamiento, las transiciones, teclado, vidrio y estado de la mini barra.
+- Diferencias no cerradas: la consulta de sugerencias se sirve desde la búsqueda unificada disponible, no desde un segundo motor; el menú contextual y los gestos especiales de las filas de resultados aún deben contrastarse con las acciones originales y la biblioteca real. No se declaran como trasplantados por el mero hecho de existir las tarjetas.
