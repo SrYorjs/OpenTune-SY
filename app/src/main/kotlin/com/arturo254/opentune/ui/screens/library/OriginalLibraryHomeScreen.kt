@@ -53,6 +53,7 @@ import com.arturo254.opentune.ui.visual.library.LibraryCardEntry
 import com.arturo254.opentune.ui.visual.library.LibraryCardGrid
 import com.arturo254.opentune.ui.visual.library.LibraryEmptyState
 import com.arturo254.opentune.ui.visual.library.LibraryListRow
+import com.arturo254.opentune.ui.visual.library.LibraryLocalImportCard
 import com.arturo254.opentune.ui.visual.library.LibraryManagePill
 import com.arturo254.opentune.ui.visual.library.LibraryRule
 import com.arturo254.opentune.ui.visual.library.LibraryScaffold
@@ -428,6 +429,23 @@ fun OriginalLibraryHomeScreen(
                 }
                 LibraryTab.All -> Unit
             }
+            item("all_import_banner") {
+                LibraryLocalImportCard(
+                    count = importedSongs.size,
+                    title = stringResource(R.string.visual_library_import),
+                    subtitle = stringResource(R.string.visual_library_import_subtitle),
+                    onClick = importUi.openPicker,
+                    modifier = Modifier.padding(horizontal = SearchHorizontalPadding),
+                )
+                Spacer(Modifier.height(16.dp))
+            }
+            item("playlist_create") {
+                LibraryManagePill(
+                    text = stringResource(R.string.visual_library_create_playlist),
+                    onClick = { createPlaylist = true },
+                )
+                Spacer(Modifier.height(16.dp))
+            }
             if (songs.isEmpty() && albums.isEmpty() && artists.isEmpty() && playlists.isEmpty()) {
                 item("empty_library") {
                     LibraryEmptyState()
@@ -471,13 +489,6 @@ fun OriginalLibraryHomeScreen(
                     LibraryRule()
                     Spacer(Modifier.height(16.dp))
                 }
-            }
-            item("playlist_create") {
-                LibraryManagePill(
-                    text = stringResource(R.string.visual_library_create_playlist),
-                    onClick = { createPlaylist = true },
-                )
-                Spacer(Modifier.height(16.dp))
             }
             item("categories") {
                 LibraryCardGrid(
