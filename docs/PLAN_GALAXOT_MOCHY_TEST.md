@@ -33,7 +33,7 @@ Cada número es una entrega delimitada. Si excede una sesión, se divide en subo
 | Operación | Trabajo | Criterio de cierre |
 | --- | --- | --- |
 | 00 | Crear rama limpia, fijar revisiones y registrar este contrato | Rama y plan publicados. Completada; sin cambios de interfaz |
-| 01 | Inventario completo de rutas, recursos, dependencias y variantes del origen; contratos de datos de destino | Mapa archivo origen → destino, SHA y lista de adaptaciones; todas las pantallas y estilos contabilizados |
+| 01 | Inventario completo de rutas, recursos, dependencias y variantes del origen; contratos de datos de destino | Completada como inventario estático: mapa archivo origen → destino, SHA y adaptaciones necesarias; ver INVENTARIO_OPERACION_01.md |
 | 02 | Dependencias de compilación, tipografías, iconos, recursos y tema originales | Recursos disponibles y compilación; sin rediseñar componentes |
 | 03 | Primitivas de superficies, desenfoque y movimiento originales; integración de Liquid Glass existente | Captura correcta del fondo, ajustes conservados y geometría original |
 | 04 | Montaje raíz original, navegación, pestañas y transiciones | AppNavigation y navegación reales activos; rutas trazadas desde MainActivity |
@@ -63,4 +63,6 @@ Cada número es una entrega delimitada. Si excede una sesión, se divide en subo
 
 ## Estado inicial de validación
 Solo se creó una rama desde un commit existente y se agregó documentación. No se compiló una app nueva ni se realizó una comparación visual en dispositivo.
-La siguiente entrega es la operación 01. Ninguna operación de interfaz se hereda como completada de las migraciones descartadas.
+La operación 01 quedó completada como inventario estático: [informe y anexos](INVENTARIO_OPERACION_01.md). La siguiente entrega es la operación 02. Ninguna operación de interfaz se hereda como completada de las migraciones descartadas.
+
+Dependencia descubierta en la operación 01: el minirreproductor, BottomSheetPlayer, selector y estilos comparten el montaje original. Trasladar sus dependencias antes de activar ese montaje; la operación 05 no se cerrará con sustitutos de las piezas de 11–14. Véase el orden de integración del inventario.
