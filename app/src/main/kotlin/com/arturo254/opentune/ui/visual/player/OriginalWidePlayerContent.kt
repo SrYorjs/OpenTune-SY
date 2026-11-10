@@ -58,7 +58,7 @@ fun OriginalWidePlayerContent(
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
-    val artworkSize = (height - 92.dp).coerceIn(148.dp, width * 0.39f)
+    val artworkSize = (height - 92.dp).coerceAtLeast(120.dp).coerceAtMost((width * 0.39f).coerceAtLeast(120.dp))
     val artPx = with(density) { artworkSize.toPx() }
     val next = queueWindows.getOrNull(currentIndex + 1)?.mediaItem?.metadata
 
