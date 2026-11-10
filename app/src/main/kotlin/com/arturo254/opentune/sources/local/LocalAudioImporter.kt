@@ -94,6 +94,15 @@ class LocalAudioImporter @Inject constructor(
                 )
                 database.withTransaction {
                     insert(media) { it.copy(isLocal = true) }
+                    artistByName(details.artist)?.let { artist ->
+                        update(
+                            artist.copy(
+                                isLocal = artist.isLocal || artist.id.startsWith("LA"),
+                                bookmarkedAt = artist.bookmarkedAt ?: now,
+                                thumbnailUrl = artist.thumbnailUrl ?: details.artwork,
+                            )
+                        )
+                    }
                     if (albumId != null) {
                         if (existingAlbum == null) {
                             insert(
