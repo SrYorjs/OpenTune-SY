@@ -36,6 +36,7 @@ enum class StudioPlayerStyle(
     ;
 
     val native: Boolean get() = legacy == null
+    val selectable: Boolean get() = this == FLAGSHIP || this == CLASSIC || legacy != null
     val editable: Boolean get() = false
 
     companion object {
