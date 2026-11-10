@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -50,7 +51,11 @@ fun OriginalLibraryCategoryScreen(
     val albums by viewModel.albums.collectAsStateWithLifecycle()
     val artists by viewModel.artists.collectAsStateWithLifecycle()
     val playlists by viewModel.playlists.collectAsStateWithLifecycle()
-    val cachedSongs by cacheViewModel.cachedSongs.collectAsStateWithLifecycle()
+    val cachedSongs by if (shelf == "cached") {
+        cacheViewModel.cachedSongs.collectAsStateWithLifecycle()
+    } else {
+        remember { mutableStateOf(emptyList<Song>()) }
+    }
     val spotify by spotifyViewModel.playlists.collectAsStateWithLifecycle()
     val downloads by LocalDownloadUtil.current.downloads.collectAsStateWithLifecycle()
     val pinned = rememberLibraryPins()
