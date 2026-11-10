@@ -82,6 +82,7 @@ fun OriginalExpandedPlayer(
     onLyrics: () -> Unit,
     onQueue: () -> Unit,
     onMenu: () -> Unit,
+    onStyles: () -> Unit,
     onSongInfo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -165,6 +166,7 @@ fun OriginalExpandedPlayer(
                 onLyrics = onLyrics,
                 onQueue = onQueue,
                 onMenu = onMenu,
+                onStyles = onStyles,
                 onSongInfo = onSongInfo,
             )
         } else {
@@ -197,7 +199,7 @@ fun OriginalExpandedPlayer(
                         canPrevious = state.canSkipPrevious,
                         canNext = state.canSkipNext,
                         actions = actions,
-                        onLongPress = onMenu,
+                        onLongPress = onStyles,
                     ),
             ) { url, childModifier ->
                 AsyncImage(
@@ -258,7 +260,7 @@ fun OriginalExpandedPlayer(
                         canPrevious = state.canSkipPrevious,
                         canNext = state.canSkipNext,
                         actions = actions,
-                        onLongPress = onMenu,
+                        onLongPress = onStyles,
                     ),
             ) {
                 CarouselPictures(
@@ -370,7 +372,7 @@ fun OriginalExpandedPlayer(
                 lyricPreview = lyricPreview,
                 onOpenLyrics = onLyrics,
                 onOpenQueue = onQueue,
-                onLongPress = onMenu,
+                onLongPress = onStyles,
                 modifier = Modifier.padding(horizontal = 24.dp),
             )
         }
