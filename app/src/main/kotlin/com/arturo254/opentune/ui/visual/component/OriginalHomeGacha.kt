@@ -139,6 +139,8 @@ private fun smoothstep(from: Float, to: Float, x: Float): Float {
 
 @Composable
 internal fun OriginalHomeGachaCard(
+    state: GachaState,
+    sounds: GachaSounds,
     pool: List<MediaMetadata>,
     pageOffset: () -> Float,
     wipeCurve: () -> Float,
@@ -148,12 +150,8 @@ internal fun OriginalHomeGachaCard(
     isPlaying: Boolean,
     onWinner: (MediaMetadata) -> Unit,
 ) {
-    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
-    val state = remember { GachaState() }
-    val sounds = remember { GachaSounds(context.applicationContext) }
-    DisposableEffect(sounds) { onDispose { sounds.release() } }
     LaunchedEffect(pool) {
         if (state.phase != GachaPhase.Idle) return@LaunchedEffect
         val available = pool.distinctBy { it.id }.size
@@ -294,7 +292,7 @@ private val GachaPointerColor = Color(0xFFF0908D)
 private val GachaPipColor = Color(0xFF3C3C3C)
 
 @Immutable
-private class GachaTint(val light: Color, val deep: Color)
+internal class GachaTint(val light: Color, val deep: Color)
 
 private val GachaDefaultTint = GachaTint(light = Color(0xFFDEA0AC), deep = Color(0xFF7C82B4))
 
@@ -465,10 +463,10 @@ private fun drawGachaMesh(
     canvas.drawRect(0f, 0f, width, height, paint)
 }
 
-private enum class GachaPhase { Idle, Rolling, Landed }
+internal enum class GachaPhase { Idle, Rolling, Landed }
 
 @Stable
-private class GachaState {
+internal class GachaState {
     var candidates by mutableStateOf<List<MediaMetadata>>(emptyList())
     var phase by mutableStateOf(GachaPhase.Idle)
     var result by mutableStateOf<MediaMetadata?>(null)
@@ -509,7 +507,7 @@ private fun reelDistance(index: Int, reel: Float, count: Int): Float {
     return d
 }
 
-private class GachaSounds(private val context: Context) {
+internal class GachaSounds(private val context: Context) {
     private var pool: SoundPool? = null
     private var tickSound = 0
     private var winSound = 0
