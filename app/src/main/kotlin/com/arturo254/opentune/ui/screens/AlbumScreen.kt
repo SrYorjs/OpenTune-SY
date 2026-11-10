@@ -3,6 +3,12 @@ package com.arturo254.opentune.ui.screens
 import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import com.arturo254.opentune.ui.component.LiquidGlassIconButton
 import com.arturo254.opentune.ui.visual.detail.OriginalLibraryDetailHeader
+import com.arturo254.opentune.ui.visual.component.GlassState
+import com.arturo254.opentune.ui.visual.component.glassRoot
+import com.arturo254.opentune.ui.visual.detail.DetailCollapsingTopBar
+import com.arturo254.opentune.ui.visual.detail.rememberDetailCollapseProgress
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -440,6 +446,14 @@ fun AlbumScreen(
     }
 
     val lazyListState = rememberLazyListState()
+    val originalDetailGlass = remember { GlassState() }
+    val originalDetailHeightPx = with(LocalDensity.current) {
+        (LocalConfiguration.current.screenHeightDp * 0.60f).dp.toPx()
+    }
+    val originalDetailMorph = rememberDetailCollapseProgress(
+        lazyListState,
+        headerHeightPx = originalDetailHeightPx,
+    ).morphProgress
 
     val showTopBarTitle by remember {
         derivedStateOf {
@@ -461,6 +475,7 @@ fun AlbumScreen(
 
         LazyColumn(
             state = lazyListState,
+            modifier = Modifier.glassRoot(originalDetailGlass, isActive = { originalDetailMorph > 0.01f }),
             contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
         ) {
             val albumWithSongs = albumWithSongs
