@@ -55,7 +55,7 @@ La aceptación de una fase exige **copiar el código real, conectar datos y acci
 - [x] Fase 00: crear rama a partir de la base limpia y registrar ruta de migración.
 - [x] Fase 01: cimientos visuales originales integrados y verificados mediante tests, lint y APK universal.
 - [x] Fase 02: navegación inferior, vidrio, indicador de descargas, cápsula mini y distribución horizontal originales conectados a la infraestructura existente; validación automatizada en ejecución.
-- [ ] Fase 03: Inicio original activado y enlazado a los datos existentes; incluidas las animaciones, Canvas y ruleta originales. Pendiente resultado del último workflow y validación visual manual.
+- [x] Fase 03: Inicio activado con sus tres distribuciones, carrusel, ruleta Gacha, Canvas, datos y rutas reales. Suite automatizada aprobada en GitHub Actions; validación visual en dispositivo todavía pendiente.
 - [ ] Fases 04–10: pendientes. La pantalla ampliada del reproductor y su transición de portada pertenecen a la fase 06.
 
 **Prohibido:** añadir pantallas de apariencia semejante, renombrar un tema vacío como terminado, inventar proveedores, romper los enlaces a la VPS o realizar fusiones automáticas a otras ramas.
@@ -93,7 +93,7 @@ La aceptación de una fase exige **copiar el código real, conectar datos y acci
 - Los modos `MOCHYY`, `LISTEN_NOW` y `HOP_IN` son composiciones separadas del original, ligadas a la preferencia `homeStyle`; la selección desde ajustes se completará al trasladar Ajustes.
 - Las secciones de reproducción frecuente, historial y favoritos consumen `MusicDatabase`; los accesos directos, listas, contenidos remotos y tendencias usan `HomeViewModel`. Menús y colas utilizan los servicios existentes.
 - `OriginalHomeSectionDetailScreen.kt` registra la ruta `section_detail/{sectionId}` que faltaba en el grafo de OpenTune-SY. Usa las tarjetas, búsqueda, gestos y colas existentes y mantiene la navegación sin pantallas fingidas.
-- Se conservan los componentes visuales del origen; la ruleta Gacha y el vídeo Canvas del carrusel original requieren adaptar recursos y datos de otros módulos antes de poder afirmar equivalencia total. No se declara que estén implementados.
+- La ruleta Gacha, Canvas y sus recursos originales están integrados y se alimentan de canciones reales. Los canales adicionales de contenido no disponibles en el backend siguen identificados como diferencias; no se inventan resultados.
 - Validación exigida para cierre técnico: tests, lint y APK universal de la rama, más verificación manual de toques y diseño en dispositivo.
 
 ## Operación 03 · Pantalla Inicio
@@ -106,7 +106,7 @@ La aceptación de una fase exige **copiar el código real, conectar datos y acci
 4. `OriginalHomeHero.kt` conserva el paginador, desenfoques progresivos superior e inferior, atenuación original, zoom y desvanecimiento por desplazamiento, curva de gesto y reproducción automática de la fuente. `OriginalHomeCanvas.kt` reutiliza el proveedor visual Apple Music y el componente Canvas existentes; deja la carátula estática si no se dispone de vídeo o la red es de consumo medido. Solo construye el reproductor Canvas en una tarjeta activa.
 5. `OriginalHomeGacha.kt` proviene del bloque de ruleta original de `HeroCarousel.kt`, separado por su tamaño y complejidad. Incluye malla AGSL, ruta alternativa sin shader en dispositivos antiguos, desplazamiento tridimensional, extracción cromática, táctiles, movimientos de carátulas, vibración y sonidos originales `gacha_tick.wav` / `gacha_win.wav`. El ganador procede de canciones reales y se reproduce con el `ListQueue` / `PlayerConnection` ya instalado.
 6. Los apartados de escuchas recientes, más reproducidas, historial, marcadores rápidos, favoritos olvidados, playlists, artistas, catálogo y vídeos disponibles se conectan al `HomeViewModel` y las rutas y menús vigentes. Se reservan las tarjetas de vídeo para filas con artículos reales identificados como vídeos o conciertos; no se muestran títulos ni ejemplos inventados.
-7. `OriginalHomeSectionDetailScreen.kt` enlaza las secciones con datos, menús, navegación y cola reales. El Inicio utiliza las mismas funciones de reproducción y resolución de fuentes musicales que antes del trasplante.
+7. `OriginalHomeSectionDetailScreen.kt` enlaza las secciones con datos, menús, navegación y cola reales. El Inicio utiliza las mismas funciones de reproducción y resolución de fuentes musicales que antes del trasplante. Las pulsaciones prolongadas de playlists locales abren `PlaylistMenu`, sin acciones vacías.
 8. Las filas utilizan la precarga anidada y el desplazamiento con ajuste de las cuadrículas originales. `OriginalHomeIntegrationTest.kt` verifica los puntos de integración, dependencias, recursos y ausencia de motores de audio paralelos.
 
 **Diferencias condicionadas por el backend existente:** los canales propios de contenido comunitario, recomendaciones diarias y clasificaciones enriquecidas que la versión original obtiene mediante su `HomeViewModel` no se pueden declarar equivalentes cuando OpenTune-SY no dispone de esas señales. Se usan los datos y secciones reales disponibles, sin copiar proveedores ni crear resultados ficticios. El selector gráfico de estilos de Inicio se conectará desde Ajustes en la operación 09. La validación de composición, gestos y vídeo en un dispositivo físico sigue pendiente.
