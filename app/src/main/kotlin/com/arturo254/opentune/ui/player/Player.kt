@@ -811,6 +811,7 @@ fun BottomSheetPlayer(
                 actions = playerActions,
                 queueWindows = queueWindows,
                 currentIndex = currentWindowIndex,
+                nextTrack = nextUpMetadata,
                 palette = gradientColors,
                 volume = playerVolume.value,
                 onVolumeChange = { newVolume ->
