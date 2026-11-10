@@ -11,4 +11,27 @@
     <string name="visual_library_artists_subtitle">Los artistas que sigues y guardaste</string>
     <string name="visual_library_added_subtitle">Las canciones más recientes de tu colección</string>
     <string name="visual_library_create_playlist">Crear playlist</string>
+    <string name="visual_library_tab_all">Todo</string>
+    <string name="visual_library_tab_local">Local</string>
+    <string name="visual_library_tab_cached">Caché</string>
+    <string name="visual_library_tab_imported">Importados</string>
+    <string name="visual_library_import">Importar música</string>
+    <string name="visual_library_manage_local">Gestionar música local</string>
+    <string name="visual_library_manage_cache">Gestionar caché</string>
+    <string name="visual_library_manage_imported">Gestionar importaciones</string>
+    <string name="visual_library_downloaded">Descargas</string>
+    <string name="visual_library_cached">Canciones en caché</string>
+    <string name="visual_library_local_files">Archivos del dispositivo</string>
+    <string name="visual_library_synced_playlists">Listas sincronizadas</string>
+    <string name="visual_library_no_local">No hay música local todavía</string>
+    <string name="visual_library_no_cached">Todavía no hay canciones completas en caché</string>
+    <string name="visual_library_no_imported">No hay música importada o sincronizada</string>
+    <string name="visual_library_offline">Música sin conexión</string>
+    <string name="visual_library_import_folder">Explorar archivos de música</string>
+    <string name="visual_library_pinned">Fijados</string>
+    <string name="visual_library_pin">Fijar en Biblioteca</string>
+    <string name="visual_library_unpin">Quitar de fijados</string>
+    <string name="visual_library_imported_music">Música importada</string>
+    <string name="visual_library_youtube_playlists">Playlists sincronizadas</string>
+    <string name="visual_library_spotify_playlists">Playlists de Spotify</string>
 </resources>
