@@ -3,6 +3,12 @@ package com.arturo254.opentune.ui.visual.library
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.LibraryPinnedEntitiesKey
 import com.arturo254.opentune.utils.rememberPreference
 import java.net.URLDecoder
@@ -63,4 +69,24 @@ class LibraryPinsState(private val storage: MutableState<String>) {
 fun rememberLibraryPins(): LibraryPinsState {
     val storage = rememberPreference(LibraryPinnedEntitiesKey, "")
     return remember(storage) { LibraryPinsState(storage) }
+}
+
+@Composable
+fun LibraryPinMenuItem(
+    state: LibraryPinsState,
+    kind: LibraryPinKind,
+    id: String,
+    onDismiss: () -> Unit,
+) {
+    LibraryManagePill(
+        text = stringResource(
+            if (state.contains(kind, id)) R.string.visual_library_unpin
+            else R.string.visual_library_pin,
+        ),
+        onClick = {
+            state.toggle(kind, id)
+            onDismiss()
+        },
+    )
+    Spacer(Modifier.height(12.dp))
 }
