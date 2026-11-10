@@ -10,7 +10,6 @@ import com.arturo254.opentune.ui.visual.studio.LocalStyleInteractive
 import com.arturo254.opentune.ui.visual.studio.whileStyleInteractive
 import com.arturo254.opentune.ui.visual.theme.InterFontFamily
 import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.gestures.detectTapGestures
 import android.media.AudioManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -287,7 +286,7 @@ private fun IpodPageContent(
 }
 
 @Composable
-private fun Chevron(geometry: IpodGeometry, sheet: BottomSheetState?, preview: Boolean, density: Density) {
+private fun Chevron(geometry: IpodGeometry, sheet: BottomSheetState, preview: Boolean, density: Density) {
     val interactive = LocalStyleInteractive.current
     val ink = LocalIpodLook.current.body.chevron
     val chevron = geometry.chevron ?: return
