@@ -92,4 +92,37 @@ class Operation05LibraryIntegrationTest {
         assertTrue(source("ui/screens/playlist/LocalPlaylistScreen.kt").contains("SelectionSongMenu("))
         assertTrue(source("ui/screens/artist/ArtistScreen.kt").contains("Intent.ACTION_SEND"))
     }
+    @Test
+    fun localManageRemovesOnlyImportedRecordsAfterConfirmation() {
+        val importer = source("sources/local/LocalAudioImporter.kt")
+        val manager = source("ui/visual/library/LibraryLocalManageMenu.kt")
+        val library = source("ui/screens/library/OriginalLibraryHomeScreen.kt")
+        assertTrue(importer.contains("suspend fun removeImported("))
+        assertTrue(importer.contains("if (!entry.song.isLocal)"))
+        assertTrue(importer.contains("delete(entry.song)"))
+        assertTrue(importer.contains("releasePersistableUriPermission("))
+        assertFalse(importer.contains(".deleteRecursively()"))
+        assertTrue(manager.contains("LocalManagePage.CONFIRMATION"))
+        assertTrue(manager.contains("onRemove(toRemove)"))
+        assertTrue(library.contains("LibraryLocalManageMenu("))
+    }
+
+    @Test
+    fun detailRowsAndLocalMusicBadgesUseOriginalVisualComponents() {
+        val rows = source("ui/visual/detail/PlaylistTrackRow.kt")
+        val marks = source("ui/visual/component/OnDeviceMarks.kt")
+        assertTrue(rows.contains("fun PlaylistTrackRow("))
+        assertTrue(rows.contains("selectedRowBand"))
+        assertTrue(rows.contains("OnDeviceMarks("))
+        assertTrue(rows.contains("externalGestures = true"))
+        assertTrue(marks.contains("songId.startsWith(\"content://\")"))
+        listOf(
+            "ui/screens/AlbumScreen.kt",
+            "ui/screens/artist/ArtistScreen.kt",
+            "ui/screens/playlist/LocalPlaylistScreen.kt",
+        ).forEach { path ->
+            assertTrue(source(path).contains("OriginalDetailSongRow("))
+        }
+    }
+
 }
