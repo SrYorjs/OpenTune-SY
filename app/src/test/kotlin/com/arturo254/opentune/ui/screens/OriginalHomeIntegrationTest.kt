@@ -105,6 +105,8 @@ class OriginalHomeIntegrationTest {
         assertTrue(home.contains("LocalPlayerConnection.current"))
         assertTrue(home.contains("viewModel.playSourceVariant("))
         assertTrue(detail.contains("player?.playQueue("))
+        assertTrue(home.contains("is Playlist -> PlaylistMenu("))
+        assertFalse(home.contains("is Playlist -> {}"))
         assertFalse(home.contains("ExoPlayer.Builder("))
         assertFalse(detail.contains("ExoPlayer.Builder("))
         assertFalse(home.contains("mockSong"))
