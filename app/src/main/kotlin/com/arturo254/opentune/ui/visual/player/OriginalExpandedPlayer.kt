@@ -30,12 +30,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
@@ -51,6 +52,10 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.allowHardware
+import coil3.request.transformations
+import coil3.size.Size
 import com.arturo254.opentune.R
 import com.arturo254.opentune.ui.visual.component.LocalMiniPillFrame
 import com.arturo254.opentune.extensions.metadata
@@ -81,6 +86,7 @@ fun OriginalExpandedPlayer(
     val carousel = rememberOriginalSongCarousel(queueWindows, currentIndex, track)
     val handle = rememberPlayerHandleState()
     val density = LocalDensity.current
+    val context = LocalContext.current
     val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navigationBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val open = sheet.progress.coerceIn(0f, 1f)
@@ -114,11 +120,19 @@ fun OriginalExpandedPlayer(
             fallbackUrl = state.artworkUrl,
             modifier = Modifier.fillMaxSize(),
         ) { url ->
+            val blurredArtwork = remember(context, url) {
+                ImageRequest.Builder(context)
+                    .data(url?.resize(96, 96))
+                    .allowHardware(false)
+                    .transformations(BackdropBlurTransformation(radiusPx = 6))
+                    .size(Size(96, 96))
+                    .build()
+            }
             AsyncImage(
-                model = url?.resize(260, 260),
+                model = blurredArtwork,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize().blur(66.dp).graphicsLayer { alpha = 0.46f },
+                modifier = Modifier.fillMaxSize().graphicsLayer { alpha = 0.46f },
             )
         }
         Box(
