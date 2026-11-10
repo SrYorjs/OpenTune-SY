@@ -250,6 +250,7 @@ fun OriginalHomeScreen(
                 isCurrent = latestSongId == song.id,
                 isPlaying = playing,
                 onOpen = { play(song, songs) },
+                durationSec = song.toMediaMetadata().duration,
                 canvasEligible = true,
             )
         }
@@ -264,6 +265,7 @@ fun OriginalHomeScreen(
                 isPlaying = playing,
                 onOpen = { playRemote(song) },
                 album = song.album?.name,
+                durationSec = song.duration,
                 canvasEligible = true,
             )
         }
