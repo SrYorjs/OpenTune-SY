@@ -118,12 +118,19 @@ fun NavGraphBuilder.navigationBuilder(
         }
     }
     composable(
-        route = "library/{category}",
-        arguments = listOf(navArgument("category") { type = NavType.StringType }),
+        route = "library/{category}?shelf={shelf}",
+        arguments = listOf(
+            navArgument("category") { type = NavType.StringType },
+            navArgument("shelf") {
+                type = NavType.StringType
+                defaultValue = "all"
+            },
+        ),
     ) { entry ->
         OriginalLibraryCategoryScreen(
             navController = navController,
             category = entry.arguments?.getString("category").orEmpty(),
+            shelf = entry.arguments?.getString("shelf") ?: "all",
         )
     }
     composable("history") {
