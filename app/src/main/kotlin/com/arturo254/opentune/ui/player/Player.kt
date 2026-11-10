@@ -1289,6 +1289,34 @@ fun BottomSheetPlayer(
             lyricsSyncOffset = lyricsSyncOffset,
             modifier = modifier,
         )
+        PlayerSelectorOverlay(
+            studio = studio,
+            styles = studioStyles,
+            onSet = { index, velocity ->
+                studioStyles.getOrNull(index)?.takeIf { it.selectable }?.let { style ->
+                    val restyled = style != activeStudioStyle
+                    if (style.legacy != null) {
+                        setLegacyPlayerDesign(style.legacy)
+                        setUseOriginalExpandedPlayer(false)
+                    } else {
+                        setStudioSelectedName(style.name)
+                        setUseOriginalExpandedPlayer(true)
+                    }
+                    studio.settleOn(index, restyled, velocity)
+                }
+            },
+            onEdit = {},
+            preview = { style ->
+                Box(Modifier.fillMaxSize().studioPreviewInert()) {
+                    if (style.legacy != null) {
+                        renderLegacyPlayer(style.legacy)
+                    } else {
+                        renderNativePlayer(style, Modifier.fillMaxSize())
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxSize(),
+        )
         }
     }
 }
