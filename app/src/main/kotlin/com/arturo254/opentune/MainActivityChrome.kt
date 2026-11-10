@@ -240,7 +240,6 @@ import com.arturo254.opentune.ui.screens.Screens
 import com.arturo254.opentune.ui.screens.buildLoginRoute
 import com.arturo254.opentune.ui.screens.musicrecognition.MusicRecognitionRoute
 import com.arturo254.opentune.ui.screens.navigationBuilder
-import com.arturo254.opentune.ui.screens.search.UniversalSearchScreen
 import com.arturo254.opentune.ui.screens.settings.DarkMode
 import com.arturo254.opentune.ui.screens.settings.DiscordPresenceManager
 import com.arturo254.opentune.ui.screens.settings.NavigationTab
@@ -571,26 +570,18 @@ internal fun MainActivitySearchBar(
     pureBlack: Boolean,
     navigationState: MainActivityNavigationState,
 ) {
-    val active = navigationState.active
-    val route = navigationState.navBackStackEntry?.destination?.route
-    if (active || route?.startsWith("search/") == true) {
-        com.arturo254.opentune.ui.screens.search.PrismSearchBar(
-            query = navigationState.query,
-            onQueryChange = navigationState.onQueryChange,
-            onSearch = navigationState.onSearch,
-            active = active,
-            onActiveChange = navigationState.onActiveChange,
-            onBack = {
-                if (active) navigationState.onActiveChange(false)
-                else navigationState.navController.navigateUp()
-            },
-            focusRequester = navigationState.searchBarFocusRequester,
+    if (navigationState.active) {
+        com.arturo254.opentune.ui.screens.search.OriginalSearchScreen(
+            navController = navigationState.navController,
             pureBlack = pureBlack,
-        ) {
-            UniversalSearchScreen(query = navigationState.query.text, pureBlack = pureBlack, embedded = true)
-        }
+            ambientActive = true,
+            startFocused = true,
+            onSearchCommitted = { navigationState.onActiveChange(false) },
+            onDismiss = { navigationState.onActiveChange(false) },
+        )
     }
 }
+
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterial3ExpressiveApi::class,
