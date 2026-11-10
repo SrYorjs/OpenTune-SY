@@ -69,13 +69,16 @@ class GalaxAetherAtlasRebuildTest {
 
     @Test
     fun searchHasItsOwnCompositionWithoutReusingTheHomeFeature() {
-        val screen = source("ui/screens/PrismDiscoveryScreen.kt")
+        val screen = source("ui/screens/search/OriginalSearchScreen.kt")
+        val design = source("ui/visual/search/OriginalSearchDesign.kt")
         val host = source("ui/screens/GalaxMainPages.kt")
-        assertTrue(host.contains("GalaxDiscoverScreen("))
-        assertTrue(screen.contains("PrismScreenFrame("))
-        assertTrue(screen.contains("PrismGenreTile("))
-        assertTrue(screen.contains("charts_screen"))
-        assertTrue(screen.contains("new_release"))
+        assertTrue(host.contains("OriginalSearchScreen("))
+        assertTrue(screen.contains("SearchGlassTopBar("))
+        assertTrue(screen.contains("MoodTile("))
+        assertTrue(screen.contains("UniversalSearchViewModel"))
+        assertTrue(screen.contains("viewModel.requestCovers("))
+        assertTrue(design.contains("SearchField("))
+        assertTrue(design.contains("ProgressiveGlassBackground("))
         assertFalse(screen.contains("PulseFeature("))
         assertFalse(screen.contains("ObservatoryLens("))
     }
