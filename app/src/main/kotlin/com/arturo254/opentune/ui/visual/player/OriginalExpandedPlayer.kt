@@ -50,6 +50,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import coil3.compose.AsyncImage
 import com.arturo254.opentune.R
+import com.arturo254.opentune.ui.visual.component.LocalMiniPillFrame
 import com.arturo254.opentune.extensions.metadata
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.ui.component.BottomSheetState
@@ -92,6 +93,16 @@ fun OriginalExpandedPlayer(
     BoxWithConstraints(modifier = modifier.fillMaxSize().background(Color.Black)) {
         val coverSide = (maxWidth - 48.dp).coerceAtMost((maxHeight - 520.dp).coerceAtLeast(140.dp))
         val coverSidePx = with(density) { coverSide.toPx() }
+        val miniFrame = LocalMiniPillFrame.current
+        val placement = originalCoverPlacement(
+            progress = open,
+            fullWidth = coverSide,
+            fullCenterX = maxWidth / 2f,
+            fullCenterY = statusTop + 47.dp + coverSide / 2f,
+            miniCenterX = miniFrame.start + 32.dp,
+            miniCenterY = 32.dp,
+            growLate = true,
+        )
         val gapPx = with(density) { 20.dp.toPx() }
         CarouselCrossfade(
             carousel = carousel,
@@ -127,11 +138,12 @@ fun OriginalExpandedPlayer(
                 modifier = Modifier
                     .size(coverSide)
                     .graphicsLayer {
-                        val reveal = ((open - 0.18f) / 0.82f).coerceIn(0f, 1f)
-                        scaleX = (0.72f + reveal * 0.28f) * playingMagnification
-                        scaleY = (0.72f + reveal * 0.28f) * playingMagnification
-                        translationY = (1f - reveal) * coverSidePx * 0.30f
-                        alpha = ((open - 0.04f) / 0.7f).coerceIn(0f, 1f)
+                        val magnify = 1f + (playingMagnification - 1f) * open
+                        scaleX = placement.scale * magnify
+                        scaleY = placement.scale * magnify
+                        translationX = placement.translationX.toPx()
+                        translationY = placement.translationY.toPx()
+                        alpha = (open / 0.52f).coerceIn(0f, 1f)
                     }
                     .clip(RoundedCornerShape(22.dp))
                     .pointerInput(onMenu, actions, state.trackId) {
