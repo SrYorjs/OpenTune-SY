@@ -261,7 +261,7 @@ internal fun LazyListScope.originalImportedTab(
     item("imported_manage") {
         Spacer(Modifier.height(20.dp))
         LibraryManagePill(
-            text = stringResource(R.string.visual_library_manage_imported),
+            text = stringResource(R.string.visual_library_manage_sync),
             onClick = onSync,
         )
     }
