@@ -156,7 +156,6 @@ fun OriginalExpandedPlayer(
                 track = track,
                 carousel = carousel,
                 actions = actions,
-                queueWindows = queueWindows,
                 nextTrack = nextTrack,
                 lyricPreview = lyricPreview,
                 width = maxWidth,
