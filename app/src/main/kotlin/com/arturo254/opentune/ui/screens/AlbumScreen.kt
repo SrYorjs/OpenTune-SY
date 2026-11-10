@@ -976,6 +976,7 @@ Row(
             )
         }
 
+        if (selection) {
         TopAppBar(
             modifier = Modifier.align(Alignment.TopCenter),
             colors = topAppBarColors,
@@ -1061,6 +1062,18 @@ Row(
                 }
             }
         )
+        } else {
+            DetailCollapsingTopBar(
+                progress = originalDetailMorph,
+                glassState = originalDetailGlass,
+                thumbnailUrl = albumWithSongs?.album?.thumbnailUrl,
+                title = albumWithSongs?.album?.title.orEmpty(),
+                accentColor = gradientColors.firstOrNull(),
+                onBackClick = { navController.navigateUp() },
+                onBackLongClick = { navController.backToMain() },
+                modifier = Modifier.align(Alignment.TopCenter),
+            )
+        }
 
         if (showQualityDialog) {
             QualitySelectionDialog(
