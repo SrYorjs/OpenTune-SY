@@ -412,6 +412,7 @@ fun LocalPlaylistScreen(
     }
     val lazyListState = rememberLazyListState()
     val originalDetailGlass = remember { GlassState() }
+    val originalCoverBounds = remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
     val originalDetailHeightPx = with(LocalDensity.current) {
         (LocalConfiguration.current.screenHeightDp * 0.60f).dp.toPx()
     }
@@ -542,6 +543,7 @@ fun LocalPlaylistScreen(
 
                         item(key = "header") {
 OriginalLibraryDetailHeader(
+    onCoverPositioned = { originalCoverBounds.value = it },
     sharedElementKey = "playlist-" + playlist.id,
     listState = lazyListState,
     title = playlist.playlist.name,
@@ -1249,6 +1251,7 @@ Row(
             DetailCollapsingTopBar(
                 progress = originalDetailMorph,
                 glassState = originalDetailGlass,
+                coverBoundsInWindow = originalCoverBounds.value,
                 thumbnailUrl = playlist?.thumbnails?.firstOrNull(),
                 title = playlist?.playlist?.name.orEmpty(),
                 accentColor = gradientColors.firstOrNull(),
