@@ -46,6 +46,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalContext
+import com.arturo254.opentune.models.MediaMetadata
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
@@ -112,14 +116,26 @@ fun OriginalHomeHero(
     scrollProgress: () -> Float,
     isLoading: Boolean = false,
     modifier: Modifier = Modifier,
+    gachaPool: List<MediaMetadata>,
+    currentSongId: String?,
+    isPlaying: Boolean,
+    onGachaWinner: (MediaMetadata) -> Unit,
 ) {
     val configuration = LocalConfiguration.current
     val peek = configuration.screenWidthDp >= 600
     val landscape = configuration.screenWidthDp > configuration.screenHeightDp
     val height = (configuration.screenHeightDp * if (peek && landscape) 0.7f else 0.6f).dp
+    val availablePool = remember(gachaPool) { gachaPool.filter { !it.thumbnailUrl.isNullOrEmpty() }.distinctBy { it.id } }
+    val showGacha = availablePool.size >= 4
+    val totalItems = items.size + if (showGacha) 1 else 0
+    val gachaState = remember { GachaState() }
+    val context = LocalContext.current
+    val gachaSounds = remember { GachaSounds(context.applicationContext) }
+    DisposableEffect(gachaSounds) { onDispose { gachaSounds.release() } }
+    var gachaRolled by remember { mutableStateOf(false) }
     val pagerState = rememberPagerState(
-        initialPage = if (items.size < 2) 0 else (Int.MAX_VALUE / 2) - (Int.MAX_VALUE / 2) % items.size,
-        pageCount = { if (items.size < 2) 1 else Int.MAX_VALUE },
+        initialPage = if (totalItems < 2) 0 else (Int.MAX_VALUE / 2) - (Int.MAX_VALUE / 2) % totalItems,
+        pageCount = { if (totalItems < 2) 1 else Int.MAX_VALUE },
     )
     val dragged by pagerState.interactionSource.collectIsDraggedAsState()
     var userSwipe by remember { mutableStateOf(false) }
@@ -135,10 +151,12 @@ fun OriginalHomeHero(
         label = "heroWipeCurve",
     )
     val edgeBlur = rememberCoverBlurAvailable()
-    LaunchedEffect(items.size, active, dragged) {
-        if (!active || items.size < 2 || dragged) return@LaunchedEffect
+    LaunchedEffect(totalItems, active, dragged, gachaRolled) {
+        if (!active || totalItems < 2 || dragged) return@LaunchedEffect
         while (true) {
-            delay(HeroAdvanceMillis)
+            val onGacha = showGacha && pagerState.currentPage % totalItems == items.size
+            if (onGacha && gachaRolled) return@LaunchedEffect
+            delay(if (onGacha) HeroAdvanceMillis * 2 else HeroAdvanceMillis)
             if (scrollProgress() < 0.08f && !pagerState.isScrollInProgress) {
                 pagerState.animateScrollToPage(
                     pagerState.currentPage + 1,
@@ -167,6 +185,7 @@ fun OriginalHomeHero(
                 }
             }
         } else {
+            CompositionLocalProvider(LocalHeroPeek provides peek) {
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.fillMaxSize(),
@@ -174,7 +193,28 @@ fun OriginalHomeHero(
                 pageSpacing = if (peek) 14.dp else 0.dp,
                 beyondViewportPageCount = 1,
             ) { page ->
-                val entry = items[page % items.size]
+                val position = page % totalItems
+                if (showGacha && position == items.size) {
+                    OriginalHomeGachaCard(
+                        state = gachaState,
+                        sounds = gachaSounds,
+                        pool = availablePool,
+                        pageOffset = { (page - pagerState.currentPage) - pagerState.currentPageOffsetFraction },
+                        wipeCurve = { wipeCurve },
+                        transitionBlur = edgeBlur,
+                        held = {
+                            !active || pagerState.currentPage != page ||
+                                pagerState.isScrollInProgress || scrollProgress() >= 0.08f
+                        },
+                        currentSongId = currentSongId,
+                        isPlaying = isPlaying,
+                        onWinner = { winner ->
+                            gachaRolled = true
+                            onGachaWinner(winner)
+                        },
+                    )
+                } else {
+                val entry = items[position]
                 PageWipe(
                     pageOffset = { (page - pagerState.currentPage) - pagerState.currentPageOffsetFraction },
                     curve = { wipeCurve },
@@ -225,6 +265,8 @@ fun OriginalHomeHero(
                         )
                     }
                 }
+                }
+            }
             }
         }
     }
