@@ -9,7 +9,7 @@ El catálogo contiene **los 112 archivos Kotlin de `ui/screens/`**, tanto pantal
 | Interfaz | Archivo principal |
 | --- | --- |
 | Inicio | `ui/screens/OriginalHomeScreen.kt` (actual), `ui/screens/HomeScreen.kt` (anterior), `ui/screens/GalaxMainPages.kt` |
-| Buscar | `ui/screens/PrismDiscoveryScreen.kt`, `ui/screens/search/PrismSearchDesign.kt`, `ui/screens/search/UniversalSearchScreen.kt` |
+| Buscar | `ui/screens/search/OriginalSearchScreen.kt` (actual), `ui/screens/search/OriginalSearchResultsScreen.kt` (actual), `ui/screens/PrismDiscoveryScreen.kt` (anterior), `ui/screens/search/UniversalSearchScreen.kt` (anterior) |
 | Biblioteca | `ui/screens/library/LibraryScreen.kt`, `ui/screens/library/GalaxArchiveDesign.kt` |
 | Ajustes | `ui/screens/settings/SettingsScreen.kt`, `ui/screens/settings/SettingsLayout.kt` |
 | Apariencia | `ui/screens/settings/AppearanceSettings.kt` |
@@ -121,6 +121,8 @@ El catálogo contiene **los 112 archivos Kotlin de `ui/screens/`**, tanto pantal
 
 | Archivo relativo | Qué controla | Ruta en la app |
 | --- | --- | --- |
+| `search/OriginalSearchScreen.kt` | Explorar y buscar con barra Glass original y catálogo actual | `search` |
+| `search/OriginalSearchResultsScreen.kt` | Resultados y colecciones originales sobre fuentes unificadas | `search/{query}` |
 | `search/OrbitResultsExperience.kt` | Búsqueda Órbita: cabecera editorial, categorías segmentadas y canciones numeradas con reproducción, versiones y descarga | `search/{query}` |
 | `search/PrismSearchBar.kt` | Entrada de búsqueda, teclado y fondo continuo de los resultados | `search/{query} · búsqueda superpuesta` |
 | `search/PrismSearchDesign.kt` | Fondo continuo, partículas, cristal y distribución según las restricciones de la ventana | `—` |
