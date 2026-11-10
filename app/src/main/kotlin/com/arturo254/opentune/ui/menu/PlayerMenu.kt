@@ -137,6 +137,7 @@ fun ColumnScope.PlayerMenu(
     isQueueTrigger: Boolean? = false,
     onShowDetailsDialog: () -> Unit,
     onDismiss: () -> Unit,
+    onOpenStyles: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
     mediaMetadata ?: return
@@ -382,7 +383,24 @@ fun ColumnScope.PlayerMenu(
 
         item {
             NewActionGrid(
-                actions = listOf(
+                actions = listOfNotNull(
+                    onOpenStyles?.let { open ->
+                        NewAction(
+                            icon = {
+                                Icon(
+                                    painter = painterResource(R.drawable.style),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(28.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            },
+                            text = "Estilos",
+                            onClick = {
+                                onDismiss()
+                                open()
+                            },
+                        )
+                    },
                     NewAction(
                         icon = {
                             Icon(
