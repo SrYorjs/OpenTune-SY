@@ -15,6 +15,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.getSystemService
 import coil3.compose.AsyncImage
 import com.arturo254.opentune.canvas.providers.AppleMusicCanvasProvider
+import com.arturo254.opentune.canvas.MonochromeApiCanvas
+import kotlinx.coroutines.CancellationException
 import com.arturo254.opentune.ui.player.CanvasArtworkPlayer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -26,6 +28,7 @@ internal fun OriginalHomeCanvas(
     title: String,
     artist: String,
     album: String?,
+    durationSec: Int?,
     artwork: String?,
     eligibleForCanvas: Boolean,
     active: Boolean,
@@ -33,19 +36,31 @@ internal fun OriginalHomeCanvas(
 ) {
     val context = LocalContext.current
     var canvasUrl by remember(id) { mutableStateOf<String?>(null) }
-    LaunchedEffect(id, title, artist, album, eligibleForCanvas, active) {
+    LaunchedEffect(id, title, artist, album, durationSec, eligibleForCanvas, active) {
         if (!eligibleForCanvas || !active || title.isBlank() || artist.isBlank()) return@LaunchedEffect
         val connectivity = context.getSystemService<ConnectivityManager>()
         if (connectivity?.isActiveNetworkMetered == true) return@LaunchedEffect
         if (canvasUrl != null) return@LaunchedEffect
         val storefront = Locale.getDefault().country
             .takeIf { it.length == 2 }?.lowercase(Locale.ROOT) ?: "us"
-        canvasUrl = runCatching {
-            withContext(Dispatchers.IO) {
+        canvasUrl = withContext(Dispatchers.IO) {
+            val monochrome = try {
+                MonochromeApiCanvas.getBySongArtist(title, artist, album, durationSec)
+                    ?.preferredAnimationUrl
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
+            }
+            monochrome ?: try {
                 AppleMusicCanvasProvider.getBySongArtist(title, artist, album, storefront)
                     ?.preferredAnimationUrl
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                null
             }
-        }.getOrNull()
+        }
     }
     Box(modifier = modifier) {
         AsyncImage(
