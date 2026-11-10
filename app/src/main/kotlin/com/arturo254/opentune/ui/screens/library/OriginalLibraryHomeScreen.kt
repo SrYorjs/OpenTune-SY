@@ -228,6 +228,9 @@ fun OriginalLibraryHomeScreen(
     BackHandler(ambientActive && query.text.isNotEmpty()) {
         query = TextFieldValue()
     }
+    BackHandler(ambientActive && query.text.isEmpty() && tab != LibraryTab.All) {
+        tab = LibraryTab.All
+    }
     if (createPlaylist) CreatePlaylistDialog(onDismiss = { createPlaylist = false })
     Box(Modifier.fillMaxSize()) {
         LibraryScaffold(
@@ -248,6 +251,36 @@ fun OriginalLibraryHomeScreen(
                 )
             },
         ) {
+            item("library_tabs") {
+                LibraryTabChips(
+                    selected = tab,
+                    onSelect = { next ->
+                        tab = next
+                        query = TextFieldValue()
+                        scope.launch { listState.scrollToItem(0) }
+                    },
+                    modifier = Modifier.padding(horizontal = SearchHorizontalPadding),
+                )
+                Spacer(Modifier.height(14.dp))
+            }
+            if (tab == LibraryTab.All || tab == LibraryTab.Local) {
+                item("library_progress") {
+                    LibraryProgressCard(
+                        title = stringResource(R.string.visual_library_manage_downloads),
+                        running = activeDownloads.isNotEmpty(),
+                        progress = downloadProgress,
+                        onClick = { navController.navigate("download_queue") },
+                        modifier = Modifier.padding(horizontal = SearchHorizontalPadding),
+                    )
+                    LibraryProgressCard(
+                        title = stringResource(R.string.visual_library_import_running),
+                        running = importUi.running,
+                        progress = null,
+                        onClick = { navController.navigate("settings/storage") },
+                        modifier = Modifier.padding(horizontal = SearchHorizontalPadding),
+                    )
+                }
+            }
             if (query.text.isNotBlank()) {
                 if (filteredSongs.isNotEmpty()) {
                     item("results_songs_title") {
@@ -321,6 +354,51 @@ fun OriginalLibraryHomeScreen(
                     item("empty_search") { LibraryEmptyState() }
                 }
                 return@LibraryScaffold
+            }
+            when (tab) {
+                LibraryTab.Local -> {
+                    originalLocalTab(
+                        songs = localSongs,
+                        albums = tabAlbums,
+                        artists = tabArtists,
+                        playlists = tabPlaylists,
+                        importedFileCount = importedSongs.size,
+                        onImport = importUi.openPicker,
+                        onOpen = navController::navigate,
+                        onPlay = playSong,
+                        onSongMenu = songMenu,
+                        nowPlayingId = current?.id,
+                        isPlaying = playing,
+                    )
+                    return@LibraryScaffold
+                }
+                LibraryTab.Cached -> {
+                    originalCachedTab(
+                        songs = cachedSongs,
+                        onOpen = navController::navigate,
+                        onPlay = playSong,
+                        onSongMenu = songMenu,
+                        nowPlayingId = current?.id,
+                        isPlaying = playing,
+                    )
+                    return@LibraryScaffold
+                }
+                LibraryTab.Imported -> {
+                    originalImportedTab(
+                        localSongs = importedSongs,
+                        localAlbums = tabAlbums,
+                        syncPlaylists = syncedPlaylists,
+                        spotifyPlaylists = spotify,
+                        onOpen = navController::navigate,
+                        onImport = importUi.openPicker,
+                        onSync = {
+                            viewModel.syncAllLibrary()
+                            spotifyViewModel.refreshPlaylists()
+                        },
+                    )
+                    return@LibraryScaffold
+                }
+                LibraryTab.All -> Unit
             }
             if (songs.isEmpty() && albums.isEmpty() && artists.isEmpty() && playlists.isEmpty()) {
                 item("empty_library") {
