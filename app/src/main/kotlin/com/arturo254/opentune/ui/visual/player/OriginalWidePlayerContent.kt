@@ -29,10 +29,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
-import androidx.media3.common.Timeline
 import coil3.compose.AsyncImage
 import com.arturo254.opentune.R
-import com.arturo254.opentune.extensions.metadata
 import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.ui.player.actions.PlayerActions
 import com.arturo254.opentune.ui.player.state.PlayerState
@@ -45,8 +43,7 @@ fun OriginalWidePlayerContent(
     track: MediaMetadata?,
     carousel: SongCarousel,
     actions: PlayerActions,
-    queueWindows: List<Timeline.Window>,
-    currentIndex: Int,
+    nextTrack: MediaMetadata?,
     width: Dp,
     height: Dp,
     volume: Float,
@@ -60,7 +57,7 @@ fun OriginalWidePlayerContent(
     val density = LocalDensity.current
     val artworkSize = (height - 92.dp).coerceAtLeast(120.dp).coerceAtMost((width * 0.39f).coerceAtLeast(120.dp))
     val artPx = with(density) { artworkSize.toPx() }
-    val next = queueWindows.getOrNull(currentIndex + 1)?.mediaItem?.metadata
+    val next = nextTrack
 
     Row(
         modifier = modifier.fillMaxSize().padding(horizontal = 20.dp, vertical = 44.dp),
