@@ -447,6 +447,7 @@ fun AlbumScreen(
 
     val lazyListState = rememberLazyListState()
     val originalDetailGlass = remember { GlassState() }
+    val originalCoverBounds = remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
     val originalDetailHeightPx = with(LocalDensity.current) {
         (LocalConfiguration.current.screenHeightDp * 0.60f).dp.toPx()
     }
@@ -484,6 +485,7 @@ fun AlbumScreen(
 
                 item(key = "header") {
 OriginalLibraryDetailHeader(
+    onCoverPositioned = { originalCoverBounds.value = it },
     sharedElementKey = "album-" + viewModel.albumId,
     listState = lazyListState,
     title = albumWithSongs.album.title,
@@ -1066,6 +1068,7 @@ Row(
             DetailCollapsingTopBar(
                 progress = originalDetailMorph,
                 glassState = originalDetailGlass,
+                coverBoundsInWindow = originalCoverBounds.value,
                 thumbnailUrl = albumWithSongs?.album?.thumbnailUrl,
                 title = albumWithSongs?.album?.title.orEmpty(),
                 accentColor = gradientColors.firstOrNull(),
