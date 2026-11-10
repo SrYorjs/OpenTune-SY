@@ -191,6 +191,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.arturo254.opentune.ui.visual.studio.StudioPlayerStyle
 import com.arturo254.opentune.ui.visual.studio.OriginalTimelinePlayer
+import com.arturo254.opentune.ui.visual.ipod.OriginalIpodPlayer
 import com.arturo254.opentune.ui.visual.studio.PlayerSelectorOverlay
 import com.arturo254.opentune.ui.visual.studio.rememberPlayerStudioState
 import com.arturo254.opentune.ui.visual.studio.studioSheetLayer
@@ -1212,7 +1213,16 @@ fun BottomSheetPlayer(
         }
 
         val renderNativePlayer: @Composable (StudioPlayerStyle, Modifier, Boolean) -> Unit = { nativeStyle, studioModifier, studioPreview ->
-            if (nativeStyle == StudioPlayerStyle.TIMELINE) {
+            if (nativeStyle == StudioPlayerStyle.IPOD) {
+                OriginalIpodPlayer(
+                    state = playerState,
+                    sheet = state,
+                    track = enrichedMetadata,
+                    onStyles = openPlayerStudio,
+                    modifier = studioModifier,
+                    preview = studioPreview,
+                )
+            } else if (nativeStyle == StudioPlayerStyle.TIMELINE) {
             OriginalTimelinePlayer(
                 state = playerState,
                 actions = playerActions,
