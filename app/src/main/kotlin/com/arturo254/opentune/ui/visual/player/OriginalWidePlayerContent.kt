@@ -35,6 +35,7 @@ import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.ui.player.actions.PlayerActions
 import com.arturo254.opentune.ui.player.state.PlayerState
 import com.arturo254.opentune.ui.utils.resize
+import com.arturo254.opentune.ui.visual.turntable.OriginalTurntableArtwork
 
 @Composable
 fun OriginalWidePlayerContent(
@@ -54,6 +55,7 @@ fun OriginalWidePlayerContent(
     onMenu: () -> Unit,
     onStyles: () -> Unit,
     onSongInfo: () -> Unit,
+    turntable: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val density = LocalDensity.current
@@ -70,7 +72,7 @@ fun OriginalWidePlayerContent(
             modifier = Modifier
                 .size(artworkSize)
                 .clip(RoundedCornerShape(22.dp))
-                .originalCoverGestures(
+                .then(if (turntable) Modifier else Modifier.originalCoverGestures(
                     enabled = true,
                     carousel = carousel,
                     spacingPx = artPx + with(density) { 20.dp.toPx() },
@@ -78,9 +80,21 @@ fun OriginalWidePlayerContent(
                     canNext = state.canSkipNext,
                     actions = actions,
                     onLongPress = onStyles,
-                ),
+                )),
         ) {
-            CarouselPictures(
+            if (turntable) {
+                OriginalTurntableArtwork(
+                    mediaId = state.trackId.orEmpty(),
+                    title = state.title.orEmpty(),
+                    artworkUrl = state.artworkUrl,
+                    positionMs = state.positionMs,
+                    durationMs = state.durationMs,
+                    isPlaying = state.isPlaying,
+                    active = true,
+                    actions = actions,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else CarouselPictures(
                 carousel = carousel,
                 fallbackUrl = state.artworkUrl,
                 cardGap = 20.dp,
@@ -111,7 +125,8 @@ fun OriginalWidePlayerContent(
                 onExpandMenu = onMenu,
                 onSongInfoClick = onSongInfo,
             )
-            OriginalPlayerProgressSlider(
+            if (turntable) Spacer(Modifier.height(52.dp))
+            else OriginalPlayerProgressSlider(
                 player = player,
                 mediaId = state.trackId,
                 positionMs = state.positionMs,
