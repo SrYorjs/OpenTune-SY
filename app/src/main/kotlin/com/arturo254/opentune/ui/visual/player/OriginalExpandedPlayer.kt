@@ -133,6 +133,25 @@ fun OriginalExpandedPlayer(
                 )
             ),
         )
+        if (maxWidth > maxHeight * 1.25f) {
+            OriginalWidePlayerContent(
+                player = player,
+                state = state,
+                track = track,
+                carousel = carousel,
+                actions = actions,
+                queueWindows = queueWindows,
+                currentIndex = currentIndex,
+                width = maxWidth,
+                height = maxHeight,
+                volume = volume,
+                onVolumeChange = onVolumeChange,
+                onLyrics = onLyrics,
+                onQueue = onQueue,
+                onMenu = onMenu,
+                onSongInfo = onSongInfo,
+            )
+        } else {
         if (edgeToEdge) {
             CarouselPictures(
                 carousel = carousel,
@@ -338,6 +357,7 @@ fun OriginalExpandedPlayer(
                 onLongPress = onMenu,
                 modifier = Modifier.padding(horizontal = 24.dp),
             )
+        }
         }
         PlayerHandle(
             state = handle,
