@@ -52,6 +52,7 @@ fun OriginalWidePlayerContent(
     onLyrics: () -> Unit,
     onQueue: () -> Unit,
     onMenu: () -> Unit,
+    onStyles: () -> Unit,
     onSongInfo: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -76,7 +77,7 @@ fun OriginalWidePlayerContent(
                     canPrevious = state.canSkipPrevious,
                     canNext = state.canSkipNext,
                     actions = actions,
-                    onLongPress = onMenu,
+                    onLongPress = onStyles,
                 ),
         ) {
             CarouselPictures(
@@ -170,7 +171,7 @@ fun OriginalWidePlayerContent(
                 lyricPreview = lyricPreview,
                 onOpenLyrics = onLyrics,
                 onOpenQueue = onQueue,
-                onLongPress = onMenu,
+                onLongPress = onStyles,
                 modifier = Modifier.padding(horizontal = 8.dp),
             )
         }
