@@ -26,6 +26,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -75,6 +79,7 @@ fun OriginalLibraryDetailHeader(
     actions: @Composable ColumnScope.() -> Unit = {},
     sharedElementKey: String? = null,
     listState: LazyListState? = null,
+    onCoverPositioned: (Rect) -> Unit = {},
 ) {
     val handedCover = remember(sharedElementKey) { containerTransformCover(sharedElementKey) }
     val coverUrl = handedCover ?: artworkUrls.firstOrNull { !it.isNullOrBlank() }
@@ -93,7 +98,15 @@ fun OriginalLibraryDetailHeader(
         modifier = modifier
             .fillMaxWidth()
             .heightIn(min = height)
-            .containerTransformTarget(sharedElementKey),
+            .containerTransformTarget(sharedElementKey)
+            .onGloballyPositioned { coordinates ->
+                onCoverPositioned(
+                    Rect(
+                        coordinates.positionInWindow(),
+                        Size(coordinates.size.width.toFloat(), coordinates.size.height.toFloat()),
+                    )
+                )
+            },
     ) {
         DetailCoverBackground(
             thumbnailUrl = coverUrl,
