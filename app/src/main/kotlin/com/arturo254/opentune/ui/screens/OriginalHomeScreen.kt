@@ -248,6 +248,7 @@ fun OriginalHomeScreen(
                 isCurrent = latestSongId == song.id,
                 isPlaying = playing,
                 onOpen = { play(song, songs) },
+                canvasEligible = true,
             )
         }
         val remote = remoteItems.filterIsInstance<SongItem>().take(3).map { song ->
@@ -260,6 +261,8 @@ fun OriginalHomeScreen(
                 isCurrent = latestSongId == song.id,
                 isPlaying = playing,
                 onOpen = { playRemote(song) },
+                album = song.album?.name,
+                canvasEligible = true,
             )
         }
         val localCollections = buildList<LocalItem> {
