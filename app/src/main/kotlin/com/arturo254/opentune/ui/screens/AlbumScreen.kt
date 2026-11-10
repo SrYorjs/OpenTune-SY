@@ -125,7 +125,7 @@ import com.arturo254.opentune.playback.queues.LocalAlbumRadio
 import com.arturo254.opentune.ui.component.IconButton
 import com.arturo254.opentune.ui.component.LocalMenuState
 import com.arturo254.opentune.ui.component.NavigationTitle
-import com.arturo254.opentune.ui.component.SongListItem
+import com.arturo254.opentune.ui.visual.detail.OriginalDetailSongRow
 import com.arturo254.opentune.ui.component.YouTubeGridItem
 import com.arturo254.opentune.ui.component.shimmer.ButtonPlaceholder
 import com.arturo254.opentune.ui.component.shimmer.ListItemPlaceHolder
@@ -718,7 +718,7 @@ Row(
                     items = wrappedSongs,
                     key = { _, song -> song.item.id },
                 ) { index, songWrapper ->
-                    SongListItem(
+                    OriginalDetailSongRow(
                         song = songWrapper.item,
                         albumIndex = index + 1,
                         isActive = songWrapper.item.id == mediaMetadata?.id,
