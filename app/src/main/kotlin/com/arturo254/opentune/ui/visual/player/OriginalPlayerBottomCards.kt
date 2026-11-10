@@ -129,7 +129,7 @@ fun OriginalPlayerBottomCards(
                 )
             },
     ) {
-        for (side in listOf(1, 0)) {
+        for (side in if (flip.value >= 0.5f) listOf(0, 1) else listOf(1, 0)) {
             val f = frontness(side)
             Box(
                 modifier = Modifier
