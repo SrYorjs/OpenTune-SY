@@ -70,6 +70,8 @@ import com.arturo254.opentune.spotify.SpotifyMapper
 import com.arturo254.opentune.ui.visual.library.LibraryTab
 import com.arturo254.opentune.ui.visual.library.LibraryTabChips
 import com.arturo254.opentune.ui.visual.library.LibraryPinKind
+import com.arturo254.opentune.ui.visual.library.LibraryPinnedRef
+import com.arturo254.opentune.ui.visual.library.LibraryPinMenuItem
 import com.arturo254.opentune.ui.visual.library.LibraryPinnedTile
 import com.arturo254.opentune.ui.visual.library.LibraryProgressCard
 import com.arturo254.opentune.ui.visual.library.rememberLibraryPins
@@ -199,22 +201,48 @@ fun OriginalLibraryHomeScreen(
     }
     val songMenu: (Song) -> Unit = { song ->
         menu.show {
+            LibraryPinMenuItem(pinsState, LibraryPinKind.SONG, song.id, menu::dismiss)
             SongMenu(song, navController = navController, onDismiss = menu::dismiss)
         }
     }
     val albumMenu: (Album) -> Unit = { album ->
         menu.show {
+            LibraryPinMenuItem(pinsState, LibraryPinKind.ALBUM, album.id, menu::dismiss)
             AlbumMenu(originalAlbum = album, navController = navController, onDismiss = menu::dismiss)
         }
     }
     val artistMenu: (Artist) -> Unit = { artist ->
         menu.show {
+            LibraryPinMenuItem(pinsState, LibraryPinKind.ARTIST, artist.id, menu::dismiss)
             ArtistMenu(originalArtist = artist, coroutineScope = scope, onDismiss = menu::dismiss)
         }
     }
     val playlistMenu: (Playlist) -> Unit = { playlist ->
         menu.show {
+            LibraryPinMenuItem(pinsState, LibraryPinKind.PLAYLIST, playlist.id, menu::dismiss)
             PlaylistMenu(playlist = playlist, coroutineScope = scope, onDismiss = menu::dismiss)
+        }
+    }
+    val pinnedEntries = pins.mapNotNull { pinned ->
+        when (pinned.kind) {
+            LibraryPinKind.SONG -> songs.firstOrNull { it.id == pinned.id }?.let { song ->
+                OriginalPinnedEntry(pinned, song.thumbnailUrl, null) { playSong(song) }
+            }
+            LibraryPinKind.PLAYLIST -> playlists.firstOrNull { it.id == pinned.id }?.let { playlist ->
+                OriginalPinnedEntry(pinned, playlist.thumbnails.firstOrNull(), "playlist-" + playlist.id) {
+                    navController.navigate("local_playlist/" + playlist.id)
+                }
+            }
+            LibraryPinKind.ALBUM -> albums.firstOrNull { it.id == pinned.id }?.let { album ->
+                OriginalPinnedEntry(pinned, album.thumbnailUrl, "album-" + album.id) {
+                    navController.navigate("album/" + album.id)
+                }
+            }
+            LibraryPinKind.ARTIST -> artists.firstOrNull { it.id == pinned.id }?.let { artist ->
+                OriginalPinnedEntry(pinned, artist.thumbnailUrl, null) {
+                    navController.navigate("artist/" + artist.id)
+                }
+            }
         }
     }
     val entry by navController.currentBackStackEntryAsState()
@@ -410,6 +438,40 @@ fun OriginalLibraryHomeScreen(
                 }
                 return@LibraryScaffold
             }
+            if (pinnedEntries.isNotEmpty()) {
+                item("pinned_header") {
+                    LibrarySectionTitle(stringResource(R.string.visual_library_pinned))
+                    Spacer(Modifier.height(12.dp))
+                    LibraryRule()
+                    Spacer(Modifier.height(16.dp))
+                }
+                item("pinned_grid") {
+                    Column(
+                        Modifier.fillMaxWidth().padding(horizontal = SearchHorizontalPadding),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        pinnedEntries.take(9).chunked(3).forEach { row ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                row.forEach { entry ->
+                                    LibraryPinnedTile(
+                                        thumbnailUrl = entry.thumbnail,
+                                        sharedElementKey = entry.sharedElementKey,
+                                        onClick = entry.onOpen,
+                                        onLongClick = {
+                                            pinsState.remove(entry.pin.kind, entry.pin.id)
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                    )
+                                }
+                                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                            }
+                        }
+                    }
+                    Spacer(Modifier.height(18.dp))
+                    LibraryRule()
+                    Spacer(Modifier.height(16.dp))
+                }
+            }
             item("playlist_create") {
                 LibraryManagePill(
                     text = stringResource(R.string.visual_library_create_playlist),
@@ -477,3 +539,10 @@ fun OriginalLibraryHomeScreen(
         }
     }
 }
+
+private data class OriginalPinnedEntry(
+    val pin: LibraryPinnedRef,
+    val thumbnail: String?,
+    val sharedElementKey: String?,
+    val onOpen: () -> Unit,
+)
