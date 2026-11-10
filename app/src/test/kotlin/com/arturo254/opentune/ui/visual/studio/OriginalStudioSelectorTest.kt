@@ -75,7 +75,7 @@ class OriginalStudioSelectorTest {
         val menu = source("ui/menu/PlayerMenu.kt")
         assertTrue(player.contains("PlayerSelectorOverlay("))
         assertTrue(player.contains("studioSheetLayer(studio)"))
-        assertTrue(player.contains("renderNativePlayer(style, Modifier.fillMaxSize())"))
+        assertTrue(player.contains("renderNativePlayer(style, Modifier.fillMaxSize(), true)"))
         assertTrue(player.contains("renderLegacyPlayer(style.legacy)"))
         assertTrue(player.contains("studio.settleOn(index, restyled, velocity)"))
         assertTrue(menu.contains("onOpenStyles"))
