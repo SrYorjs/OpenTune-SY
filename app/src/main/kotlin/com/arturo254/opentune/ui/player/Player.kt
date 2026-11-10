@@ -812,6 +812,10 @@ fun BottomSheetPlayer(
                 queueWindows = queueWindows,
                 currentIndex = currentWindowIndex,
                 palette = gradientColors,
+                volume = playerVolume.value,
+                onVolumeChange = { newVolume ->
+                    playerConnection.service.playerVolume.value = newVolume
+                },
                 onLyrics = { lyricsSheetState.expandSoft() },
                 onQueue = { queueSheetState.expandSoft() },
                 onMenu = {
