@@ -1211,7 +1211,7 @@ fun BottomSheetPlayer(
         )
         }
 
-        val renderNativePlayer: @Composable (StudioPlayerStyle, Modifier) -> Unit = { nativeStyle, studioModifier ->
+        val renderNativePlayer: @Composable (StudioPlayerStyle, Modifier, Boolean) -> Unit = { nativeStyle, studioModifier, studioPreview ->
             if (nativeStyle == StudioPlayerStyle.TIMELINE) {
             OriginalTimelinePlayer(
                 state = playerState,
@@ -1233,6 +1233,7 @@ fun BottomSheetPlayer(
                     }
                 },
                 modifier = studioModifier,
+                preview = studioPreview,
             )
             } else {
             OriginalExpandedPlayer(
@@ -1266,6 +1267,7 @@ fun BottomSheetPlayer(
                 onStyles = openPlayerStudio,
                 classic = nativeStyle == StudioPlayerStyle.CLASSIC,
                 turntable = nativeStyle == StudioPlayerStyle.TURNTABLE,
+                preview = studioPreview,
                 modifier = studioModifier,
                 onSongInfo = {
                     enrichedMetadata?.let { metadata ->
@@ -1278,7 +1280,7 @@ fun BottomSheetPlayer(
             }
         }
         if (useOriginalExpandedPlayer) {
-            renderNativePlayer(activeStudioStyle, Modifier.fillMaxSize().studioSheetLayer(studio))
+            renderNativePlayer(activeStudioStyle, Modifier.fillMaxSize().studioSheetLayer(studio), false)
         } else {
             Box(Modifier.fillMaxSize().studioSheetLayer(studio)) {
                 renderLegacyPlayer(playerDesignStyle)
@@ -1337,7 +1339,7 @@ fun BottomSheetPlayer(
                     if (style.legacy != null) {
                         renderLegacyPlayer(style.legacy)
                     } else {
-                        renderNativePlayer(style, Modifier.fillMaxSize())
+                        renderNativePlayer(style, Modifier.fillMaxSize(), true)
                     }
                 }
             },
