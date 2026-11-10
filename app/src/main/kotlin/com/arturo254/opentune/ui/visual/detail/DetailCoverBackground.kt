@@ -62,7 +62,7 @@ fun DetailCoverBackground(
                         fallbackColor = fallbackColorInt,
                     )
                     extractedColor = colors.firstOrNull()?.let {
-                        PlayerColorExtractor.darkenIfTooLight(it, isDarkTheme = isDarkTheme)
+                        androidx.compose.ui.graphics.lerp(it, Color.Black, if (isDarkTheme) 0.58f else 0.18f)
                     }
                     extractedColor?.let { onColorExtracted(it) }
                 }
