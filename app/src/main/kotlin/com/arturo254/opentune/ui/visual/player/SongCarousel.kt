@@ -395,8 +395,10 @@ fun rememberOriginalSongCarousel(
             thumbnailUrl = mediaMetadata?.thumbnailUrl,
         )
     }
-    carousel.onQueue(queue, track)
-    LaunchedEffect(carousel, carousel.step) { carousel.settle() }
+    LaunchedEffect(carousel, queue, track) {
+        carousel.onQueue(queue, track)
+        carousel.letGo()
+    }
     return carousel
 }
 
