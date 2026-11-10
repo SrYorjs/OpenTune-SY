@@ -84,6 +84,7 @@ fun OriginalExpandedPlayer(
     onMenu: () -> Unit,
     onStyles: () -> Unit,
     onSongInfo: () -> Unit,
+    classic: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val carousel = rememberOriginalSongCarousel(queueWindows, currentIndex, track)
@@ -99,7 +100,7 @@ fun OriginalExpandedPlayer(
         label = "originalCoverMagnification",
     )
     val background = palette.firstOrNull() ?: Color(0xFF202020)
-    val edgeToEdge = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    val edgeToEdge = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !classic
     val next = nextTrack
 
     BoxWithConstraints(modifier = modifier.fillMaxSize().background(Color.Black)) {
@@ -316,6 +317,7 @@ fun OriginalExpandedPlayer(
                 onPrevious = actions::previous,
                 onPlayPause = actions::playPause,
                 onNext = actions::next,
+                flagshipGlyph = !classic,
             )
             Spacer(Modifier.height(12.dp))
             Row(
