@@ -84,6 +84,7 @@ data class OriginalHomeHeroItem(
     val opensPage: Boolean = false,
     val onOpen: () -> Unit,
     val album: String? = null,
+    val durationSec: Int? = null,
     val canvasEligible: Boolean = false,
 )
 
@@ -239,6 +240,7 @@ fun OriginalHomeHero(
                                 title = entry.title,
                                 artist = entry.subtitle,
                                 album = entry.album,
+                                durationSec = entry.durationSec,
                                 artwork = entry.artwork,
                                 eligibleForCanvas = entry.canvasEligible,
                                 active = active &&
