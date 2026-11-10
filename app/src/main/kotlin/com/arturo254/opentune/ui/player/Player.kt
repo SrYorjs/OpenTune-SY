@@ -190,6 +190,7 @@ import com.arturo254.opentune.utils.rememberPreference
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.arturo254.opentune.ui.visual.studio.StudioPlayerStyle
+import com.arturo254.opentune.ui.visual.studio.OriginalTimelinePlayer
 import com.arturo254.opentune.ui.visual.studio.PlayerSelectorOverlay
 import com.arturo254.opentune.ui.visual.studio.rememberPlayerStudioState
 import com.arturo254.opentune.ui.visual.studio.studioSheetLayer
@@ -1211,6 +1212,29 @@ fun BottomSheetPlayer(
         }
 
         val renderNativePlayer: @Composable (StudioPlayerStyle, Modifier) -> Unit = { nativeStyle, studioModifier ->
+            if (nativeStyle == StudioPlayerStyle.TIMELINE) {
+            OriginalTimelinePlayer(
+                state = playerState,
+                actions = playerActions,
+                artworkColor = gradientColors.firstOrNull() ?: MaterialTheme.colorScheme.primary,
+                queueWindows = queueWindows,
+                currentIndex = currentWindowIndex,
+                metadata = enrichedMetadata,
+                onStyles = openPlayerStudio,
+                onMenu = {
+                    enrichedMetadata?.let { metadata ->
+                        menuState.showPlayerPanelMenu(
+                            metadata = metadata,
+                            navController = navController,
+                            playerBottomSheetState = state,
+                            bottomSheetPageState = bottomSheetPageState,
+                            onOpenStyles = openPlayerStudio,
+                        )
+                    }
+                },
+                modifier = studioModifier,
+            )
+            } else {
             OriginalExpandedPlayer(
                 sheet = state,
                 player = playerConnection.player,
@@ -1251,6 +1275,7 @@ fun BottomSheetPlayer(
                     }
                 },
             )
+            }
         }
         if (useOriginalExpandedPlayer) {
             renderNativePlayer(activeStudioStyle, Modifier.fillMaxSize().studioSheetLayer(studio))
