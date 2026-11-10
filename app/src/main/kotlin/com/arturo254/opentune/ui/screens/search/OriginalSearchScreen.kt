@@ -91,6 +91,9 @@ fun OriginalSearchScreen(
     navController: NavController,
     pureBlack: Boolean,
     ambientActive: Boolean,
+    startFocused: Boolean = false,
+    onSearchCommitted: (() -> Unit)? = null,
+    onDismiss: (() -> Unit)? = null,
     genresViewModel: MoodAndGenresViewModel = hiltViewModel(),
     searchViewModel: UniversalSearchViewModel = hiltViewModel(),
 ) {
@@ -106,7 +109,7 @@ fun OriginalSearchScreen(
     val genresLoading by genresViewModel.isLoading.collectAsStateWithLifecycle()
     val searchState by searchViewModel.state.collectAsStateWithLifecycle()
     var query by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue()) }
-    var active by rememberSaveable { mutableStateOf(false) }
+    var active by rememberSaveable { mutableStateOf(startFocused) }
     val browseListState = rememberLazyListState()
     val activeListState = rememberLazyListState()
     val glassState = remember { GlassState() }
@@ -130,6 +133,7 @@ fun OriginalSearchScreen(
                     database.query { insert(SearchHistory(query = text)) }
                 }
             }
+            onSearchCommitted?.invoke()
             navController.navigate("search/" + Uri.encode(text))
         }
     }
@@ -137,6 +141,7 @@ fun OriginalSearchScreen(
     LaunchedEffect(active, ambientActive, query.text) {
         if (active && ambientActive) searchViewModel.query.value = query.text
     }
+    BackHandler(enabled = !active && onDismiss != null) { onDismiss?.invoke() }
     BackHandler(enabled = active) {
         active = false
         focusManager.clearFocus()
