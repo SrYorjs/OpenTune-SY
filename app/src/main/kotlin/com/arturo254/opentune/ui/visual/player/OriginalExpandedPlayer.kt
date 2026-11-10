@@ -1,5 +1,6 @@
 package com.arturo254.opentune.ui.visual.player
 
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -88,10 +90,13 @@ fun OriginalExpandedPlayer(
         label = "originalCoverMagnification",
     )
     val background = palette.firstOrNull() ?: Color(0xFF202020)
+    val edgeToEdge = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     val next = queueWindows.getOrNull(currentIndex + 1)?.mediaItem?.metadata
 
     BoxWithConstraints(modifier = modifier.fillMaxSize().background(Color.Black)) {
         val coverSide = (maxWidth - 48.dp).coerceAtMost((maxHeight - 520.dp).coerceAtLeast(140.dp))
+        val artRegion = maxHeight * 0.63f
+        val artRegionPx = with(density) { artRegion.toPx() }
         val coverSidePx = with(density) { coverSide.toPx() }
         val miniFrame = LocalMiniPillFrame.current
         val placement = originalCoverPlacement(
@@ -128,12 +133,77 @@ fun OriginalExpandedPlayer(
                 )
             ),
         )
+        if (edgeToEdge) {
+            CarouselPictures(
+                carousel = carousel,
+                fallbackUrl = state.artworkUrl,
+                cardGap = 0.dp,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .height(artRegion)
+                    .graphicsLayer {
+                        val widthPx = size.width
+                        val growing = open
+                        val miniSizePx = 48.dp.toPx()
+                        scaleX = (miniSizePx + (widthPx - miniSizePx) * growing) / widthPx.coerceAtLeast(1f)
+                        scaleY = (miniSizePx + (artRegionPx - miniSizePx) * growing) / artRegionPx.coerceAtLeast(1f)
+                        translationX = ((miniFrame.start + 32.dp - maxWidth / 2f) * (1f - growing)).toPx()
+                        translationY = ((32.dp - artRegion / 2f) * (1f - growing)).toPx()
+                        val magnify = 1f + (playingMagnification - 1f) * growing
+                        scaleX *= magnify
+                        scaleY *= magnify
+                        alpha = (open / 0.5f).coerceIn(0f, 1f)
+                    }
+                    .originalCoverGestures(
+                        enabled = open > 0.95f,
+                        carousel = carousel,
+                        spacingPx = with(density) { maxWidth.toPx() },
+                        canPrevious = state.canSkipPrevious,
+                        canNext = state.canSkipNext,
+                        actions = actions,
+                        onLongPress = onMenu,
+                    ),
+            ) { url, childModifier ->
+                AsyncImage(
+                    model = url?.resize(1080, 1080),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = childModifier.fillMaxSize(),
+                )
+            }
+            CoverReflection(
+                url = state.artworkUrl,
+                coverHeight = { artRegionPx },
+                magnify = { playingMagnification },
+                alpha = { open * 0.92f },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .offset(y = artRegion)
+                    .fillMaxWidth()
+                    .height(maxHeight - artRegion),
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
+                    .height(artRegion)
+                    .background(
+                        Brush.verticalGradient(
+                            0f to Color.Transparent,
+                            0.65f to Color.Transparent,
+                            1f to Color.Black.copy(alpha = 0.42f),
+                        )
+                    ),
+            )
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = statusTop + 47.dp, bottom = navigationBottom + 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            if (!edgeToEdge) {
             Box(
                 modifier = Modifier
                     .size(coverSide)
@@ -146,44 +216,15 @@ fun OriginalExpandedPlayer(
                         alpha = (open / 0.52f).coerceIn(0f, 1f)
                     }
                     .clip(RoundedCornerShape(22.dp))
-                    .pointerInput(onMenu, actions, state.trackId) {
-                        detectTapGestures(
-                            onDoubleTap = { actions.toggleFavorite() },
-                            onLongPress = { onMenu() },
-                        )
-                    }
-                    .pointerInput(carousel, state.canSkipNext, state.canSkipPrevious, gapPx, coverSidePx) {
-                        var dragTotal = 0f
-                        detectHorizontalDragGestures(
-                            onDragStart = {
-                                dragTotal = 0f
-                                carousel.startDrag()
-                            },
-                            onHorizontalDrag = { change, delta ->
-                                dragTotal += delta
-                                carousel.dragTo(
-                                    travelledPx = dragTotal,
-                                    spacingPx = coverSidePx + gapPx,
-                                    hasPrevious = state.canSkipPrevious,
-                                    hasNext = state.canSkipNext,
-                                )
-                                change.consume()
-                            },
-                            onDragEnd = {
-                                carousel.release(
-                                    travelledPx = dragTotal,
-                                    velocityPx = 0f,
-                                    spacingPx = coverSidePx + gapPx,
-                                    flingPx = coverSidePx * 1.5f,
-                                    canSkipPrevious = state.canSkipPrevious,
-                                    canSkipNext = state.canSkipNext,
-                                    onPrevious = actions::previous,
-                                    onNext = actions::next,
-                                )
-                            },
-                            onDragCancel = carousel::cancelDrag,
-                        )
-                    },
+                    .originalCoverGestures(
+                        enabled = open > 0.95f,
+                        carousel = carousel,
+                        spacingPx = coverSidePx + gapPx,
+                        canPrevious = state.canSkipPrevious,
+                        canNext = state.canSkipNext,
+                        actions = actions,
+                        onLongPress = onMenu,
+                    ),
             ) {
                 CarouselPictures(
                     carousel = carousel,
@@ -207,6 +248,7 @@ fun OriginalExpandedPlayer(
                 alpha = { open * 0.7f },
                 modifier = Modifier.fillMaxWidth().height(32.dp),
             )
+            }
             Spacer(Modifier.weight(1f))
             OriginalPlayerSongInfoRow(
                 title = state.title.orEmpty(),
