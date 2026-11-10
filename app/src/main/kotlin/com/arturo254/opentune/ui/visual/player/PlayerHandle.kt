@@ -138,7 +138,7 @@ fun PlayerHandle(
     var pressed by remember { mutableStateOf(false) }
 
     LaunchedEffect(sheet) {
-        snapshotFlow { pressed || (!sheet.progress > 0.05f && sheet.progress > 0f) }
+        snapshotFlow { pressed || (sheet.progress < 0.95f && sheet.progress > 0f) }
             .collectLatest { chevron -> bend.animateTo(if (chevron) 1f else 0f, HandleBendSpring) }
     }
     LaunchedEffect(sheet, state) {
