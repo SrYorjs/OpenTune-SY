@@ -1124,6 +1124,7 @@ Row(
             )
         }
 
+        if (selection || isSearching) {
         TopAppBar(
             colors = topAppBarColors,
             title = {
@@ -1244,6 +1245,30 @@ Row(
                 }
             }
         )
+        } else {
+            DetailCollapsingTopBar(
+                progress = originalDetailMorph,
+                glassState = originalDetailGlass,
+                thumbnailUrl = playlist?.thumbnails?.firstOrNull(),
+                title = playlist?.playlist?.name.orEmpty(),
+                accentColor = gradientColors.firstOrNull(),
+                onBackClick = { navController.navigateUp() },
+                onBackLongClick = { navController.backToMain() },
+                modifier = Modifier.align(Alignment.TopCenter),
+                actions = {
+                    IconButton(
+                        onClick = { isSearching = true },
+                        onLongClick = {},
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.search),
+                            contentDescription = null,
+                            tint = Color.White,
+                        )
+                    }
+                },
+            )
+        }
 
         PullToRefreshDefaults.Indicator(
             isRefreshing = isRefreshing,
