@@ -2,7 +2,7 @@ package com.arturo254.opentune.ui.screens
 
 import com.arturo254.opentune.core.designsystem.theme.galaxScreenBackground
 import com.arturo254.opentune.ui.component.LiquidGlassIconButton
-import com.arturo254.opentune.ui.screens.GalaxMediaHeader
+import com.arturo254.opentune.ui.visual.detail.OriginalLibraryDetailHeader
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -468,7 +468,9 @@ fun AlbumScreen(
             if (hasSongs) {
 
                 item(key = "header") {
-GalaxMediaHeader(
+OriginalLibraryDetailHeader(
+    sharedElementKey = "album-" + viewModel.albumId,
+    listState = lazyListState,
     title = albumWithSongs.album.title,
     label = stringResource(R.string.galax_album_label),
     artworkUrls = listOf(albumWithSongs.album.thumbnailUrl),
