@@ -48,6 +48,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.key
 import androidx.compose.ui.platform.LocalContext
 import com.arturo254.opentune.models.MediaMetadata
 import androidx.compose.runtime.getValue
@@ -133,10 +134,12 @@ fun OriginalHomeHero(
     val gachaSounds = remember { GachaSounds(context.applicationContext) }
     DisposableEffect(gachaSounds) { onDispose { gachaSounds.release() } }
     var gachaRolled by remember { mutableStateOf(false) }
-    val pagerState = rememberPagerState(
-        initialPage = if (totalItems < 2) 0 else (Int.MAX_VALUE / 2) - (Int.MAX_VALUE / 2) % totalItems,
-        pageCount = { if (totalItems < 2) 1 else Int.MAX_VALUE },
-    )
+    val pagerState = key(totalItems) {
+        rememberPagerState(
+            initialPage = if (totalItems < 2) 0 else (Int.MAX_VALUE / 2) - (Int.MAX_VALUE / 2) % totalItems,
+            pageCount = { if (totalItems < 2) 1 else Int.MAX_VALUE },
+        )
+    }
     val dragged by pagerState.interactionSource.collectIsDraggedAsState()
     var userSwipe by remember { mutableStateOf(false) }
     LaunchedEffect(dragged) { if (dragged) userSwipe = true }
