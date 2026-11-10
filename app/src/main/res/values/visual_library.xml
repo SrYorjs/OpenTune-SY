@@ -5,4 +5,9 @@
     <string name="visual_library_albums_hint">Buscar un álbum</string>
     <string name="visual_library_artists_hint">Buscar un artista</string>
     <string name="visual_library_playlists_hint">Buscar una playlist</string>
+    <string name="visual_library_songs_subtitle">Todas las canciones de tu biblioteca</string>
+    <string name="visual_library_playlists_subtitle">Las listas de reproducción que guardaste</string>
+    <string name="visual_library_albums_subtitle">Los álbumes que forman tu colección</string>
+    <string name="visual_library_artists_subtitle">Los artistas que sigues y guardaste</string>
+    <string name="visual_library_added_subtitle">Las canciones más recientes de tu colección</string>
 </resources>
