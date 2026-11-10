@@ -37,7 +37,7 @@ import coil3.compose.AsyncImage
 import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem
 import com.arturo254.opentune.core.designsystem.motion.galaxMotion
-import com.arturo254.opentune.ui.screens.library.LibraryScreen
+import com.arturo254.opentune.ui.screens.library.OriginalLibraryHomeScreen
 import com.arturo254.opentune.ui.screens.search.OriginalSearchScreen
 import com.arturo254.opentune.constants.PureBlackKey
 import com.arturo254.opentune.utils.rememberPreference
@@ -72,7 +72,7 @@ fun GalaxMainPages(navController: NavController, pager: PagerState, onOpenSearch
             0 -> OriginalHomeScreen(navController, ambientActive = active,
                 onOpenSearchTab = onOpenSearch, onOpenLibraryTab = { open(2) })
             1 -> OriginalSearchScreen(navController, pureBlack = pureBlack, ambientActive = active)
-            2 -> LibraryScreen(navController, ambientActive = active,
+            2 -> OriginalLibraryHomeScreen(navController, ambientActive = active,
                 onOpenSearchTab = { open(1) })
         }
     }
