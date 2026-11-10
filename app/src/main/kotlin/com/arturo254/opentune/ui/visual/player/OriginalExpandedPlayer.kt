@@ -1,6 +1,10 @@
 package com.arturo254.opentune.ui.visual.player
 
 import androidx.compose.foundation.background
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -77,6 +81,11 @@ fun OriginalExpandedPlayer(
     val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val navigationBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val open = sheet.progress.coerceIn(0f, 1f)
+    val playingMagnification by animateFloatAsState(
+        targetValue = if (state.isPlaying) 1.05f else 1f,
+        animationSpec = tween(420, easing = FastOutSlowInEasing),
+        label = "originalCoverMagnification",
+    )
     val background = palette.firstOrNull() ?: Color(0xFF202020)
     val next = queueWindows.getOrNull(currentIndex + 1)?.mediaItem?.metadata
 
@@ -119,12 +128,18 @@ fun OriginalExpandedPlayer(
                     .size(coverSide)
                     .graphicsLayer {
                         val reveal = ((open - 0.18f) / 0.82f).coerceIn(0f, 1f)
-                        scaleX = 0.72f + reveal * 0.28f
-                        scaleY = 0.72f + reveal * 0.28f
+                        scaleX = (0.72f + reveal * 0.28f) * playingMagnification
+                        scaleY = (0.72f + reveal * 0.28f) * playingMagnification
                         translationY = (1f - reveal) * coverSidePx * 0.30f
                         alpha = ((open - 0.04f) / 0.7f).coerceIn(0f, 1f)
                     }
                     .clip(RoundedCornerShape(22.dp))
+                    .pointerInput(onMenu, actions, state.trackId) {
+                        detectTapGestures(
+                            onDoubleTap = { actions.toggleFavorite() },
+                            onLongPress = { onMenu() },
+                        )
+                    }
                     .pointerInput(carousel, state.canSkipNext, state.canSkipPrevious, gapPx, coverSidePx) {
                         var dragTotal = 0f
                         detectHorizontalDragGestures(
