@@ -63,6 +63,8 @@ fun OriginalExpandedPlayer(
     queueWindows: List<Timeline.Window>,
     currentIndex: Int,
     palette: List<Color>,
+    volume: Float,
+    onVolumeChange: (Float) -> Unit,
     onLyrics: () -> Unit,
     onQueue: () -> Unit,
     onMenu: () -> Unit,
@@ -79,7 +81,7 @@ fun OriginalExpandedPlayer(
     val next = queueWindows.getOrNull(currentIndex + 1)?.mediaItem?.metadata
 
     BoxWithConstraints(modifier = modifier.fillMaxSize().background(Color.Black)) {
-        val coverSide = (maxWidth - 48.dp).coerceAtMost(maxHeight * 0.46f).coerceAtLeast(160.dp)
+        val coverSide = (maxWidth - 48.dp).coerceAtMost((maxHeight - 520.dp).coerceAtLeast(140.dp))
         val coverSidePx = with(density) { coverSide.toPx() }
         val gapPx = with(density) { 20.dp.toPx() }
         CarouselCrossfade(
@@ -252,7 +254,11 @@ fun OriginalExpandedPlayer(
                     )
                 }
             }
-            Spacer(Modifier.height(13.dp))
+            OriginalPlayerVolumeBar(
+                volume = volume,
+                onVolumeChange = onVolumeChange,
+            )
+            Spacer(Modifier.height(7.dp))
             OriginalPlayerBottomCards(
                 nextTitle = next?.title,
                 nextArtist = next?.artists?.joinToString { it.name },
