@@ -96,11 +96,16 @@ fun OriginalLibraryHomeScreen(
     val player = LocalPlayerConnection.current
     val menu = LocalMenuState.current
     val scope = rememberCoroutineScope()
+    var tab by rememberSaveable { mutableStateOf(LibraryTab.All) }
     val songs by database.allSongs().collectAsStateWithLifecycle(emptyList())
     val albums by viewModel.albums.collectAsStateWithLifecycle()
     val artists by viewModel.artists.collectAsStateWithLifecycle()
     val playlists by viewModel.playlists.collectAsStateWithLifecycle()
-    val cachedSongs by cacheViewModel.cachedSongs.collectAsStateWithLifecycle()
+    val cachedSongs by if (tab == LibraryTab.Cached) {
+        cacheViewModel.cachedSongs.collectAsStateWithLifecycle()
+    } else {
+        remember { mutableStateOf(emptyList<Song>()) }
+    }
     val spotify by spotifyViewModel.playlists.collectAsStateWithLifecycle()
     val downloads by LocalDownloadUtil.current.downloads.collectAsStateWithLifecycle()
     val pinsState = rememberLibraryPins()
@@ -125,7 +130,6 @@ fun OriginalLibraryHomeScreen(
     val syncedPlaylists = remember(playlists) {
         playlists.filter { it.playlist.browseId != null }
     }
-    var tab by rememberSaveable { mutableStateOf(LibraryTab.All) }
     val tabSongs = when (tab) {
         LibraryTab.All -> songs
         LibraryTab.Local -> localSongs
