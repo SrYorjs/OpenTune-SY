@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -108,9 +110,9 @@ fun OriginalTimelinePlayer(
     val shortSide = LocalConfiguration.current.screenWidthDp.coerceAtMost(LocalConfiguration.current.screenHeightDp).toFloat()
     val icon = (shortSide * 0.15f).dp.coerceIn(50.dp, 72.dp)
     val circle = (shortSide * 0.078f).dp.coerceIn(28.dp, 40.dp)
-    val elapsedSize = (shortSide * 0.185f).sp.coerceIn(56.sp, 96.sp)
-    val titleSize = (shortSide * 0.04f).sp.coerceIn(14.sp, 18.sp)
-    val artistSize = (shortSide * 0.034f).sp.coerceIn(12.sp, 16.sp)
+    val elapsedSize = (shortSide * 0.185f).coerceIn(56f, 96f).sp
+    val titleSize = (shortSide * 0.04f).coerceIn(14f, 18f).sp
+    val artistSize = (shortSide * 0.034f).coerceIn(12f, 16f).sp
     val insets = timelineInsets(isLandscape)
     val carousel = rememberOriginalSongCarousel(queueWindows, currentIndex, metadata)
     val title = state.title.orEmpty()
