@@ -373,11 +373,11 @@ fun SongMenu(
             trailingContent = {
                 IconButton(
                     onClick = {
-                        val s = song.song.toggleLike()
+                        val s = if (song.song.isLocal) song.song.localToggleLike() else song.song.toggleLike()
                         database.query {
                             update(s)
                         }
-                        syncUtils.likeSong(s)
+                        if (!song.song.isLocal) syncUtils.likeSong(s)
                     },
                 ) {
                     Icon(
@@ -488,8 +488,14 @@ fun SongMenu(
                     val intent =
                         Intent().apply {
                             action = Intent.ACTION_SEND
-                            type = "text/plain"
-                            putExtra(Intent.EXTRA_TEXT, "https://music.youtube.com/watch?v=${song.id}")
+                            if (song.song.isLocal) {
+                                type = "audio/*"
+                                putExtra(Intent.EXTRA_STREAM, android.net.Uri.parse(song.id))
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            } else {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, "https://music.youtube.com/watch?v=${song.id}")
+                            }
                         }
                     context.startActivity(Intent.createChooser(intent, null))
                 },
@@ -506,7 +512,9 @@ fun SongMenu(
                 text = editText,
                 onClick = { showEditDialog = true },
             ),
-        )
+        ).let { actions ->
+            if (song.song.isLocal) actions.drop(1) else actions
+        }
     }
 
     LazyColumn(
@@ -721,6 +729,7 @@ fun SongMenu(
                         )
                     }
 
+                    if (!song.song.isLocal) {
                     when (downloadState) {
                         Download.STATE_COMPLETED -> {
                             ListItem(
@@ -831,6 +840,7 @@ fun SongMenu(
                             },
                             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                         )
+                    }
                     }
                 }
             }
