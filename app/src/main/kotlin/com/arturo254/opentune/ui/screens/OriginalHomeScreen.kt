@@ -86,6 +86,7 @@ import com.arturo254.opentune.playback.queues.YouTubeQueue
 import com.arturo254.opentune.ui.component.LocalMenuState
 import com.arturo254.opentune.ui.menu.AlbumMenu
 import com.arturo254.opentune.ui.menu.ArtistMenu
+import com.arturo254.opentune.ui.menu.PlaylistMenu
 import com.arturo254.opentune.ui.menu.SongMenu
 import com.arturo254.opentune.ui.menu.YouTubeAlbumMenu
 import com.arturo254.opentune.ui.menu.YouTubeArtistMenu
@@ -224,7 +225,7 @@ fun OriginalHomeScreen(
                 is Song -> SongMenu(originalSong = item, navController = navController, metadata = metadataMap[item.id], onDismiss = menuState::dismiss)
                 is Album -> AlbumMenu(originalAlbum = item, navController = navController, onDismiss = menuState::dismiss)
                 is Artist -> ArtistMenu(originalArtist = item, coroutineScope = scope, onDismiss = menuState::dismiss)
-                is Playlist -> {}
+                is Playlist -> PlaylistMenu(playlist = item, coroutineScope = scope, onDismiss = menuState::dismiss)
             }
         }
     }
