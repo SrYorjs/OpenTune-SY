@@ -116,6 +116,12 @@ fun OriginalLibraryHomeScreen(
     val localSongs = remember(songs, downloadedIds) {
         songs.filter { it.song.isLocal || it.id in downloadedIds }
     }
+    val localPlaylistIds by remember(localSongs) {
+        database.playlistIdsContainingSongs(localSongs.map { it.id })
+    }.collectAsStateWithLifecycle(emptyList())
+    val cachedPlaylistIds by remember(cachedSongs) {
+        database.playlistIdsContainingSongs(cachedSongs.map { it.id })
+    }.collectAsStateWithLifecycle(emptyList())
     val syncedPlaylists = remember(playlists) {
         playlists.filter { it.playlist.browseId != null }
     }
@@ -142,8 +148,8 @@ fun OriginalLibraryHomeScreen(
     }
     val tabPlaylists = when (tab) {
         LibraryTab.All -> playlists
-        LibraryTab.Local -> playlists.filter { it.playlist.isLocal }
-        LibraryTab.Cached -> emptyList()
+        LibraryTab.Local -> playlists.filter { it.id in localPlaylistIds }
+        LibraryTab.Cached -> playlists.filter { it.id in cachedPlaylistIds }
         LibraryTab.Imported -> syncedPlaylists
     }
     val activeDownloads = remember(downloads) {
@@ -404,6 +410,9 @@ fun OriginalLibraryHomeScreen(
                 LibraryTab.Cached -> {
                     originalCachedTab(
                         songs = cachedSongs,
+                        albums = tabAlbums,
+                        artists = tabArtists,
+                        playlists = tabPlaylists,
                         onOpen = navController::navigate,
                         onPlay = playSong,
                         onSongMenu = songMenu,
