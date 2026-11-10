@@ -110,6 +110,9 @@ internal class StreamResolver(
 
     fun createDataSourceFactory(): DataSource.Factory =
         ResolvingDataSource.Factory(createCacheDataSource()) { dataSpec ->
+            if (dataSpec.uri.scheme == "content" || dataSpec.uri.scheme == "file") {
+                return@Factory dataSpec
+            }
             if (StreamRequestPolicy.isDirectHttpStream(dataSpec.uri.toString())) {
                 return@Factory dataSpec
             }
