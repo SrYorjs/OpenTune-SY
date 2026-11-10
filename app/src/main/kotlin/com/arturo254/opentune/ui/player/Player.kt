@@ -1241,6 +1241,7 @@ fun BottomSheetPlayer(
                 },
                 onStyles = openPlayerStudio,
                 classic = nativeStyle == StudioPlayerStyle.CLASSIC,
+                turntable = nativeStyle == StudioPlayerStyle.TURNTABLE,
                 modifier = studioModifier,
                 onSongInfo = {
                     enrichedMetadata?.let { metadata ->
