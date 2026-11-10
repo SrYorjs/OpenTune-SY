@@ -42,4 +42,15 @@
     <string name="visual_library_cache_explanation">Canciones completas que conserva el reproductor</string>
     <string name="visual_library_imported_explanation">Colecciones realmente sincronizadas</string>
     <string name="visual_library_imported_playlist_title">Playlists importadas y sincronizadas</string>
+    <string name="visual_library_manage_title">Gestionar música local</string>
+    <string name="visual_library_manage_add">Añadir archivos</string>
+    <string name="visual_library_manage_select">Quitar de la biblioteca</string>
+    <string name="visual_library_manage_clear">Retirar todas las importaciones</string>
+    <string name="visual_library_manage_select_title">Seleccionar música local</string>
+    <string name="visual_library_manage_confirm_title">¿Retirar estas canciones?</string>
+    <string name="visual_library_manage_confirm_description">Se quitarán %1$d canciones de la biblioteca. Los archivos originales permanecerán en tu dispositivo.</string>
+    <string name="visual_library_manage_cancel">Cancelar</string>
+    <string name="visual_library_manage_remove">Retirar %1$d</string>
+    <string name="visual_library_removed_result">Se retiraron %1$d canciones de la biblioteca</string>
+    <string name="visual_library_manage_sync">Sincronizar listas</string>
 </resources>
