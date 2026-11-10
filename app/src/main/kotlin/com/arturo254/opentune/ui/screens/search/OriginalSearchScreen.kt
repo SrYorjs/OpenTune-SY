@@ -81,6 +81,7 @@ import com.arturo254.opentune.ui.visual.search.rememberCollapseProgress
 import com.arturo254.opentune.ui.visual.search.searchTopBarHeight
 import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.viewmodels.MoodAndGenresViewModel
+import com.arturo254.opentune.viewmodels.coverKey
 import com.arturo254.opentune.viewmodels.UniversalSearchViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -164,6 +165,7 @@ fun OriginalSearchScreen(
                         sections = sections.orEmpty(),
                         loading = genresLoading,
                         navController = navController,
+                        viewModel = genresViewModel,
                     )
                 }
             }
@@ -262,6 +264,7 @@ private fun OriginalSearchBrowseContent(
     sections: List<com.arturo254.opentune.innertube.pages.MoodAndGenres.Item>,
     loading: Boolean,
     navController: NavController,
+    viewModel: MoodAndGenresViewModel,
 ) {
     val bottomInset = LocalPlayerAwareWindowInsets.current.asPaddingValues().calculateBottomPadding()
     LazyColumn(
@@ -297,10 +300,15 @@ private fun OriginalSearchBrowseContent(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     row.forEach { item ->
+                        LaunchedEffect(item.endpoint.browseId, item.endpoint.params) {
+                            viewModel.requestCovers(item.endpoint.browseId, item.endpoint.params)
+                        }
                         MoodTile(
                             title = item.title,
                             stripeColor = item.stripeColor,
-                            covers = emptyList(),
+                            covers = viewModel.covers[
+                                coverKey(item.endpoint.browseId, item.endpoint.params)
+                            ].orEmpty(),
                             onClick = {
                                 navController.navigate(
                                     "youtube_browse/" + item.endpoint.browseId +
