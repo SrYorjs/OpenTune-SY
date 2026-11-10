@@ -188,6 +188,12 @@ import com.arturo254.opentune.utils.makeTimeString
 import com.arturo254.opentune.utils.rememberEnumPreference
 import com.arturo254.opentune.utils.rememberPreference
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.arturo254.opentune.ui.visual.studio.StudioPlayerStyle
+import com.arturo254.opentune.ui.visual.studio.PlayerSelectorOverlay
+import com.arturo254.opentune.ui.visual.studio.rememberPlayerStudioState
+import com.arturo254.opentune.ui.visual.studio.studioSheetLayer
+import com.arturo254.opentune.ui.visual.studio.studioPreviewInert
 import coil3.compose.AsyncImage
 import com.arturo254.opentune.constants.AodAutoActivationKey
 import com.arturo254.opentune.constants.AodFullscreenKey
@@ -226,12 +232,35 @@ fun BottomSheetPlayer(
     val playerConnection = LocalPlayerConnection.current ?: return
     val playerActions = rememberPlayerActions(playerConnection)
 
-    val (useOriginalExpandedPlayer) = rememberPreference(booleanPreferencesKey("originalExpandedPlayer"), true)
+    val (useOriginalExpandedPlayer, setUseOriginalExpandedPlayer) = rememberPreference(booleanPreferencesKey("originalExpandedPlayer"), true)
+    val (studioSelectedName, setStudioSelectedName) = rememberPreference(stringPreferencesKey("studioPlayerStyle"), "FLAGSHIP")
+    val (_, setLegacyPlayerDesign) = rememberEnumPreference(PlayerDesignStyleKey, PlayerDesignStyle.V8)
+    val studioStyles = remember { StudioPlayerStyle.selectorStyles.filter { it.selectable } }
+    val studioColumns = remember(studioStyles) {
+        StudioPlayerStyle.selectorColumns
+            .map { column -> column.filter { it.selectable } }
+            .filter { it.isNotEmpty() }
+            .map { group -> group.map(studioStyles::indexOf) }
+    }
+    val studio = rememberPlayerStudioState(studioColumns)
     val presentation = rememberPlayerPresentationPreferences()
     val playerDesignStyle = presentation.designStyle
     val playerBackground = presentation.backgroundStyle
     val playerButtonsStyle = presentation.buttonStyle
     val sliderStyle = presentation.sliderStyle
+
+    val activeStudioStyle = if (useOriginalExpandedPlayer) {
+        StudioPlayerStyle.fromStored(studioSelectedName).takeIf { it.selectable && it.native }
+            ?: StudioPlayerStyle.FLAGSHIP
+    } else {
+        studioStyles.firstOrNull { it.legacy == playerDesignStyle } ?: StudioPlayerStyle.FLAGSHIP
+    }
+    val openPlayerStudio: () -> Unit = {
+        if (!state.isCollapsed) studio.open(studioStyles.indexOf(activeStudioStyle).coerceAtLeast(0))
+    }
+    LaunchedEffect(state.isCollapsed) {
+        if (state.isCollapsed) studio.reset()
+    }
 
     val (playerCustomImageUri) = rememberPreference(PlayerCustomImageUriKey, "")
     val (playerCustomBlur) = rememberPreference(PlayerCustomBlurKey, 0f)
