@@ -62,6 +62,7 @@ import com.arturo254.opentune.models.MediaMetadata
 import com.arturo254.opentune.ui.player.actions.PlayerActions
 import com.arturo254.opentune.ui.player.state.PlayerState
 import com.arturo254.opentune.ui.visual.player.CarouselPictures
+import com.arturo254.opentune.ui.visual.player.carouselText
 import com.arturo254.opentune.ui.visual.player.rememberOriginalSongCarousel
 import com.arturo254.opentune.ui.visual.theme.InterFontFamily
 import com.arturo254.opentune.utils.makeTimeString
@@ -127,12 +128,14 @@ fun OriginalTimelinePlayer(
         circle = circle,
         timeSize = elapsedSize,
         topReserve = if (isLandscape) 0.dp else 20.dp + icon + 14.dp,
-        modifier = modifier.pointerInput(onStyles, actions, preview) {
-            if (!preview) detectTapGestures(
-                onDoubleTap = { actions.playPause() },
-                onLongPress = { onStyles() },
-            )
-        },
+        modifier = modifier.originalStyleGestures(
+            enabled = !preview,
+            carousel = carousel,
+            canPrevious = state.canSkipPrevious,
+            canNext = state.canSkipNext,
+            actions = actions,
+            onLongPress = onStyles,
+        ),
     ) {
         Row(
             modifier = Modifier
@@ -160,23 +163,56 @@ fun OriginalTimelinePlayer(
                 )
             }
             Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    color = tones.ink,
-                    fontSize = titleSize,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = artist,
-                    color = tones.inkSoft,
-                    fontSize = artistSize,
-                    fontWeight = FontWeight.Medium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+            Box(modifier = Modifier.weight(1f)) {
+                val slots = com.arturo254.opentune.ui.visual.player.rememberTextSlots(carousel)
+                if (slots.isEmpty()) {
+                    Column {
+                        Text(
+                            text = title,
+                            color = tones.ink,
+                            fontSize = titleSize,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = artist,
+                            color = tones.inkSoft,
+                            fontSize = artistSize,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                } else {
+                    slots.forEach { slot ->
+                        androidx.compose.runtime.key(slot.uid) {
+                            val current = slot.step == carousel.step
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .then(Modifier.carouselText(carousel, slot)),
+                            ) {
+                                Text(
+                                    text = slot.title.ifBlank { if (current) title else "" },
+                                    color = tones.ink,
+                                    fontSize = titleSize,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    text = slot.artist.ifBlank { if (current) artist else "" },
+                                    color = tones.inkSoft,
+                                    fontSize = artistSize,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
         Box(
