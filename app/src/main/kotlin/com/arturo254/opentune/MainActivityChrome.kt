@@ -371,7 +371,8 @@ internal fun MainActivityTopBar(
     val topAppBarScrollBehavior = navigationEffects.topAppBarScrollBehavior
 
     val ownsHeading = navigationState.selectedNavigationRoute in setOf(Screens.Home.route, Screens.Search.route) ||
-        navBackStackEntry?.destination?.route in setOf(Screens.MoodAndGenres.route, "charts_screen", "new_release", "browse/{browseId}", "youtube_browse/{browseId}?params={params}")
+        navBackStackEntry?.destination?.route in setOf(Screens.MoodAndGenres.route, "charts_screen", "new_release", "browse/{browseId}", "youtube_browse/{browseId}?params={params}") ||
+        navBackStackEntry?.destination?.route?.startsWith("search/") == true
                                         if (shouldShowTopBar && !navigationState.active && !ownsHeading) {
                                             val shouldUseFloatingTopBar = remember(navBackStackEntry) {
                                                 navBackStackEntry?.destination?.route == Screens.Home.route ||
