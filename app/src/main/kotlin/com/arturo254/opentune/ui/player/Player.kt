@@ -830,12 +830,9 @@ fun BottomSheetPlayer(
                 },
                 onSongInfo = {
                     enrichedMetadata?.let { metadata ->
-                        menuState.showPlayerPanelMenu(
-                            metadata = metadata,
-                            navController = navController,
-                            playerBottomSheetState = state,
-                            bottomSheetPageState = bottomSheetPageState,
-                        )
+                        bottomSheetPageState.show {
+                            ShowMediaInfo(metadata.id)
+                        }
                     }
                 },
             )
