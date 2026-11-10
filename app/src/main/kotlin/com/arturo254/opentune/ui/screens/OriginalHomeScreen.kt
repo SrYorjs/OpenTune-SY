@@ -344,6 +344,21 @@ fun OriginalHomeScreen(
                             active = ambientActive,
                             scrollProgress = { collapsedScroll },
                             isLoading = loading,
+                            gachaPool = songs.map { it.toMediaMetadata() },
+                            currentSongId = latestSongId,
+                            isPlaying = playing,
+                            onGachaWinner = { winner ->
+                                val index = songs.indexOfFirst { it.id == winner.id }
+                                if (index >= 0 && player != null) {
+                                    player.playQueue(
+                                        ListQueue(
+                                            title = "Home",
+                                            items = songs.map { it.toMediaItem() },
+                                            startIndex = index,
+                                        )
+                                    )
+                                }
+                            },
                         )
                     }
                 }
