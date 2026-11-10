@@ -60,7 +60,7 @@ private fun rememberCardVisible(running: Boolean): Boolean {
 fun LibraryProgressCard(
     title: String,
     running: Boolean,
-    progress: Float,
+    progress: Float?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -71,7 +71,7 @@ fun LibraryProgressCard(
         modifier = modifier,
     ) {
         val fraction = animateFloatAsState(
-            targetValue = progress,
+            targetValue = progress ?: 0f,
             animationSpec = tween(350),
             label = "libraryProgressFraction",
         )
@@ -93,7 +93,7 @@ fun LibraryProgressCard(
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    text = "${(progress * 100).toInt()}%",
+                    text = progress?.let { "${(it * 100).toInt()}%" } ?: "…",
                     color = SearchColors.Primary,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
