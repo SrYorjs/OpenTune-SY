@@ -41,12 +41,15 @@ class LocalAudioImporter @Inject constructor(
                     existing++
                     return@runCatching
                 }
-                runCatching {
+                val hasPersistentAccess = runCatching {
                     context.contentResolver.takePersistableUriPermission(
                         uri,
                         android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION,
                     )
+                }.isSuccess || context.contentResolver.persistedUriPermissions.any {
+                    it.uri == uri && it.isReadPermission
                 }
+                check(hasPersistentAccess) { "No se pudo conservar el permiso de lectura del archivo" }
                 val titleFromFile = context.contentResolver.query(
                     uri,
                     arrayOf(OpenableColumns.DISPLAY_NAME),
