@@ -827,6 +827,7 @@ fun BottomSheetPlayer(
                             navController = navController,
                             playerBottomSheetState = state,
                             bottomSheetPageState = bottomSheetPageState,
+                            onOpenStyles = openPlayerStudio,
                         )
                     }
                 },
@@ -1012,6 +1013,7 @@ fun BottomSheetPlayer(
                                             navController = navController,
                                             playerBottomSheetState = state,
                                             bottomSheetPageState = bottomSheetPageState,
+                                            onOpenStyles = openPlayerStudio,
                                         )
                                     },
                                 )
@@ -1143,6 +1145,7 @@ fun BottomSheetPlayer(
                                                 navController = navController,
                                                 playerBottomSheetState = state,
                                                 bottomSheetPageState = bottomSheetPageState,
+                                                onOpenStyles = openPlayerStudio,
                                             )
                                         },
                                     )
@@ -1232,6 +1235,7 @@ fun BottomSheetPlayer(
                             navController = navController,
                             playerBottomSheetState = state,
                             bottomSheetPageState = bottomSheetPageState,
+                            onOpenStyles = openPlayerStudio,
                         )
                     }
                 },
