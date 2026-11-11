@@ -55,3 +55,5 @@ include(":shazamkit")
 //        substitute(module("com.github.teamnewpipe:NewPipeExtractor")).using(project(":extractor"))
 //    }
 //}
+
+include(":visual-foundation")

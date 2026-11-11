@@ -160,6 +160,17 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhtt
 logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "loggingInterceptor" }
 
 
+original-materialkolor = { module = "com.materialkolor:material-kolor", version = "4.1.1" }
+original-appcompat = { module = "androidx.appcompat:appcompat", version = "1.7.1" }
+original-splashscreen = { module = "androidx.core:core-splashscreen", version = "1.2.0" }
+original-coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
+original-lottie = { module = "com.airbnb.android:lottie-compose", version = "6.6.2" }
+original-smooth-corner = { module = "com.github.racra:smooth-corner-rect-android-compose", version = "v1.0.0" }
+original-adaptive = { module = "androidx.compose.material3.adaptive:adaptive", version = "1.3.0-alpha09" }
+original-adaptive-layout = { module = "androidx.compose.material3.adaptive:adaptive-layout", version = "1.3.0-alpha09" }
+original-adaptive-navigation = { module = "androidx.compose.material3.adaptive:adaptive-navigation", version = "1.3.0-alpha09" }
+original-ucrop = { module = "com.github.yalantis:ucrop", version = "2.2.11" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }

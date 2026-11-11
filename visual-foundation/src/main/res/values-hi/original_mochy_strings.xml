@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="original_explore">खोजें</string>
+    <string name="original_local_history">स्थानीय</string>
+    <string name="original_back_button_desc">पीछे</string>
+    <string name="original_no_title">कोई शीर्षक नहीं</string>
+    <string name="original_unknown_artist">अज्ञात संगीतकार</string>
+    <string name="original_unknown_item_type">अज्ञात वस्तु प्रकार</string>
+    <string name="original_retry_button">पुन: प्रयास करें</string>
+    <string name="original_album_cover_desc">एल्बम आवरण</string>
+</resources>

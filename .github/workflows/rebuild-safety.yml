@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - opentune-rebuild-v1
+      - GalaxOTxMochyTEST
   pull_request:
     branches:
       - opentune-rebuild-v1

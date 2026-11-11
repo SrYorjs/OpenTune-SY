@@ -238,6 +238,14 @@ ksp {
 }
 
 dependencies {
+    implementation(project(":visual-foundation"))
+    implementation(libs.original.coil.svg)
+    implementation(libs.original.lottie)
+    implementation(libs.original.smooth.corner)
+    implementation(libs.original.adaptive)
+    implementation(libs.original.adaptive.layout)
+    implementation(libs.original.adaptive.navigation)
+    implementation(libs.original.ucrop)
     implementation(libs.guava)
     implementation(libs.coroutines.guava)
     implementation(libs.concurrent.futures)
@@ -333,7 +341,6 @@ dependencies {
     testImplementation(libs.junit)
     implementation("com.github.therealbush:translator:1.1.1")
     implementation("androidx.lifecycle:lifecycle-process:2.10.0")
-    implementation("androidx.compose.material3.adaptive:adaptive:1.2.0")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {

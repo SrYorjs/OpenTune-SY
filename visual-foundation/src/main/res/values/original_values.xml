@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    
+    <drawable name="original_media3_notification_play">@drawable/original_play</drawable>
+    <drawable name="original_media3_notification_pause">@drawable/original_pause</drawable>
+    <drawable name="original_media3_notification_seek_to_previous">@drawable/original_skip_previous</drawable>
+    <drawable name="original_media3_notification_seek_to_next">@drawable/original_skip_next</drawable>
+</resources>

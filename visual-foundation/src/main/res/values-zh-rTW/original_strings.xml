@@ -1,0 +1,350 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    
+    <string name="original_home">首頁</string>
+    <string name="original_music">Music</string>
+    <string name="original_songs">歌曲</string>
+    <string name="original_artists">藝人</string>
+    <string name="original_albums">專輯</string>
+    <string name="original_playlists">播放清單</string>
+    
+    <plurals name="original_n_selected">
+        <item quantity="other">已選取 %d 個項目</item>
+    </plurals>
+    
+    <string name="original_history">歷史記錄</string>
+    <string name="original_stats">統計</string>
+    <string name="original_mood_and_genres">情境與類型</string>
+    <string name="original_account">帳號</string>
+    <string name="original_quick_picks">歌曲快選</string>
+    <string name="original_quick_picks_empty">聽一些音樂讓我們知道您的喜好</string>
+    <string name="original_forgotten_favorites">重溫舊愛</string>
+    <string name="original_keep_listening">再聽一次</string>
+    <string name="original_your_youtube_playlists">你的 YouTube 播放清單</string>
+    <string name="original_similar_to">風格近似</string>
+    <string name="original_new_release_albums">新專輯</string>
+    
+    <string name="original_today">今天</string>
+    <string name="original_yesterday">昨天</string>
+    <string name="original_this_week">這週</string>
+    <string name="original_last_week">上週</string>
+    
+    <string name="original_most_played_songs">最常播放的歌曲</string>
+    <string name="original_most_played_artists">最常播放的藝人</string>
+    <string name="original_most_played_albums">最常播放的專輯</string>
+    
+    <string name="original_search">搜尋</string>
+    <string name="original_search_yt_music">搜尋 YouTube Music…</string>
+    <string name="original_search_library">搜尋媒體庫…</string>
+    <string name="original_filter_library">媒體庫</string>
+    <string name="original_filter_liked">已按讚</string>
+    <string name="original_filter_downloaded">已下載</string>
+    <string name="original_filter_all">全部</string>
+    <string name="original_filter_songs">歌曲</string>
+    <string name="original_filter_videos">影片</string>
+    <string name="original_filter_albums">專輯</string>
+    <string name="original_filter_artists">藝人</string>
+    <string name="original_filter_playlists">播放清單</string>
+    <string name="original_filter_community_playlists">社群播放清單</string>
+    <string name="original_filter_featured_playlists">精選播放清單</string>
+    <string name="original_filter_bookmarked">收藏</string>
+    <string name="original_no_results_found">找不到結果</string>
+    
+    <string name="original_library_song_empty">媒體庫的歌曲會顯示在這裡</string>
+    <string name="original_library_artist_empty">媒體庫的藝人會顯示在這裡</string>
+    <string name="original_library_album_empty">媒體庫的專輯會顯示在這裡</string>
+    <string name="original_library_playlist_empty">你的播放清單會顯示在這裡</string>
+    
+    <string name="original_from_your_library">來自你的媒體庫</string>
+    
+    <string name="original_other_versions">其他版本</string>
+    <string name="original_album_description_placeholder">This is a placeholder description for the album. Enjoy listening to the tracks below!</string>
+    
+    <string name="original_liked_songs">喜歡的歌曲</string>
+    <string name="original_downloaded_songs">已下載的歌曲</string>
+    <string name="original_playlist_is_empty">播放清單為空</string>
+    <string name="original_remove_download_playlist_confirm">確定要刪除「%s」的下載嗎？</string>
+    <string name="original_delete_playlist_confirm">確定要刪除播放清單「%s」嗎?</string>
+    <string name="original_you_might_also_like">Related Playlist</string>
+    
+    <string name="original_retry">重試</string>
+    <string name="original_radio">電台</string>
+    <string name="original_shuffle">隨機播放</string>
+    <string name="original_shuffle_content_desc">Shuffle</string>
+    <string name="original_shuffle_label">Shuffle</string>
+    <string name="original_reset">重設</string>
+    
+    <string name="original_details">詳細資訊</string>
+    <string name="original_view_details">View details</string>
+    <string name="original_edit">編輯</string>
+    <string name="original_start_radio">開啟電台</string>
+    <string name="original_play">播放</string>
+    <string name="original_pause">Pause</string>
+    <string name="original_play_next">接著播放</string>
+    <string name="original_add_to_queue">加入待播清單</string>
+    <string name="original_add_to_library">加入媒體庫</string>
+    <string name="original_add_all_to_library">全部加入媒體庫</string>
+    <string name="original_remove_from_library">從音樂庫中移除</string>
+    <string name="original_added_to_library">Added to library</string>
+    <string name="original_removed_from_library">Removed from library</string>
+    <string name="original_remove_from_import_and_library">Remove from import and library</string>
+    <string name="original_removed_from_import_and_library">Removed from your %1$s imports and your library</string>
+    <string name="original_remove_all_from_library">全部從音樂庫中移除</string>
+    <string name="original_action_download">下載</string>
+    <string name="original_downloading">下載中</string>
+    <string name="original_saving">Saving</string>
+    <string name="original_saved">Saved</string>
+    <string name="original_remove_download">刪除下載</string>
+    <string name="original_import_playlist">匯入播放清單</string>
+    <string name="original_add_to_playlist">加入播放清單</string>
+    <string name="original_start_an_radio">Radio</string>
+    <string name="original_add_to_an_playlist">Add</string>
+    <string name="original_view_artist">瀏覽藝人</string>
+    <string name="original_view_album">瀏覽專輯</string>
+    <string name="original_refetch">更新資料</string>
+    <string name="original_share">分享</string>
+    <string name="original_more_options">More options</string>
+    <string name="original_more_label">More</string>
+    <string name="original_releases_for_you">Releases for you</string>
+    <string name="original_delete">移除</string>
+    <string name="original_remove_from_history">從記錄中移除</string>
+    <string name="original_remove_from_playlist">從播放清單中移除</string>
+    <string name="original_remove_from_queue">從播放佇列中移除</string>
+    <string name="original_search_online">線上搜尋</string>
+    <string name="original_action_sync">同步</string>
+    <string name="original_advanced">進階</string>
+    <string name="original_tempo_and_pitch">速度和音調</string>
+    
+    <string name="original_sort_by_create_date">新增時間</string>
+    <string name="original_sort_by_name">名稱</string>
+    <string name="original_sort_by_artist">藝人</string>
+    <string name="original_sort_by_year">年份</string>
+    <string name="original_sort_by_song_count">歌曲總數</string>
+    <string name="original_sort_by_length">長度</string>
+    <string name="original_sort_by_play_time">播放時間</string>
+    <string name="original_sort_by_custom">自訂順序</string>
+    
+    <string name="original_media_id">Id</string>
+    <string name="original_mime_type">MIME 類型</string>
+    <string name="original_codecs">編碼</string>
+    <string name="original_bitrate">位元速率</string>
+    <string name="original_sample_rate">採樣率</string>
+    <string name="original_loudness">響度</string>
+    <string name="original_volume">音量</string>
+    <string name="original_file_size">檔案大小</string>
+    <string name="original_unknown">未知</string>
+    <string name="original_copied">已複製至剪貼簿</string>
+    <string name="original_edit_lyrics">編輯歌詞</string>
+    <string name="original_search_lyrics">搜尋歌詞</string>
+    <string name="original_lyrics_swipe_to_change_song">Swipe to change song</string>
+    <string name="original_lyrics_swipe_to_change_song_desc">Swipe left or right in the artist and song name section in full-screen lyrics to change the song</string>
+    <string name="original_lyrics_thumbnail_play_pause">Show play/pause on thumbnail</string>
+    <string name="original_lyrics_thumbnail_play_pause_desc">Show a play/pause button overlay on the song thumbnail in full-screen lyrics</string>
+    <string name="original_edit_song">編輯歌曲</string>
+    <string name="original_song_title">歌名</string>
+    <string name="original_song_artists">藝人</string>
+    <string name="original_error_song_title_empty">歌名不能為空</string>
+    <string name="original_error_song_artist_empty">藝人不能為空</string>
+    <string name="original_save">儲存</string>
+    <string name="original_choose_playlist">選擇播放清單</string>
+    <string name="original_edit_playlist">編輯播放清單</string>
+    <string name="original_create_playlist">新增播放清單</string>
+    <string name="original_playlist_name">名稱</string>
+    <string name="original_error_playlist_name_empty">播放清單名稱不能為空</string>
+    <string name="original_edit_artist">編輯藝人</string>
+    <string name="original_artist_name">藝人名稱</string>
+    <string name="original_error_artist_name_empty">藝人名稱不能為空</string>
+    <string name="original_duplicates">重複項目</string>
+    <string name="original_skip_duplicates">略過重複項目</string>
+    <string name="original_add_anyway">仍要新增</string>
+    <string name="original_duplicates_description_single">播放清單已有此曲目</string>
+    <string name="original_duplicates_description_multiple">播放清單已有 %d 首相同曲目</string>
+    
+    <plurals name="original_n_song">
+        <item quantity="other">%d 首歌曲</item>
+    </plurals>
+    <plurals name="original_n_artist">
+        <item quantity="other">%d 位藝人</item>
+    </plurals>
+    <plurals name="original_n_album">
+        <item quantity="other">%d 張專輯</item>
+    </plurals>
+    <plurals name="original_n_playlist">
+        <item quantity="other">%d 個播放清單</item>
+    </plurals>
+    <plurals name="original_n_week">
+        <item quantity="other">%d 週</item>
+    </plurals>
+    <plurals name="original_n_month">
+        <item quantity="other">%d 個月</item>
+    </plurals>
+    <plurals name="original_n_year">
+        <item quantity="other">%d 年</item>
+    </plurals>
+    <plurals name="original_n_apk_found">
+        <item quantity="other">%d APKs found</item>
+    </plurals>
+    
+    <string name="original_playlist_imported">已匯入此播放清單</string>
+    <string name="original_removed_song_from_playlist">已將「%s」從播放清單移除</string>
+    <string name="original_playlist_synced">同步完成</string>
+    <string name="original_undo">復原</string>
+    
+    <string name="original_lyrics_not_found">沒有歌詞</string>
+    <string name="original_sleep_timer">睡眠定時器</string>
+    <string name="original_end_of_song">這首歌曲播放完畢</string>
+    <plurals name="original_minute">
+        <item quantity="other">%d 分鐘</item>
+    </plurals>
+    <string name="original_error_no_stream">沒有可用的音源</string>
+    <string name="original_error_no_internet">沒有網路連線</string>
+    <string name="original_error_timeout">連線逾時</string>
+    <string name="original_error_unknown">未知的錯誤</string>
+    
+    <string name="original_action_like">喜歡</string>
+    <string name="original_action_like_all">全部喜歡</string>
+    <string name="original_action_remove_like">取消喜歡</string>
+    <string name="original_action_remove_like_all">全部取消喜歡</string>
+    <string name="original_action_shuffle_on">隨機播放開啟</string>
+    <string name="original_action_shuffle_off">隨機播放關閉</string>
+    <string name="original_repeat_mode_off">重複播放關閉</string>
+    <string name="original_repeat_mode_one">重複播放此歌曲</string>
+    <string name="original_repeat_mode_all">重複播放佇列</string>
+    
+    <string name="original_queue_all_songs">全部歌曲</string>
+    <string name="original_queue_searched_songs">搜尋的歌曲</string>
+    
+    <string name="original_music_player">音樂播放器</string>
+    
+    <string name="original_settings">設定</string>
+    <string name="original_appearance">外觀</string>
+    <string name="original_theme">主題</string>
+    <string name="original_theme_desc">Customize your app theme</string>
+    <string name="original_theme_colors">Theme &amp; Colors</string>
+    <string name="original_theme_mode">Theme Mode</string>
+    <string name="original_color_palette">Color Palette</string>
+    <string name="original_use_system_colors">Use system colors</string>
+    <string name="original_enable_dynamic_theme">使用動態主題</string>
+    <string name="original_dark_theme">深色主題</string>
+    <string name="original_dark_theme_on">開</string>
+    <string name="original_dark_theme_off">關</string>
+    <string name="original_dark_theme_follow_system">跟隨系統</string>
+    <string name="original_pure_black">純黑</string>
+    <string name="original_customize_navigation_tabs">自訂導覽列</string>
+    <string name="original_player">播放器</string>
+    <string name="original_player_text_alignment">播放器文字對齊</string>
+    <string name="original_lyrics_text_position">歌詞文字位置</string>
+    <string name="original_sided">靠邊</string>
+    <string name="original_left">靠左</string>
+    <string name="original_center">置中</string>
+    <string name="original_right">靠右</string>
+    <string name="original_player_slider_style">播放器滑桿樣式</string>
+    <string name="original_default_">預設</string>
+    <string name="original_apple_music">Apple Music</string>
+    <string name="original_squiggly">波浪</string>
+    <string name="original_misc">其他</string>
+    <string name="original_default_open_tab">預設啟動標籤</string>
+    <string name="original_grid_cell_size">網格大小</string>
+    <string name="original_small">小</string>
+    <string name="original_big">大</string>
+    <string name="original_content">內容</string>
+    <string name="original_action_logout">登出</string>
+    <string name="original_action_login">Log in</string>
+    <string name="original_login">登入</string>
+    <string name="original_show_audio_quality_badge">Show audio quality badge</string>
+    <string name="original_not_logged_in">尚未登入</string>
+    <string name="original_login_failed">登入失敗</string>
+    <string name="original_content_language">預設內容語言</string>
+    <string name="original_content_country">預設內容國家</string>
+    <string name="original_system_default">系統預設</string>
+    <string name="original_enable_proxy">啟用 Proxy</string>
+    <string name="original_proxy_type">Proxy 種類</string>
+    <string name="original_proxy_url">Proxy URL</string>
+    <string name="original_restart_to_take_effect">重啟以套用變更</string>
+    <string name="original_player_and_audio">播放與音訊</string>
+    <string name="original_audio_quality">音質</string>
+    <string name="original_network_ip_version">Network IP Version</string>
+    <string name="original_ip_version_auto">Automatic</string>
+    <string name="original_ip_version_ipv4">Forced IPv4</string>
+    <string name="original_ip_version_ipv6">Forced IPv6</string>
+    <string name="original_audio_quality_auto">自動</string>
+    <string name="original_audio_quality_high">高</string>
+    <string name="original_audio_quality_low">低</string>
+    <string name="original_audio_quality_medium">Medium</string>
+    <string name="original_queue">播放佇列</string>
+    <string name="original_persistent_queue">保留播放佇列</string>
+    <string name="original_persistent_queue_desc">開啟應用程式時還原上次的播放佇列</string>
+    <string name="original_auto_load_more">自動載入更多歌曲</string>
+    <string name="original_auto_load_more_desc">當播放佇列快結束時，自動加入更多歌曲，如果可以的話</string>
+    <string name="original_skip_silence">跳過無聲片段</string>
+    <string name="original_audio_normalization">標準化音量</string>
+    <string name="original_auto_skip_next_on_error">發生錯誤時自動跳到下一首</string>
+    <string name="original_auto_skip_next_on_error_desc">讓你享受音樂不中斷</string>
+    <string name="original_stop_music_on_task_clear">將音樂在清除任務時停止</string>
+    <string name="original_equalizer">等化器</string>
+    <string name="original_storage">儲存</string>
+    <string name="original_cache">快取</string>
+    <string name="original_image_cache">圖片快取</string>
+    <string name="original_song_cache">歌曲快取</string>
+    <string name="original_max_cache_size">最大快取大小</string>
+    <string name="original_unlimited">無限制</string>
+    <string name="original_clear_all_downloads">清除所有下載</string>
+    <string name="original_max_image_cache_size">圖片快取大小</string>
+    <string name="original_clear_image_cache">清除圖片快取</string>
+    <string name="original_max_song_cache_size">歌曲快取大小</string>
+    <string name="original_clear_song_cache">清除歌曲快取</string>
+    <string name="original_size_used">已使用 %s</string>
+    <string name="original_clear_downloaded_updates">Clear downloaded updates</string>
+    <string name="original_clear_downloaded_updates_desc">Remove downloaded APK files to free up space</string>
+    <string name="original_privacy">隱私</string>
+    <string name="original_listen_history">觀看記錄</string>
+    <string name="original_pause_listen_history">暫停觀看記錄</string>
+    <string name="original_clear_listen_history">清除觀看記錄</string>
+    <string name="original_clear_listen_history_confirm">您確定要清除所有觀看記錄嗎？</string>
+    <string name="original_search_history">搜尋記錄</string>
+    <string name="original_pause_search_history">暫停搜尋記錄</string>
+    <string name="original_clear_search_history">清除搜尋記錄</string>
+    <string name="original_clear_search_history_confirm">您確定要清除所有搜尋記錄嗎？</string>
+    <string name="original_use_login_for_browse">Use login for browsing content</string>
+    <string name="original_use_login_for_browse_desc">This can influence what content you see and for example shows premium-only albums if you are logged in with a Premium account</string>
+    <string name="original_disable_screenshot">禁用截圖</string>
+    <string name="original_disable_screenshot_desc">當此選項開啟時，您無法截圖，也無法在「最近使用」中看到此應用程式的畫面。</string>
+    <string name="original_enable_lrclib">使用 LrcLib 提供歌詞</string>
+    <string name="original_enable_kugou">使用酷狗音樂提供歌詞</string>
+    <string name="original_hide_explicit">移除不適當內容</string>
+    <string name="original_backup_restore">備份與還原</string>
+    <string name="original_action_backup">備份</string>
+    <string name="original_action_restore">還原</string>
+    <string name="original_imported_playlist">已匯入的播放清單</string>
+    <string name="original_backup_create_success">成功建立備份</string>
+    <string name="original_backup_create_failed">無法建立備份</string>
+    <string name="original_restore_failed">無法還原備份</string>
+    <string name="original_discord_integration">Discord 整合</string>
+    <string name="original_discord_information">mochy使用KizzyRPC函式庫來設定您的Discord狀態。這會用到Discord Gateway連線，可能會違反Discord服務條款，但是目前沒有使用者為此被停用帳號。使用此功能需自行承擔此風險。\n\nmochy只會提取你的token，所有東西都存在本機。</string>
+    <string name="original_dismiss">了解</string>
+    <string name="original_options">選項</string>
+    <string name="original_preview">預覽</string>
+    <string name="original_enable_discord_rpc">啟用 Rich Presence</string>
+    <string name="original_about">關於</string>
+    <string name="original_app_version">應用程式版本</string>
+    <string name="original_new_version_available">發現新版本</string>
+    <string name="original_translation_models">翻譯模型</string>
+    <string name="original_clear_translation_models">清除翻譯模型</string>
+    <string name="original_bluetooth_permission_required">Bluetooth permission is required to discover audio devices.</string>
+    <string name="original_streaming_to">Streaming to</string>
+    <string name="original_this_phone">This phone</string>
+    <string name="original_wired_headphones">Wired headphones</string>
+    <string name="original_hdmi">HDMI</string>
+    <string name="original_phone_speaker">Phone speaker</string>
+    <string name="original_audio_quality_title">Audio Quality</string>
+    <string name="original_battery_content_desc">Battery Level</string>
+    <string name="original_done">Done</string>
+    <string name="original_audio_devices">Audio devices</string>
+    <string name="original_bluetooth_headphones">Bluetooth headphones</string>
+    <string name="original_license">GNU General Public License v3.0</string>
+    <string name="original_standard_lyrics_blur">Standard lyrics blur</string>
+    <string name="original_listen_together_smart_resync">Smart Network Resync</string>
+    <string name="original_listen_together_smart_resync_desc">Automatically catch up with the host after a connection drop</string>
+    <string name="original_error_stream_unavailable_title">Couldn\'t play this track</string>
+    <string name="original_playback_error_channel_name">Playback errors</string>
+</resources>

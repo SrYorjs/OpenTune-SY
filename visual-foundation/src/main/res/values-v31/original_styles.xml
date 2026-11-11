@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    
+    <style name="original_Theme.App.Starting.Icon" parent="original_Theme.App.Starting">
+        <item name="android:windowSplashScreenAnimatedIcon">@null</item>
+    </style>
+
+    
+    <style name="original_Theme.Widget.mochy" parent="@android:style/Theme.DeviceDefault.DayNight">
+        <item name="android:fontFamily">@font/original_inter</item>
+        <item name="fontFamily">@font/original_inter</item>
+    </style>
+</resources>

@@ -1,0 +1,350 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    
+    <string name="original_home">Home</string>
+    <string name="original_music">Music</string>
+    <string name="original_songs">Songs</string>
+    <string name="original_artists">Artists</string>
+    <string name="original_albums">Albums</string>
+    <string name="original_playlists">Playlists</string>
+    
+    <plurals name="original_n_selected">
+        <item quantity="other">%d selected</item>
+    </plurals>
+    
+    <string name="original_history">History</string>
+    <string name="original_stats">Stats</string>
+    <string name="original_mood_and_genres">Mood and Genres</string>
+    <string name="original_account">Account</string>
+    <string name="original_quick_picks">Quick picks</string>
+    <string name="original_quick_picks_empty">Listen to songs to generate your quick picks</string>
+    <string name="original_forgotten_favorites">Forgotten favorites</string>
+    <string name="original_keep_listening">Keep listening</string>
+    <string name="original_your_youtube_playlists">Your YouTube playlists</string>
+    <string name="original_similar_to">Similar to</string>
+    <string name="original_new_release_albums">New release albums</string>
+    
+    <string name="original_today">Today</string>
+    <string name="original_yesterday">Yesterday</string>
+    <string name="original_this_week">This week</string>
+    <string name="original_last_week">Last week</string>
+    
+    <string name="original_most_played_songs">Most played songs</string>
+    <string name="original_most_played_artists">Most played artists</string>
+    <string name="original_most_played_albums">Most played albums</string>
+    
+    <string name="original_search">Search</string>
+    <string name="original_search_yt_music">Search YouTube Music…</string>
+    <string name="original_search_library">Search library…</string>
+    <string name="original_filter_library">Library</string>
+    <string name="original_filter_liked">Liked</string>
+    <string name="original_filter_downloaded">Downloaded</string>
+    <string name="original_filter_all">All</string>
+    <string name="original_filter_songs">Songs</string>
+    <string name="original_filter_videos">Videos</string>
+    <string name="original_filter_albums">Albums</string>
+    <string name="original_filter_artists">Artists</string>
+    <string name="original_filter_playlists">Playlists</string>
+    <string name="original_filter_community_playlists">Community playlists</string>
+    <string name="original_filter_featured_playlists">Featured playlists</string>
+    <string name="original_filter_bookmarked">Bookmarked</string>
+    <string name="original_no_results_found">No results found</string>
+    
+    <string name="original_library_song_empty">Library songs will show up here</string>
+    <string name="original_library_artist_empty">Library artists will show up here</string>
+    <string name="original_library_album_empty">Library albums will show up here</string>
+    <string name="original_library_playlist_empty">Your playlists will show up here</string>
+    
+    <string name="original_from_your_library">From your library</string>
+    
+    <string name="original_other_versions">Other versions</string>
+    <string name="original_album_description_placeholder">This is a placeholder description for the album. Enjoy listening to the tracks below!</string>
+    
+    <string name="original_liked_songs">Liked songs</string>
+    <string name="original_downloaded_songs">Downloaded songs</string>
+    <string name="original_playlist_is_empty">The playlist is empty</string>
+    <string name="original_remove_download_playlist_confirm">Do you really want to remove all \"%s\" playlist songs from the Downloaded Songs storage?</string>
+    <string name="original_delete_playlist_confirm">Do you really want to delete the playlist \"%s\"?</string>
+    <string name="original_you_might_also_like">Related Playlist</string>
+    
+    <string name="original_retry">Retry</string>
+    <string name="original_radio">Radio</string>
+    <string name="original_shuffle">Shuffle</string>
+    <string name="original_shuffle_content_desc">Shuffle</string>
+    <string name="original_shuffle_label">Shuffle</string>
+    <string name="original_reset">Reset</string>
+    
+    <string name="original_details">Details</string>
+    <string name="original_view_details">View details</string>
+    <string name="original_edit">Edit</string>
+    <string name="original_start_radio">Start radio</string>
+    <string name="original_play">Play</string>
+    <string name="original_pause">Pause</string>
+    <string name="original_play_next">Play next</string>
+    <string name="original_add_to_queue">Add to queue</string>
+    <string name="original_add_to_library">Add to library</string>
+    <string name="original_add_all_to_library">Add all to library</string>
+    <string name="original_remove_from_library">Remove from library</string>
+    <string name="original_added_to_library">Added to library</string>
+    <string name="original_removed_from_library">Removed from library</string>
+    <string name="original_remove_from_import_and_library">Remove from import and library</string>
+    <string name="original_removed_from_import_and_library">Removed from your %1$s imports and your library</string>
+    <string name="original_remove_all_from_library">Remove all from library</string>
+    <string name="original_action_download">Download</string>
+    <string name="original_downloading">Downloading</string>
+    <string name="original_saving">Saving</string>
+    <string name="original_saved">Saved</string>
+    <string name="original_remove_download">Remove download</string>
+    <string name="original_import_playlist">Import playlist</string>
+    <string name="original_add_to_playlist">Add to playlist</string>
+    <string name="original_start_an_radio">Radio</string>
+    <string name="original_add_to_an_playlist">Add</string>
+    <string name="original_view_artist">View artist</string>
+    <string name="original_view_album">View album</string>
+    <string name="original_refetch">Refetch</string>
+    <string name="original_share">Share</string>
+    <string name="original_more_options">More options</string>
+    <string name="original_more_label">More</string>
+    <string name="original_releases_for_you">Releases for you</string>
+    <string name="original_delete">Delete</string>
+    <string name="original_remove_from_history">Remove from history</string>
+    <string name="original_remove_from_playlist">Remove from playlist</string>
+    <string name="original_remove_from_queue">Remove from queue</string>
+    <string name="original_search_online">Search online</string>
+    <string name="original_action_sync">Sync</string>
+    <string name="original_advanced">Advanced</string>
+    <string name="original_tempo_and_pitch">Tempo and Pitch</string>
+    
+    <string name="original_sort_by_create_date">Date added</string>
+    <string name="original_sort_by_name">Name</string>
+    <string name="original_sort_by_artist">Artist</string>
+    <string name="original_sort_by_year">Year</string>
+    <string name="original_sort_by_song_count">Song count</string>
+    <string name="original_sort_by_length">Length</string>
+    <string name="original_sort_by_play_time">Play time</string>
+    <string name="original_sort_by_custom">Custom order</string>
+    
+    <string name="original_media_id">Media id</string>
+    <string name="original_mime_type">MIME type</string>
+    <string name="original_codecs">Codecs</string>
+    <string name="original_bitrate">Bitrate</string>
+    <string name="original_sample_rate">Sample rate</string>
+    <string name="original_loudness">Loudness</string>
+    <string name="original_volume">Volume</string>
+    <string name="original_file_size">File size</string>
+    <string name="original_unknown">Unknown</string>
+    <string name="original_copied">Copied to clipboard</string>
+    <string name="original_edit_lyrics">Edit lyrics</string>
+    <string name="original_search_lyrics">Search lyrics</string>
+    <string name="original_lyrics_swipe_to_change_song">Swipe to change song</string>
+    <string name="original_lyrics_swipe_to_change_song_desc">Swipe left or right in the artist and song name section in full-screen lyrics to change the song</string>
+    <string name="original_lyrics_thumbnail_play_pause">Show play/pause on thumbnail</string>
+    <string name="original_lyrics_thumbnail_play_pause_desc">Show a play/pause button overlay on the song thumbnail in full-screen lyrics</string>
+    <string name="original_edit_song">Edit song</string>
+    <string name="original_song_title">Song title</string>
+    <string name="original_song_artists">Song artists</string>
+    <string name="original_error_song_title_empty">Song title cannot be empty.</string>
+    <string name="original_error_song_artist_empty">Song artist cannot be empty.</string>
+    <string name="original_save">Save</string>
+    <string name="original_choose_playlist">Choose playlist</string>
+    <string name="original_edit_playlist">Edit playlist</string>
+    <string name="original_create_playlist">Create playlist</string>
+    <string name="original_playlist_name">Playlist name</string>
+    <string name="original_error_playlist_name_empty">Playlist name cannot be empty.</string>
+    <string name="original_edit_artist">Edit artist</string>
+    <string name="original_artist_name">Artist name</string>
+    <string name="original_error_artist_name_empty">Artist name cannot be empty.</string>
+    <string name="original_duplicates">Duplicates</string>
+    <string name="original_skip_duplicates">Skip duplicates</string>
+    <string name="original_add_anyway">Add anyway</string>
+    <string name="original_duplicates_description_single">The song is already in your playlist</string>
+    <string name="original_duplicates_description_multiple">%d songs are already in your playlist</string>
+    
+    <plurals name="original_n_song">
+        <item quantity="other">%d songs</item>
+    </plurals>
+    <plurals name="original_n_artist">
+        <item quantity="other">%d artists</item>
+    </plurals>
+    <plurals name="original_n_album">
+        <item quantity="other">%d albums</item>
+    </plurals>
+    <plurals name="original_n_playlist">
+        <item quantity="other">%d playlists</item>
+    </plurals>
+    <plurals name="original_n_week">
+        <item quantity="other">%d weeks</item>
+    </plurals>
+    <plurals name="original_n_month">
+        <item quantity="other">%d months</item>
+    </plurals>
+    <plurals name="original_n_year">
+        <item quantity="other">%d years</item>
+    </plurals>
+    <plurals name="original_n_apk_found">
+        <item quantity="other">%d APKs found</item>
+    </plurals>
+    
+    <string name="original_playlist_imported">Playlist imported</string>
+    <string name="original_removed_song_from_playlist">Removed \"%s\" from playlist</string>
+    <string name="original_playlist_synced">Playlist synced</string>
+    <string name="original_undo">Undo</string>
+    
+    <string name="original_lyrics_not_found">Lyrics not found</string>
+    <string name="original_sleep_timer">Sleep timer</string>
+    <string name="original_end_of_song">End of song</string>
+    <plurals name="original_minute">
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <string name="original_error_no_stream">No stream available</string>
+    <string name="original_error_no_internet">No network connection</string>
+    <string name="original_error_timeout">Timeout</string>
+    <string name="original_error_unknown">Unknown error</string>
+    
+    <string name="original_action_like">Like</string>
+    <string name="original_action_like_all">Like all</string>
+    <string name="original_action_remove_like">Remove like</string>
+    <string name="original_action_remove_like_all">Remove all likes</string>
+    <string name="original_action_shuffle_on">Shuffle on</string>
+    <string name="original_action_shuffle_off">Shuffle off</string>
+    <string name="original_repeat_mode_off">Repeat mode off</string>
+    <string name="original_repeat_mode_one">Repeat current song</string>
+    <string name="original_repeat_mode_all">Repeat queue</string>
+    
+    <string name="original_queue_all_songs">All songs</string>
+    <string name="original_queue_searched_songs">Searched songs</string>
+    
+    <string name="original_music_player">Music Player</string>
+    
+    <string name="original_settings">Settings</string>
+    <string name="original_appearance">Appearance</string>
+    <string name="original_theme">Theme</string>
+    <string name="original_theme_desc">Customize your app theme</string>
+    <string name="original_theme_colors">Theme &amp; Colors</string>
+    <string name="original_theme_mode">Theme Mode</string>
+    <string name="original_color_palette">Color Palette</string>
+    <string name="original_use_system_colors">Use system colors</string>
+    <string name="original_enable_dynamic_theme">Enable dynamic theme</string>
+    <string name="original_dark_theme">Dark theme</string>
+    <string name="original_dark_theme_on">On</string>
+    <string name="original_dark_theme_off">Off</string>
+    <string name="original_dark_theme_follow_system">Follow system</string>
+    <string name="original_pure_black">Pure black</string>
+    <string name="original_customize_navigation_tabs">Customize navigation tabs</string>
+    <string name="original_player">Player</string>
+    <string name="original_player_text_alignment">Player text alignment</string>
+    <string name="original_lyrics_text_position">Lyrics text position</string>
+    <string name="original_sided">Sided</string>
+    <string name="original_left">Left</string>
+    <string name="original_center">Center</string>
+    <string name="original_right">Right</string>
+    <string name="original_player_slider_style">Player slider style</string>
+    <string name="original_default_">Default</string>
+    <string name="original_apple_music">Apple Music</string>
+    <string name="original_squiggly">Squiggly</string>
+    <string name="original_misc">Misc</string>
+    <string name="original_default_open_tab">Default open tab</string>
+    <string name="original_grid_cell_size">Grid cell size</string>
+    <string name="original_small">Small</string>
+    <string name="original_big">Big</string>
+    <string name="original_content">Content</string>
+    <string name="original_action_logout">Log out</string>
+    <string name="original_action_login">Log in</string>
+    <string name="original_login">Login</string>
+    <string name="original_show_audio_quality_badge">Show audio quality badge</string>
+    <string name="original_not_logged_in">Not logged in</string>
+    <string name="original_login_failed">Login failed</string>
+    <string name="original_content_language">Default content language</string>
+    <string name="original_content_country">Default content country</string>
+    <string name="original_system_default">System default</string>
+    <string name="original_enable_proxy">Enable proxy</string>
+    <string name="original_proxy_type">Proxy type</string>
+    <string name="original_proxy_url">Proxy URL</string>
+    <string name="original_restart_to_take_effect">Restart to take effect</string>
+    <string name="original_player_and_audio">Player and audio</string>
+    <string name="original_audio_quality">Audio quality</string>
+    <string name="original_network_ip_version">Network IP Version</string>
+    <string name="original_ip_version_auto">Automatic</string>
+    <string name="original_ip_version_ipv4">Forced IPv4</string>
+    <string name="original_ip_version_ipv6">Forced IPv6</string>
+    <string name="original_audio_quality_auto">Auto</string>
+    <string name="original_audio_quality_high">High</string>
+    <string name="original_audio_quality_low">Low</string>
+    <string name="original_audio_quality_medium">Medium</string>
+    <string name="original_queue">Queue</string>
+    <string name="original_persistent_queue">Persistent queue</string>
+    <string name="original_persistent_queue_desc">Restore your last queue when the app starts</string>
+    <string name="original_auto_load_more">Auto load more songs</string>
+    <string name="original_auto_load_more_desc">Automatically add more songs when the end of the queue is reached, if possible</string>
+    <string name="original_skip_silence">Skip silence</string>
+    <string name="original_audio_normalization">Audio normalization</string>
+    <string name="original_auto_skip_next_on_error">Auto skip to next song when error occurs</string>
+    <string name="original_auto_skip_next_on_error_desc">Ensure your continuous playback experience</string>
+    <string name="original_stop_music_on_task_clear">Stop music on task clear</string>
+    <string name="original_equalizer">Equalizer</string>
+    <string name="original_storage">Storage</string>
+    <string name="original_cache">Cache</string>
+    <string name="original_image_cache">Image Cache</string>
+    <string name="original_song_cache">Song Cache</string>
+    <string name="original_max_cache_size">Max cache size</string>
+    <string name="original_unlimited">Unlimited</string>
+    <string name="original_clear_all_downloads">Clear all downloads</string>
+    <string name="original_max_image_cache_size">Max image cache size</string>
+    <string name="original_clear_image_cache">Clear image cache</string>
+    <string name="original_max_song_cache_size">Max song cache size</string>
+    <string name="original_clear_song_cache">Clear song cache</string>
+    <string name="original_size_used">%s used</string>
+    <string name="original_clear_downloaded_updates">Clear downloaded updates</string>
+    <string name="original_clear_downloaded_updates_desc">Remove downloaded APK files to free up space</string>
+    <string name="original_privacy">Privacy</string>
+    <string name="original_listen_history">Listen history</string>
+    <string name="original_pause_listen_history">Pause listen history</string>
+    <string name="original_clear_listen_history">Clear listen history</string>
+    <string name="original_clear_listen_history_confirm">Are you sure you want to clear all listen history?</string>
+    <string name="original_search_history">Search history</string>
+    <string name="original_pause_search_history">Pause search history</string>
+    <string name="original_clear_search_history">Clear search history</string>
+    <string name="original_clear_search_history_confirm">Are you sure you want to clear all search history?</string>
+    <string name="original_use_login_for_browse">Use login for browsing content</string>
+    <string name="original_use_login_for_browse_desc">This can influence what content you see and for example shows premium-only albums if you are logged in with a Premium account</string>
+    <string name="original_disable_screenshot">Disable screenshot</string>
+    <string name="original_disable_screenshot_desc">When this option is on, screenshots and the app\'s view in Recents are disabled.</string>
+    <string name="original_enable_lrclib">Enable LrcLib lyrics provider</string>
+    <string name="original_enable_kugou">Enable KuGou lyrics provider</string>
+    <string name="original_hide_explicit">Hide explicit content</string>
+    <string name="original_backup_restore">Backup and restore</string>
+    <string name="original_action_backup">Backup</string>
+    <string name="original_action_restore">Restore</string>
+    <string name="original_imported_playlist">Imported playlist</string>
+    <string name="original_backup_create_success">Backup created successfully</string>
+    <string name="original_backup_create_failed">Couldn\'t create backup</string>
+    <string name="original_restore_failed">Failed to restore backup</string>
+    <string name="original_discord_integration">Discord Integration</string>
+    <string name="original_discord_information">mochy uses the KizzyRPC library to set your Discord account\'s status. This involves using the Discord Gateway connection, which may be considered a violation of Discord\'s TOS. However, there are no known cases of user accounts being suspended for this reason. Use at your own risk.\n\mochy will only extract your token, and everything else is stored locally.</string>
+    <string name="original_dismiss">Dismiss</string>
+    <string name="original_options">Options</string>
+    <string name="original_preview">Preview</string>
+    <string name="original_enable_discord_rpc">Enable Rich Presence</string>
+    <string name="original_about">About</string>
+    <string name="original_app_version">App version</string>
+    <string name="original_new_version_available">New version available</string>
+    <string name="original_translation_models">Translation Models</string>
+    <string name="original_clear_translation_models">Clear translation models</string>
+    <string name="original_bluetooth_permission_required">Bluetooth permission is required to discover audio devices.</string>
+    <string name="original_streaming_to">Streaming to</string>
+    <string name="original_this_phone">This phone</string>
+    <string name="original_wired_headphones">Wired headphones</string>
+    <string name="original_hdmi">HDMI</string>
+    <string name="original_phone_speaker">Phone speaker</string>
+    <string name="original_audio_quality_title">Audio Quality</string>
+    <string name="original_battery_content_desc">Battery Level</string>
+    <string name="original_done">Done</string>
+    <string name="original_audio_devices">Audio devices</string>
+    <string name="original_bluetooth_headphones">Bluetooth headphones</string>
+    <string name="original_license">GNU General Public License v3.0</string>
+    <string name="original_standard_lyrics_blur">Standard lyrics blur</string>
+    <string name="original_listen_together_smart_resync">Smart Network Resync</string>
+    <string name="original_listen_together_smart_resync_desc">Automatically catch up with the host after a connection drop</string>
+    <string name="original_error_stream_unavailable_title">Couldn\'t play this track</string>
+    <string name="original_playback_error_channel_name">Playback errors</string>
+</resources>

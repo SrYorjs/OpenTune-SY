@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="original_flagship_output_speaker">Speaker internal</string>
+    <string name="original_flagship_output_wired">Headphone kabel</string>
+    <string name="original_flagship_output_usb">Audio USB</string>
+    <string name="original_flagship_output_bluetooth">Bluetooth</string>
+    <string name="original_flagship_output_hdmi">HDMI</string>
+    <string name="original_flagship_output_change">Ganti tempat musik diputar</string>
+
+    <string name="original_flagship_play">Putar</string>
+    <string name="original_flagship_pause">Jeda</string>
+    <string name="original_flagship_next">Lagu berikutnya</string>
+    <string name="original_flagship_previous">Lagu sebelumnya</string>
+    <string name="original_flagship_back_ten">Mundur 10 detik</string>
+    <string name="original_flagship_forward_ten">Maju 10 detik</string>
+    <string name="original_flagship_lyrics">Lirik</string>
+    <string name="original_flagship_queue">Antrean</string>
+    <string name="original_flagship_volume">Volume</string>
+
+    <string name="original_flagship_layout_three">Mundur, putar, maju</string>
+    <string name="original_flagship_layout_three_caption">Tiga tombol besar, tanpa bingkai</string>
+    <string name="original_flagship_layout_ten">Dengan lompat 10 detik</string>
+    <string name="original_flagship_layout_ten_caption">Lompat 10 detik ke dua arah, tombol putar dalam lingkaran</string>
+</resources>

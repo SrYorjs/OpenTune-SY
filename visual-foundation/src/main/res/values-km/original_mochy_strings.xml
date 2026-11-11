@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="original_explore">រុករក</string>
+    <string name="original_local_history">លើឧបករណ៍</string>
+    <string name="original_charts">តារាង</string>
+    <string name="original_back_button_desc">ត្រឡប់ក្រោយ</string>
+    <string name="original_no_title">គ្មានចំណងជើង</string>
+    <string name="original_unknown_artist">សិល្បករមិនស្គាល់</string>
+    <string name="original_unknown_item_type">ប្រភេទមិនស្គាល់</string>
+    <string name="original_loading_charts">កំពុងផ្ទុកតារាង…</string>
+    <string name="original_retry_button">ព្យាយាមម្តងទៀត</string>
+    <string name="original_album_cover_desc">គម្របអាល់ប៊ុម</string>
+    <string name="original_top_music_videos">វីដេអូចម្រៀងពេញនិយម</string>
+    <string name="original_trending">កំពុងពេញនិយម</string>
+    <string name="original_top_result">លទ្ធផលល្អបំផុត</string>
+    <string name="original_other_results">ផ្សេងៗ</string>
+    <string name="original_weeks">សប្តាហ៍</string>
+    <string name="original_months">ខែ</string>
+    <string name="original_years">ឆ្នាំ</string>
+    <string name="original_continuous">បន្តជាប់គ្នា</string>
+    <string name="original_liked">ចូលចិត្ត</string>
+    <string name="original_offline">បានទាញយក</string>
+</resources>

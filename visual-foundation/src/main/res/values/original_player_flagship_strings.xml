@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    
+    <string name="original_flagship_output_speaker">Internal speaker</string>
+    <string name="original_flagship_output_wired">Wired headphones</string>
+    <string name="original_flagship_output_usb">USB audio</string>
+    <string name="original_flagship_output_bluetooth">Bluetooth</string>
+    <string name="original_flagship_output_hdmi">HDMI</string>
+    <string name="original_flagship_output_change">Change where the music plays</string>
+
+    
+    <string name="original_flagship_play">Play</string>
+    <string name="original_flagship_pause">Pause</string>
+    <string name="original_flagship_next">Next song</string>
+    <string name="original_flagship_previous">Previous song</string>
+    <string name="original_flagship_back_ten">Back 10 seconds</string>
+    <string name="original_flagship_forward_ten">Forward 10 seconds</string>
+    <string name="original_flagship_lyrics">Lyrics</string>
+    <string name="original_flagship_queue">Queue</string>
+    <string name="original_flagship_volume">Volume</string>
+
+    
+    <string name="original_flagship_layout_three">Back, play, next</string>
+    <string name="original_flagship_layout_three_caption">Three big buttons, nothing round them</string>
+    <string name="original_flagship_layout_ten">With 10 second skips</string>
+    <string name="original_flagship_layout_ten_caption">Jump 10 seconds either way, play in a circle</string>
+</resources>
