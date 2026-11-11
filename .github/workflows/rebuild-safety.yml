@@ -6,6 +6,9 @@ on:
     branches:
       - opentune-rebuild-v1
       - GalaxOTxMochyTEST
+    paths-ignore:
+      - "docs/**"
+      - "**/*.md"
   pull_request:
     branches:
       - opentune-rebuild-v1

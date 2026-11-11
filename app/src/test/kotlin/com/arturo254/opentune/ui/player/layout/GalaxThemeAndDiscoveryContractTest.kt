@@ -1,6 +1,9 @@
 package com.arturo254.opentune.ui.player.layout
 
 import java.io.File
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -15,28 +18,35 @@ class GalaxThemeAndDiscoveryContractTest {
         File(root, "com/arturo254/opentune/$relative").readText()
 
     @Test
-    fun albumColorExtractionFollowsCurrentMediaAndCancelsStaleResults() {
+    fun originalThemeIsActiveAndKeepsTheGlassDesignSystem() {
         val host = source("MainActivityThemeHost.kt")
-        assertTrue(host.contains("currentMediaMetadata.collectLatest"))
-        assertTrue(host.contains("Dispatchers.IO"))
-        assertTrue(host.contains(".allowHardware(false)"))
-        assertTrue(host.contains(".extractThemeColor()"))
-        assertTrue(host.contains("artworkThemeActive = true"))
-        assertTrue(host.contains("artworkThemeActive = false"))
-        assertTrue(host.contains("themeColor = customThemeColor"))
+        assertTrue(host.contains("import com.arturo254.opentune.foundation.theme.OriginalTheme"))
+        assertTrue(host.contains("OriginalTheme(pureBlack = pureBlack)"))
+        assertTrue(host.indexOf("OriginalTheme(pureBlack") < host.indexOf("ProvideOpenTuneDesignSystem("))
+        assertTrue(host.contains("artworkRadiusDp = artworkCornerRadius"))
+        assertTrue(host.contains("reduceMotion = reduceMotion"))
+        assertTrue(host.contains("setSystemBarAppearance(ForceDarkTheme)"))
+        assertFalse(host.contains("OpenTuneTheme("))
     }
 
     @Test
-    fun applicationRestoresUsersColorWhenNoTrackIsAvailable() {
-        val host = source("MainActivityThemeHost.kt")
-        val prefs = source("constants/PreferenceKeys.kt")
-        assertTrue(host.contains("ArtworkReactiveThemeKey"))
-        assertTrue(prefs.contains("artworkReactiveTheme"))
-        assertTrue(host.contains("if (!artworkReactiveTheme) return@LaunchedEffect"))
-        assertTrue(host.contains("song == null"))
-        assertTrue(host.contains("artwork == null"))
-        assertTrue(host.contains("seedPalette = if (!artworkThemeActive) customThemeSeedPalette else null"))
-        assertTrue(host.contains("customThemeColor"))
+    fun originalBinaryResourcesMatchThePinnedSource() {
+        val project = listOf(File(".."), File(".")).first { File(it, "visual-foundation").isDirectory }
+        val manifest = kotlinx.serialization.json.Json.parseToJsonElement(
+            File(project, "docs/inventario-02/trasplante.json").readText(),
+        ).jsonObject
+        org.junit.Assert.assertEquals("f8a3593fd0c37edca3da9012c0eb4bc37e907cc7", manifest.getValue("revision").jsonPrimitive.content)
+        val binaries = manifest.getValue("files").jsonArray.filter {
+            it.jsonObject.getValue("adaptation").jsonPrimitive.content == "byte_identical"
+        }
+        org.junit.Assert.assertEquals(74, binaries.size)
+        binaries.forEach { entry ->
+            val item = entry.jsonObject
+            val path = item.getValue("destination").jsonPrimitive.content
+            val digest = java.security.MessageDigest.getInstance("SHA-256")
+                .digest(File(project, path).readBytes()).joinToString("") { "%02x".format(it.toInt() and 0xff) }
+            org.junit.Assert.assertEquals(path, item.getValue("source_sha256").jsonPrimitive.content, digest)
+        }
     }
 
     @Test
