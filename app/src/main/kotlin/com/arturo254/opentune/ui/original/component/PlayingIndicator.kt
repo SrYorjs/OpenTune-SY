@@ -64,7 +64,7 @@ fun PlayingIndicator(
     // frame every few milliseconds behind it. Likewise while the page it's on is opening, closing
     // or sinking behind another: that page is one cached picture then, and bars moving in it made
     // the whole page render again for every one of their frames.
-    val obscured = com.arturo254.opentune.LocalAppContentObscured.current
+    val obscured = androidx.compose.runtime.rememberUpdatedState(!rememberOriginalAmbientMotion())
     val navTransition = LocalNavAnimatedContentScope.current?.transition
     val held = remember(obscured, navTransition) {
         derivedStateOf {

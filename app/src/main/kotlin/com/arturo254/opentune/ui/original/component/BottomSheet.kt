@@ -208,7 +208,7 @@ fun BottomSheet(
     val currentSideSwipe by androidx.compose.runtime.rememberUpdatedState(collapsedSwipe)
     val currentOnTouchActivity by androidx.compose.runtime.rememberUpdatedState(onTouchActivity)
     val (swipeUpFollows) = com.arturo254.opentune.utils.rememberPreference(
-        com.arturo254.opentune.constants.PlayerSwipeUpFollowsKey,
+        com.arturo254.opentune.ui.original.fullconstants.PlayerSwipeUpFollowsKey,
         defaultValue = true,
     )
     val currentSwipeUpFollows by androidx.compose.runtime.rememberUpdatedState(swipeUpFollows)

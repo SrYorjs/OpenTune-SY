@@ -14,7 +14,7 @@ import androidx.navigation.NavController
 import com.arturo254.opentune.innertube.models.PlaylistItem
 import com.arturo254.opentune.innertube.models.WatchEndpoint
 import com.arturo254.opentune.R
-import com.arturo254.opentune.ui.component.MenuState
+import com.arturo254.opentune.ui.component.MenuState as ExistingMenuState
 import com.arturo254.opentune.db.entities.Album
 import com.arturo254.opentune.db.entities.Artist
 import com.arturo254.opentune.db.entities.Playlist
@@ -27,7 +27,7 @@ import kotlinx.coroutines.CoroutineScope
 @Composable
 fun LibraryArtistListItem(
     navController: NavController,
-    menuState: MenuState,
+    menuState: ExistingMenuState,
     coroutineScope: CoroutineScope,
     artist: Artist,
     modifier: Modifier = Modifier
@@ -62,7 +62,7 @@ fun LibraryArtistListItem(
 @Composable
 fun LibraryArtistGridItem(
     navController: NavController,
-    menuState: MenuState,
+    menuState: ExistingMenuState,
     coroutineScope: CoroutineScope,
     artist: Artist,
     modifier: Modifier = Modifier
@@ -91,7 +91,7 @@ fun LibraryArtistGridItem(
 fun LibraryAlbumListItem(
     modifier: Modifier = Modifier,
     navController: NavController,
-    menuState: MenuState,
+    menuState: ExistingMenuState,
     album: Album,
     isActive: Boolean = false,
     isPlaying: Boolean = false
@@ -129,7 +129,7 @@ fun LibraryAlbumListItem(
 fun LibraryAlbumGridItem(
     modifier: Modifier = Modifier,
     navController: NavController,
-    menuState: MenuState,
+    menuState: ExistingMenuState,
     coroutineScope: CoroutineScope,
     album: Album,
     isActive: Boolean = false,
@@ -162,7 +162,7 @@ fun LibraryAlbumGridItem(
 @Composable
 fun LibraryPlaylistListItem(
     navController: NavController,
-    menuState: MenuState,
+    menuState: ExistingMenuState,
     coroutineScope: CoroutineScope,
     playlist: Playlist,
     modifier: Modifier = Modifier
@@ -233,7 +233,7 @@ fun LibraryPlaylistListItem(
 @Composable
 fun LibraryPlaylistGridItem(
     navController: NavController,
-    menuState: MenuState,
+    menuState: ExistingMenuState,
     coroutineScope: CoroutineScope,
     playlist: Playlist,
     modifier: Modifier = Modifier

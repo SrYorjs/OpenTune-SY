@@ -16,6 +16,8 @@ import com.arturo254.opentune.ui.original.utils.AppMotion
 import com.arturo254.opentune.utils.rememberEnumPreference
 import com.arturo254.opentune.utils.rememberPreference
 
+val LocalGlassState = staticCompositionLocalOf<GlassState?> { null }
+
 val LocalOriginalSceneActive = staticCompositionLocalOf { true }
 
 internal fun originalAmbientMotionAllowed(
