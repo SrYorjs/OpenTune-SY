@@ -562,11 +562,7 @@ fun librarySwipeAction(song: SongEntity): SwipeAction {
         color = SwipeSaveColor,
         label = stringResource(if (inLibrary) R.string.remove_from_library else R.string.add_to_library),
     ) {
-        // the same as the song menu's library item: the feedback token, then the local flag
-        // (which also tells YouTube)
-        val token = if (inLibrary) song.libraryRemoveToken else song.libraryAddToken
-        token?.let { SwipeScope.launch { YouTube.feedback(listOf(it)) } }
-        database.query { update(song.toggleLibrary()) }
+        database.setOriginalStoredSongMembership(song)
         TopToaster.show(
             text = context.getString(if (inLibrary) com.arturo254.opentune.foundation.R.string.original_removed_from_library else com.arturo254.opentune.foundation.R.string.original_added_to_library),
             thumbnail = song.thumbnailUrl,
@@ -582,25 +578,7 @@ fun librarySwipeAction(song: SongEntity): SwipeAction {
 @Composable
 fun removeImportSwipeAction(song: SongEntity, source: ImportSource): SwipeAction {
     val context = LocalContext.current
-    val database = LocalDatabase.current
-    return SwipeAction(
-        icon = R.drawable.delete,
-        color = SwipeRemoveColor,
-        label = stringResource(com.arturo254.opentune.foundation.R.string.original_remove_from_import_and_library),
-    ) {
-        // the library part is the same as the library swipe's: the feedback token, then the local flag
-        if (song.inLibrary != null) song.libraryRemoveToken?.let { SwipeScope.launch { YouTube.feedback(listOf(it)) } }
-        database.transaction {
-            deleteImportedSong(song.id, source.key)
-            deleteImportSessionSong(song.id, source.key)
-            if (song.inLibrary != null) update(song.toggleLibrary())
-        }
-        TopToaster.show(
-            text = context.getString(com.arturo254.opentune.foundation.R.string.original_removed_from_import_and_library, source.label),
-            thumbnail = song.thumbnailUrl,
-            iconRes = R.drawable.delete,
-        )
-    }
+    return unavailableOriginalImportRemoval(context, source)
 }
 
 /** the same for a song straight from YouTube, which may not be in the database yet */
@@ -616,18 +594,8 @@ fun librarySwipeAction(song: SongItem): SwipeAction {
         color = SwipeSaveColor,
         label = stringResource(if (inLibrary) R.string.remove_from_library else R.string.add_to_library),
     ) {
-        // mirrors the YouTube song menu
         val adding = !inLibrary
-        SwipeScope.launch { YouTube.toggleSongLibrary(song.id, adding) }
-        if (adding) {
-            database.transaction {
-                insert(song.toMediaMetadata())
-                inLibrary(song.id, LocalDateTime.now())
-                addLibraryTokens(song.id, song.libraryAddToken, song.libraryRemoveToken)
-            }
-        } else {
-            database.query { inLibrary(song.id, null) }
-        }
+        database.setOriginalRemoteSongLocalMembership(song, adding)
         TopToaster.show(
             text = context.getString(if (adding) com.arturo254.opentune.foundation.R.string.original_added_to_library else com.arturo254.opentune.foundation.R.string.original_removed_from_library),
             thumbnail = song.thumbnail,

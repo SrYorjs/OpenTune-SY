@@ -30,6 +30,7 @@ data class MediaMetadata(
     val likedDate: LocalDateTime? = null,
     val inLibrary: LocalDateTime? = null,
     val spotifyTrackId: String? = null,
+    val suggestedBy: String? = null,
 ) : Serializable {
     companion object {
         private const val serialVersionUID = 1L
