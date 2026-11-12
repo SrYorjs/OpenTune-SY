@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.R
 import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidBackdrop
 import com.arturo254.opentune.core.designsystem.liquid.galaxLiquidEffect
+import com.arturo254.opentune.ui.original.component.LocalOriginalGlassState
+import com.arturo254.opentune.ui.original.component.glassRoot
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 
@@ -42,12 +44,20 @@ internal fun PrismSearchBar(
     content: @Composable () -> Unit,
 ) {
     val backdrop = rememberLayerBackdrop()
+    val originalGlass = LocalOriginalGlassState.current
     val inputLabel = stringResource(R.string.prism_input_label)
     BackHandler(active) { onActiveChange(false) }
     LaunchedEffect(active) { if (active) focusRequester.requestFocus() }
     Box(if (active) Modifier.fillMaxSize().imePadding() else Modifier.fillMaxWidth()) {
-        if (active)
-            PrismAtmosphere(true, pureBlack, Modifier.matchParentSize().layerBackdrop(backdrop))
+        if (active) {
+            Box(
+                Modifier.matchParentSize().then(
+                    if (originalGlass != null) Modifier.glassRoot(originalGlass) else Modifier,
+                ),
+            ) {
+                PrismAtmosphere(true, pureBlack, Modifier.matchParentSize().layerBackdrop(backdrop))
+            }
+        }
         CompositionLocalProvider(
             LocalGalaxLiquidBackdrop provides
                 (if (active) backdrop else LocalGalaxLiquidBackdrop.current),

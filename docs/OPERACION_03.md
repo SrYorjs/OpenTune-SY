@@ -15,7 +15,7 @@ Se conservan colores, radios, shaders, curvas, tiempos, constantes y algoritmos 
 - La superficie de la barra existente ejecuta FrostedChromeGlass y sus respuestas táctiles originales. Su estructura de navegación se traslada en la operación 04.
 - El ramal de vidrio modular del origen se conecta al renderer Liquid Glass existente, conservando variante y tuning. Cuando Liquid Glass está desactivado se utiliza el vidrio esmerilado original.
 - La fuente original se captura en NavHost; la barra que la lee queda fuera. El estado se renueva al cambiar ruta o abrir Buscar para no reutilizar la captura anterior. Los descendientes de la fuente no reciben el estado capturado ni el backdrop Liquid.
-- La apertura de Buscar deja el vidrio original sin captura antes que reutilizar la ruta anterior. Su captura propia se integrará con la pantalla original de la operación 07.
+- Buscar captura exclusivamente su fondo atmosférico, hermano de los controles. La apertura cambia la fuente activa y al cerrar vuelve a la ruta actual; no se muestrea la interfaz de búsqueda dentro de sí misma.
 - Las constantes de preferencias originales se aíslan sin sustituir las claves propias; DisableBlur utiliza la clave existente.
 
 ## Alcance y comprobaciones pendientes
