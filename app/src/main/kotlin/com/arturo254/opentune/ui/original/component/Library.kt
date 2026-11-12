@@ -177,7 +177,6 @@ fun LibraryPlaylistListItem(
                             playlist = playlist,
                             coroutineScope = coroutineScope,
                             onDismiss = menuState::dismiss,
-                            navController = navController,
                         )
                     } else {
                         playlist.playlist.browseId?.let { browseId ->
@@ -203,10 +202,7 @@ fun LibraryPlaylistListItem(
                                     isEditable = false
                                 ),
                                 coroutineScope = coroutineScope,
-                                onDismiss = menuState::dismiss,
-                                onImportedPlaylist = { playlistId ->
-                                    navController.navigate("local_playlist/$playlistId")
-                                }
+                                onDismiss = menuState::dismiss
                             )
                         }
                     }
@@ -262,7 +258,6 @@ fun LibraryPlaylistGridItem(
                             playlist = playlist,
                             coroutineScope = coroutineScope,
                             onDismiss = menuState::dismiss,
-                            navController = navController,
                         )
                     } else {
                         playlist.playlist.browseId?.let { browseId ->
@@ -288,10 +283,7 @@ fun LibraryPlaylistGridItem(
                                     isEditable = false
                                 ),
                                 coroutineScope = coroutineScope,
-                                onDismiss = menuState::dismiss,
-                                onImportedPlaylist = { playlistId ->
-                                    navController.navigate("local_playlist/$playlistId")
-                                }
+                                onDismiss = menuState::dismiss
                             )
                         }
                     }

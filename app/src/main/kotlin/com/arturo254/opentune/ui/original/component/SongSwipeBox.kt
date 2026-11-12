@@ -72,8 +72,7 @@ fun SongSwipeBox(
                 listOf(target.mediaId)
             },
             onDismiss = { playlistTarget = null },
-            topSongId = target.mediaId,
-            topSongArtworkUrl = target.mediaMetadata.artworkUri?.toString(),
+
         )
     }
 

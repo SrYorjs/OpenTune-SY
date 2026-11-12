@@ -741,7 +741,7 @@ fun PlaylistListItem(
                     stringResource(R.string.offline) -> R.drawable.offline
                     stringResource(R.string.cached_playlist) -> R.drawable.cached
 
-                    stringResource(R.string.uploaded_playlist) -> R.drawable.backup
+                    stringResource(com.arturo254.opentune.foundation.R.string.original_uploaded_playlist) -> R.drawable.backup
                     else -> if (autoPlaylist) R.drawable.trending_up else R.drawable.queue_music
                 }
                 Icon(
@@ -832,7 +832,7 @@ fun PlaylistGridItem(
                     stringResource(R.string.offline) -> R.drawable.offline
                     stringResource(R.string.cached_playlist) -> R.drawable.cached
 
-                    stringResource(R.string.uploaded_playlist) -> R.drawable.backup
+                    stringResource(com.arturo254.opentune.foundation.R.string.original_uploaded_playlist) -> R.drawable.backup
                     else -> if (autoPlaylist) R.drawable.trending_up else R.drawable.queue_music
                 }
                 Box(

@@ -55,7 +55,7 @@ object CoverThemeColor {
     }
 
     
-    internal fun darken(argb: Int): Int {
+    fun darken(argb: Int): Int {
         val hsl = FloatArray(3)
         ColorUtils.colorToHSL(argb, hsl)
         hsl[1] = (hsl[1] * 0.9f).coerceAtMost(0.62f)
