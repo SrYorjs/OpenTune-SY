@@ -192,6 +192,10 @@ import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidTuning
 import com.arturo254.opentune.core.designsystem.liquid.LocalGalaxLiquidBackdrop
 import com.arturo254.opentune.core.designsystem.liquid.galvanicRecipe
 import com.arturo254.opentune.core.designsystem.liquid.parseGalaxLiquidVariant
+import com.arturo254.opentune.ui.original.component.GlassState
+import com.arturo254.opentune.ui.original.component.LocalOriginalGlassState
+import com.arturo254.opentune.ui.original.component.LocalOriginalSceneActive
+import com.arturo254.opentune.ui.original.component.glassRoot
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.arturo254.opentune.core.designsystem.glass.LocalGalaxGlassMode
@@ -352,6 +356,7 @@ internal fun MainActivityScaffold(
         navigationState.currentRoute != "settings/appearance/galax_liquid" &&
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
     ) rememberLayerBackdrop() else null
+    val originalGlassState = remember(navigationState.currentRoute, navigationState.active) { GlassState() }
     val menuState = remember { MenuState() }
 
     val haptic = LocalHapticFeedback.current
@@ -417,6 +422,7 @@ internal fun MainActivityScaffold(
     val searchOverlayCapturesGlass = navigationState.active
 
                     CompositionLocalProvider(
+                        LocalOriginalGlassState provides originalGlassState,
                         LocalDatabase provides database,
                         LocalContentColor provides if (pureBlack) Color.White else contentColorFor(MaterialTheme.colorScheme.surface),
                         LocalHapticFeedback provides customHaptic,
@@ -484,6 +490,8 @@ internal fun MainActivityScaffold(
                                         .nestedScroll(searchBarScrollBehavior.nestedScrollConnection)
                                 ) {
                                     CompositionLocalProvider(
+                                        LocalOriginalGlassState provides null,
+                                        LocalOriginalSceneActive provides !active,
                                         LocalGalaxLiquidBackdrop provides null,
                                         com.arturo254.opentune.ui.screens.search.LocalPrismSceneActive provides !active,
                                     ) {
@@ -570,6 +578,11 @@ internal fun MainActivityScaffold(
                                             )
                                         },
                                         modifier = Modifier
+                                            .then(
+                                                if (!enableGalaxGlass && !searchOverlayCapturesGlass)
+                                                    Modifier.glassRoot(originalGlassState)
+                                                else Modifier
+                                            )
                                             .then(
                                                 if (liveLiquidBackdrop != null && !searchOverlayCapturesGlass)
                                                     Modifier.layerBackdrop(liveLiquidBackdrop)

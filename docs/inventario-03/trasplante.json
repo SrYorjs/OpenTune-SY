@@ -1,0 +1,119 @@
+{
+  "revision": "f8a3593fd0c37edca3da9012c0eb4bc37e907cc7",
+  "files": [
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/GlassKit.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/GlassKit.kt",
+      "source_blob": "6fb6375ffbfea6c62317462054a52479ce500122",
+      "adaptations": [
+        "packages",
+        "non_legal_comments_removed",
+        "detail_accent_composition_local",
+        "hardware_canvas_guard",
+        "recording_finally"
+      ]
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/BlurEffectCache.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/BlurEffectCache.kt",
+      "source_blob": "8257785f954a9a85a64a6974601807f44ecd3885",
+      "adaptations": [
+        "packages",
+        "non_legal_comments_removed"
+      ]
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/ProgressiveBlur.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/ProgressiveBlur.kt",
+      "source_blob": "8d424f6a20e0c77a996b1e4258aeb50b54197b32",
+      "adaptations": [
+        "packages",
+        "non_legal_comments_removed"
+      ]
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/AgslShader.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/AgslShader.kt",
+      "source_blob": "87afa46dd104504657ea7351d5751c61c2d7a7aa",
+      "adaptations": [
+        "packages",
+        "non_legal_comments_removed"
+      ]
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/FrostedGlass.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/FrostedGlass.kt",
+      "source_blob": "7fd2699de27e5522c83ffde5435cc4155d48ea71",
+      "adaptations": [
+        "packages",
+        "non_legal_comments_removed",
+        "module_glass_branch_connected_to_existing_galax_liquid_renderer"
+      ]
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/Press3D.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/Press3D.kt",
+      "source_blob": "7ff8323c7991fdc915d41bf0b18fd6e5aa672842",
+      "adaptations": [
+        "packages",
+        "non_legal_comments_removed",
+        "reduced_motion_gate"
+      ]
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/TouchFeedback.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/TouchFeedback.kt",
+      "source_blob": "501118a31a8201350364a0a7804b6144fffb0d69",
+      "adaptations": [
+        "packages",
+        "non_legal_comments_removed"
+      ]
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/RevealOnAppear.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/RevealOnAppear.kt",
+      "source_blob": "9a476b4da2a1de5065f6569a51514297d22e1342",
+      "adaptations": [
+        "packages",
+        "non_legal_comments_removed",
+        "ambient_wave_lifecycle_and_scene_gate"
+      ]
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/PageWipe.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/PageWipe.kt",
+      "source_blob": "056f977f05676295baf6509cc25e234c45bbeb8d",
+      "adaptations": [
+        "packages",
+        "non_legal_comments_removed"
+      ]
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/SmoothCornerShape.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/SmoothCornerShape.kt",
+      "source_blob": "d2119f02503be432a7cd4e4107da04af7bab6809",
+      "adaptations": [
+        "packages",
+        "non_legal_comments_removed"
+      ]
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/utils/AppMotion.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/utils/AppMotion.kt",
+      "source_blob": "bf1feea8a66e0c181baf14e6eefc4519847ac81f",
+      "adaptations": [
+        "packages",
+        "non_legal_comments_removed"
+      ]
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/utils/RubberBand.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/utils/RubberBand.kt",
+      "source_blob": "530857e1c2264495dd5e9969a91131572bd1da3d",
+      "adaptations": [
+        "packages",
+        "non_legal_comments_removed"
+      ]
+    }
+  ]
+}

@@ -7,6 +7,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.createLifecycleAwareWindowRecomposer
+import com.arturo254.opentune.ui.original.utils.AppMotion
 import androidx.lifecycle.lifecycleScope
 import com.arturo254.opentune.constants.StopMusicOnTaskClearKey
 import com.arturo254.opentune.db.MusicDatabase
@@ -33,6 +35,8 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var syncUtils: SyncUtils
 
+    private var systemScaleObserver: android.database.ContentObserver? = null
+
     private lateinit var serviceBindingController: MainActivityServiceBindingController
     private lateinit var deepLinkController: MainActivityDeepLinkController
     private lateinit var systemUiController: MainActivitySystemUiController
@@ -52,6 +56,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        systemScaleObserver?.let(contentResolver::unregisterContentObserver)
+        systemScaleObserver = null
         super.onDestroy()
         if (isFinishing && !isChangingConfigurations) {
             try { DiscordPresenceManager.stop() } catch (_: Exception) {}
@@ -105,7 +111,12 @@ class MainActivity : ComponentActivity() {
         systemUiController.initializeLocale()
         systemUiController.observeScreenshotProtection()
 
-        setContent {
+        systemScaleObserver = AppMotion.followSystemScale(this)
+        val motionRecomposer = window.decorView.createLifecycleAwareWindowRecomposer(
+            AppMotion.durationScale,
+            lifecycle,
+        )
+        setContent(parent = motionRecomposer) {
             val bottomSheetPageState = remember { BottomSheetPageState() }
 
             MainActivityUpdateHost(

@@ -8,6 +8,9 @@
 
 package com.arturo254.opentune.ui.component
 
+import com.arturo254.opentune.ui.original.component.OriginalChromeSurface
+import com.arturo254.opentune.ui.original.component.RoundedHighlight
+import com.arturo254.opentune.ui.original.component.pressBounce
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -141,6 +144,7 @@ fun FloatingNavigationToolbar(
     ) {
         val showSelectedLabels = maxWidth >= OpenTuneNavigationDimensions.compactLabelThreshold
 
+        OriginalChromeSurface(shape = barShape, pureBlack = pureBlack) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -153,29 +157,6 @@ fun FloatingNavigationToolbar(
                     )
                 )
                 .clip(barShape)
-                .background(
-                    if (liquidGlass) {
-                        Color.Transparent
-                    } else {
-                        if (pureBlack) Color.Black.copy(alpha = 0.90f)
-                        else MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.94f)
-                    }
-                )
-                .galaxGlassEffect(
-                    shape = barShape,
-                    pureBlack = pureBlack,
-                    spec = GlassSurfaceSpec(
-                        mode = GlassMode.CLASSIC,
-                        surface = GlassSurfaceType.NAVIGATION,
-                        optics = GlassOptics(
-                            blurRadius = 4,
-                            refraction = 0.045f,
-                            curve = 0.10f,
-                            dispersion = 0.0015f,
-                            edge = 0f,
-                        ),
-                    ),
-                )
                 .padding(
                     horizontal = OpenTuneNavigationDimensions.floatingHorizontalPadding,
                     vertical = OpenTuneNavigationDimensions.floatingVerticalPadding,
@@ -195,6 +176,7 @@ fun FloatingNavigationToolbar(
             )
 
 
+        }
         }
     }
 }
@@ -244,9 +226,16 @@ private fun ToolbarItemsContainer(
             Row(Modifier.fillMaxWidth()) {
                 items.forEachIndexed { index, screen ->
                     val selected = pagerState.currentPage == index
+                    val interactionSource = remember(screen.route) { MutableInteractionSource() }
                     Column(
                         Modifier.weight(1f).height(56.dp)
-                            .selectable(selected = selected, role = Role.Tab) {
+                            .pressBounce(interactionSource)
+                            .selectable(
+                                selected = selected,
+                                role = Role.Tab,
+                                interactionSource = interactionSource,
+                                indication = RoundedHighlight(24.dp),
+                            ) {
                                 haptic(GalaxHapticCue.SELECTION)
                                 if (reducedMotion) scope.launch { pagerState.scrollToPage(index) }
                                 else onItemClick(screen, selected)

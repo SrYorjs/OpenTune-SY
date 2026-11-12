@@ -39,7 +39,9 @@ internal fun MainActivityThemeHost(
             artworkRadiusDp = artworkCornerRadius,
             reduceMotion = reduceMotion,
         ) {
-            content(pureBlack, lyricsSyncOffset)
+            com.arturo254.opentune.ui.original.component.OriginalVisualHost(reduceMotion) {
+                content(pureBlack, lyricsSyncOffset)
+            }
         }
     }
 }
