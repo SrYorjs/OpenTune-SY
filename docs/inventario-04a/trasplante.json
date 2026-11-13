@@ -1,0 +1,59 @@
+{
+  "revision": "f8a3593fd0c37edca3da9012c0eb4bc37e907cc7",
+  "A1": [
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/utils/WindowLayout.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/utils/WindowLayout.kt",
+      "adaptations": [
+        "package",
+        "existing_model_contracts"
+      ],
+      "source_blob": "5b96d166d459c567148646c02ce3c8618c6c4ced"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/utils/StableInsets.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/utils/StableInsets.kt",
+      "adaptations": [
+        "package",
+        "existing_model_contracts"
+      ],
+      "source_blob": "deac4ce6e272ab06509f79d2d69520247faefb32"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/utils/SplashScreenExit.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/utils/SplashScreenExit.kt",
+      "adaptations": [
+        "package",
+        "existing_model_contracts"
+      ],
+      "source_blob": "42709f2185b5697f396729f0a28a2ff4c4d2812f"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/launch/LaunchIntro.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/launch/LaunchIntro.kt",
+      "adaptations": [
+        "package",
+        "existing_model_contracts"
+      ],
+      "source_blob": "9a1e7015a4a53b629f3c24be09fd210d17bd1303"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/ContainerTransform.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/ContainerTransform.kt",
+      "adaptations": [
+        "package",
+        "existing_model_contracts"
+      ],
+      "source_blob": "e91c90c2da9a0a23ba8c0a6a68c17aada3adc091"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/SharedElementTransition.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/SharedElementTransition.kt",
+      "adaptations": [
+        "package",
+        "existing_model_contracts"
+      ],
+      "source_blob": "24bcc69eed0b8d157232df12b11489bace52c3d0"
+    }
+  ]
+}

@@ -239,6 +239,7 @@ ksp {
 
 dependencies {
     implementation(project(":visual-foundation"))
+      implementation(libs.original.splashscreen)
     implementation(libs.original.coil.svg)
     implementation(libs.original.lottie)
     implementation(libs.original.smooth.corner)
