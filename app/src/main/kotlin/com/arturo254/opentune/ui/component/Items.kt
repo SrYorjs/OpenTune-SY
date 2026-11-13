@@ -1,5 +1,7 @@
 package com.arturo254.opentune.ui.component
 
+import com.arturo254.opentune.extensions.metadata
+
 import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
@@ -140,73 +142,11 @@ inline fun ListItem(
     noinline subtitle: (@Composable RowScope.() -> Unit)? = null,
     thumbnailContent: @Composable () -> Unit,
     trailingContent: @Composable RowScope.() -> Unit = {},
-    isActive: Boolean = false
-) {
-    val shape = RoundedCornerShape(20.dp)
-    val containerColor =
-        if (isActive) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-        } else {
-            MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.56f)
-        }
-    val borderColor =
-        if (isActive) {
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.24f)
-        } else {
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.18f)
-        }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .padding(horizontal = 10.dp, vertical = 3.dp)
-            .height(ListItemHeight - 6.dp)
-            .clip(shape)
-            .background(containerColor)
-            .border(
-                width = 0.75.dp,
-                color = borderColor,
-                shape = shape,
-            )
-            .padding(horizontal = 8.dp),
-    ) {
-        Box(
-            modifier = Modifier.padding(end = 10.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            thumbnailContent()
-        }
-
-        Column(
-            verticalArrangement = Arrangement.spacedBy(2.dp),
-            modifier = Modifier.weight(1f),
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color =
-                    if (isActive) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            if (subtitle != null) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    subtitle()
-                }
-            }
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            content = trailingContent,
-        )
-    }
-}
+    isActive: Boolean = false,
+) = com.arturo254.opentune.ui.original.component.ListItem(
+    modifier = modifier, title = title, subtitle = subtitle,
+    thumbnailContent = thumbnailContent, trailingContent = trailingContent, isActive = isActive,
+)
 
 @Composable
 fun ListItem(
@@ -216,19 +156,10 @@ fun ListItem(
     badges: @Composable RowScope.() -> Unit = {},
     thumbnailContent: @Composable () -> Unit,
     trailingContent: @Composable RowScope.() -> Unit = {},
-    isActive: Boolean = false
-) = ListItem(
-    title = title,
-    modifier = modifier,
-    isActive = isActive,
-    subtitle = {
-        badges()
-        if (!subtitle.isNullOrEmpty()) {
-            Text(text = subtitle, color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-    },
-    thumbnailContent = thumbnailContent,
-    trailingContent = trailingContent
+    isActive: Boolean = false,
+) = com.arturo254.opentune.ui.original.component.ListItem(
+    modifier = modifier, title = title, subtitle = subtitle, badges = badges,
+    thumbnailContent = thumbnailContent, trailingContent = trailingContent, isActive = isActive,
 )
 
 @Composable
@@ -240,21 +171,10 @@ fun GridItem(
     thumbnailContent: @Composable BoxWithConstraintsScope.() -> Unit,
     thumbnailRatio: Float = 1f,
     fillMaxWidth: Boolean = false,
-) {
-    Column(
-        modifier = if (fillMaxWidth) modifier.padding(8.dp).fillMaxWidth()
-            else modifier.padding(8.dp).width(GridThumbnailHeight * thumbnailRatio),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        BoxWithConstraints(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxWidth().aspectRatio(thumbnailRatio)
-                .clip(com.arturo254.opentune.core.designsystem.theme.GalaxScreenStyle.artworkShape),
-        ) { thumbnailContent() }
-        title()
-        Row(verticalAlignment = Alignment.CenterVertically) { badges(); subtitle() }
-    }
-}
+) = com.arturo254.opentune.ui.original.component.GridItem(
+    modifier = modifier, title = title, subtitle = subtitle, badges = badges,
+    thumbnailContent = thumbnailContent, thumbnailRatio = thumbnailRatio, fillMaxWidth = fillMaxWidth,
+)
 
 @Composable
 private fun playlistCountText(
@@ -557,31 +477,9 @@ fun GridItem(
     thumbnailContent: @Composable BoxWithConstraintsScope.() -> Unit,
     thumbnailRatio: Float = 1f,
     fillMaxWidth: Boolean = false,
-) = GridItem(
-    modifier = modifier,
-    title = {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Start,
-            modifier = Modifier.fillMaxWidth()
-        )
-    },
-    subtitle = {
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.secondary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-    },
-    thumbnailContent = thumbnailContent,
-    thumbnailRatio = thumbnailRatio,
-    fillMaxWidth = fillMaxWidth
+) = com.arturo254.opentune.ui.original.component.GridItem(
+    modifier = modifier, title = title, subtitle = subtitle, badges = badges,
+    thumbnailContent = thumbnailContent, thumbnailRatio = thumbnailRatio, fillMaxWidth = fillMaxWidth,
 )
 
 @Composable
@@ -623,47 +521,14 @@ fun SongListItem(
     isSwipeable: Boolean = true,
     swipeContentBackgroundColor: Color? = null,
     trailingContent: @Composable RowScope.() -> Unit = {},
-) {
-    val swipeEnabled by rememberPreference(SwipeToSongKey, defaultValue = false)
-    val resolvedSwipeContentBackgroundColor = swipeContentBackgroundColor ?: MaterialTheme.colorScheme.surface
-
-    val content: @Composable () -> Unit = {
-        ListItem(
-            title = song.song.title,
-            subtitle = joinByBullet(
-                song.artists.joinToString { it.name },
-                makeTimeString(song.song.duration * 1000L),
-                viewCountText
-            ),
-            badges = badges,
-            thumbnailContent = {
-                ItemThumbnail(
-                    thumbnailUrl = song.song.thumbnailUrl?.resize(200, 200),
-                    albumIndex = albumIndex,
-                    isSelected = isSelected,
-                    isActive = isActive,
-                    isPlaying = isPlaying,
-                    shape = RoundedCornerShape(ThumbnailCornerRadius),
-                    modifier = Modifier.size(ListThumbnailSize)
-                )
-            },
-            trailingContent = trailingContent,
-            modifier = modifier,
-            isActive = isActive
-        )
-    }
-
-    if (isSwipeable && swipeEnabled) {
-        SwipeToSongBox(
-            mediaItem = song.toMediaItem(),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            content()
-        }
-    } else {
-        content()
-    }
-}
+)  = com.arturo254.opentune.ui.original.component.SongListItem(
+    song = song, modifier = modifier, albumIndex = albumIndex, showLikedIcon = showLikedIcon,
+    showInLibraryIcon = showInLibraryIcon, showDownloadIcon = showDownloadIcon,
+    downloadState = metadata?.downloadState, badges = badges, isSelected = isSelected,
+    isActive = isActive, isPlaying = isPlaying, isSwipeable = isSwipeable,
+    backgroundColor = swipeContentBackgroundColor ?: Color.Unspecified,
+    trailingContent = trailingContent,
+)
 
 @Composable
 fun SongGridItem(
@@ -694,48 +559,11 @@ fun SongGridItem(
     isActive: Boolean = false,
     isPlaying: Boolean = false,
     fillMaxWidth: Boolean = false,
-) = GridItem(
-    title = {
-        Text(
-            text = song.song.title,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .basicMarquee()
-                .fillMaxWidth()
-        )
-    },
-    subtitle = {
-        Text(
-            text = joinByBullet(
-                song.artists.joinToString { it.name },
-                makeTimeString(song.song.duration * 1000L)
-            ),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.secondary,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-    },
-    badges = badges,
-    thumbnailContent = {
-        ItemThumbnail(
-            thumbnailUrl = song.song.thumbnailUrl,
-            isActive = isActive,
-            isPlaying = isPlaying,
-            shape = RoundedCornerShape(GridThumbnailCornerRadius),
-            modifier = Modifier.size(GridThumbnailHeight)
-        )
-        if (!isActive) {
-            OverlayPlayButton(
-                visible = true
-            )
-        }
-    },
-    fillMaxWidth = fillMaxWidth,
-    modifier = modifier
+)  = com.arturo254.opentune.ui.original.component.SongGridItem(
+    song = song, modifier = modifier, showLikedIcon = showLikedIcon,
+    showInLibraryIcon = showInLibraryIcon, showDownloadIcon = showDownloadIcon,
+    downloadState = metadata?.downloadState, badges = badges, isActive = isActive,
+    isPlaying = isPlaying, fillMaxWidth = fillMaxWidth,
 )
 
 @Composable
@@ -758,21 +586,8 @@ fun ArtistListItem(
         }
     },
     trailingContent: @Composable RowScope.() -> Unit = {},
-) = ListItem(
-    title = artist.artist.name,
-    subtitle = pluralStringResource(R.plurals.n_song, artist.songCount, artist.songCount),
-    badges = badges,
-    thumbnailContent = {
-        AsyncImage(
-            model = artist.artist.thumbnailUrl,
-            contentDescription = null,
-            modifier = Modifier
-                .size(ListThumbnailSize)
-                .clip(CircleShape),
-        )
-    },
-    trailingContent = trailingContent,
-    modifier = modifier,
+)  = com.arturo254.opentune.ui.original.component.ArtistListItem(
+    artist = artist, modifier = modifier, badges = badges, trailingContent = trailingContent,
 )
 
 @Composable
@@ -788,22 +603,8 @@ fun ArtistGridItem(
         }
     },
     fillMaxWidth: Boolean = false,
-) = GridItem(
-    title = artist.artist.name,
-    subtitle = pluralStringResource(R.plurals.n_song, artist.songCount, artist.songCount),
-    badges = badges,
-    thumbnailContent = {
-        AsyncImage(
-            model = artist.artist.thumbnailUrl,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(CircleShape)
-        )
-    },
-    fillMaxWidth = fillMaxWidth,
-    modifier = modifier
+)  = com.arturo254.opentune.ui.original.component.ArtistGridItem(
+    artist = artist, modifier = modifier, badges = badges, fillMaxWidth = fillMaxWidth,
 )
 
 @Composable
@@ -857,25 +658,10 @@ fun AlbumListItem(
     isActive: Boolean = false,
     isPlaying: Boolean = false,
     trailingContent: @Composable RowScope.() -> Unit = {},
-) = ListItem(
-    title = album.album.title,
-    subtitle = joinByBullet(
-        album.artists.joinToString { it.name },
-        pluralStringResource(R.plurals.n_song, album.album.songCount, album.album.songCount),
-        album.album.year?.toString()
-    ),
-    badges = badges,
-    thumbnailContent = {
-        ItemThumbnail(
-            thumbnailUrl = album.album.thumbnailUrl,
-            isActive = isActive,
-            isPlaying = isPlaying,
-            shape = RoundedCornerShape(ThumbnailCornerRadius),
-            modifier = Modifier.size(ListThumbnailSize)
-        )
-    },
-    trailingContent = trailingContent,
-    modifier = modifier
+)  = com.arturo254.opentune.ui.original.component.AlbumListItem(
+    album = album, modifier = modifier, showLikedIcon = showLikedIcon,
+    downloadState = metadata?.downloadState, badges = badges,
+    isActive = isActive, isPlaying = isPlaying, trailingContent = trailingContent,
 )
 
 @Composable
@@ -923,53 +709,10 @@ fun AlbumGridItem(
     isActive: Boolean = false,
     isPlaying: Boolean = false,
     fillMaxWidth: Boolean = false,
-) = GridItem(
-    title = {
-        Text(
-            text = album.album.title,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .basicMarquee()
-                .fillMaxWidth()
-        )
-    },
-    subtitle = {
-        Text(
-            text = album.artists.joinToString { it.name },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.secondary,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-    },
-    badges = badges,
-    thumbnailContent = {
-        val database = LocalDatabase.current
-        val playerConnection = LocalPlayerConnection.current ?: return@GridItem
-
-        ItemThumbnail(
-            thumbnailUrl = album.album.thumbnailUrl,
-            isActive = isActive,
-            isPlaying = isPlaying,
-            shape = RoundedCornerShape(GridThumbnailCornerRadius),
-        )
-
-        AlbumPlayButton(
-            visible = !isActive,
-            onClick = {
-                coroutineScope.launch {
-                    database.albumWithSongs(album.id).firstOrNull()?.let { albumWithSongs ->
-                        playerConnection.playQueue(LocalAlbumRadio(albumWithSongs))
-                    }
-                }
-            }
-        )
-    },
-    fillMaxWidth = fillMaxWidth,
-    modifier = modifier
+)  = com.arturo254.opentune.ui.original.component.AlbumGridItem(
+    album = album, modifier = modifier, coroutineScope = coroutineScope,
+    downloadState = metadata?.downloadState, badges = badges,
+    isActive = isActive, isPlaying = isPlaying, fillMaxWidth = fillMaxWidth,
 )
 
 @Composable
@@ -984,49 +727,9 @@ fun PlaylistListItem(
         }
     },
     trailingContent: @Composable RowScope.() -> Unit = {}
-) = ListItem(
-    title = playlist.playlist.name,
-    subtitle = if (autoPlaylist) {
-        ""
-    } else {
-        if (playlist.songCount == 0 && playlist.playlist.remoteSongCount != null) {
-            pluralStringResource(
-                R.plurals.n_song,
-                playlist.playlist.remoteSongCount,
-                playlist.playlist.remoteSongCount
-            )
-        } else {
-            pluralStringResource(
-                R.plurals.n_song,
-                playlist.songCount,
-                playlist.songCount
-            )
-        }
-    },
-    badges = badges,
-    thumbnailContent = {
-        PlaylistThumbnail(
-            thumbnails = playlist.thumbnails,
-            size = ListThumbnailSize,
-            placeHolder = {
-                val painter = when (playlist.playlist.name) {
-                    stringResource(R.string.liked) -> R.drawable.favorite_border
-                    stringResource(R.string.offline) -> R.drawable.offline
-                    stringResource(R.string.cached_playlist) -> R.drawable.cached
-                    else -> if (autoPlaylist) R.drawable.trending_up else R.drawable.queue_music
-                }
-                Icon(
-                    painter = painterResource(painter),
-                    contentDescription = null,
-                    tint = LocalContentColor.current.copy(alpha = 0.8f),
-                    modifier = Modifier.size(ListThumbnailSize / 2)
-                )
-            },
-            shape = RoundedCornerShape(ThumbnailCornerRadius)
-        )
-    },
-    trailingContent = trailingContent,
-    modifier = modifier
+)  = com.arturo254.opentune.ui.original.component.PlaylistListItem(
+    playlist = playlist, modifier = modifier, autoPlaylist = autoPlaylist,
+    downloadState = metadata?.downloadState, badges = badges, trailingContent = trailingContent,
 )
 
 @Composable
@@ -1160,75 +863,9 @@ fun PlaylistGridItem(
         }
     },
     fillMaxWidth: Boolean = false,
-) = GridItem(
-    title = {
-        Text(
-            text = playlist.playlist.name,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier
-                .basicMarquee()
-                .fillMaxWidth()
-        )
-    },
-    subtitle = {
-        val subtitle = if (autoPlaylist) {
-            ""
-        } else {
-            if (playlist.songCount == 0 && playlist.playlist.remoteSongCount != null) {
-                pluralStringResource(
-                    R.plurals.n_song,
-                    playlist.playlist.remoteSongCount,
-                    playlist.playlist.remoteSongCount
-                )
-            } else {
-                pluralStringResource(
-                    R.plurals.n_song,
-                    playlist.songCount,
-                    playlist.songCount
-                )
-            }
-        }
-        Text(
-            text = subtitle,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.secondary,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
-    },
-    badges = badges,
-    thumbnailContent = {
-        val width = maxWidth
-        PlaylistThumbnail(
-            thumbnails = playlist.thumbnails,
-            size = width,
-            placeHolder = {
-                val painter = when (playlist.playlist.name) {
-                    stringResource(R.string.liked) -> R.drawable.favorite_border
-                    stringResource(R.string.offline) -> R.drawable.offline
-                    stringResource(R.string.cached_playlist) -> R.drawable.cached
-                    else -> if (autoPlaylist) R.drawable.trending_up else R.drawable.queue_music
-                }
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Icon(
-                        painter = painterResource(painter),
-                        contentDescription = null,
-                        tint = LocalContentColor.current.copy(alpha = 0.8f),
-                        modifier = Modifier.size(width / 2)
-                    )
-                }
-            },
-            shape = RoundedCornerShape(GridThumbnailCornerRadius)
-        )
-    },
-    fillMaxWidth = fillMaxWidth,
-    modifier = modifier
+)  = com.arturo254.opentune.ui.original.component.PlaylistGridItem(
+    playlist = playlist, modifier = modifier, autoPlaylist = autoPlaylist,
+    downloadState = metadata?.downloadState, badges = badges, fillMaxWidth = fillMaxWidth,
 )
 
 @Composable
@@ -1240,30 +877,11 @@ fun MediaMetadataListItem(
     isPlaying: Boolean = false,
     shouldLoadImage: Boolean = true,
     trailingContent: @Composable RowScope.() -> Unit = {},
-) {
-    ListItem(
-        title = mediaMetadata.title,
-        subtitle = joinByBullet(
-            mediaMetadata.artists.joinToString { it.name },
-            makeTimeString(mediaMetadata.duration * 1000L)
-        ),
-        thumbnailContent = {
-            ItemThumbnail(
-                thumbnailUrl = mediaMetadata.thumbnailUrl,
-                albumIndex = null,
-                isSelected = isSelected,
-                isActive = isActive,
-                isPlaying = isPlaying,
-                shouldLoadImage = shouldLoadImage,
-                shape = RoundedCornerShape(ThumbnailCornerRadius),
-                modifier = Modifier.size(ListThumbnailSize)
-            )
-        },
-        trailingContent = trailingContent,
-        modifier = modifier,
-        isActive = isActive
-    )
-}
+)  = com.arturo254.opentune.ui.original.component.MediaMetadataListItem(
+    mediaMetadata = if (shouldLoadImage) mediaMetadata else mediaMetadata.copy(thumbnailUrl = null),
+    modifier = modifier, isSelected = isSelected, isActive = isActive,
+    isPlaying = isPlaying, trailingContent = trailingContent,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1304,51 +922,12 @@ fun YouTubeListItem(
             }
         }
     },
-) {
-    val swipeEnabled by rememberPreference(SwipeToSongKey, defaultValue = false)
-
-    val content: @Composable () -> Unit = {
-        ListItem(
-            title = item.title,
-            subtitle = when (item) {
-                is SongItem -> joinByBullet(
-                    item.artists.joinToString { it.name },
-                    makeTimeString(item.duration?.times(1000L)),
-                    viewCountText
-                )
-                is AlbumItem -> joinByBullet(item.artists?.joinToString { it.name }, item.year?.toString())
-                is ArtistItem -> null
-                is PlaylistItem -> joinByBullet(item.author?.name, item.songCountText)
-            },
-            badges = badges,
-            thumbnailContent = {
-                ItemThumbnail(
-                    thumbnailUrl = item.thumbnail,
-                    albumIndex = albumIndex,
-                    isSelected = isSelected,
-                    isActive = isActive,
-                    isPlaying = isPlaying,
-                    shape = if (item is ArtistItem) CircleShape else RoundedCornerShape(ThumbnailCornerRadius),
-                    modifier = Modifier.size(ListThumbnailSize)
-                )
-            },
-            trailingContent = trailingContent,
-            modifier = modifier,
-            isActive = isActive
-        )
-    }
-
-    if (item is SongItem && isSwipeable && swipeEnabled) {
-        SwipeToSongBox(
-            mediaItem = item.copy(thumbnail = item.thumbnail.resize(1080, 1080)).toMediaItem(),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            content()
-        }
-    } else {
-        content()
-    }
-}
+)  = com.arturo254.opentune.ui.original.component.YouTubeListItem(
+    item = item, modifier = modifier, albumIndex = albumIndex,
+    isSelected = isSelected, isActive = isActive, isPlaying = isPlaying,
+    isSwipeable = isSwipeable, trailingContent = trailingContent,
+    isLiked = metadata?.isLiked, downloadState = metadata?.downloadState, badges = badges,
+)
 
 @Composable
 fun YouTubeGridItem(
@@ -1384,80 +963,11 @@ fun YouTubeGridItem(
     isActive: Boolean = false,
     isPlaying: Boolean = false,
     fillMaxWidth: Boolean = false,
-) = GridItem(
-    title = {
-        Text(
-            text = item.title,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            textAlign = if (item is ArtistItem) TextAlign.Center else TextAlign.Start,
-            modifier = Modifier
-                .basicMarquee()
-                .fillMaxWidth()
-        )
-    },
-    subtitle = {
-        val subtitle = when (item) {
-            is SongItem -> joinByBullet(item.artists.joinToString { it.name }, makeTimeString(item.duration?.times(1000L)))
-            is AlbumItem -> joinByBullet(item.artists?.joinToString { it.name }, item.year?.toString())
-            is ArtistItem -> null
-            is PlaylistItem -> joinByBullet(item.author?.name, item.songCountText)
-        }
-        if (subtitle != null) {
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.secondary,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    },
-    badges = badges,
-    thumbnailContent = {
-        val database = LocalDatabase.current
-        val playerConnection = LocalPlayerConnection.current ?: return@GridItem
-        val shape = if (item is ArtistItem) CircleShape else RoundedCornerShape(GridThumbnailCornerRadius)
-
-        ItemThumbnail(
-            thumbnailUrl = item.thumbnail,
-            isActive = isActive,
-            isPlaying = isPlaying,
-            shape = shape,
-            thumbnailRatio = thumbnailRatio
-        )
-
-        if (item is SongItem && !isActive) {
-            OverlayPlayButton(
-                visible = true
-            )
-        }
-
-        AlbumPlayButton(
-            visible = item is AlbumItem && !isActive,
-            onClick = {
-                coroutineScope?.launch(Dispatchers.IO) {
-                    var albumWithSongs = database.albumWithSongs(item.id).first()
-                    if (albumWithSongs?.songs.isNullOrEmpty()) {
-                        YouTube.album(item.id).onSuccess { albumPage ->
-                            database.transaction { insert(albumPage) }
-                            albumWithSongs = database.albumWithSongs(item.id).first()
-                        }.onFailure { reportException(it) }
-                    }
-                    albumWithSongs?.let {
-                        withContext(Dispatchers.Main) {
-                            playerConnection.playQueue(LocalAlbumRadio(it))
-                        }
-                    }
-                }
-            }
-        )
-    },
-    thumbnailRatio = thumbnailRatio,
-    fillMaxWidth = fillMaxWidth,
-    modifier = modifier
+)  = com.arturo254.opentune.ui.original.component.YouTubeGridItem(
+    item = item, modifier = modifier, coroutineScope = coroutineScope,
+    isLiked = metadata?.isLiked, downloadState = metadata?.downloadState, badges = badges,
+    thumbnailRatio = thumbnailRatio, isActive = isActive,
+    isPlaying = isPlaying, fillMaxWidth = fillMaxWidth,
 )
 
 @Composable
@@ -1469,24 +979,16 @@ fun LocalSongsGrid(
     isActive: Boolean = false,
     isPlaying: Boolean = false,
     fillMaxWidth: Boolean = false,
-    modifier: Modifier = Modifier
-) = GridItem(
+    modifier: Modifier = Modifier,
+) = com.arturo254.opentune.ui.original.component.LocalSongsGrid(
     title = title,
     subtitle = subtitle,
     badges = badges,
-    thumbnailContent = {
-        LocalThumbnail(
-            thumbnailUrl = thumbnailUrl,
-            isActive = isActive,
-            isPlaying = isPlaying,
-            shape = RoundedCornerShape(GridThumbnailCornerRadius),
-            modifier = if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier,
-            showCenterPlay = true,
-            playButtonVisible = false
-        )
-    },
+    thumbnailUrl = thumbnailUrl,
+    isActive = isActive,
+    isPlaying = isPlaying,
     fillMaxWidth = fillMaxWidth,
-    modifier = modifier
+    modifier = modifier,
 )
 
 @Composable
@@ -1498,24 +1000,16 @@ fun LocalArtistsGrid(
     isActive: Boolean = false,
     isPlaying: Boolean = false,
     fillMaxWidth: Boolean = false,
-    modifier: Modifier = Modifier
-) = GridItem(
+    modifier: Modifier = Modifier,
+) = com.arturo254.opentune.ui.original.component.LocalArtistsGrid(
     title = title,
     subtitle = subtitle,
     badges = badges,
-    thumbnailContent = {
-        LocalThumbnail(
-            thumbnailUrl = thumbnailUrl,
-            isActive = false,
-            isPlaying = false,
-            shape = CircleShape,
-            modifier = if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier,
-            showCenterPlay = false,
-            playButtonVisible = false
-        )
-    },
+    thumbnailUrl = thumbnailUrl,
+    isActive = isActive,
+    isPlaying = isPlaying,
     fillMaxWidth = fillMaxWidth,
-    modifier = modifier
+    modifier = modifier,
 )
 
 @Composable
@@ -1527,24 +1021,16 @@ fun LocalAlbumsGrid(
     isActive: Boolean = false,
     isPlaying: Boolean = false,
     fillMaxWidth: Boolean = false,
-    modifier: Modifier = Modifier
-) = GridItem(
+    modifier: Modifier = Modifier,
+) = com.arturo254.opentune.ui.original.component.LocalAlbumsGrid(
     title = title,
     subtitle = subtitle,
     badges = badges,
-    thumbnailContent = {
-        LocalThumbnail(
-            thumbnailUrl = thumbnailUrl,
-            isActive = isActive,
-            isPlaying = isPlaying,
-            shape = RoundedCornerShape(GridThumbnailCornerRadius),
-            modifier = if (fillMaxWidth) Modifier.fillMaxWidth() else Modifier,
-            showCenterPlay = false,
-            playButtonVisible = true
-        )
-    },
+    thumbnailUrl = thumbnailUrl,
+    isActive = isActive,
+    isPlaying = isPlaying,
     fillMaxWidth = fillMaxWidth,
-    modifier = modifier
+    modifier = modifier,
 )
 
 @Composable
@@ -1661,188 +1147,30 @@ fun LocalThumbnail(
     modifier: Modifier = Modifier,
     showCenterPlay: Boolean = false,
     playButtonVisible: Boolean = false,
-    thumbnailRatio: Float = 1f
-) {
-    val context = LocalContext.current
-    val density = LocalDensity.current
-
-    BoxWithConstraints(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .aspectRatio(thumbnailRatio)
-            .clip(shape)
-    ) {
-        val (cropThumbnailToSquare, _) = rememberPreference(CropThumbnailToSquareKey, false)
-        val isYouTubeThumb = thumbnailUrl?.contains("ytimg.com", ignoreCase = true) == true
-        val shouldApplySquareCrop = cropThumbnailToSquare && isYouTubeThumb && kotlin.math.abs(thumbnailRatio - 1f) < 0.001f
-        val widthPx = if (maxWidth == Dp.Infinity) null else with(density) { maxWidth.roundToPx().coerceAtLeast(1) }
-        val heightPx = if (maxHeight == Dp.Infinity) null else with(density) { maxHeight.roundToPx().coerceAtLeast(1) }
-        val request = remember(thumbnailUrl, widthPx, heightPx) {
-            ImageRequest.Builder(context)
-                .data(thumbnailUrl)
-                .allowHardware(true)
-                .apply {
-                    if (widthPx != null && heightPx != null) {
-                        size(widthPx, heightPx)
-                    }
-                }
-                .build()
-        }
-        AsyncImage(
-            model = request,
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize().let { if (shouldApplySquareCrop) it.aspectRatio(1f) else it }
-        )
-
-        AnimatedVisibility(
-            visible = isActive,
-            enter = fadeIn(tween(500)),
-            exit = fadeOut(tween(500))
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f), shape)
-            ) {
-                if (isPlaying) {
-                    PlayingIndicator(
-                        color = Color.White,
-                        modifier = Modifier.height(24.dp)
-                    )
-                } else {
-                    Icon(
-                        painter = painterResource(R.drawable.play),
-                        contentDescription = null,
-                        tint = Color.White
-                    )
-                }
-            }
-        }
-
-        if (showCenterPlay) {
-            AnimatedVisibility(
-                visible = !(isActive && isPlaying),
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(8.dp)
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = 0.6f))
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.play),
-                        contentDescription = null,
-                        tint = Color.White
-                    )
-                }
-            }
-        }
-
-        if (playButtonVisible) {
-            AnimatedVisibility(
-                visible = true,
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(8.dp)
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black.copy(alpha = ActiveBoxAlpha))
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.play),
-                        contentDescription = null,
-                        tint = Color.White
-                    )
-                }
-            }
-        }
-    }
-}
+    thumbnailRatio: Float = 1f,
+) = com.arturo254.opentune.ui.original.component.LocalThumbnail(
+    thumbnailUrl = thumbnailUrl,
+    isActive = isActive,
+    isPlaying = isPlaying,
+    shape = shape,
+    modifier = modifier,
+    showCenterPlay = showCenterPlay,
+    playButtonVisible = playButtonVisible,
+    thumbnailRatio = thumbnailRatio,
+)
 
 @Composable
 fun PlaylistThumbnail(
     thumbnails: List<String>,
     size: Dp,
     placeHolder: @Composable () -> Unit,
-    shape: Shape
-) {
-    val context = LocalContext.current
-    val density = LocalDensity.current
-    val sizePx = with(density) { size.roundToPx().coerceAtLeast(1) }
-
-    when (thumbnails.size) {
-        0 -> Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(size)
-                .clip(shape)
-                .background(MaterialTheme.colorScheme.surfaceContainer)
-        ) {
-            placeHolder()
-        }
-        1 -> {
-            val request = remember(thumbnails, sizePx) {
-                ImageRequest.Builder(context)
-                    .data(thumbnails[0].resize((sizePx * 1.5).toInt(), (sizePx * 1.5).toInt()))
-                    .size(sizePx, sizePx)
-                    .allowHardware(true)
-                    .build()
-            }
-            AsyncImage(
-                model = request,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(size)
-                    .clip(shape)
-            )
-        }
-        else -> Box(
-            modifier = Modifier
-                .size(size)
-                .clip(shape)
-        ) {
-            listOf(
-                Alignment.TopStart,
-                Alignment.TopEnd,
-                Alignment.BottomStart,
-                Alignment.BottomEnd
-            ).fastForEachIndexed { index, alignment ->
-                val halfPx = (sizePx / 2).coerceAtLeast(1)
-                val url = thumbnails.getOrNull(index)
-                val request = remember(url, halfPx) {
-                    ImageRequest.Builder(context)
-                        .data(url?.resize((halfPx * 1.5).toInt(), (halfPx * 1.5).toInt()))
-                        .size(halfPx, halfPx)
-                        .allowHardware(true)
-                        .build()
-                }
-                AsyncImage(
-                    model = request,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .align(alignment)
-                        .size(size / 2)
-                )
-            }
-        }
-    }
-}
+    shape: Shape,
+) = com.arturo254.opentune.ui.original.component.PlaylistThumbnail(
+    thumbnails = thumbnails,
+    size = size,
+    placeHolder = placeHolder,
+    shape = shape,
+)
 
 @Composable
 fun BoxScope.OverlayPlayButton(
@@ -1906,104 +1234,38 @@ fun BoxScope.AlbumPlayButton(
 fun SwipeToSongBox(
     modifier: Modifier = Modifier,
     mediaItem: MediaItem,
-    content: @Composable BoxScope.() -> Unit
+    content: @Composable BoxScope.() -> Unit,
 ) {
-    val ctx = LocalContext.current
-    val player = LocalPlayerConnection.current
-    val scope = rememberCoroutineScope()
-    val offset = remember { mutableStateOf(0f) }
-    val threshold = 300f
-
-    val dragState = rememberDraggableState { delta ->
-        offset.value = (offset.value + delta).coerceIn(-threshold, threshold)
-    }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .draggable(
-                orientation = Orientation.Horizontal,
-                state = dragState,
-                onDragStopped = {
-                    when {
-                        offset.value >= threshold -> {
-                            player?.playNext(listOf(mediaItem))
-                            Toast.makeText(ctx, R.string.play_next, Toast.LENGTH_SHORT).show()
-                            reset(offset, scope)
-                        }
-
-                        offset.value <= -threshold -> {
-                            player?.addToQueue(listOf(mediaItem))
-                            Toast.makeText(ctx, R.string.add_to_queue, Toast.LENGTH_SHORT).show()
-                            reset(offset, scope)
-                        }
-
-                        else -> reset(offset, scope)
-                    }
-                }
-            )
-    ) {
-        if (offset.value != 0f) {
-            val (iconRes, bg, tint, align) = if (offset.value > 0)
-                Quadruple(
-                    R.drawable.playlist_play,
-                    MaterialTheme.colorScheme.secondary,
-                    MaterialTheme.colorScheme.onSecondary,
-                    Alignment.CenterStart
-                ) else
-                Quadruple(
-                    R.drawable.queue_music,
-                    MaterialTheme.colorScheme.primary,
-                    MaterialTheme.colorScheme.onPrimary,
-                    Alignment.CenterEnd
-                )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .align(Alignment.Center)
-                    .background(bg),
-                contentAlignment = align
+    val database = LocalDatabase.current
+    val currentSong by remember(database, mediaItem.mediaId) {
+        database.song(mediaItem.mediaId)
+    }.collectAsState(initial = null)
+    val isInLibrary = currentSong?.song?.inLibrary != null
+    val color = MaterialTheme.colorScheme.primary
+    val label = stringResource(if (isInLibrary) R.string.remove_from_library else R.string.add_to_library)
+    com.arturo254.opentune.ui.original.component.SongSwipeBox(
+        modifier = modifier,
+        library = {
+            com.arturo254.opentune.ui.original.component.SwipeAction(
+                icon = if (isInLibrary) R.drawable.library_add_check else R.drawable.library_add,
+                color = color,
+                label = label,
+                mediaItem = { mediaItem },
             ) {
-                Icon(
-                    painter = painterResource(id = iconRes),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(horizontal = 24.dp)
-                        .size(30.dp)
-                        .alpha(0.9f),
-                    tint = tint
-                )
+                database.transaction {
+                    mediaItem.metadata?.let { insert(it) }
+                    getSongByIdBlocking(mediaItem.mediaId)?.song?.let { update(it.toggleLibrary()) }
+                }
             }
-        }
-
-        Box(
-            modifier = Modifier
-                .offset { IntOffset(offset.value.roundToInt(), 0) }
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface),
-            content = content
-        )
-    }
+        },
+        queue = {
+            com.arturo254.opentune.ui.original.component.queueSwipeAction { mediaItem }
+        },
+        content = {
+            Box(content = content)
+        },
+    )
 }
-
-private fun reset(offset: MutableState<Float>, scope: CoroutineScope) {
-    scope.launch {
-        animate(
-            initialValue = offset.value,
-            targetValue = 0f,
-            animationSpec = tween(durationMillis = 300)
-        ) { value, _ -> offset.value = value }
-    }
-}
-
-data class Quadruple<A, B, C, D>(
-    val first: A,
-    val second: B,
-    val third: C,
-    val fourth: D
-)
 
 private object Icon {
     @Composable

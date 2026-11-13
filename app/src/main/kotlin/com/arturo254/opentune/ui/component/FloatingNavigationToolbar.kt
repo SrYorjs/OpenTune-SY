@@ -243,9 +243,19 @@ private fun ToolbarItemsContainer(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
                     ) {
-                        Icon(painterResource(if (selected) screen.iconIdActive else screen.iconIdInactive), null,
-                            tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(22.dp))
+                        val icon: @Composable () -> Unit = {
+                            Icon(
+                                painterResource(if (selected) screen.iconIdActive else screen.iconIdInactive),
+                                null,
+                                tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(22.dp),
+                            )
+                        }
+                        if (screen.route == Screens.Library.route) {
+                            com.arturo254.opentune.ui.original.component.LibraryDownloadIcon(icon)
+                        } else {
+                            icon()
+                        }
                         Text(stringResource(screen.titleId), style = MaterialTheme.typography.labelSmall,
                             maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }

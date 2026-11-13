@@ -962,7 +962,7 @@ private fun ThemeRichPreview(
                                     Text("Switch", style = MaterialTheme.typography.labelLarge)
                                     Text("On/off states", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
-                                androidx.compose.material3.Switch(
+                                com.arturo254.opentune.ui.original.component.AppSwitch(
                                     checked = switchOn,
                                     onCheckedChange = { switchOn = it },
                                 )

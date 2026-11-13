@@ -59,80 +59,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun NewActionButton(
-    icon: @Composable () -> Unit,
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
-    contentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
-) {
-    val activeGlass = LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED
-    val shape = GalaxVisualKit.tileShape
-    val interaction = remember { MutableInteractionSource() }
-    val pressed by interaction.collectIsPressedAsState()
-    val motion = com.arturo254.opentune.core.designsystem.OpenTuneDesignSystem.galaxMotion
-    val scale by animateFloatAsState(
-        targetValue = if (pressed && enabled) motion.pressScale else 1f,
-        animationSpec = motion.pressSpec,
-        label = "galaxActionTilePress",
-    )
-    val accent = MaterialTheme.colorScheme.primary
-    Box(
-        modifier = modifier
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                alpha = if (enabled) 1f else .46f
-            }
-            .clip(shape)
-            .then(
-                if (activeGlass) Modifier.galaxLiquidChrome(shape, emphasis = .82f)
-                else Modifier.galaxNebulaSurface(shape, accent = backgroundColor, intensity = .85f),
-            )
-            .clickable(
-                enabled = enabled,
-                interactionSource = interaction,
-                indication = LocalIndication.current,
-                onClick = onClick,
-            ),
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 15.dp, vertical = 16.dp),
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(19.dp),
-        ) {
-            GalaxGlyphFrame(
-                size = 46.dp,
-                accent = accent,
-            ) {
-                Box(Modifier.size(25.dp), contentAlignment = Alignment.Center) {
-                    icon()
-                }
-            }
-            Text(
-                text = text,
-                color = if (activeGlass) MaterialTheme.colorScheme.onSurface else contentColor,
-                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                minLines = 1,
-            )
-        }
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 20.dp, end = 18.dp)
-                .size(6.dp)
-                .background(accent.copy(alpha = .75f), CircleShape),
-        )
-    }
-}
-
-@Composable
 fun NewMenuItem(
     headlineContent: @Composable () -> Unit,
     leadingContent: @Composable (() -> Unit)? = null,
@@ -244,36 +170,27 @@ fun NewMenuSectionHeader(
 fun NewActionGrid(
     actions: List<NewAction>,
     modifier: Modifier = Modifier,
-    columns: Int = 3
+    columns: Int = 3,
 ) {
-    val rows = actions.chunked(columns)
-
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        rows.forEach { row ->
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                row.forEach { action ->
-                    NewActionButton(
-                        icon = action.icon,
-                        text = action.text,
-                        onClick = action.onClick,
-                        modifier = Modifier.weight(1f),
-                        enabled = action.enabled,
-                        backgroundColor = if (action.backgroundColor != Color.Unspecified) action.backgroundColor else MaterialTheme.colorScheme.surfaceVariant,
-                        contentColor = if (action.contentColor != Color.Unspecified) action.contentColor else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                repeat(columns - row.size) {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-            }
-        }
+    val surface = if (LocalGalaxLiquidVariant.current != GalaxLiquidVariant.DISABLED) {
+        modifier.galaxLiquidChrome(GalaxVisualKit.tileShape, emphasis = .82f)
+    } else {
+        modifier
     }
+    com.arturo254.opentune.ui.original.component.NewActionGrid(
+        actions = actions.map { action ->
+            com.arturo254.opentune.ui.original.component.NewAction(
+                icon = action.icon,
+                text = action.text,
+                onClick = { action.onClick() },
+                enabled = action.enabled,
+                backgroundColor = action.backgroundColor,
+                contentColor = action.contentColor,
+            )
+        },
+        modifier = surface,
+        columns = columns,
+    )
 }
 
 data class NewAction(

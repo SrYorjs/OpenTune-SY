@@ -308,12 +308,19 @@ internal fun RowScope.MainActivityNavigationRail(
                                             NavigationRailItem(
                                                 selected = isSelected,
                                                 icon = {
-                                                    Icon(
-                                                        painter = painterResource(
-                                                            id = if (isSelected) screen.iconIdActive else screen.iconIdInactive
-                                                        ),
-                                                        contentDescription = null,
-                                                    )
+                                                    val icon: @Composable () -> Unit = {
+                                                        Icon(
+                                                            painter = painterResource(
+                                                                id = if (isSelected) screen.iconIdActive else screen.iconIdInactive
+                                                            ),
+                                                            contentDescription = null,
+                                                        )
+                                                    }
+                                                    if (screen.route == Screens.Library.route) {
+                                                        com.arturo254.opentune.ui.original.component.LibraryDownloadIcon(icon)
+                                                    } else {
+                                                        icon()
+                                                    }
                                                 },
                                                 label = {
                                                     if (!slimNav) {
