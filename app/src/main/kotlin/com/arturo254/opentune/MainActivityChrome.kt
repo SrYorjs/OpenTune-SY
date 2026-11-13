@@ -1,5 +1,8 @@
 package com.arturo254.opentune
 
+import com.arturo254.opentune.ui.original.component.navigateToTab
+import com.arturo254.opentune.ui.original.component.onTabTapped
+
 import android.annotation.SuppressLint
 import android.Manifest
 import android.content.Intent
@@ -341,7 +344,10 @@ internal fun RowScope.MainActivityNavigationRail(
 
                                                     onActiveChange(false)
                                                     coroutineScope.launch {
-                                                        navigationState.pagerState.animateScrollToPage(navigationItems.indexOf(screen))
+                                                        navController.onTabTapped(
+                                                            com.arturo254.opentune.ui.original.screens.Screens.MainScreens.first { it.route == screen.route },
+                                                            isSelected,
+                                                        ) { navController.currentBackStackEntry?.savedStateHandle?.set("scrollToTop", true) }
                                                     }
                                                 },
                                             )
@@ -750,10 +756,14 @@ internal fun BoxScope.MainActivityFloatingToolbar(
                                             musicRecognitionContentDescription = if (shouldShowHomeShuffleButton) stringResource(R.string.music_recognition) else "",
                                             selectedRoute = selectedNavigationRoute,
                                             pagerState = navigationState.pagerState,
+                                            onSearchDoubleTap = { navController.currentBackStackEntry?.savedStateHandle?.set("requestSearchFocus", true) },
                                             onItemClick = { screen, isSelected ->
                                                 onActiveChange(false)
                                                 coroutineScope.launch {
-                                                    navigationState.pagerState.animateScrollToPage(navigationItems.indexOf(screen))
+                                                    navController.onTabTapped(
+                                                            com.arturo254.opentune.ui.original.screens.Screens.MainScreens.first { it.route == screen.route },
+                                                            isSelected,
+                                                        ) { navController.currentBackStackEntry?.savedStateHandle?.set("scrollToTop", true) }
                                                 }
                                             },
                                         )

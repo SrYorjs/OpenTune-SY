@@ -6,7 +6,8 @@
       "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/utils/WindowLayout.kt",
       "adaptations": [
         "package",
-        "existing_model_contracts"
+        "existing_model_contracts",
+        "measured_compose_constraints_with_window_fallback"
       ],
       "source_blob": "5b96d166d459c567148646c02ce3c8618c6c4ced"
     },
@@ -33,7 +34,8 @@
       "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/launch/LaunchIntro.kt",
       "adaptations": [
         "package",
-        "existing_model_contracts"
+        "existing_model_contracts",
+        "launcher_artwork_contract_adapter"
       ],
       "source_blob": "9a1e7015a4a53b629f3c24be09fd210d17bd1303"
     },
@@ -55,5 +57,377 @@
       ],
       "source_blob": "24bcc69eed0b8d157232df12b11489bace52c3d0"
     }
-  ]
+  ],
+  "A2": {
+    "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/screens/NavigationBuilder.kt",
+    "source_blob": "c2e07222c5ebf80a22d74178e9d2fe0c5332ded5",
+    "adaptations": [
+      "packages",
+      "existing_screen_signatures",
+      "route_aliases",
+      "query_parameter_separator"
+    ],
+    "screens": [
+      {
+        "original": "HomeScreen",
+        "current": "HomeScreen",
+        "replacement_operation": "06",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "SectionDetailScreen",
+        "current": "HomeScreen",
+        "replacement_operation": "06",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "ComingSoonScreen",
+        "current": "HomeScreen",
+        "replacement_operation": "06",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "SearchScreen",
+        "current": "GalaxDiscoverScreen + PrismSearchBar + UniversalSearchScreen",
+        "replacement_operation": "07",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "OnlineSearchResult",
+        "current": "UniversalSearchScreen",
+        "replacement_operation": "07",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "GenreScreen",
+        "current": "YouTubeBrowseScreen",
+        "replacement_operation": "07",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "LibraryHomeScreen",
+        "current": "LibraryScreen",
+        "replacement_operation": "08/10",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "LibrarySongsScreen",
+        "current": "LibraryScreen",
+        "replacement_operation": "08/10",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "LibraryPlaylistsScreen",
+        "current": "LibraryScreen",
+        "replacement_operation": "08/10",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "LibraryRecentlyAddedScreen",
+        "current": "LibraryScreen",
+        "replacement_operation": "08/10",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "LibraryAlbumsScreen",
+        "current": "LibraryScreen",
+        "replacement_operation": "08/10",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "LibraryArtistsScreen",
+        "current": "LibraryScreen",
+        "replacement_operation": "08/10",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "LibraryImportedScreen",
+        "current": "LibraryScreen",
+        "replacement_operation": "08/10",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "ArtistSimilarScreen",
+        "current": "ArtistScreen",
+        "replacement_operation": "09",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "CipherSettingsScreen",
+        "current": "ContentSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "PlaybackDiagnosticsScreen",
+        "current": "DebugSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "SettingsPanePlaceholder",
+        "current": "SettingsScreen",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "MochySettingsScreen",
+        "current": "SettingsScreen",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "AppBehaviourSettingsScreen",
+        "current": "ContentSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "IntegrationsScreen",
+        "current": "IntegrationScreen",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "DiscordScreen",
+        "current": "DiscordSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "ScrobbleServiceScreen",
+        "current": "LastFMSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "ProxySettingsScreen",
+        "current": "PrivacySettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "CrossmixSettingsScreen",
+        "current": "PlayerSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "DeveloperSpaceScreen",
+        "current": "AboutScreen",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "DevPlaygroundScreen",
+        "current": "DebugSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "StorageScreen",
+        "current": "StorageSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "ExperimentalSettingsScreen",
+        "current": "DebugSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "ImportSyncScreen",
+        "current": "BackupAndRestore",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "TvLinkScreen",
+        "current": "AndroidAutoSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "ImportProvidersScreen",
+        "current": "IntegrationScreen",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "TuneMyMusicImportScreen",
+        "current": "BackupAndRestore",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "ImportProgressScreen",
+        "current": "BackupAndRestore",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "YouTubeSyncScreen",
+        "current": "AccountSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "YouTubeLoginScreen",
+        "current": "LoginScreen",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "AccountImportScreen",
+        "current": "AccountSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "EqualizerScreen",
+        "current": "PlayerSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "GestureScreen",
+        "current": "PlayerSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "CustomisationScreen",
+        "current": "AppearanceSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "AudioLabScreen",
+        "current": "PlayerSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "AudioFxScreen",
+        "current": "PlayerSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "AudioQualityScreen",
+        "current": "PlayerSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "AudioPassScreen",
+        "current": "PlayerSettings",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "ModulesScreen",
+        "current": "IntegrationScreen",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "ModuleScreen",
+        "current": "IntegrationScreen",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      },
+      {
+        "original": "ModulePageScreen",
+        "current": "IntegrationScreen",
+        "replacement_operation": "16",
+        "reason": "original presentation pending its scheduled operation"
+      }
+    ],
+    "routes": [
+      "home",
+      "search_input",
+      "library",
+      "settings",
+      "section_detail/{sectionId}",
+      "history",
+      "coming_soon/{sectionTitle}",
+      "library/songs",
+      "library/playlists",
+      "library/added",
+      "library/local/added",
+      "library/cached/added",
+      "library/local/albums",
+      "library/cached/albums",
+      "library/local/artists",
+      "library/cached/artists",
+      "library/local/playlists",
+      "library/cached/playlists",
+      "library/imported/{source}",
+      "library/imported/{source}/playlists",
+      "library/imported/{source}/albums",
+      "stats",
+      "cipher_settings",
+      "playback_diagnostics",
+      "mochy_settings",
+      "general_settings",
+      "integrations_settings",
+      "integrations_settings/discord",
+      "integrations_settings/scrobble/{site}",
+      "proxy_settings",
+      "crossmix_settings",
+      "developer_space?person={person}",
+      "developer_playground",
+      "storage_settings",
+      "experimental_settings",
+      "import_sync",
+      "tv_link",
+      "import_providers",
+      "import_tunemymusic",
+      "import_progress",
+      "youtube_sync",
+      "account_import/{service}?resync={resync}&then={then}",
+      "youtube_login",
+      "equalizer",
+      "gesture_settings",
+      "customisation_settings",
+      "audio_lab",
+      "audio_fx",
+      "audio_quality",
+      "audio_pass",
+      "modules",
+      "module/{id}",
+      "module_page/{id}/{page}",
+      "browse/{browseId}",
+      "search/{query}",
+      "album/{albumId}",
+      "artist/{artistId}",
+      "artist/{artistId}/songs",
+      "artist/{artistId}/albums",
+      "artist/{artistId}/similar",
+      "artist/{artistId}/items?browseId={browseId}&params={params}",
+      "online_playlist/{playlistId}",
+      "local_playlist/{playlistId}",
+      "auto_playlist/{playlist}",
+      "cache_playlist/{playlist}",
+      "top_playlist/{top}",
+      "genre/{browseId}?params={params}",
+      "youtube_browse/{browseId}?params={params}",
+      "library/albums",
+      "library/artists"
+    ],
+    "app_navigation_source_blob": "fe8914919f97bc175bbb4d328fb1905eca238365",
+    "validation": {
+      "attempt_1": "6 signature errors",
+      "attempt_2": "2 double-tap parameter errors",
+      "attempt_3": "build/04a-a2-assemble.log: SUCCESS"
+    },
+    "pending": "Original presentations and their specific capabilities remain in operations 06-16; library shelf/source routes show the current complete library until 08/10."
+  },
+  "A1_validation": {
+    "compile": "build/04a-a1-1.log: SUCCESS",
+    "assemble": "build/04a-a1-assemble.log: SUCCESS",
+    "commit": "329c3883"
+  }
 }

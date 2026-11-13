@@ -1,5 +1,7 @@
 package com.arturo254.opentune
 
+import com.arturo254.opentune.ui.original.component.navigateToTab
+
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -41,7 +43,7 @@ internal fun GalaxCompactNavigationOrb(
     pureBlack: Boolean,
 ) {
     val items = navigationState.navigationItems
-    val currentPage = navigationState.pagerState.currentPage.coerceIn(0, items.lastIndex)
+    val currentPage = items.indexOfFirst { it.route == navigationState.selectedNavigationRoute }.coerceIn(0, items.lastIndex)
     val current = items[currentPage]
     val colors = MaterialTheme.colorScheme
     val glass = LocalEnableLiquidGlass.current

@@ -31,7 +31,7 @@ sealed class Screens(
         titleId = R.string.search,
         iconIdInactive = R.drawable.search,
         iconIdActive = R.drawable.search,
-        route = "search"
+        route = "search_input"
     )
 
     object Library : Screens(
@@ -55,7 +55,9 @@ sealed class Screens(
         route = "mood_and_genres"
     )
 
+    object Settings : Screens(R.string.settings, R.drawable.settings, R.drawable.settings, "settings")
+
     companion object {
-        val MainScreens = listOf(Home, Search, Library)
+        val MainScreens = listOf(Home, Search, Library, Settings)
     }
 }

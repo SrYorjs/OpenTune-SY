@@ -7,6 +7,7 @@
 package com.arturo254.opentune.ui.screens
 import com.arturo254.opentune.ui.screens.DownloadQueueScreen
 
+import com.arturo254.opentune.ui.original.screens.originalNavigationBuilder
 import android.net.Uri
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -46,7 +47,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
-import androidx.navigation.compose.composable
+import androidx.navigation.compose.composable as additionalComposable
 import androidx.navigation.navArgument
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.DarkModeKey
@@ -111,9 +112,17 @@ fun NavGraphBuilder.navigationBuilder(
     pagerState: androidx.compose.foundation.pager.PagerState,
     onOpenSearch: () -> Unit,
 ) {
+    originalNavigationBuilder(
+        navController, scrollBehavior, null, androidx.compose.material3.SnackbarHostState(), latestVersionName,
+    )
+    composable("search") {
+        val pureBlack by rememberPreference(PureBlackKey, false)
+        com.arturo254.opentune.ui.original.adapters.SearchScreen(navController, pureBlack)
+    }
     Screens.MainScreens.forEach { screen ->
         composable(screen.route) {
-            GalaxMainPages(navController, pagerState, onOpenSearch)
+            val pureBlack by rememberPreference(PureBlackKey, false)
+            com.arturo254.opentune.ui.original.adapters.SearchScreen(navController, pureBlack)
         }
     }
     composable("history") {
@@ -474,4 +483,17 @@ fun NavGraphBuilder.navigationBuilder(
         }
     }
 
+}
+private fun NavGraphBuilder.composable(
+    route: String,
+    arguments: List<androidx.navigation.NamedNavArgument> = emptyList(),
+    enterTransition: (androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.EnterTransition?)? = null,
+    exitTransition: (androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.ExitTransition?)? = null,
+    popEnterTransition: (androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.EnterTransition?)? = enterTransition,
+    popExitTransition: (androidx.compose.animation.AnimatedContentTransitionScope<androidx.navigation.NavBackStackEntry>.() -> androidx.compose.animation.ExitTransition?)? = exitTransition,
+    content: @Composable androidx.compose.animation.AnimatedContentScope.(androidx.navigation.NavBackStackEntry) -> Unit,
+) {
+    if (route in com.arturo254.opentune.ui.original.screens.OriginalNavigationRoutes) return
+    additionalComposable(route, arguments, enterTransition = enterTransition, exitTransition = exitTransition,
+        popEnterTransition = popEnterTransition, popExitTransition = popExitTransition, content = content)
 }

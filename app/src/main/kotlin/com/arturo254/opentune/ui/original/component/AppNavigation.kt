@@ -50,7 +50,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.size
-import com.arturo254.opentune.ui.original.component.LocalGlassState
+import com.arturo254.opentune.ui.original.component.LocalOriginalGlassState as LocalGlassState
 
 @Immutable
 private data class NavItemState(

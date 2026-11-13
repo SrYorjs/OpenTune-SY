@@ -91,7 +91,7 @@ internal fun rememberMainActivityNavigationState(
         MainActivity.ACTION_SEARCH -> 1
         else -> if (defaultOpenTab == NavigationTab.LIBRARY) 2 else if (defaultOpenTab == NavigationTab.SEARCH) 1 else 0
     } }
-    val pagerState = androidx.compose.foundation.pager.rememberPagerState(initialPage = initialPage) { 3 }
+    val pagerState = androidx.compose.foundation.pager.rememberPagerState(initialPage = initialPage) { 4 }
     var initialPageApplied by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         if (!initialPageApplied) {
@@ -173,7 +173,7 @@ internal fun rememberMainActivityNavigationState(
             active -> Screens.Search.route
             pendingNavigationRoute != null -> pendingNavigationRoute
             else -> if (normalizedNavigationRoute in Screens.MainScreens.map { it.route })
-                Screens.MainScreens[pagerState.currentPage].route else normalizedNavigationRoute
+                normalizedNavigationRoute else normalizedNavigationRoute
         }
 
     val onActiveChange: (Boolean) -> Unit = { newActive ->

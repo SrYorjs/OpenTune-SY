@@ -501,6 +501,7 @@ internal fun MainActivityScaffold(
                                         startDestination = when (tabOpenedFromShortcut ?: defaultOpenTab) {
                                             NavigationTab.HOME -> Screens.Home
                                             NavigationTab.LIBRARY -> Screens.Library
+                                            NavigationTab.SEARCH -> Screens.Search
                                             else -> Screens.Home
                                         }.route,
                                         enterTransition = {
