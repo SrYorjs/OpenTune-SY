@@ -9,6 +9,15 @@ import com.arturo254.opentune.ui.original.screens.Screens
 import com.arturo254.opentune.ui.original.component.navigateToTab
 import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.constants.PureBlackKey
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+
+@Composable
+internal fun routeSceneActive(): Boolean {
+    val lifecycle by LocalLifecycleOwner.current.lifecycle.currentStateFlow.collectAsState()
+    return lifecycle.isAtLeast(Lifecycle.State.RESUMED) &&
+        !com.arturo254.opentune.LocalAppContentObscured.current.value
+}
 
 enum class RouteShelf(val key: String) { Local("local"), Cached("cached") }
 fun sourceKey(key: String?): String? = key
@@ -16,19 +25,19 @@ fun sourceKey(key: String?): String? = key
 /** Temporary equivalent: HomeScreen; original presentation: operation 06. */
 @Composable
 fun HomeScreen(navController: NavHostController, snackbarHostState: SnackbarHostState) {
-    com.arturo254.opentune.ui.screens.HomeScreen(navController, onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) }, onOpenLibraryTab = { navController.navigateToTab(Screens.Library.route) })
+    com.arturo254.opentune.ui.screens.HomeScreen(navController, ambientActive = routeSceneActive(), onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) }, onOpenLibraryTab = { navController.navigateToTab(Screens.Library.route) })
 }
 
 /** Temporary equivalent: HomeScreen; original presentation: operation 06. */
 @Composable
 fun SectionDetailScreen(navController: NavHostController, sectionId: String, homeViewModel: com.arturo254.opentune.viewmodels.HomeViewModel) {
-    com.arturo254.opentune.ui.screens.HomeScreen(navController, viewModel = homeViewModel)
+    com.arturo254.opentune.ui.screens.HomeScreen(navController, viewModel = homeViewModel, ambientActive = routeSceneActive())
 }
 
 /** Temporary equivalent: HomeScreen; original presentation: operation 06. */
 @Composable
 fun ComingSoonScreen(navController: NavHostController, sectionTitle: String) {
-    com.arturo254.opentune.ui.screens.HomeScreen(navController)
+    com.arturo254.opentune.ui.screens.HomeScreen(navController, ambientActive = routeSceneActive())
 }
 
 /** Temporary equivalent: GalaxDiscoverScreen + PrismSearchBar + UniversalSearchScreen; original presentation: operation 07. */
@@ -53,43 +62,43 @@ fun GenreScreen(navController: NavHostController, pureBlack: Boolean) {
 /** Temporary equivalent: LibraryScreen; original presentation: operation 08/10. */
 @Composable
 fun LibraryHomeScreen(navController: NavHostController, pureBlack: Boolean) {
-    com.arturo254.opentune.ui.screens.library.LibraryScreen(navController, onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) })
+    com.arturo254.opentune.ui.screens.library.LibraryScreen(navController, ambientActive = routeSceneActive(), onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) })
 }
 
 /** Temporary equivalent: LibraryScreen; original presentation: operation 08/10. */
 @Composable
 fun LibrarySongsScreen(navController: NavHostController) {
-    com.arturo254.opentune.ui.screens.library.LibraryScreen(navController, onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) })
+    com.arturo254.opentune.ui.screens.library.LibraryScreen(navController, ambientActive = routeSceneActive(), onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) })
 }
 
 /** Temporary equivalent: LibraryScreen; original presentation: operation 08/10. */
 @Composable
 fun LibraryPlaylistsScreen(navController: NavHostController, shelf: RouteShelf? = null, source: String? = null) {
-    com.arturo254.opentune.ui.screens.library.LibraryScreen(navController, onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) })
+    com.arturo254.opentune.ui.screens.library.LibraryScreen(navController, ambientActive = routeSceneActive(), onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) })
 }
 
 /** Temporary equivalent: LibraryScreen; original presentation: operation 08/10. */
 @Composable
 fun LibraryRecentlyAddedScreen(navController: NavHostController, shelf: RouteShelf? = null) {
-    com.arturo254.opentune.ui.screens.library.LibraryScreen(navController, onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) })
+    com.arturo254.opentune.ui.screens.library.LibraryScreen(navController, ambientActive = routeSceneActive(), onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) })
 }
 
 /** Temporary equivalent: LibraryScreen; original presentation: operation 08/10. */
 @Composable
 fun LibraryAlbumsScreen(navController: NavHostController, shelf: RouteShelf? = null, source: String? = null) {
-    com.arturo254.opentune.ui.screens.library.LibraryScreen(navController, onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) })
+    com.arturo254.opentune.ui.screens.library.LibraryScreen(navController, ambientActive = routeSceneActive(), onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) })
 }
 
 /** Temporary equivalent: LibraryScreen; original presentation: operation 08/10. */
 @Composable
 fun LibraryArtistsScreen(navController: NavHostController, shelf: RouteShelf? = null) {
-    com.arturo254.opentune.ui.screens.library.LibraryScreen(navController, onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) })
+    com.arturo254.opentune.ui.screens.library.LibraryScreen(navController, ambientActive = routeSceneActive(), onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) })
 }
 
 /** Temporary equivalent: LibraryScreen; original presentation: operation 08/10. */
 @Composable
 fun LibraryImportedScreen(navController: NavHostController) {
-    com.arturo254.opentune.ui.screens.library.LibraryScreen(navController, onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) })
+    com.arturo254.opentune.ui.screens.library.LibraryScreen(navController, ambientActive = routeSceneActive(), onOpenSearchTab = { navController.navigateToTab(Screens.Search.route) })
 }
 
 /** Temporary equivalent: ArtistScreen; original presentation: operation 09. */

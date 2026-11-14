@@ -109,7 +109,7 @@ fun NavGraphBuilder.navigationBuilder(
     navController: NavHostController,
     scrollBehavior: TopAppBarScrollBehavior,
     latestVersionName: String,
-    pagerState: androidx.compose.foundation.pager.PagerState,
+    pagerState: androidx.compose.foundation.pager.PagerState?,
     onOpenSearch: () -> Unit,
 ) {
     originalNavigationBuilder(
@@ -496,4 +496,17 @@ private fun NavGraphBuilder.composable(
     if (route in com.arturo254.opentune.ui.original.screens.OriginalNavigationRoutes) return
     additionalComposable(route, arguments, enterTransition = enterTransition, exitTransition = exitTransition,
         popEnterTransition = popEnterTransition, popExitTransition = popExitTransition, content = content)
+}
+
+@RequiresApi(Build.VERSION_CODES.R)
+@OptIn(ExperimentalMaterial3Api::class)
+fun NavGraphBuilder.navigationBuilder(
+    navController: NavHostController,
+    scrollBehavior: TopAppBarScrollBehavior,
+    activity: android.app.Activity,
+    snackbarHostState: androidx.compose.material3.SnackbarHostState,
+) {
+    navigationBuilder(navController, scrollBehavior, com.arturo254.opentune.BuildConfig.VERSION_NAME, null) {
+        navController.navigate(com.arturo254.opentune.ui.original.screens.Screens.Search.route)
+    }
 }

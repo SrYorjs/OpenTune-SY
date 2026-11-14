@@ -25,6 +25,12 @@ internal fun SearchPresentation(navController: NavHostController, pureBlack: Boo
     val focusManager = LocalFocusManager.current
     val database = LocalDatabase.current
     val pauseHistory by rememberPreference(PauseSearchHistoryKey, false)
+    val hideChrome = com.arturo254.opentune.LocalHideAppChrome.current
+    DisposableEffect(active) {
+        hideChrome.value = active
+        onDispose { hideChrome.value = false }
+    }
+    val searchGlass = remember { com.arturo254.opentune.ui.original.component.GlassState() }
     val entry by navController.currentBackStackEntryFlow.collectAsState(initial = navController.currentBackStackEntry)
     val request by entry?.savedStateHandle?.getStateFlow("requestSearchFocus", false)
         ?.collectAsState() ?: remember { mutableStateOf(false) }
@@ -35,8 +41,9 @@ internal fun SearchPresentation(navController: NavHostController, pureBlack: Boo
         }
     }
     Box(Modifier.fillMaxSize()) {
-        GalaxDiscoverScreen(navController, onOpenSearch = { active = true }, ambientActive = !active)
+        GalaxDiscoverScreen(navController, onOpenSearch = { active = true }, ambientActive = !active && routeSceneActive())
         if (active) {
+            CompositionLocalProvider(com.arturo254.opentune.ui.original.component.LocalOriginalGlassState provides searchGlass) {
             PrismSearchBar(
                 query = query,
                 onQueryChange = { query = it },
@@ -51,6 +58,7 @@ internal fun SearchPresentation(navController: NavHostController, pureBlack: Boo
                 pureBlack = pureBlack,
             ) {
                 UniversalSearchScreen(query.text, pureBlack, embedded = true)
+            }
             }
         }
     }

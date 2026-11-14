@@ -429,5 +429,70 @@
     "compile": "build/04a-a1-1.log: SUCCESS",
     "assemble": "build/04a-a1-assemble.log: SUCCESS",
     "commit": "329c3883"
+  },
+  "A3": {
+    "source": "app/src/main/kotlin/com/mochyy/mochymusic/MainActivity.kt",
+    "source_blob": "9e01d1264afb7fd426d6c4b454dc5c41f29a8b3b",
+    "adaptations": [
+      "packages",
+      "current_preference_contracts",
+      "foundation_resources",
+      "existing_composition_locals",
+      "player_listener_visibility_lifecycle",
+      "current_player_lyrics_offset",
+      "current_theme_and_measured_window_host",
+      "library_shortcut"
+    ],
+    "status": "assemble_passed",
+    "validation": {
+      "attempt_1": "build/04a-a3-1.log: failed; runtime contracts missing",
+      "attempt_2": "build/04a-a3-2.log: failed; LocalSky import",
+      "attempt_3": "build/04a-a3-assemble.log: SUCCESS",
+      "original_function_declarations_retained": true,
+      "visual_device_checks": "not run: adb.exe missing from the configured Android SDK platform-tools path"
+    },
+    "additional_original_dependency": {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/screens/donate/DonatePrompt.kt",
+      "source_blob": "d42c18650fd1131b639a24ee9b89c71b90caf3ec",
+      "adaptations": [
+        "packages",
+        "original_preferences",
+        "current_about_support_presentation"
+      ],
+      "replacement_operation": "16"
+    },
+    "runtime_equivalents": {
+      "setup": "current AccountSettings editor; replacement 16",
+      "support": "complete original scheduler and current AboutScreen; replacement 16",
+      "update": "current Updater/release UI; replacement 16",
+      "song_share": "native Android ACTION_SEND; original graphic/lyric sharing presentation 12",
+      "tv": "settings/android_auto and tv_link -> current AndroidAutoSettings; replacement 16",
+      "shared_audio": "durable file URI identity, metadata, artwork and song/artist rows in the current database; full album/embedded lyric import remains 10/16"
+    },
+    "safety_contracts": [
+      "background sibling exclusively supplies refraction; dialogs create their own background host",
+      "selected Liquid Glass variant, tuning and power/low-memory limits retained",
+      "current menu and bottom-sheet page hosts retained",
+      "current player and V1-V17 files retained without changes",
+      "UI listeners detach on stop and attach on resume; service binding guards double unbind",
+      "existing Together/login/download shortcuts retained",
+      "local file/content/resource URIs bypass YouTube resolution"
+    ],
+    "pending": [
+      "Original Home intro mark/skeleton target is absent until 06; original timeout/fade fallback remains active.",
+      "Original presentations and specific shelf/source filtering remain in operations 06-16.",
+      "Compact/expanded/short-height/large-text, playback and gesture verification on device remains outstanding (adb unavailable)."
+    ]
+  },
+  "original_error_groups": {
+    "total": 252,
+    "utilities_04": 31,
+    "contracts_04": 7,
+    "imports_preferences_02_03": 31,
+    "home_search_artist_06_07_09": 8,
+    "library_08_10": 18,
+    "player_11_15": 20,
+    "features_16": 98,
+    "inference_receivers_composition_mutability": 39
   }
 }

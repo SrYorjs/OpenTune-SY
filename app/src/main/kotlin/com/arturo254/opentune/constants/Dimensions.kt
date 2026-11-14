@@ -8,6 +8,9 @@
 
 package com.arturo254.opentune.constants
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.core.designsystem.theme.DefaultOpenTuneSizeTokens
@@ -40,8 +43,8 @@ val SmallGridThumbnailHeight = DefaultOpenTuneSizeTokens.smallGridThumbnailHeigh
 val GridThumbnailHeight = DefaultOpenTuneSizeTokens.gridThumbnailHeight
 val AlbumThumbnailSize = DefaultOpenTuneSizeTokens.albumThumbnailSize
 
-val ThumbnailCornerRadius = OpenTuneShapeRadii.listArtwork
-val GridThumbnailCornerRadius = OpenTuneShapeRadii.gridArtwork
+var ThumbnailCornerRadius by mutableStateOf(OpenTuneShapeRadii.listArtwork)
+var GridThumbnailCornerRadius by mutableStateOf(OpenTuneShapeRadii.gridArtwork)
 
 val PlayerHorizontalPadding = DefaultOpenTuneSizeTokens.playerHorizontalPadding
 
