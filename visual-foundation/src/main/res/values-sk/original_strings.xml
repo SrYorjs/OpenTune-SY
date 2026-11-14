@@ -287,7 +287,7 @@
     <string name="original_backup_create_failed">Nepodarilo sa vytvoriť zálohu</string>
     <string name="original_restore_failed">Nepodarilo sa obnoviť zálohu</string>
     <string name="original_discord_integration">Integrácia Discordu</string>
-    <string name="original_discord_information">mochy používa knižnicu KizzyRPC na nastavenie stavu vášho účtu Discord. To zahŕňa použitie pripojenia Discord Gateway, čo môže byť považované za porušenie TOS Discordu. Zatiaľ však nie sú známe prípady pozastavenia účtov používateľov z tohto dôvodu. Používanie na vlastné riziko.\n\nmochy bude extrahovať iba váš token, všetko ostatné sa ukladá lokálne.</string>
+    <string name="original_discord_information">The app používa knižnicu KizzyRPC na nastavenie stavu vášho účtu Discord. To zahŕňa použitie pripojenia Discord Gateway, čo môže byť považované za porušenie TOS Discordu. Zatiaľ však nie sú známe prípady pozastavenia účtov používateľov z tohto dôvodu. Používanie na vlastné riziko.\n\nthe app bude extrahovať iba váš token, všetko ostatné sa ukladá lokálne.</string>
     <string name="original_dismiss">Zatvoriť</string>
     <string name="original_options">Možnosťi</string>
     <string name="original_preview">Náhľad</string>

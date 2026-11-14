@@ -48,7 +48,7 @@ fun originalPlayerStyleConfig(style: PlayerDesignStyle): GalaxOriginalStyleConfi
         40f, true, .73f, "VINJAX  /  17",
     )
     else -> GalaxOriginalStyleConfig(
-        "GALAXOT", "MUSIC UNIVERSE", "Tu música sin límites", 24f, true, .72f, "GALAXOT",
+        "MUSIC", "MUSIC UNIVERSE", "Tu música sin límites", 24f, true, .72f, "MUSIC",
     )
 }
 

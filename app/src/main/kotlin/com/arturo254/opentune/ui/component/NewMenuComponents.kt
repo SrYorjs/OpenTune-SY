@@ -154,7 +154,7 @@ fun NewMenuSectionHeader(
         modifier = modifier.padding(horizontal = 20.dp, vertical = 15.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        GalaxEyebrow(text = "GALAXOT  /  OPTIONS")
+        GalaxEyebrow(text = "OPTIONS")
         Text(
             text = text,
             style = MaterialTheme.typography.titleLarge.copy(

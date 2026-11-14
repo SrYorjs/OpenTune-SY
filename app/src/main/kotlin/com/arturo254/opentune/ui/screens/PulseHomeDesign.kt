@@ -164,7 +164,7 @@ internal fun PulseHeader(account: String?, onNavigate: (String) -> Unit) {
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
-                "GALAXOT",
+                "MUSIC",
                 style = MaterialTheme.typography.labelSmall,
                 letterSpacing = 2.8.sp,
                 color = MaterialTheme.colorScheme.primary,

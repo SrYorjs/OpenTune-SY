@@ -85,8 +85,8 @@ fun GalaxPlayerControlDock(
                     modifier = Modifier.size(width = 21.dp, height = 14.dp),
                 )
                 Text(
-                    text = if (isPlaying) "GALAXOT  /  AHORA SUENA"
-                    else "GALAXOT  /  EN PAUSA",
+                    text = if (isPlaying) "AHORA SUENA"
+                    else "EN PAUSA",
                     color = Color.White.copy(alpha = .74f),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,

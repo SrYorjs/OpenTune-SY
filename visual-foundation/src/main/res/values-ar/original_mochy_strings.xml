@@ -234,7 +234,7 @@
     <string name="original_scrobble_delay_percent">نسبة تأخير سكرابل</string>
     <string name="original_scrobble_delay_minutes">دقائق تأخير سكرابل</string>
     <string name="original_swipe_song_to_remove">مرر الأغنية لإزالتها من قائمة التشغيل</string>
-    <string name="original_last_fm_send_likes_description">عندما تعجبك أغنية أو تلغي إعجابك بها في mochy سيتم تلقائيًا وضع علامة (أحببت) أو (غير محبوب) على نفس الأغنية في Last.fm</string>
+    <string name="original_last_fm_send_likes_description">عندما تعجبك أغنية أو تلغي إعجابك بها في التطبيق سيتم تلقائيًا وضع علامة (أحببت) أو (غير محبوب) على نفس الأغنية في Last.fm</string>
     <string name="original_last_fm_send_likes">إرسال الإعجابات/إلغاء الإعجابات</string>
     <string name="original_lyrics_romanize_chinese">كلمات الأغاني الصينية بالحروف اللاتينية</string>
     <string name="original_hide_video_songs">إخفاء أغاني الفيديو</string>
@@ -322,7 +322,7 @@
     <string name="original_wrapped_top_artist_listening_time">لقد استمعت إليهم لمدة %d دقيقة</string>
     <string name="original_wrapped_top_song_title">أغنيتك الأكثر استماعاً هي</string>
     <string name="original_wrapped_top_song_listening_time">لقد استمعت لمدة %d دقيقة</string>
-    <string name="original_wrapped_intro_title">mochy</string>
+    <string name="original_wrapped_intro_title">التطبيق</string>
     <string name="original_wrapped_playlist_title">ملخصك السنوي لـ %s</string>
     <string name="original_wrapped_create_playlist">إنشاء قائمة تشغيل</string>
     <string name="original_wrapped_playlist_saved">تم حفظ قائمة التشغيل</string>
@@ -330,7 +330,7 @@
     <string name="original_progress_percent">التقدم %s%%</string>
     <string name="original_listening_to_mochy">الاستماع إلى متروليست</string>
     <string name="original_listen_on_youtube_music">استمع عبر يوتيوب ميوزك</string>
-    <string name="original_visit_mochy">قم بزيارة mochy</string>
+    <string name="original_visit_mochy">قم بزيارة التطبيق</string>
     <string name="original_open">فتح</string>
     <string name="original_failed_to_create_image">فشل إنشاء الصورة: %s</string>
     <string name="original_failed_to_parse_proxy">فشل تحليل عنوان URL للوكيل.</string>
@@ -485,7 +485,7 @@
     <string name="original_crash_description">حدث خطأ غير متوقع يرجى مشاركة تقرير العطل لمساعدتنا في حل المشكلة.</string>
     <string name="original_crash_share_logs">مشاركة السجلات</string>
     <string name="original_crash_share_title">مشاركة تقرير التعطل</string>
-    <string name="original_crash_report_subject">تقرير تعطل تطبيق mochy</string>
+    <string name="original_crash_report_subject">تقرير تعطل تطبيق التطبيق</string>
     <string name="original_crash_close">إغلاق</string>
     <string name="original_crash_no_log">لا يوجد سجل أعطال متاح</string>
     <string name="original_palette_dynamic">ديناميكي</string>
@@ -515,7 +515,7 @@
     <string name="original_cd_system_mode">وضع النظام</string>
     <string name="original_cd_palette_item">لوحة ألوان %1$s</string>
     <string name="original_not_playing">لا يتم تشغيل أي أغنية</string>
-    <string name="original_tap_to_play">اضغط لفتح mochy</string>
+    <string name="original_tap_to_play">اضغط لفتح التطبيق</string>
     <string name="original_widget_music_player">مشغل موسيقى</string>
     <string name="original_widget_turntable">القرص الدوار</string>
     <string name="original_listen_together_choose_server">اختر خادمًا</string>
@@ -583,7 +583,7 @@
     <string name="original_recently_converted">تم تحويله مؤخرًا</string>
     <string name="original_csv_import_failed">فشل استيراد ملف CSV</string>
     <string name="original_importing_csv">استيراد ملف CSV</string>
-    <string name="original_play_on_app">تشغيل على mochy</string>
+    <string name="original_play_on_app">تشغيل على التطبيق</string>
     <string name="original_listening">الاستماع…</string>
     <string name="original_ai_api_key_required">مفتاح API مطلوب</string>
     <string name="original_ai_error_unexpected">نتيجة ترجمة غير متوقعة</string>
@@ -647,9 +647,9 @@
     <string name="original_discord_rpc_preview">معاينة الحالة الغنية</string>
     <string name="original_discord_presence">التواجد</string>
     <string name="original_discord_connect_description">سجّل الدخول باستخدام Discord للمشاركة ما تستمع إليه</string>
-    <string name="original_discord_playing_mochy">تشغيل mochy</string>
-    <string name="original_discord_watching_mochy">مشاهدة mochy</string>
-    <string name="original_discord_competing_mochy">التنافس في mochy</string>
+    <string name="original_discord_playing_mochy">تشغيل التطبيق</string>
+    <string name="original_discord_watching_mochy">مشاهدة التطبيق</string>
+    <string name="original_discord_competing_mochy">التنافس في التطبيق</string>
     <string name="original_discord_activity_name">اسم النشاط</string>
     <string name="original_discord_activity_name_description">اسم مخصص للنشاط (اتركه فارغًا للافتراضي)</string>
     <string name="original_discord_advanced_mode">الوضع المتقدم</string>

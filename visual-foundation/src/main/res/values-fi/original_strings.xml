@@ -214,12 +214,12 @@
     <string name="original_enable_lrclib">Ota LrcLib-lyriikantarjoaja käyttöön</string>
     <string name="original_hide_explicit">Piilota sopimaton sisältö</string>
     <string name="original_dismiss">Hylkää</string>
-    <string name="original_discord_information">mochy käyttää KizzyRPC-kirjastoa asettaaksesi Discord-tilisi tilan. Tämä edellyttää Discord Gateway-yhteyttä, jota voidaan katsoa Discordin käyttöehtojen rikkomuksena. Ei kuitenkaan ole tiedossa tapauksia, joissa käyttäjätilit olisi jäädytetty tästä syystä. Käytä omalla vastuullasi. \n \nmochy poimii ainoastaan tunnuksesi, ja kaikki muu säilytetään paikallisesti.</string>
+    <string name="original_discord_information">Sovellus käyttää KizzyRPC-kirjastoa asettaaksesi Discord-tilisi tilan. Tämä edellyttää Discord Gateway-yhteyttä, jota voidaan katsoa Discordin käyttöehtojen rikkomuksena. Ei kuitenkaan ole tiedossa tapauksia, joissa käyttäjätilit olisi jäädytetty tästä syystä. Käytä omalla vastuullasi. \n \nsovellus poimii ainoastaan tunnuksesi, ja kaikki muu säilytetään paikallisesti.</string>
     <string name="original_options">Asetukset</string>
     <string name="original_preview">Esikatselu</string>
     <string name="original_login_failed">Kirjautuminen epäonnistui</string>
     <string name="original_action_logout">Kirjaudu ulos</string>
-    <string name="original_enable_discord_rpc">Tämä on Discord-integraatio-ominaisuus, se tarkoittaa mochy-toiminnan näyttämistä Discord-tililläsi</string>
+    <string name="original_enable_discord_rpc">Tämä on Discord-integraatio-ominaisuus, se tarkoittaa sovellus-toiminnan näyttämistä Discord-tililläsi</string>
     <string name="original_forgotten_favorites">Unohtuneet suosikit</string>
     <string name="original_sample_rate">Näytteenottonopeus</string>
     <string name="original_queue_searched_songs">Haetut laulut</string>

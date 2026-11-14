@@ -293,7 +293,7 @@ HorizontalPager(
 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text       = stringResource(R.string.app_name),
+                            text       = stringResource(R.string.music_player),
                             style      = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color      = SnowDim,
@@ -629,7 +629,7 @@ private fun SummaryPage(
         }
         if (topSong == null && topArtist == null && topAlbum == null)
             Text(stringResource(R.string.no_listening_data), color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.labelMedium,
+        Text(stringResource(R.string.music_player), style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary)
     }
 }

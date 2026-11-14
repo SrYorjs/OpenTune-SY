@@ -119,7 +119,7 @@ private val OpenTuneWidgetColors =
 @Composable
 private fun PlayerWidgetContent(state: PlayerWidgetState, uiPrefs: WidgetUiPrefs) {
     val context = LocalContext.current
-    val title = state.title.ifBlank { context.getString(R.string.app_name) }
+    val title = state.title.ifBlank { context.getString(R.string.music_player) }
     val artist = state.artist.ifBlank { "OpenTune" }
 
     Box(

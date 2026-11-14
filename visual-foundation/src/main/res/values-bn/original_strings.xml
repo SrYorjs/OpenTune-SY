@@ -274,7 +274,7 @@
     <string name="original_enable_lrclib">LrcLib গানের লিরিক্স প্রদানকারী সক্রিয় করুন</string>
     <string name="original_hide_explicit">স্পষ্ট বিষয়বস্তু লুকান</string>
     <string name="original_discord_integration">ডিসকর্ড ইন্টিগ্রেশন</string>
-    <string name="original_discord_information">mochy আপনার Discord অ্যাকাউন্টের স্ট্যাটাস সেট করার জন্য KizzyRPC লাইব্রেরি ব্যবহার করে। এর মধ্যে Discord Gateway সংযোগ ব্যবহার করা হয়, যা Discord-এর পরিষেবার শর্তাবলীর (TOS) লঙ্ঘন হিসেবে বিবেচিত হতে পারে। তবে, এই কারণে ব্যবহারকারীর অ্যাকাউন্ট সাসপেন্ড হওয়ার কোনো পরিচিত ঘটনা নেই। ব্যবহার আপনার নিজের ঝুঁকিতে করুন।\n\nmochy শুধুমাত্র আপনার টোকেন সংগ্রহ করবে, এবং বাকী সবকিছু স্থানীয়ভাবে সংরক্ষিত থাকবে।</string>
+    <string name="original_discord_information">অ্যাপ আপনার Discord অ্যাকাউন্টের স্ট্যাটাস সেট করার জন্য KizzyRPC লাইব্রেরি ব্যবহার করে। এর মধ্যে Discord Gateway সংযোগ ব্যবহার করা হয়, যা Discord-এর পরিষেবার শর্তাবলীর (TOS) লঙ্ঘন হিসেবে বিবেচিত হতে পারে। তবে, এই কারণে ব্যবহারকারীর অ্যাকাউন্ট সাসপেন্ড হওয়ার কোনো পরিচিত ঘটনা নেই। ব্যবহার আপনার নিজের ঝুঁকিতে করুন।\n\nঅ্যাপ শুধুমাত্র আপনার টোকেন সংগ্রহ করবে, এবং বাকী সবকিছু স্থানীয়ভাবে সংরক্ষিত থাকবে।</string>
     <string name="original_dismiss">বাতিল করুন</string>
     <string name="original_options">বিকল্পসমূহ</string>
     <string name="original_preview">প্রিভিউ</string>

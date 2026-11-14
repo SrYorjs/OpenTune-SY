@@ -263,7 +263,7 @@
     <string name="original_disable_screenshot_desc">Ketika pilihan ini diaktifkan, tangkapan layar dan tampilan aplikasi di Terkini dinonaktifkan.</string>
     <string name="original_enable_lrclib">Aktifkan penyedia lirik LrcLib</string>
     <string name="original_discord_integration">Integrasi Discord</string>
-    <string name="original_discord_information">mochy menggunakan pustaka KizzyRPC untuk mengatur status akun Discord Anda. Hal ini melibatkan penggunaan sambungan Discord Gateway, yang dapat dianggap sebagai pelanggaran TOS Discord. Namun, tidak ada kasus yang diketahui tentang akun pengguna yang ditangguhkan karena alasan ini. Gunakan dengan risiko Anda sendiri.\n\nmochy hanya akan mengekstrak token Anda, dan yang lainnya disimpan secara lokal.</string>
+    <string name="original_discord_information">Aplikasi menggunakan pustaka KizzyRPC untuk mengatur status akun Discord Anda. Hal ini melibatkan penggunaan sambungan Discord Gateway, yang dapat dianggap sebagai pelanggaran TOS Discord. Namun, tidak ada kasus yang diketahui tentang akun pengguna yang ditangguhkan karena alasan ini. Gunakan dengan risiko Anda sendiri.\n\naplikasi hanya akan mengekstrak token Anda, dan yang lainnya disimpan secara lokal.</string>
     <string name="original_dismiss">Singkirkan</string>
     <string name="original_preview">Pratinjau</string>
     <string name="original_enable_discord_rpc">Aktifkan Rich Presence</string>

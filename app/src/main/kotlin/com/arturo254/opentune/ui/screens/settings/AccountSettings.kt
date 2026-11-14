@@ -317,7 +317,7 @@ private fun AccountSettingsHeader(onClose: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Icon(painterResource(R.drawable.opentune), null, Modifier.size(28.dp), tint = MaterialTheme.colorScheme.primary)
-        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge,
+        Text(stringResource(R.string.music_player), style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
         IconButton(onClick = onClose) { Icon(painterResource(R.drawable.close), stringResource(R.string.close)) }
     }
@@ -420,7 +420,7 @@ private fun AppVersionFooter() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = stringResource(R.string.app_name),
+            text = stringResource(R.string.music_player),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
             fontWeight = FontWeight.Medium

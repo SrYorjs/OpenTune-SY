@@ -74,7 +74,7 @@ fun GalaxPlayerSceneOverlay(
             GalaxSceneInsignia(index = index, accent = accent)
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "GALAXOT  /  $subtitle",
+                    text = "$subtitle",
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
                     color = Color.White.copy(alpha = .94f),

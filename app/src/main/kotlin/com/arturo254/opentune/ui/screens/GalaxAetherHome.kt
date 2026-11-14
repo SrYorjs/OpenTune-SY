@@ -75,7 +75,7 @@ internal fun AetherHomeMasthead(
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
-                text = "GALAXOT  /  01",
+                text = "01",
                 color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.labelSmall,
                 letterSpacing = 2.2.sp,

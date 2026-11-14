@@ -71,7 +71,7 @@ fun GalaxHomeIdentity(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            GalaxEyebrow("GALAXOT  /  TU UNIVERSO")
+            GalaxEyebrow("TU UNIVERSO")
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineLarge.copy(
@@ -154,7 +154,7 @@ fun GalaxHomeSectionIntro(
             .padding(start = 24.dp, end = 24.dp, top = 21.dp, bottom = 14.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        GalaxEyebrow("GALAXOT  /  EN TU ÓRBITA")
+        GalaxEyebrow("EN TU ÓRBITA")
         Text(
             text = title,
             style = MaterialTheme.typography.headlineSmall.copy(
@@ -213,7 +213,7 @@ fun GalaxHomeMixBoard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = "GALAXOT  /  PERSONAL ORBIT",
+                    text = "PERSONAL ORBIT",
                     color = colors.primary,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,

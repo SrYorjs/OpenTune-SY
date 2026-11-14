@@ -108,7 +108,7 @@ internal fun ArchiveHeader(
     ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
-                text = "GALAXOT",
+                text = "MUSIC",
                 style = MaterialTheme.typography.labelSmall,
                 letterSpacing = 2.8.sp,
                 fontWeight = FontWeight.SemiBold,

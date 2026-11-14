@@ -168,7 +168,7 @@ fun GalaxSourceDiscoveryCard(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = "GALAXOT  /  DESCUBRIMIENTO",
+                text = "DESCUBRIMIENTO",
                 style = MaterialTheme.typography.labelSmall,
                 letterSpacing = .8.sp,
                 color = scheme.primary.copy(alpha = .8f),

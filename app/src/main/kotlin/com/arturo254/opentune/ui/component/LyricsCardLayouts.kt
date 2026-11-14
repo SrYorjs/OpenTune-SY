@@ -109,7 +109,7 @@ internal fun LyricsBrandingRow(
         }
         Spacer(Modifier.width(8.dp))
         Text(
-            text  = context.getString(R.string.app_name),
+            text  = context.getString(R.string.music_player),
             color = secondaryColor,
             fontSize    = 13.sp,
             fontWeight  = FontWeight.SemiBold,

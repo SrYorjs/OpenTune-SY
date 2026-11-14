@@ -160,7 +160,7 @@ fun GalaxListeningDeck(
                                 .background(if (active) scheme.primary else Color.White, CircleShape),
                         )
                         Text(
-                            text = if (active) "NOW PLAYING" else "GALAXOT  /  ORBIT",
+                            text = if (active) "NOW PLAYING" else "ORBIT",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             color = Color.White,

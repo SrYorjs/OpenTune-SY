@@ -284,7 +284,7 @@
     <string name="original_auto_skip_next_on_error_desc">Garante um experiência contínua de reprodução</string>
     <string name="original_auto_skip_next_on_error">Avançar automaticamente para a música seguinte se ocorrer algum erro</string>
     <string name="original_stop_music_on_task_clear">Parar ao limpar a tarefa</string>
-    <string name="original_discord_information">mochy utiliza a biblioteca KizzyRPC para definir o estado da sua conta Discord. Isto envolve uma ligação ao Discord Gateway, que pode ser considerada uma violação dos termos do serviço Discord. Contudo ,não há casos conhecidos de contas suspensas por este motivo. Utilize por sua conta e risco.\n\nmochy apenas irá extrair o seu token e tudo o resto é armazenado localmente.</string>
+    <string name="original_discord_information">O app utiliza a biblioteca KizzyRPC para definir o estado da sua conta Discord. Isto envolve uma ligação ao Discord Gateway, que pode ser considerada uma violação dos termos do serviço Discord. Contudo ,não há casos conhecidos de contas suspensas por este motivo. Utilize por sua conta e risco.\n\no app apenas irá extrair o seu token e tudo o resto é armazenado localmente.</string>
     <string name="original_use_login_for_browse">Inicie a sessão para ver o conteúdo de navegação</string>
     <string name="original_use_login_for_browse_desc">Isto influencia o conteúdo visível, e por exemplo, mostra apenas álbuns Premium, se estiver autenticado com uma conta Premium</string>
     <string name="original_action_login">Iniciar sessão</string>

@@ -436,7 +436,7 @@ internal fun MainActivityTopBar(
                                                             verticalArrangement = Arrangement.spacedBy(1.dp),
                                                         ) {
                                                             Text(
-                                                                text = stringResource(R.string.app_name),
+                                                                text = stringResource(R.string.music_player),
                                                                 style = MaterialTheme.typography.headlineMedium,
                                                                 fontWeight = FontWeight.Bold,
                                                                 color = MaterialTheme.colorScheme.onSurface,

@@ -72,7 +72,7 @@ fun NavigationTitle(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            GalaxEyebrow(text = label ?: "GALAXOT  /  DISCOVER")
+            GalaxEyebrow(text = label ?: "DISCOVER")
             Text(
                 text = title,
                 color = scheme.onSurface,

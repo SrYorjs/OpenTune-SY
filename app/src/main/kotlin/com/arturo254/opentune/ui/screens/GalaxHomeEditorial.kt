@@ -61,7 +61,7 @@ fun GalaxHomeEditorialTopBar(
             verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
             Text(
-                text = "GALAXOT",
+                text = "MUSIC",
                 style = MaterialTheme.typography.labelSmall,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 3.1.sp,

@@ -20,7 +20,7 @@
     <string name="original_installing_system_update">Installing system\nupdate…</string>
     <string name="original_making_update_ready">Making Update ready, this may take a while</string>
     <string name="original_your_app_getting_better">Your App is getting even better…</string>
-    <string name="original_update_includes_features">This update includes new features and the latest from mochy-music %1$s, making your app even more helpful. Learn more at %2$s.</string>
+    <string name="original_update_includes_features">This update includes new features and the latest from appen-music %1$s, making your app even more helpful. Learn more at %2$s.</string>
     <string name="original_whats_new">What\'s new?</string>
     <string name="original_update_available">Update</string>
     <string name="original_checking_for_updates">Checking for updates…</string>
@@ -35,7 +35,7 @@
     <string name="original_mobile_network_warning">Downloading updates over a mobile network or while roaming may cause additional charges.</string>
     <string name="original_update_size">Update size: %1$s MB</string>
     <string name="original_check_internet_connection">Check your internet connection and try again.</string>
-    <string name="original_mochy_music_version">mochy MUSIC version %1$s</string>
+    <string name="original_mochy_music_version">Appen version %1$s</string>
     <string name="original_last_checked">Last checked: %1$s</string>
     <string name="original_install">Install</string>
     <string name="original_check_for_update">Check for update</string>
@@ -51,12 +51,12 @@
     <string name="original_update_notifications_subtitle">Show a notification when a new update is found</string>
     <string name="original_settings_check_updates_title">Check for updates</string>
     <string name="original_later">Later</string>
-    <string name="original_mochy_music_title">mochy MUSIC</string>
+    <string name="original_mochy_music_title">Appen</string>
     <string name="original_developer_section">DEVELOPER</string>
     <string name="original_collaborator_section">COLLABORATOR</string>
     <string name="original_app_info_section">APP INFO</string>
     <string name="original_community_section">COMMUNITY</string>
-    <string name="original_developer_name">mochyDH P ASHOKAN</string>
+    <string name="original_developer_name">P ASHOKAN</string>
     <string name="original_app_developer">Lead Developer</string>
     <string name="original_website">Website</string>
     <string name="original_collaborator_tboyke">T-Boyke</string>

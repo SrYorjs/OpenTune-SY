@@ -273,7 +273,7 @@
     <string name="original_action_restore">Gjenopprett</string>
     <string name="original_imported_playlist">Spilleliste importert</string>
     <string name="original_action_logout">Logg ut</string>
-    <string name="original_discord_information">mochy bruker KizzyRPC for å stille inn statusen på Discord-kontoen din. Dette innebærer bruk ave Discord Gateway-portneren, som kan anses som et brudd på Discords tjenestevilkår. Det finnes dog ingen kjente tilfelle av suspenderte brukerkonter på denne grunnen. Bruk på egen risiko. \n \nmochy henter bare inn symbolet ditt, og alt annet blir lagret lokalt.</string>
+    <string name="original_discord_information">Appen bruker KizzyRPC for å stille inn statusen på Discord-kontoen din. Dette innebærer bruk ave Discord Gateway-portneren, som kan anses som et brudd på Discords tjenestevilkår. Det finnes dog ingen kjente tilfelle av suspenderte brukerkonter på denne grunnen. Bruk på egen risiko. \n \nappen henter bare inn symbolet ditt, og alt annet blir lagret lokalt.</string>
     <string name="original_preview">Forhåndsvisning</string>
     <string name="original_about">Om</string>
 </resources>

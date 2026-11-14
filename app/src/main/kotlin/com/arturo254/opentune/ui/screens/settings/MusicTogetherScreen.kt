@@ -129,7 +129,7 @@ fun MusicTogetherScreen(
 
     val (displayName, setDisplayName) = rememberPreference(
         TogetherDisplayNameKey,
-        defaultValue = Build.MODEL?.takeIf { it.isNotBlank() } ?: context.getString(R.string.app_name),
+        defaultValue = Build.MODEL?.takeIf { it.isNotBlank() } ?: context.getString(R.string.music_player),
     )
     val (port, setPort) = rememberPreference(TogetherDefaultPortKey, defaultValue = 42117)
     val (allowAddTracks, setAllowAddTracksRaw) = rememberPreference(

@@ -169,7 +169,7 @@ fun GalaxSettingsSectionHero(
                     Modifier.size(7.dp).background(accent, CircleShape),
                 )
                 Text(
-                    text = "GALAXOT / $ordinal",
+                    text = "$ordinal",
                     color = accent,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,

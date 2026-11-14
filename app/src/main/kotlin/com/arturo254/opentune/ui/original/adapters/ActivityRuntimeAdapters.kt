@@ -56,7 +56,7 @@ object AppLanguage {
 object AppIcons {
     fun launchedFrom(intent: Intent?): AppIcon? =
         if (intent?.action == Intent.ACTION_MAIN) AppIcon(com.arturo254.opentune.R.mipmap.ic_launcher, null) else null
-    fun splashShows(icon: AppIcon?): Boolean = icon != null && Build.VERSION.SDK_INT >= 33
+    fun splashShows(icon: AppIcon?): Boolean = icon?.usesLauncherSplash == true && Build.VERSION.SDK_INT >= 33
     fun syncSplash(activity: Activity) {
         if (Build.VERSION.SDK_INT >= 33) {
             val theme = activity.packageManager.getActivityInfo(activity.componentName, 0).themeResource

@@ -282,7 +282,7 @@
     <string name="original_backup_create_failed">Не вдалося створити резервну копію</string>
     <string name="original_restore_failed">Не вдалося відновити з резервної копії</string>
     <string name="original_discord_integration">Інтеграція з Discord</string>
-    <string name="original_discord_information">mochy використовує бібліотеку KizzyRPC для встановлення статусу вашого облікового запису Discord. Це передбачає використання підключення через Discord Gateway, що може вважатися порушенням умов використання Discord. Однак, наразі немає відомих випадків блокування облікових записів користувачів з цієї причини. Використовуйте на свій страх і ризик.\n\nmochy буде зчитувати тільки ваш токен, а все інше зберігається локально.</string>
+    <string name="original_discord_information">Застосунок використовує бібліотеку KizzyRPC для встановлення статусу вашого облікового запису Discord. Це передбачає використання підключення через Discord Gateway, що може вважатися порушенням умов використання Discord. Однак, наразі немає відомих випадків блокування облікових записів користувачів з цієї причини. Використовуйте на свій страх і ризик.\n\nзастосунок буде зчитувати тільки ваш токен, а все інше зберігається локально.</string>
     <string name="original_dismiss">Закрити</string>
     <string name="original_options">Налаштування</string>
     <string name="original_preview">Попередній перегляд</string>

@@ -241,7 +241,7 @@
     <string name="original_google_cast">Google Cast</string>
     <string name="original_google_cast_description">Aktivieren Sie die Audioübertragung auf Chromecast und andere Cast-fähige Geräte.</string>
     <string name="original_last_fm_send_likes">Likes/Dislikes senden</string>
-    <string name="original_last_fm_send_likes_description">Lieder bei Last.fm als „Gefällt mir“/„Gefällt mir nicht“ markieren, wenn sie in mochy als „Gefällt mir“/„Gefällt mir nicht“ markiert werden.</string>
+    <string name="original_last_fm_send_likes_description">Lieder bei Last.fm als „Gefällt mir“/„Gefällt mir nicht“ markieren, wenn sie in die App als „Gefällt mir“/„Gefällt mir nicht“ markiert werden.</string>
     <string name="original_logging_in">Anmelden…</string>
     <string name="original_hide_video_songs">Videosongs ausblenden</string>
     <string name="original_details_desc">Informationen zum Song anzeigen</string>
@@ -295,26 +295,26 @@
     <string name="original_wrapped_total_artists_title">Du hast dir angehört</string>
     <string name="original_wrapped_total_songs_title">Du hast dir angehört</string>
     <string name="original_wrapped_total_songs_subtitle">einzigartige Lieder</string>
-    <string name="original_wrapped_intro_title">mochy</string>
+    <string name="original_wrapped_intro_title">Die App</string>
     <string name="original_wrapped_intro_subtitle">Es ist an der Zeit, herauszufinden, was du dir angehört hast.</string>
     <string name="original_wrapped_intro_button">Auf geht\'s!</string>
-    <string name="original_wrapped_end_thanks">Danke für dein Musikerlebnis mit mochy!</string>
+    <string name="original_wrapped_end_thanks">Danke für dein Musikerlebnis mit die App!</string>
     <string name="original_wrapped_end_create_playlist">Erstelle deine Wrapped-Playlist</string>
     <string name="original_wrapped_end_creating_playlist">Erstellen...</string>
     <string name="original_wrapped_end_playlist_saved">Playlist gespeichert</string>
     <string name="original_wrapped_ready_title">Dein Wrapped ist bereit!</string>
     <string name="original_wrapped_ready_subtitle">Zeit, einen Blick auf die Highlights des Jahres zu werfen.</string>
     <string name="original_wrapped_thank_you">Danke fürs Zuhören</string>
-    <string name="original_wrapped_special_thanks">Besonderer Dank gilt MO Agamy für die Erstellung von mochy.</string>
+    <string name="original_wrapped_special_thanks">Besonderer Dank gilt MO Agamy für die Erstellung von die App.</string>
     <string name="original_wrapped_close">Wrapped schließen</string>
     <string name="original_wrapped_playlist_title">Dein %s Wrapped</string>
     <string name="original_wrapped_create_playlist">Playlist erstellen</string>
     <string name="original_wrapped_playlist_saved">Playlist gespeichert</string>
     <string name="original_casting_to">Übertragung auf %s</string>
     <string name="original_progress_percent">Fortschritt %s%%</string>
-    <string name="original_listening_to_mochy">mochy hören</string>
+    <string name="original_listening_to_mochy">Die App hören</string>
     <string name="original_listen_on_youtube_music">Auf YouTube Music anhören</string>
-    <string name="original_visit_mochy">Besuchen Sie mochy</string>
+    <string name="original_visit_mochy">Besuchen Sie die App</string>
     <string name="original_open">Öffnen</string>
     <string name="original_failed_to_create_image">Bild konnte nicht erstellt werden: %s</string>
     <string name="original_copied_title">Kopierter Titel</string>
@@ -323,7 +323,7 @@
     <string name="original_failed_to_parse_proxy">Die Proxy-URL konnte nicht analysiert werden.</string>
     <string name="original_wrapped_artist_image_content_description">Künstlerbild</string>
     <string name="original_wrapped_top_song_album_art_content_description">Albumcover</string>
-    <string name="original_wrapped_logo_content_description">mochy Logo</string>
+    <string name="original_wrapped_logo_content_description">Die App Logo</string>
     <string name="original_wrapped_year">2025</string>
     <string name="original_top_result">Top Ergebnis</string>
     <string name="original_wrapped_top_artist_image_content_description">Bild des Top-Künstlers</string>
@@ -347,7 +347,7 @@
     </plurals>
     <string name="original_system_equalizer">System-Equalizer</string>
     <string name="original_no_song_playing">Es wird kein Song abgespielt</string>
-    <string name="original_tap_to_open">Tippen, um mochy zu öffnen</string>
+    <string name="original_tap_to_open">Tippen, um die App zu öffnen</string>
     <string name="original_previous">Vorherige</string>
     <string name="original_play_pause">Wiedergabe/Pause</string>
     <string name="original_next">Weiter</string>
@@ -488,7 +488,7 @@
     <string name="original_crash_description">Ein unerwarteter Fehler ist aufgetreten. Bitte teile uns den Absturzbericht mit, damit wir das Problem beheben können.</string>
     <string name="original_crash_share_logs">Protokolle teilen</string>
     <string name="original_crash_share_title">Absturzbericht teilen</string>
-    <string name="original_crash_report_subject">mochy Absturzbericht</string>
+    <string name="original_crash_report_subject">Die App Absturzbericht</string>
     <string name="original_crash_close">Schließen</string>
     <string name="original_crash_no_log">Kein Absturzprotokoll verfügbar</string>
     <string name="original_palette_dynamic">Dynamisch</string>
@@ -513,7 +513,7 @@
     <string name="original_cd_pure_black_mode">Reines Schwarz Modus</string>
     <string name="original_cd_palette_item">%1$s Palette</string>
     <string name="original_not_playing">Es wird kein Lied abgespielt</string>
-    <string name="original_tap_to_play">Tippen Sie hier, um mochy zu öffnen</string>
+    <string name="original_tap_to_play">Tippen Sie hier, um die App zu öffnen</string>
     <string name="original_widget_music_player">Music Player</string>
     <string name="original_widget_turntable">Drehscheibe</string>
     <string name="original_together">Gemeinsam</string>
@@ -568,7 +568,7 @@
     <string name="original_recently_converted">Kürzlich konvertiert</string>
     <string name="original_csv_import_failed">Fehler beim Importieren der CSV-Datei</string>
     <string name="original_importing_csv">CSV importieren</string>
-    <string name="original_play_on_app">Auf mochy abspielen</string>
+    <string name="original_play_on_app">Auf die App abspielen</string>
     <string name="original_listening">Hören…</string>
     <string name="original_continue_action">Weitermachen</string>
     <string name="original_hold_to_recognize">Halten Sie das Suchsymbol gedrückt, um Musik zu erkennen.</string>

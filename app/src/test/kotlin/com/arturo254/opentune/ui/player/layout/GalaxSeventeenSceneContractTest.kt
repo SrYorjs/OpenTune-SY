@@ -147,7 +147,7 @@ class GalaxSeventeenSceneContractTest {
         assertEquals("GALAXTHEME", playerStyleCategoryLabel(PlayerDesignStyle.V16))
         assertEquals("VINJAX", playerStyleCategoryLabel(PlayerDesignStyle.V17))
         (9..15).forEach { version ->
-            assertEquals("ORIGINAL GALAXOT", playerStyleCategoryLabel(PlayerDesignStyle.valueOf("V$version")))
+            assertEquals("ORIGINAL", playerStyleCategoryLabel(PlayerDesignStyle.valueOf("V$version")))
         }
         assertEquals("ESTILO CLÁSICO", playerStyleCategoryLabel(PlayerDesignStyle.V8))
     }

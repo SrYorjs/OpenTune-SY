@@ -227,7 +227,7 @@
     <string name="original_scrobble_delay_percent">Odstotek zakasnitve beleženja</string>
     <string name="original_scrobble_delay_minutes">Zakasnitev beleženja v minutah</string>
     <string name="original_last_fm_send_likes">Pošlji všečke/nevšečke</string>
-    <string name="original_last_fm_send_likes_description">Dodaj/odstrani pesmi med priljubljenimi na Last.fm, ko jih všečkaš/odvšečkaš v mochyu</string>
+    <string name="original_last_fm_send_likes_description">Dodaj/odstrani pesmi med priljubljenimi na Last.fm, ko jih všečkaš/odvšečkaš v the app</string>
     <string name="original_lyrics_romanize_chinese">Romaniziraj kitajska besedila</string>
     <string name="original_edit_playlist_cover_note">Opomba: Vaš račun mora biti povezan s telefonsko številko in preverjen na YouTube Music, da lahko spremenite naslovnico seznama predvajanja.</string>
     <string name="original_settings_section_player">Predvajalnik in predstavnost</string>
@@ -321,6 +321,6 @@
     <string name="original_wrapped_total_artists_subtitle">različnih izvajalcev</string>
     <string name="original_casting_to">Predvajanje na %s</string>
     <string name="original_progress_percent">Napredek: %s%%</string>
-    <string name="original_listening_to_mochy">Poslušaš mochy</string>
+    <string name="original_listening_to_mochy">Poslušaš the app</string>
     <string name="original_listen_on_youtube_music">Poslušaj v YouTube Music</string>
 </resources>

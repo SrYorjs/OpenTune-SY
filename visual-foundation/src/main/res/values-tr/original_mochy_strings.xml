@@ -345,7 +345,7 @@
     <string name="original_enable_scrobbling">Scrobbling\'i etkinleştir</string>
     <string name="original_lastfm_now_playing">Şimdi çalanı gönder</string>
     <string name="original_last_fm_send_likes">Beğenilenler/Beğenilmeyenleri Gönder</string>
-    <string name="original_last_fm_send_likes_description">mochy\'te Beğenilen/Beğenilmeyen şarkıları Last.fm\'de de Beğen/Beğenme</string>
+    <string name="original_last_fm_send_likes_description">Uygulama\'te Beğenilen/Beğenilmeyen şarkıları Last.fm\'de de Beğen/Beğenme</string>
     <string name="original_logging_in">Giriş yapılıyor…</string>
 
     <string name="original_scrobbling_configuration">Scrobbling Yapılandırması</string>
@@ -385,7 +385,7 @@
     <string name="original_karaoke">Karaoke</string>
     <string name="original_apple_music_style">Apple Müzik</string>
     <string name="original_apple_music_style_letter">Apple Music V2 (Letter by Letter)</string>
-    <string name="original_mochy_1">mochy (Fluid)</string>
+    <string name="original_mochy_1">Uygulama (Fluid)</string>
     <string name="original_apple_music_lyrics_blur">Apple Music Lyrics Blur</string>
     <string name="original_apple_music_lyrics_blur_desc">Premium bir odak efekti için pasif şarkı sözü satırlarına bulanıklık uygulayın</string>
     <string name="original_lyrics_v2_fluid">Şarkı Sözleri V2 (Akıcı)</string>
@@ -414,19 +414,19 @@
     <string name="original_wrapped_total_artists_subtitle">benzersiz sanatçılar</string>
     <string name="original_wrapped_total_songs_title">Şunları dinlediniz</string>
     <string name="original_wrapped_total_songs_subtitle">benzersiz şarkılar</string>
-    <string name="original_wrapped_intro_title">mochy</string>
+    <string name="original_wrapped_intro_title">Uygulama</string>
     <string name="original_wrapped_intro_subtitle">Dinlediklerinize göz atmanın zamanı geldi</string>
     <string name="original_wrapped_intro_button">hadi başlayalım!</string>
-    <string name="original_wrapped_end_thanks">mochy ile dinlediğiniz için teşekkürler!</string>
+    <string name="original_wrapped_end_thanks">Uygulama ile dinlediğiniz için teşekkürler!</string>
     <string name="original_wrapped_end_create_playlist">Özet Çalma Listeni Oluştur</string>
     <string name="original_wrapped_end_creating_playlist">Oluşturuluyor...</string>
     <string name="original_wrapped_end_playlist_saved">Çalma Listesi Kaydedildi</string>
-    <string name="original_wrapped_logo_content_description">mochy Logosu</string>
+    <string name="original_wrapped_logo_content_description">Uygulama Logosu</string>
     <string name="original_wrapped_year">2025</string>
     <string name="original_wrapped_ready_title">ÖZETİNİZ HAZIR!</string>
     <string name="original_wrapped_ready_subtitle">Bu yıl neleri sevdiğini görme zamanı.</string>
     <string name="original_wrapped_thank_you">Dinlediğin için teşekkürler</string>
-    <string name="original_wrapped_special_thanks">mochy\'i oluşturduğu için MO Agamy\'ye özel teşekkürler</string>
+    <string name="original_wrapped_special_thanks">Uygulama\'i oluşturduğu için MO Agamy\'ye özel teşekkürler</string>
     <string name="original_wrapped_close">Özeti kapat</string>
     <string name="original_wrapped_playlist_title">%s Özetin</string>
     <string name="original_wrapped_create_playlist">Çalma listesi oluştur</string>
@@ -459,9 +459,9 @@
     <string name="original_plays">plays</string>
     <string name="original_casting_to">%s cihazına yansıtılıyor</string>
     <string name="original_progress_percent">İlerleme %s%%</string>
-    <string name="original_listening_to_mochy">mochy dinleniyor</string>
+    <string name="original_listening_to_mochy">Uygulama dinleniyor</string>
     <string name="original_listen_on_youtube_music">YouTube Music\'te dinle</string>
-    <string name="original_visit_mochy">mochy\'i ziyaret et</string>
+    <string name="original_visit_mochy">Uygulama\'i ziyaret et</string>
     <string name="original_open">Aç</string>
     <string name="original_failed_to_create_image">Görsel oluşturulamadı: %s</string>
     <string name="original_copied_title">Başlık kopyalandı</string>
@@ -478,13 +478,13 @@
     
     <string name="original_album_art">Albüm kapağı</string>
     <string name="original_no_song_playing">Oynatılan şarkı yok</string>
-    <string name="original_tap_to_open">mochy\'i açmak için bas</string>
+    <string name="original_tap_to_open">Uygulama\'i açmak için bas</string>
     <string name="original_previous">Bir önceki</string>
     <string name="original_play_pause">Devam Et/Duraklat</string>
     <string name="original_next">Bir sonraki</string>
     <string name="original_like">Beğen</string>
     <string name="original_not_playing">Herhangi bir şarkı oynatılmıyor</string>
-    <string name="original_tap_to_play">mochy\'i açmak için tıkla</string>
+    <string name="original_tap_to_play">Uygulama\'i açmak için tıkla</string>
     <string name="original_widget_description">Oynatıcı widgetı için arkaplan kontrolcüsü</string>
     <string name="original_queue_widget_description">Sıra önizlemeli oynatıcı</string>
     <string name="original_turntable_widget_description">Şarkıyı oynatmak ve değiştirmek yapılmış için dairesel müzik widget\'ı</string>
@@ -641,7 +641,7 @@
     <string name="original_crash_description">Beklenmedik bir hata oluştu. Sorunu çözebilmemiz için lütfen bize oluşan hatayı raporlayın.</string>
     <string name="original_crash_share_logs">Logları paylaş</string>
     <string name="original_crash_share_title">Hata raporlarını paylaş</string>
-    <string name="original_crash_report_subject">mochy Hata Bildirimi</string>
+    <string name="original_crash_report_subject">Uygulama Hata Bildirimi</string>
     <string name="original_crash_close">Kapat</string>
     <string name="original_crash_no_log">Hata logları bulunmamakta</string>
 
@@ -693,7 +693,7 @@
     <string name="original_delete_from_history">Geçmişten sil</string>
     <string name="original_re_listen">Yeniden dinle</string>
     <string name="original_hold_to_recognize">Müziği tanımlamak için arama tuşuna basılı tutun</string>
-    <string name="original_play_on_app">mochy\'te dinle</string>
+    <string name="original_play_on_app">Uygulama\'te dinle</string>
     <string name="original_recognized_track">Tanımlanmış parça</string>
 
     
@@ -732,9 +732,9 @@
     <string name="original_discord_rpc_preview">Zengin Görünüm Önizlemesi</string>
     <string name="original_discord_presence">Görünüm</string>
     <string name="original_discord_connect_description">Ne dinlediğini paylaşmak için Discord\'a giriş yap</string>
-    <string name="original_discord_playing_mochy">mochy oynatılıyor</string>
-    <string name="original_discord_watching_mochy">mochy izlenliyor</string>
-    <string name="original_discord_competing_mochy">mochy\'te yarış</string>
+    <string name="original_discord_playing_mochy">Uygulama oynatılıyor</string>
+    <string name="original_discord_watching_mochy">Uygulama izlenliyor</string>
+    <string name="original_discord_competing_mochy">Uygulama\'te yarış</string>
     <string name="original_discord_activity_name">Aktivite adı</string>
     <string name="original_discord_activity_name_description">Aktivite için özel ad (boş bırakılırsa varsayılan kullanılır)</string>
     <string name="original_discord_advanced_mode">Gelişmiş seçenekler</string>

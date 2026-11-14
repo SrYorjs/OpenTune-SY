@@ -113,7 +113,7 @@ fun GalaxLiquidPreview(
             )
             Column(Modifier.align(Alignment.TopStart).padding(18.dp)) {
                 Text(
-                    "GALAXOT    •    GLASS STUDIO",
+                    "GLASS STUDIO",
                     style = MaterialTheme.typography.labelMedium,
                     color = Color.White.copy(alpha = .9f),
                 )
@@ -128,7 +128,7 @@ fun GalaxLiquidPreview(
             }
             // High-frequency background detail exposes real blur/refraction differences.
             Text(
-                "GALAXOT  / / /  01  02  03  \u2726  LIQUID  / / /  04  05  06",
+                "01  02  03  \u2726  LIQUID  / / /  04  05  06",
                 modifier = Modifier.align(Alignment.Center),
                 style = MaterialTheme.typography.titleLarge,
                 color = Color.White.copy(alpha = .76f),

@@ -910,7 +910,7 @@ fun RichPresence(
     "song" -> song?.song?.title ?: "Song name"
     "artist" -> song?.artists?.firstOrNull()?.name ?: "Artist"
     "album" -> song?.song?.albumName ?: song?.album?.title ?: "Album"
-    "app" -> stringResource(R.string.app_name)
+    "app" -> stringResource(R.string.music_player)
     "custom" -> largeTextCustom.ifBlank { "Custom text" }
     "dontshow" -> null
     else -> song?.song?.albumName ?: song?.album?.title
@@ -1030,7 +1030,7 @@ fun RichPresence(
                                 ActivitySource.ARTIST -> song?.artists?.joinToString { it.name } ?: "Artist"
                                 ActivitySource.ALBUM -> song?.song?.albumName ?: song?.album?.title ?: song?.song?.title ?: "Unknown Album"
                                 ActivitySource.SONG -> song?.song?.title ?: "Song"
-                                ActivitySource.APP -> stringResource(R.string.app_name)
+                                ActivitySource.APP -> stringResource(R.string.music_player)
                             }
 
                             Text(

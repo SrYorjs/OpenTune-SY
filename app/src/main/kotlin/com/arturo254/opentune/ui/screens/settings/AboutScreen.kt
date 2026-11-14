@@ -390,7 +390,7 @@ private fun GalaxAboutHero() {
                         color = colors.primary,
                     )
                     Text(
-                        text = stringResource(R.string.app_name),
+                        text = stringResource(R.string.music_player),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = colors.onSurface,

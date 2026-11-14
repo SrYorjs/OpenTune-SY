@@ -188,7 +188,7 @@ fun GalaxLibraryDestinationHero(
                         tint=mainColor,modifier=Modifier.size(23.dp))
                 }
                 Text(
-                    "GALAXOT  /  $number",
+                    "$number",
                     style=MaterialTheme.typography.labelSmall,
                     color=mainColor,
                     fontWeight=FontWeight.Bold,

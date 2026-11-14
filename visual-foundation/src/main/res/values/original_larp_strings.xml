@@ -58,7 +58,7 @@
 
     <string name="original_larp_sixty_seven_title">67 larper</string>
     <string name="original_larp_sixty_seven_dac">Chord Mojo 2</string>
-    <string name="original_larp_sixty_seven_lead">Portable DAC, straight from Mochy</string>
+    <string name="original_larp_sixty_seven_lead">Portable DAC, straight from the app</string>
     <string name="original_larp_sixty_seven_power">600 mW</string>
     <string name="original_larp_sixty_seven_channels">Stereo, phase-matched</string>
     <string name="original_larp_sixty_seven_source">The label\'s own hi-res master</string>
@@ -66,7 +66,7 @@
     <string name="original_larp_sixty_seven_runs">A spare audio core</string>
     <string name="original_larp_sixty_seven_effects">None, not even a fade</string>
     <string name="original_larp_sixty_seven_hires">32-bit float, straight through</string>
-    <string name="original_larp_sixty_seven_route">Mochy to the DAC over asynchronous USB</string>
+    <string name="original_larp_sixty_seven_route">The app to the DAC over asynchronous USB</string>
     <string name="original_larp_sixty_seven_jitter">12 ps</string>
     <string name="original_larp_sixty_seven_buffer">10 ms</string>
 
@@ -76,25 +76,25 @@
     <string name="original_larp_brainrot_power">18 W</string>
     <string name="original_larp_brainrot_channels">Stereo, tuned by ear</string>
     <string name="original_larp_brainrot_source">The mixing desk, live</string>
-    <string name="original_larp_brainrot_decoder">None, Mochy reads FLAC fluently</string>
+    <string name="original_larp_brainrot_decoder">None, the app reads FLAC fluently</string>
     <string name="original_larp_brainrot_runs">Brainrot</string>
     <string name="original_larp_brainrot_effects">None, the artist signed off every bit</string>
     <string name="original_larp_brainrot_hires">64-bit float, gold-plated</string>
-    <string name="original_larp_brainrot_route">Mochy to the DAC over a silver cable</string>
+    <string name="original_larp_brainrot_route">The app to the DAC over a silver cable</string>
     <string name="original_larp_brainrot_jitter">1 ps</string>
     <string name="original_larp_brainrot_buffer">1 ms</string>
 
     <string name="original_larp_maxxing_title">Maxxing larper</string>
     <string name="original_larp_maxxing_dac">Wadax Atlantis Reference</string>
-    <string name="original_larp_maxxing_lead">Straight from Mochy, no decoder</string>
+    <string name="original_larp_maxxing_lead">Straight from the app, no decoder</string>
     <string name="original_larp_maxxing_power">1,000,000 W</string>
     <string name="original_larp_maxxing_channels">Stereo, tuned by hand</string>
     <string name="original_larp_maxxing_source">The studio\'s own master tape</string>
-    <string name="original_larp_maxxing_decoder">None, Mochy streams it raw</string>
+    <string name="original_larp_maxxing_decoder">None, the app streams it raw</string>
     <string name="original_larp_maxxing_runs">Pure dopamine</string>
     <string name="original_larp_maxxing_effects">None, every bit lands the way the artist dreamt it</string>
     <string name="original_larp_maxxing_hires">64-bit float, straight through</string>
-    <string name="original_larp_maxxing_route">Mochy to the DAC, no decoder in between</string>
+    <string name="original_larp_maxxing_route">The app to the DAC, no decoder in between</string>
     <string name="original_larp_maxxing_jitter">0 ps</string>
     <string name="original_larp_maxxing_buffer">0 ms, it plays before you press play</string>
 </resources>

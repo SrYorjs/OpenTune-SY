@@ -254,7 +254,7 @@
     <string name="original_backup_create_failed">Αδυναμία δημιουργίας αντιγράφων ασφαλείας</string>
     <string name="original_restore_failed">Αποτυχία επαναφοράς αντιγράφου ασφαλείας</string>
     <string name="original_discord_integration">Ενσωμάτωση Discord</string>
-    <string name="original_discord_information">Το mochy χρησιμοποιεί τη βιβλιοθήκη KizzyRPC για να ρυθμίσει την κατάσταση του λογαριασμού σας στο Discord. Αυτό περιλαμβάνει τη χρήση της σύνδεσης Discord Gateway, η οποία μπορεί να θεωρηθεί παραβίαση των TOS του Discord. Ωστόσο, δεν υπάρχουν γνωστές περιπτώσεις αναστολής λογαριασμών χρηστών για αυτόν τον λόγο. Η χρήση γίνεται με δική σας ευθύνη.\n\nΤο mochy θα εξάγει μόνο το token σας και όλα τα υπόλοιπα αποθηκεύονται τοπικά.</string>
+    <string name="original_discord_information">Το η εφαρμογή χρησιμοποιεί τη βιβλιοθήκη KizzyRPC για να ρυθμίσει την κατάσταση του λογαριασμού σας στο Discord. Αυτό περιλαμβάνει τη χρήση της σύνδεσης Discord Gateway, η οποία μπορεί να θεωρηθεί παραβίαση των TOS του Discord. Ωστόσο, δεν υπάρχουν γνωστές περιπτώσεις αναστολής λογαριασμών χρηστών για αυτόν τον λόγο. Η χρήση γίνεται με δική σας ευθύνη.\n\nΤο η εφαρμογή θα εξάγει μόνο το token σας και όλα τα υπόλοιπα αποθηκεύονται τοπικά.</string>
     <string name="original_dismiss">Απόρριψη</string>
     <string name="original_options">Επιλογές</string>
     <string name="original_preview">Προεπισκόπηση</string>

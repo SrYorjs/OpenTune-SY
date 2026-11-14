@@ -100,7 +100,7 @@ fun GalaxPlayerStyleStudioScreen(navController: NavController) {
                     )
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text("GALAXOT  /  APARIENCIA", color = scheme.primary,
+                    Text("APARIENCIA", color = scheme.primary,
                         style = MaterialTheme.typography.labelSmall, letterSpacing = 1.4.sp)
                     Text("Estudio de reproductores", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 }

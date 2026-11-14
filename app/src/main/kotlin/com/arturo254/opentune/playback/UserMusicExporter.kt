@@ -112,7 +112,7 @@ class UserMusicExporter @Inject constructor(
                     put(MediaStore.Audio.Media.IS_PENDING, 0)
                 }, null, null)
                 preferences.edit().putBoolean(id, true).apply()
-                Timber.tag("GalaxMusicExport").i("Audio disponible en Music/GalaxOT: %s", id)
+                Timber.tag("GalaxMusicExport").i("Audio disponible en la carpeta de música: %s", id)
             } catch (error: Exception) {
                 destination?.let { runCatching { context.contentResolver.delete(it, null, null) } }
                 Timber.tag("GalaxMusicExport").w(error, "No se pudo exportar %s", id)

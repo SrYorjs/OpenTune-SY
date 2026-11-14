@@ -37,7 +37,7 @@ class GalaxThemeAndDiscoveryContractTest {
         ).jsonObject
         org.junit.Assert.assertEquals("f8a3593fd0c37edca3da9012c0eb4bc37e907cc7", manifest.getValue("revision").jsonPrimitive.content)
         val binaries = manifest.getValue("files").jsonArray.filter {
-            it.jsonObject.getValue("adaptation").jsonPrimitive.content == "byte_identical"
+            it.jsonObject.getValue("adaptation").jsonPrimitive.content in setOf("byte_identical", "brand_asset_override")
         }
         org.junit.Assert.assertEquals(74, binaries.size)
         binaries.forEach { entry ->
@@ -45,7 +45,22 @@ class GalaxThemeAndDiscoveryContractTest {
             val path = item.getValue("destination").jsonPrimitive.content
             val digest = java.security.MessageDigest.getInstance("SHA-256")
                 .digest(File(project, path).readBytes()).joinToString("") { "%02x".format(it.toInt() and 0xff) }
-            org.junit.Assert.assertEquals(path, item.getValue("source_sha256").jsonPrimitive.content, digest)
+            if (item.getValue("adaptation").jsonPrimitive.content == "brand_asset_override") {
+                // 04-B explicitly replaces app identity artwork, never fonts or unrelated resources.
+                val allowed = setOf("original_ic_launcher", "original_ic_launcher_round", "original_ic_stat_name",
+                    "original_icon", "original_mochy_wrapped_v1", "original_mochy_wrapped_v2", "original_mochy_discord",
+                    "original_modules_bar_mochy", "original_ic_launcher_anime", "original_donate_character",
+                    "original_tv_mascot", "original_tv_banner")
+                assertTrue(path, File(path).nameWithoutExtension in allowed)
+                val input = item.getValue("brand_input").jsonPrimitive.content
+                assertTrue(input in setOf("assets/icon.png", "assets/Notification_Logo.png"))
+                val inputDigest = java.security.MessageDigest.getInstance("SHA-256").digest(File(project, input).readBytes())
+                    .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+                org.junit.Assert.assertEquals(input, item.getValue("brand_input_sha256").jsonPrimitive.content, inputDigest)
+                org.junit.Assert.assertEquals(path, item.getValue("destination_sha256").jsonPrimitive.content, digest)
+            } else {
+                org.junit.Assert.assertEquals(path, item.getValue("source_sha256").jsonPrimitive.content, digest)
+            }
         }
     }
 

@@ -301,7 +301,7 @@
     <string name="original_restore_failed">فشل في استعادة النسخة الاحتياطية</string>
     <string name="original_options">خيارات</string>
     <string name="original_preview">معاينة</string>
-    <string name="original_discord_information">mochy يستخدم مكتبة KizzyRPC لتعيين حالة حساب Discord الخاص بك. هذا يتضمن استخدام اتصال Discord Gateway، والذي قد يعتبر انتهاكًا لشروط خدمة Discord. مع ذلك، لا توجد حالات معروفة لتعطيل حسابات المستخدمين لهذا السبب. استخدم على مسؤوليتك الخاصة. \n \nسيقوم mochy فقط باستخراج رمز الوصول الخاص بك، وسيتم تخزين كل شيء آخر محليًا.</string>
+    <string name="original_discord_information">التطبيق يستخدم مكتبة KizzyRPC لتعيين حالة حساب Discord الخاص بك. هذا يتضمن استخدام اتصال Discord Gateway، والذي قد يعتبر انتهاكًا لشروط خدمة Discord. مع ذلك، لا توجد حالات معروفة لتعطيل حسابات المستخدمين لهذا السبب. استخدم على مسؤوليتك الخاصة. \n \nسيقوم التطبيق فقط باستخراج رمز الوصول الخاص بك، وسيتم تخزين كل شيء آخر محليًا.</string>
     <string name="original_dismiss">صرف</string>
     <string name="original_enable_discord_rpc">فعل Rich Presence</string>
     <string name="original_new_version_available">نسخة جديدة متوفرة</string>

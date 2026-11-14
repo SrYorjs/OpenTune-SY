@@ -112,7 +112,7 @@ fun GalaxScreenHeading(title: String, subtitle: String, modifier: Modifier = Mod
         Column(
             verticalArrangement = Arrangement.spacedBy(9.dp),
         ) {
-            GalaxEyebrow("GALAXOT  /  MUSIC UNIVERSE")
+            GalaxEyebrow("MUSIC UNIVERSE")
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineLarge,

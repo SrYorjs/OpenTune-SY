@@ -7,4 +7,5 @@ import androidx.annotation.DrawableRes
 data class AppIcon(
     @DrawableRes val foreground: Int,
     @ColorRes val background: Int?,
+    val usesLauncherSplash: Boolean = false,
 )

@@ -20,7 +20,7 @@
     <string name="original_installing_system_update">Menginstal pembaruan sistem…</string>
     <string name="original_making_update_ready">Menyiapkan pembaruan, proses ini mungkin memerlukan waktu</string>
     <string name="original_your_app_getting_better">Aplikasi Anda menjadi lebih baik…</string>
-    <string name="original_update_includes_features">Pembaruan ini mencakup fitur baru dan pembaruan terbaru dari mochy-music %1$s agar aplikasi semakin bermanfaat. Pelajari selengkapnya di %2$s.</string>
+    <string name="original_update_includes_features">Pembaruan ini mencakup fitur baru dan pembaruan terbaru dari aplikasi-music %1$s agar aplikasi semakin bermanfaat. Pelajari selengkapnya di %2$s.</string>
     <string name="original_whats_new">Apa yang baru?</string>
     <string name="original_update_available">Pembaruan</string>
     <string name="original_checking_for_updates">Memeriksa pembaruan…</string>
@@ -35,7 +35,7 @@
     <string name="original_mobile_network_warning">Mengunduh pembaruan melalui jaringan seluler atau saat roaming dapat menimbulkan biaya tambahan.</string>
     <string name="original_update_size">Ukuran pembaruan: %1$s MB</string>
     <string name="original_check_internet_connection">Periksa koneksi internet dan coba lagi.</string>
-    <string name="original_mochy_music_version">mochy MUSIC versi %1$s</string>
+    <string name="original_mochy_music_version">Aplikasi versi %1$s</string>
     <string name="original_last_checked">Terakhir diperiksa: %1$s</string>
     <string name="original_install">Instal</string>
     <string name="original_check_for_update">Periksa pembaruan</string>
@@ -50,12 +50,12 @@
     <string name="original_update_notifications_subtitle">Tampilkan notifikasi saat pembaruan baru ditemukan</string>
     <string name="original_settings_check_updates_title">Periksa pembaruan</string>
     <string name="original_later">Nanti</string>
-    <string name="original_mochy_music_title">mochy MUSIC</string>
+    <string name="original_mochy_music_title">Aplikasi</string>
     <string name="original_developer_section">PENGEMBANG</string>
     <string name="original_collaborator_section">KOLABORATOR</string>
     <string name="original_app_info_section">INFO APLIKASI</string>
     <string name="original_community_section">KOMUNITAS</string>
-    <string name="original_developer_name">mochyDH P ASHOKAN</string>
+    <string name="original_developer_name">P ASHOKAN</string>
     <string name="original_app_developer">Pengembang utama</string>
     <string name="original_website">Situs web</string>
     <string name="original_collaborator_tboyke">T-Boyke</string>

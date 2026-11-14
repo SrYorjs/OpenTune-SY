@@ -276,7 +276,7 @@
     <string name="original_backup_create_failed">No se pudo crear la copia de seguridad</string>
     <string name="original_restore_failed">No se pudo restaurar la copia de seguridad</string>
     <string name="original_discord_integration">Integración con Discord</string>
-    <string name="original_discord_information">mochy utiliza la biblioteca KizzyRPC para configurar el estado de tu cuenta de Discord. Esto implica el uso de la conexión Discord Gateway, lo que puede considerarse una violación de los Términos de servicio de Discord. Sin embargo, no se conocen casos de cuentas de usuario suspendidas por este motivo. Úsalo bajo tu propia responsabilidad.\n\nmochy solo extraerá tu token, y todo lo demás se almacena localmente.</string>
+    <string name="original_discord_information">La app utiliza la biblioteca KizzyRPC para configurar el estado de tu cuenta de Discord. Esto implica el uso de la conexión Discord Gateway, lo que puede considerarse una violación de los Términos de servicio de Discord. Sin embargo, no se conocen casos de cuentas de usuario suspendidas por este motivo. Úsalo bajo tu propia responsabilidad.\n\nla app solo extraerá tu token, y todo lo demás se almacena localmente.</string>
     <string name="original_dismiss">Desestimar</string>
     <string name="original_options">Opciones</string>
     <string name="original_preview">Vista previa</string>

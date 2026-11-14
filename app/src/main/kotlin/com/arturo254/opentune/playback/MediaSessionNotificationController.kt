@@ -98,7 +98,7 @@ internal class MediaSessionNotificationController(
                 MusicService.CHANNEL_ID,
                 R.string.music_player,
             ).apply {
-                setSmallIcon(R.drawable.opentune)
+                setSmallIcon(R.drawable.galaxot_notification)
             },
         )
 
@@ -147,9 +147,7 @@ internal class MediaSessionNotificationController(
             .Builder(
                 service,
                 MusicService.CHANNEL_ID,
-            ).setSmallIcon(
-                R.drawable.opentune_monochrome,
-            ).setContentTitle(
+            ).setSmallIcon(R.drawable.galaxot_notification).setContentTitle(
                 service.getString(
                     R.string.music_player,
                 ),

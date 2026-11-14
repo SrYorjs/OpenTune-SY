@@ -274,14 +274,14 @@
     <string name="original_action_backup">Rezervna kopija</string>
     <string name="original_action_restore">Povratak</string>
     <string name="original_imported_playlist">Spiska je uvezena</string>
-    <string name="original_discord_information">mochy koristi KizzyRPC biblioteku kako bi stavio tvoj Discord status. Ovo uključuje korištenje Discord Gateway spajanja, što bi se moglo smatrati prekršajem Discord-ovog TOS-a. Međutim nema poznatih slučajeva gdje su korisnički nalozi bili suspendovani zbog ovoga razloga. Korisite na svoju štetu.\n\nmochy će samo izvesti vaš žeton, i sve drugo je lokalno sklađeno.</string>
+    <string name="original_discord_information">The app koristi KizzyRPC biblioteku kako bi stavio tvoj Discord status. Ovo uključuje korištenje Discord Gateway spajanja, što bi se moglo smatrati prekršajem Discord-ovog TOS-a. Međutim nema poznatih slučajeva gdje su korisnički nalozi bili suspendovani zbog ovoga razloga. Korisite na svoju štetu.\n\nthe app će samo izvesti vaš žeton, i sve drugo je lokalno sklađeno.</string>
     <string name="original_login_failed">Neuspješno upisivanje</string>
     <string name="original_options">Opcije</string>
     <string name="original_preview">Pregled</string>
     <string name="original_enable_discord_rpc">Omogući Bogatu Prisutnost</string>
     <string name="original_app_version">Verzija aplikacije</string>
     <string name="original_action_logout">Izpiši se</string>
-    <string name="original_about">O mochy-u</string>
+    <string name="original_about">O the app-u</string>
     <string name="original_clear_translation_models">Rasčisti modele prevođenja</string>
     <string name="original_new_version_available">Dostupna je nova verzija</string>
     <string name="original_translation_models">Modeli prevođenja</string>

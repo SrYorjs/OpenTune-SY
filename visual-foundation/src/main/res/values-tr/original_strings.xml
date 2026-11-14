@@ -343,7 +343,7 @@
     <string name="original_restore_failed">Yedekleme geri yüklenemedi</string>
 
     <string name="original_discord_integration">Discord Entegrasyonu</string>
-    <string name="original_discord_information">mochy, Discord hesabınızın durumunu ayarlamak için KizzyRPC kütüphanesini kullanır. Bu, Discord\'un Hizmet Şartları\'nın ihlali olarak kabul edilebilecek Discord Geçit bağlantısının kullanılmasını gerektirir. Fakat kullanıcı hesaplarının bu nedenle askıya alındığı bilinen bir örnek yoktur. Riski size ait olmak üzere kullanın. \n \nmochy yalnızca belirtecinizi çıkarır ve diğer her şey yerel olarak saklanır.</string>
+    <string name="original_discord_information">Uygulama, Discord hesabınızın durumunu ayarlamak için KizzyRPC kütüphanesini kullanır. Bu, Discord\'un Hizmet Şartları\'nın ihlali olarak kabul edilebilecek Discord Geçit bağlantısının kullanılmasını gerektirir. Fakat kullanıcı hesaplarının bu nedenle askıya alındığı bilinen bir örnek yoktur. Riski size ait olmak üzere kullanın. \n \nuygulama yalnızca belirtecinizi çıkarır ve diğer her şey yerel olarak saklanır.</string>
     <string name="original_dismiss">İptal</string>
     <string name="original_options">Seçenekler</string>
     <string name="original_preview">Ön izleme</string>

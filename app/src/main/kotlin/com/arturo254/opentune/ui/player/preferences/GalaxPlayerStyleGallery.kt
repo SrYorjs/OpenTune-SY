@@ -46,7 +46,7 @@ internal fun playerStyleCategoryLabel(style: PlayerDesignStyle): String = when (
     PlayerDesignStyle.V12,
     PlayerDesignStyle.V13,
     PlayerDesignStyle.V14,
-    PlayerDesignStyle.V15 -> "ORIGINAL GALAXOT"
+    PlayerDesignStyle.V15 -> "ORIGINAL"
     else -> "ESTILO CLÁSICO"
 }
 

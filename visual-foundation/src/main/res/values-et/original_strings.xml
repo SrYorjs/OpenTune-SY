@@ -193,7 +193,7 @@
     <string name="original_enable_lrclib">Kasuta laulusõnade kuvamiseks teenusepakkujat LrcLib</string>
     <string name="original_dismiss">Loobu</string>
     <string name="original_preview">Eelvaade</string>
-    <string name="original_enable_discord_rpc">Näita oma tegevust mochy rakenduses Discordi olekuteatena</string>
+    <string name="original_enable_discord_rpc">Näita oma tegevust the app rakenduses Discordi olekuteatena</string>
     <string name="original_sort_by_create_date">Lisamise kuupäev</string>
     <string name="original_sort_by_name">Nime alusel</string>
     <string name="original_sort_by_artist">Esitaja järgi</string>
@@ -272,7 +272,7 @@
     <string name="original_backup_create_failed">Varukoopia tegemine ei õnnestunud</string>
     <string name="original_restore_failed">Varukoopiast taastamine ei õnnestunud</string>
     <string name="original_discord_integration">Lõiming Discordiga</string>
-    <string name="original_discord_information">mochy kasutab Discordi kasutajakonto oleku kuvamiseks KizzyRPC teeki. See eeldab Discord Gateway ühenduse kasutamist ja seda loetakse Discordi kasutustingimuste rikkumiseks. Aga pole teada ühtegi juhust, kus kasutajakonto oleks sel põhjusel keelatud. Kasuta seda teenust omal vastutsusel.\n\nmochy kasutab ainult sinu tunnusluba, kõike muud hoitakse kohalikus seadmes.</string>
+    <string name="original_discord_information">The app kasutab Discordi kasutajakonto oleku kuvamiseks KizzyRPC teeki. See eeldab Discord Gateway ühenduse kasutamist ja seda loetakse Discordi kasutustingimuste rikkumiseks. Aga pole teada ühtegi juhust, kus kasutajakonto oleks sel põhjusel keelatud. Kasuta seda teenust omal vastutsusel.\n\nthe app kasutab ainult sinu tunnusluba, kõike muud hoitakse kohalikus seadmes.</string>
     <string name="original_options">Valikud</string>
     <string name="original_action_logout">Logi välja</string>
     <string name="original_login_failed">Sisselogimine ei õnnestunud</string>

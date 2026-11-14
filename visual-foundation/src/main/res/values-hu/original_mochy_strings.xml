@@ -240,7 +240,7 @@
     <string name="original_enable_scrobbling">Scrobbling engedélyezése</string>
     <string name="original_lastfm_now_playing">\"Épp hallgatott\" állapot küldése</string>
     <string name="original_last_fm_send_likes">Kedvelések küldése</string>
-    <string name="original_last_fm_send_likes_description">Dalok kedvencnek jelölése/törlése a Last.fm-en, ha a mochy-ben kedveled/nem kedveled őket</string>
+    <string name="original_last_fm_send_likes_description">Dalok kedvencnek jelölése/törlése a Last.fm-en, ha a az alkalmazás-ben kedveled/nem kedveled őket</string>
     <string name="original_logging_in">Bejelentkezés…</string>
     <string name="original_scrobbling_configuration">Scrobbling beállítása</string>
     <string name="original_scrobble_min_track_duration">Ennél hosszabb számok scrobble-olása</string>

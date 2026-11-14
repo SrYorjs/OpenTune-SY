@@ -194,7 +194,7 @@ fun GalaxFeaturedTrack(song: Song, isPlaying: Boolean, onClick: () -> Unit) {
                         style = MaterialTheme.typography.labelSmall,
                     )
                     Text(
-                        text = "—  GALAXOT  /  FEATURED",
+                        text = "—  FEATURED",
                         color = Color.White.copy(alpha = .55f),
                         style = MaterialTheme.typography.labelSmall,
                     )

@@ -111,7 +111,7 @@ fun SettingsProfileHeader(modifier: Modifier = Modifier) {
 
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = stringResource(R.string.app_name),
+                        text = stringResource(R.string.music_player),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,

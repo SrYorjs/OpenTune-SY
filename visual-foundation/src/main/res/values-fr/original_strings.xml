@@ -354,7 +354,7 @@
     <string name="original_restore_failed">Échec de la restauration de la sauvegarde</string>
 
     <string name="original_discord_integration">Intégration Discord</string>
-    <string name="original_discord_information">mochy Music utilise la bibliothèque KizzyRPC pour définir le statut de votre compte Discord. Cela implique l\'utilisation de la passerelle Discord, ce qui peut être considéré comme une violation des conditions d\'utilisation de Discord. Cependant, aucun cas de suspension de compte utilisateur pour cette raison n\'a été recensé. Utilisez ce service à vos risques et périls. \n\mochy Music extraira uniquement votre jeton ; toutes les autres données sont stockées localement.</string>
+    <string name="original_discord_information">L’application utilise la bibliothèque KizzyRPC pour définir le statut de votre compte Discord. Cela implique l\'utilisation de la passerelle Discord, ce qui peut être considéré comme une violation des conditions d\'utilisation de Discord. Cependant, aucun cas de suspension de compte utilisateur pour cette raison n\'a été recensé. Utilisez ce service à vos risques et périls. \nl’application extraira uniquement votre jeton ; toutes les autres données sont stockées localement.</string>
     <string name="original_dismiss">Rejeter</string>
     <string name="original_options">Options</string>
     <string name="original_preview">Aperçu</string>
