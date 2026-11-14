@@ -58,6 +58,46 @@ las incidencias están NewApi en navigationBuilder y RestrictedApi en los acceso
 al backstack, líneas de navegación no modificadas en esta tarea. Los recursos
 nuevos de splash no figuran como errores en ese informe.
 
+## Comparación posterior con el conteo de 04-B
+
+El XML de lint de 04-D separa 113 incidencias severity="Error" y 14
+severity="Fatal". El total de 127 comunicado sumaba ambas severidades; compararlo
+directamente con los 113 errores reportados para 04-B era ambiguo. No se conserva
+aquí un XML independiente de 04-B para comparar las 113 entradas una por una;
+no se afirma equivalencia completa solo por coincidir el número.
+
+Las 14 Fatal son ExtraTranslation de OpenTune_canvas y OpenTune_canvas_desc en
+values-fr, values-ja, values-ko, values-ru, values-uk, values-vi y values-zh-rCN
+(dos claves por idioma). Los siete archivos tienen blobs idénticos en 06671b46
+(04-B) y 13228218 (04-D). El default ya tenía GalaxOT_canvas y GalaxOT_canvas_desc
+en 04-B y tampoco cambió entre ambas revisiones. Estas 14 incidencias no son
+nuevas de 04-C, 05/11-1 ni 04-D.
+
+Origen comprobado con git show: cdc8a4f8 renombró las dos claves default de
+OpenTune_canvas/desc a GalaxOT_canvas/desc sin actualizar esos siete idiomas.
+Las traducciones conservan las claves originales desde 175eed35. El desajuste
+procede de cdc8a4f8, anterior a 04-B. Se corrige la interpretación del reporte,
+sin cambiar abortOnError, reglas ni supresiones. No se corrigen recursos fuera
+del alcance de esta comparación. Se añade /.artifacts/ a .gitignore.
+
+## 04-E: corrección de ExtraTranslation
+
+En fr, ja, ko, ru, uk, vi y zh-rCN se renombran únicamente las dos claves Canvas
+a GalaxOT_canvas y GalaxOT_canvas_desc, como en el idioma base. Se conservan las
+descripciones traducidas; el título OpenTune Canvas pasa a Canvas y OpenTune画布
+a 画布. No se eliminan traducciones ni se alteran reglas de lint.
+
+Una sola ejecución conjunta de :innertube:test :app:testUniversalDebugUnitTest
+:app:lintUniversalDebug :app:assembleUniversalDebug: BUILD SUCCESSFUL en 6 min
+50 s. App: 576 tests sin fallos. APK generado. El XML nuevo de lint contiene
+0 Fatal, 0 ExtraTranslation, 113 Error, 575 Warning y 41 Hint. Las lecturas del
+log se separaron mediante Start-Sleep -Seconds 300. No se modifica abortOnError.
+La comprobación adicional :app:lintVitalRelease no pudo resolverse: Gradle la
+considera ambigua entre las variantes Armeabi y Universal. Se ejecutó la tarea
+concreta :app:lintVitalUniversalRelease: BUILD SUCCESSFUL en 6 min 32 s. No se
+modificaron las reglas para lograrlo. Los logs de ambas comprobaciones también
+se consultaron mediante intervalos Start-Sleep -Seconds 300.
+
 Sin prueba visual en dispositivo; la alineación descrita
 es la del contrato de recursos y Compose, pendiente de validar en Android 26-30,
 31-32 y 33+ (incluido encuadre del sistema, insets y arranque frío/caliente).
