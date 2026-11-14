@@ -339,13 +339,6 @@
       "adaptation": "resource_identifiers_and_xml_serialization"
     },
     {
-      "source": "app/src/main/res/drawable/collab.jpg",
-      "destination": "visual-foundation/src/main/res/drawable/original_collab.jpg",
-      "source_sha256": "5533457b436de8274c6edf7f2fffeb59526291daf591f316e7dce0364db342fb",
-      "destination_sha256": "5533457b436de8274c6edf7f2fffeb59526291daf591f316e7dce0364db342fb",
-      "adaptation": "byte_identical"
-    },
-    {
       "source": "app/src/main/res/drawable/commit.xml",
       "destination": "visual-foundation/src/main/res/drawable/original_commit.xml",
       "source_sha256": "a69e69d41a8f7a86d56e060660a1b3935f1ea104334fb229aee40df77d8c0998",
@@ -1846,13 +1839,6 @@
       "source_sha256": "911f4b86f01d43f64f404f81bb0c8117e82d6be1920521836a57a89118f592c6",
       "destination_sha256": "1de8cd19d7b71cdbc4eff1469dbd69c56ac6c891aa49b7c0db9a793821225042",
       "adaptation": "resource_identifiers_and_xml_serialization"
-    },
-    {
-      "source": "app/src/main/res/drawable/thank_you_badge.png",
-      "destination": "visual-foundation/src/main/res/drawable/original_thank_you_badge.png",
-      "source_sha256": "60308fdcc54f2a0352b23962e073e2a13ac01d928dee65886d2bd85937f9e29e",
-      "destination_sha256": "60308fdcc54f2a0352b23962e073e2a13ac01d928dee65886d2bd85937f9e29e",
-      "adaptation": "byte_identical"
     },
     {
       "source": "app/src/main/res/drawable/thumb_down.xml",
@@ -3455,13 +3441,6 @@
       "destination": "visual-foundation/src/main/res/raw/original_setting.json",
       "source_sha256": "9fcd39005f93791ddca1f16b6d6990433b51a37d2dd457c53b208cc33e2a15ba",
       "destination_sha256": "9fcd39005f93791ddca1f16b6d6990433b51a37d2dd457c53b208cc33e2a15ba",
-      "adaptation": "byte_identical"
-    },
-    {
-      "source": "app/src/main/res/raw/wrapped_theme.mp3",
-      "destination": "visual-foundation/src/main/res/raw/original_wrapped_theme.mp3",
-      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-      "destination_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "adaptation": "byte_identical"
     },
     {
@@ -5989,7 +5968,6 @@
     "drawable/clear_all": "drawable/original_clear_all",
     "drawable/close": "drawable/original_close",
     "drawable/cloud": "drawable/original_cloud",
-    "drawable/collab": "drawable/original_collab",
     "drawable/commit": "drawable/original_commit",
     "drawable/connect_people": "drawable/original_connect_people",
     "drawable/content_copy": "drawable/original_content_copy",
@@ -6224,7 +6202,6 @@
     "drawable/sync": "drawable/original_sync",
     "drawable/tab": "drawable/original_tab",
     "drawable/telegram": "drawable/original_telegram",
-    "drawable/thank_you_badge": "drawable/original_thank_you_badge",
     "drawable/thumb_down": "drawable/original_thumb_down",
     "drawable/thumb_up_like": "drawable/original_thumb_up_like",
     "drawable/timer": "drawable/original_timer",
@@ -6390,7 +6367,6 @@
     "raw/search": "raw/original_search",
     "raw/search_filled": "raw/original_search_filled",
     "raw/setting": "raw/original_setting",
-    "raw/wrapped_theme": "raw/original_wrapped_theme",
     "string/about": "string/original_about",
     "string/about_album": "string/original_about_album",
     "string/about_artist": "string/original_about_artist",
@@ -8655,5 +8631,211 @@
     "style/Theme.App.Starting.Icon": "style/original_Theme.App.Starting.Icon",
     "style/Theme.Widget.mochy": "style/original_Theme.Widget.mochy",
     "style/Theme.mochy": "style/original_Theme.mochy"
+  },
+  "removed_resources": [
+    {
+      "source": "app/src/main/res/drawable/collab.jpg",
+      "destination": "visual-foundation/src/main/res/drawable/original_collab.jpg",
+      "source_sha256": "5533457b436de8274c6edf7f2fffeb59526291daf591f316e7dce0364db342fb",
+      "destination_sha256": "5533457b436de8274c6edf7f2fffeb59526291daf591f316e7dce0364db342fb",
+      "adaptation": "byte_identical",
+      "operation": "04-C",
+      "reason": "No resource references in app/src or visual-foundation/src code, XML or tests; remove unused transplanted asset"
+    },
+    {
+      "source": "app/src/main/res/drawable/thank_you_badge.png",
+      "destination": "visual-foundation/src/main/res/drawable/original_thank_you_badge.png",
+      "source_sha256": "60308fdcc54f2a0352b23962e073e2a13ac01d928dee65886d2bd85937f9e29e",
+      "destination_sha256": "60308fdcc54f2a0352b23962e073e2a13ac01d928dee65886d2bd85937f9e29e",
+      "adaptation": "byte_identical",
+      "operation": "04-C",
+      "reason": "No resource references in app/src or visual-foundation/src code, XML or tests; remove unused transplanted asset"
+    },
+    {
+      "source": "app/src/main/res/raw/wrapped_theme.mp3",
+      "destination": "visual-foundation/src/main/res/raw/original_wrapped_theme.mp3",
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "destination_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "adaptation": "byte_identical",
+      "operation": "04-C",
+      "reason": "No resource references in app/src or visual-foundation/src code, XML or tests; remove unused transplanted asset"
+    }
+  ],
+  "cleanup_04c": {
+    "reference_scope": [
+      "app/src",
+      "visual-foundation/src"
+    ],
+    "dynamic_lookup": "No getIdentifier or equivalent name-based resource lookup in either source tree",
+    "remaining_original_media": [
+      {
+        "path": "visual-foundation/src/main/res/drawable/original_apple_airpods.png",
+        "size": 1195,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable/original_apple_headset.png",
+        "size": 1368,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable/original_apple_lyrics.png",
+        "size": 721,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable/original_dev.jpg",
+        "size": 151514,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable/original_ic_kofi.webp",
+        "size": 3636,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable/original_speaker_applemusic.png",
+        "size": 991,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable/original_tune_my_music.png",
+        "size": 23068,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable/original_weeknd.webp",
+        "size": 40064,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_dev_keycii.jpg",
+        "size": 36852,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_flagship_lyrics.png",
+        "size": 824,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_flagship_output_phone.png",
+        "size": 465,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_flagship_queue.png",
+        "size": 302,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_flagship_ten_seconds.png",
+        "size": 1854,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_frame_51_3.png",
+        "size": 452791,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_integration_discord.webp",
+        "size": 3082,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_integration_discord_banner.webp",
+        "size": 11332,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_integration_lastfm.webp",
+        "size": 3940,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_integration_librefm.webp",
+        "size": 3452,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_monochrome_logo.png",
+        "size": 2305,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_provider_apple_music.webp",
+        "size": 7502,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_provider_spotify.jpg",
+        "size": 9697,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_provider_tidal.png",
+        "size": 7122,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/drawable-nodpi/original_provider_youtube_music.webp",
+        "size": 17846,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/raw/original_gacha_tick.wav",
+        "size": 2336,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/raw/original_gacha_win.wav",
+        "size": 54728,
+        "references": []
+      },
+      {
+        "path": "visual-foundation/src/main/res/raw/original_larp_mode.gif",
+        "size": 34375,
+        "references": []
+      }
+    ],
+    "visible_mochy_string_values": [],
+    "legal_files_retained": [
+      "visual-foundation/LICENSE",
+      "visual-foundation/NOTICE.md",
+      "visual-foundation/src/main/res/values*/original_strings.xml",
+      "visual-foundation/src/main/res/values*/original_mochy_strings.xml",
+      "visual-foundation/src/main/res/values*/original_updater_strings.xml"
+    ],
+    "license": "GNU General Public License version 3 (source LICENSE at pinned Mochy revision)",
+    "xml_scan": {
+      "total": 7,
+      "first20": [
+        "visual-foundation/src/main/res/values/original_styles.xml:7: <item name=\"postSplashScreenTheme\">@style/original_Theme.mochy</item>",
+        "app/src/main/res/values/app_name.xml:3: <string name=\"app_name\">GalaxOT</string>",
+        "app/src/main/res/values/styles.xml:16: <item name=\"android:windowBackground\">@drawable/galaxot_launch_background</item>",
+        "app/src/main/res/values-v31/styles.xml:5: <item name=\"android:windowBackground\">@drawable/galaxot_launch_background</item>",
+        "app/src/main/res/values-v31/styles.xml:6: <item name=\"android:windowSplashScreenBackground\">@color/galaxot_splash_background</item>",
+        "app/src/main/res/values-v31/styles.xml:7: <item name=\"android:windowSplashScreenAnimatedIcon\">@drawable/galaxot_launcher_foreground</item>",
+        "app/src/main/res/values-v31/styles.xml:8: <item name=\"android:windowSplashScreenIconBackgroundColor\">@color/galaxot_splash_background</item>"
+      ]
+    },
+    "validation": {
+      "attempt": 1,
+      "result": "BUILD SUCCESSFUL",
+      "tasks": [
+        ":innertube:test",
+        ":app:testUniversalDebugUnitTest",
+        ":app:assembleUniversalDebug"
+      ],
+      "app_tests": {
+        "tests": 575,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "log": "build/04c-validation-1.log",
+      "license_matches_reference": true
+    }
   }
 }

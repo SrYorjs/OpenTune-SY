@@ -39,7 +39,23 @@ class GalaxThemeAndDiscoveryContractTest {
         val binaries = manifest.getValue("files").jsonArray.filter {
             it.jsonObject.getValue("adaptation").jsonPrimitive.content in setOf("byte_identical", "brand_asset_override")
         }
-        org.junit.Assert.assertEquals(74, binaries.size)
+        org.junit.Assert.assertEquals(71, binaries.size)
+        // 04-C removes only these unused assets; preserve their pinned provenance.
+        val removed = manifest.getValue("removed_resources").jsonArray.map { it.jsonObject }
+        val removedSources = mapOf(
+            "visual-foundation/src/main/res/drawable/original_collab.jpg" to "5533457b436de8274c6edf7f2fffeb59526291daf591f316e7dce0364db342fb",
+            "visual-foundation/src/main/res/drawable/original_thank_you_badge.png" to "60308fdcc54f2a0352b23962e073e2a13ac01d928dee65886d2bd85937f9e29e",
+            "visual-foundation/src/main/res/raw/original_wrapped_theme.mp3" to "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        )
+        org.junit.Assert.assertEquals(removedSources.keys, removed.map { it.getValue("destination").jsonPrimitive.content }.toSet())
+        org.junit.Assert.assertEquals(3, removed.size)
+        org.junit.Assert.assertEquals(74, binaries.size + removed.size)
+        removed.forEach { item ->
+            val path = item.getValue("destination").jsonPrimitive.content
+            org.junit.Assert.assertEquals("04-C", item.getValue("operation").jsonPrimitive.content)
+            org.junit.Assert.assertEquals(removedSources.getValue(path), item.getValue("source_sha256").jsonPrimitive.content)
+            assertFalse("Removed orphan must stay absent: $path", File(project, path).exists())
+        }
         binaries.forEach { entry ->
             val item = entry.jsonObject
             val path = item.getValue("destination").jsonPrimitive.content
