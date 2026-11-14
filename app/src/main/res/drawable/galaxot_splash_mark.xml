@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:width="288dp" android:height="288dp" android:gravity="center">
+        <layer-list>
+            <item android:left="71.08085dp" android:top="58.82553dp"
+                android:right="60.05106dp" android:bottom="72.30638dp">
+                <bitmap android:src="@drawable/galaxot_icon_transparent" android:gravity="fill" />
+            </item>
+        </layer-list>
+    </item>
+</layer-list>

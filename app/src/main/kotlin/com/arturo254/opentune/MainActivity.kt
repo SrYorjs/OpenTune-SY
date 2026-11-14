@@ -226,7 +226,7 @@ import com.arturo254.opentune.utils.rememberPreference
 import com.arturo254.opentune.utils.reportException
 import com.valentinilk.shimmer.LocalShimmerTheme
 import dagger.hilt.android.AndroidEntryPoint
-import com.arturo254.opentune.ui.original.adapters.SetupWizardContainer
+
 import kotlinx.coroutines.Dispatchers
 import androidx.datastore.preferences.core.edit
 import kotlinx.coroutines.delay
@@ -243,33 +243,6 @@ import javax.inject.Inject
 private const val BackgroundZoomOnExpand = true
 
 @Suppress("DEPRECATION", "ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
-
-private const val SETUP_MARKER_FILE = "setup_wizard_completed"
-
-private fun hasOnboardedOnThisInstall(context: android.content.Context): Boolean {
-    if (runCatching { java.io.File(context.noBackupFilesDir, SETUP_MARKER_FILE).exists() }.getOrDefault(false)) {
-        return true
-    }
-
-    if (isUpgradedInstall(context)) {
-        markOnboardedOnThisInstall(context)
-        return true
-    }
-    return false
-}
-
-/** True when this package has been updated in place at least once, i.e. it is not a fresh install. */
-private fun isUpgradedInstall(context: android.content.Context): Boolean =
-    runCatching {
-        val info = context.packageManager.getPackageInfo(context.packageName, 0)
-        info.lastUpdateTime > info.firstInstallTime
-    }.getOrDefault(false)
-
-// also called by the import once it has swapped the old library in, so onboarding doesn't show again
-internal fun markOnboardedOnThisInstall(context: android.content.Context) {
-    runCatching { java.io.File(context.noBackupFilesDir, SETUP_MARKER_FILE).createNewFile() }
-}
-
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
@@ -915,14 +888,6 @@ class MainActivity : ComponentActivity() {
                 )
                 val swipeToSong by rememberPreference(SwipeToSongKey, false)
 
-                val setupCompleted by rememberPreference(com.arturo254.opentune.ui.original.fullconstants.SetupCompletedKey, false)
-                var forceShowSetup by remember { mutableStateOf(false) }
-                // Seeded once per process: a restored backup can say setup is done on an
-                // install that has never actually shown the wizard. Kept as state because
-                // finishing the wizard writes the marker and must dismiss it right away.
-                var onboardedHere by remember { mutableStateOf(hasOnboardedOnThisInstall(context)) }
-
-
                 CompositionLocalProvider(
                     com.arturo254.opentune.ui.original.adapters.LocalRuntimeNavigation provides navController,
                     com.arturo254.opentune.ui.component.LocalMenuState provides currentMenuState,
@@ -961,29 +926,9 @@ class MainActivity : ComponentActivity() {
                         },
                     )
                     com.arturo254.opentune.ui.original.adapters.DonatePromptScheduler(
-                        enabled = setupCompleted && onboardedHere && !forceShowSetup,
+                        enabled = launchIntro.done,
                     )
-                        SetupWizardContainer(
-                            isVisible = !setupCompleted || !onboardedHere || forceShowSetup,
-                            onSetupCompleted = { username, uri ->
-                                markOnboardedOnThisInstall(context)
-                                onboardedHere = true
-                                coroutineScope.launch(Dispatchers.IO) {
-                                    val savedUriStr = uri?.let { com.arturo254.opentune.ui.original.adapters.ProfileStore.copyPhoto(context, it) }.orEmpty()
-
-                                    dataStore.updateData { prefs ->
-                                        prefs.toMutablePreferences().apply {
-                                            set(com.arturo254.opentune.ui.original.fullconstants.SetupCompletedKey, true)
-                                            set(com.arturo254.opentune.ui.original.fullconstants.UsernameKey, username)
-                                            if (savedUriStr.isNotEmpty()) {
-                                                set(com.arturo254.opentune.ui.original.fullconstants.ProfilePicUriKey, savedUriStr)
-                                            }
-                                        }
-                                    }
-                                }
-                                forceShowSetup = false
-                            }
-                        ) {
+                        Box {
                             Scaffold(
                             snackbarHost = { SnackbarHost(snackbarHostState) },
                             topBar = {

@@ -42,6 +42,7 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -286,6 +287,7 @@ fun LaunchIntroOverlay(state: LaunchIntroState, essentialsReady: Boolean) {
     if (state.done) return
     val ready by rememberUpdatedState(essentialsReady)
     val context = LocalContext.current
+    val splashBackground = colorResource(com.arturo254.opentune.R.color.galaxot_splash_background)
     val art = remember(context) { LaunchMarkArt(context) }
     val frame = remember { MarkFrame() }
     // read once for the first frame: it has to match what the splash showed
@@ -347,7 +349,7 @@ fun LaunchIntroOverlay(state: LaunchIntroState, essentialsReady: Boolean) {
                 }
                 .drawBehind {
                     val backdrop = 1f - smoothstep(0.18f, 0.7f, state.flight.value)
-                    if (backdrop > 0f) drawRect(Color.Black.copy(alpha = backdrop))
+                    if (backdrop > 0f) drawRect(splashBackground.copy(alpha = backdrop))
                 }
         )
 

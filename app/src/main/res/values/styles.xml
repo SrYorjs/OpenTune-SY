@@ -13,6 +13,11 @@
     </style>
     <!-- Brand entry theme; retain Theme.OpenTune as a compatibility parent. -->
     <style name="Theme.GalaxOT" parent="Theme.OpenTune">
-        <item name="android:windowBackground">@drawable/galaxot_launch_background</item>
+        <item name="android:windowBackground">@color/galaxot_splash_background</item>
+    </style>
+    <style name="Theme.GalaxOT.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/galaxot_splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/galaxot_splash_mark</item>
+        <item name="postSplashScreenTheme">@style/Theme.GalaxOT</item>
     </style>
 </resources>

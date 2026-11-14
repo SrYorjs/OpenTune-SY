@@ -8,5 +8,5 @@
     <color name="galaxot_halo_blue">#65BAFF</color>
     <color name="galaxot_ice_blue">#DFF5FF</color>
     <color name="galaxot_launcher_background">#00000000</color>
-    <color name="galaxot_splash_background">#071021</color>
+    <color name="galaxot_splash_background">#000000</color>
 </resources>

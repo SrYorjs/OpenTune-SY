@@ -15,7 +15,6 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.arturo254.opentune.BuildConfig
-import com.arturo254.opentune.constants.AccountNameKey
 import com.arturo254.opentune.constants.AppLanguageKey
 import com.arturo254.opentune.constants.SYSTEM_DEFAULT
 import com.arturo254.opentune.db.MusicDatabase
@@ -24,7 +23,6 @@ import com.arturo254.opentune.ui.original.launch.AppIcon
 import com.arturo254.opentune.ui.original.screens.Screens
 import com.arturo254.opentune.utils.dataStore
 import com.arturo254.opentune.utils.get
-import com.arturo254.opentune.utils.rememberPreference
 import kotlinx.coroutines.flow.map
 import java.io.File
 import java.util.Locale
@@ -88,19 +86,6 @@ object TransferRestore {
     }
 }
 
-/** The existing account editor completes the first-run profile until operation 16. */
-@Composable
-fun SetupWizardContainer(isVisible: Boolean, onSetupCompleted: (String, Uri?) -> Unit, content: @Composable () -> Unit) {
-    if (isVisible) {
-        val name by rememberPreference(AccountNameKey, "")
-        com.arturo254.opentune.ui.screens.settings.AccountSettings(
-            LocalRuntimeNavigation.current,
-            onClose = { onSetupCompleted(name, null) },
-            latestVersionName = BuildConfig.VERSION_NAME,
-        )
-    } else content()
-}
-
 fun showsSettingsPane(backStack: List<NavBackStackEntry>, route: String?): Boolean =
     route != "settings" && (route?.startsWith("settings/") == true || route == "mochy_settings") &&
         backStack.any { it.destination.route == "settings" }
@@ -141,7 +126,7 @@ fun SongShareHost() {
                 song.id.startsWith("https://") -> song.id
                 else -> ""
             }
-            val text = "${song.title} — ${song.artists.joinToString { it.name }}\n$link"
+            val text = "${song.title} â€” ${song.artists.joinToString { it.name }}\n$link"
             context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, text)

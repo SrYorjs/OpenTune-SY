@@ -118,10 +118,18 @@ class GalaxOTBrandingContractTest {
         val v31 = source("res/values-v31/styles.xml")
         val draw = source("res/drawable/galaxot_launch_background.xml")
         assertTrue(base.contains("name=\"Theme.GalaxOT\" parent=\"Theme.OpenTune\""))
-        assertTrue(base.contains("@drawable/galaxot_launch_background"))
+        assertTrue(base.contains("name=\"Theme.GalaxOT.Starting\" parent=\"Theme.SplashScreen\""))
+        assertTrue(base.contains("name=\"postSplashScreenTheme\">@style/Theme.GalaxOT"))
+        assertTrue(base.contains("name=\"windowSplashScreenAnimatedIcon\">@drawable/galaxot_splash_mark"))
         assertTrue(v31.contains("android:windowSplashScreenBackground"))
-        assertTrue(v31.contains("@drawable/galaxot_launcher_foreground"))
+        assertTrue(v31.contains("name=\"android:windowSplashScreenAnimatedIcon\">@drawable/galaxot_splash_mark"))
+        assertFalse(v31.contains("windowSplashScreenIconBackgroundColor"))
         assertTrue(draw.contains("@color/galaxot_splash_background"))
+        assertTrue(draw.contains("@drawable/galaxot_splash_mark"))
+        val mark = source("res/drawable/galaxot_splash_mark.xml")
+        assertTrue(mark.contains("@drawable/galaxot_icon_transparent"))
+        for (dimension in listOf("288dp", "71.08085dp", "58.82553dp", "60.05106dp", "72.30638dp")) assertTrue(mark.contains(dimension))
+        assertTrue(source("res/values/galaxot_brand.xml").contains("name=\"galaxot_splash_background\">#000000</color>"))
         val intro = source("kotlin/com/arturo254/opentune/ui/original/launch/LaunchIntro.kt")
         assertTrue(intro.contains("R.drawable.galaxot_icon_transparent"))
         assertTrue(intro.contains("canvas.drawBitmap(bitmap, null, bounds, paint)"))
@@ -132,6 +140,25 @@ class GalaxOTBrandingContractTest {
         assertTrue(exit.contains("LaunchGate.onSplashGone()"))
         assertTrue(exit.contains("provider.remove()"))
         assertTrue(source("AndroidManifest.xml").contains("android:name=\".MainActivity\""))
+        val manifest = javax.xml.parsers.DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }
+            .newDocumentBuilder().parse(resource("AndroidManifest.xml"))
+        val activities = manifest.getElementsByTagName("activity")
+        val main = (0 until activities.length).map { activities.item(it) as org.w3c.dom.Element }
+            .single { it.getAttributeNS("http://schemas.android.com/apk/res/android", "name") == ".MainActivity" }
+        assertEquals("@style/Theme.GalaxOT.Starting", main.getAttributeNS("http://schemas.android.com/apk/res/android", "theme"))
+    }
+
+    @Test fun freshInstallDoesNotRequireAnAccountOrWriteMochySetupCompletion() {
+        val activity = source("kotlin/com/arturo254/opentune/MainActivity.kt")
+        val adapters = source("kotlin/com/arturo254/opentune/ui/original/adapters/ActivityRuntimeAdapters.kt")
+        for (removed in listOf("SetupWizardContainer", "SetupCompletedKey", "hasOnboardedOnThisInstall", "forceShowSetup")) {
+            assertFalse(activity.contains(removed))
+        }
+        assertFalse(adapters.contains("fun SetupWizardContainer"))
+        assertFalse(adapters.contains("screens.settings.AccountSettings("))
+        assertTrue(activity.contains("startDestination = intent?.getStringExtra(\"initial_navigation_route\") ?: when (tabOpenedFromShortcut ?: defaultOpenTab)"))
+        assertTrue(activity.contains("NavigationTab.HOME -> Screens.Home"))
+        assertTrue(activity.contains("installSplashScreen().handOffToLaunchIntro"))
     }
 
     @Test fun notificationsUseTheWhiteLogoInEveryDensity() {
