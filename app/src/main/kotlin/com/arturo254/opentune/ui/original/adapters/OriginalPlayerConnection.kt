@@ -4,6 +4,8 @@ import androidx.media3.common.Player
 import com.arturo254.opentune.extensions.getCurrentQueueIndex
 import com.arturo254.opentune.extensions.getQueueWindows
 import com.arturo254.opentune.playback.PlayerConnection
+import com.arturo254.opentune.utils.dataStore
+import com.arturo254.opentune.utils.get
 import com.arturo254.opentune.ui.original.player.models.ProgressState
 import com.arturo254.opentune.ui.original.player.models.QueueItemData
 import com.arturo254.opentune.ui.original.player.models.QueueState
@@ -24,7 +26,21 @@ class OriginalPlayerConnection(
     val scope: CoroutineScope,
     isPageActiveAndResumed: StateFlow<Boolean>,
 ) {
-    private val player = connection.player
+    val player = connection.player
+    val service = connection.service
+    val currentLyrics = connection.currentLyrics
+    val error = connection.error
+    val isPlaying = connection.isPlaying
+    val uiState by lazy { com.arturo254.opentune.ui.original.player.PlayerUiState(this) }
+    val skipDelayMs: Long get() = 0L
+    val lyricsOffsetMs = service.dataStore.data.map {
+        it[com.arturo254.opentune.constants.LyricsSyncOffsetKey] ?: 0
+    }.stateIn(scope, SharingStarted.WhileSubscribed(0), service.dataStore.get(com.arturo254.opentune.constants.LyricsSyncOffsetKey, 0))
+
+    fun seekToNext() = connection.seekToNext()
+    fun seekToPrevious() = connection.seekToPrevious()
+    fun isCurrentMusicVideo(): Boolean = player.currentMediaItem?.mediaMetadata?.extras
+        ?.getBoolean(com.arturo254.opentune.extensions.ExtraIsMusicVideo) == true
     val mediaMetadata = connection.mediaMetadata
     val currentSong = connection.currentSong
     val shuffleModeEnabled = connection.shuffleModeEnabled
@@ -72,6 +88,7 @@ class OriginalPlayerConnection(
     }.flowOn(Dispatchers.Main.immediate).stateIn(
         scope, SharingStarted.WhileSubscribed(0), initialTransportState to initialQueueState,
     )
+    val queueSnapshot = snapshots.map { it.second }.stateIn(scope, SharingStarted.WhileSubscribed(0), initialQueueState)
 
     val isEffectivelyPlaying = snapshots.map { it.first.isPlaying }
     val canSkipNext = snapshots.map { it.first.canSkipNext }
