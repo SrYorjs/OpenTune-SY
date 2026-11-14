@@ -26,27 +26,20 @@ class GalaxGlassIntegrationTest {
     }
 
     @Test fun actualRouteCaptureIsScopeSeparatedFromConsumingOverlays() {
-        val shell = source("MainActivityScaffold.kt")
-        assertTrue(shell.contains("rememberLayerBackdrop()"))
-        assertTrue(shell.contains("Modifier.layerBackdrop(liveLiquidBackdrop)"))
-        assertTrue(shell.contains("LocalGalaxLiquidBackdrop provides liveLiquidBackdrop"))
-        assertTrue(shell.contains("LocalGalaxLiquidBackdrop provides null"))
-        assertTrue(shell.contains("MainActivityFloatingToolbar("))
-        assertFalse(shell.contains("LocalLiquidBackdrop provides liveLiquidBackdrop"))
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.backgroundIsSeparate()
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.singleGlassRenderer()
     }
 
     @Test fun searchControlsSampleTheirBackgroundSiblingAndNotTheirOwnViewport() {
-        val scaffold = source("MainActivityScaffold.kt")
-        val search = source("MainActivityChrome.kt")
-        assertTrue(scaffold.contains("searchOverlayCapturesGlass = navigationState.active"))
-        assertTrue(scaffold.contains("liveLiquidBackdrop != null && !searchOverlayCapturesGlass"))
+        val search = source("ui/original/adapters/SearchPresentation.kt")
         val portal = source("ui/screens/search/PrismSearchBar.kt")
+        assertTrue(search.contains("LocalOriginalGlassState provides searchGlass"))
+        assertTrue(search.contains("UniversalSearchScreen(query.text, pureBlack, embedded = true)"))
         assertTrue(portal.contains("PrismAtmosphere(true, pureBlack, Modifier.matchParentSize().layerBackdrop(backdrop))"))
-        assertTrue(scaffold.contains("Modifier.layerBackdrop(liveLiquidBackdrop)"))
         assertTrue(portal.contains("LocalPrismBackdrop provides (if (active) backdrop else null)"))
-        assertFalse(search.contains(".then(searchBackdropModifier)"))
-        assertTrue(search.contains("UniversalSearchScreen("))
-        assertTrue(source("ui/component/FloatingNavigationToolbar.kt").contains(".galaxGlassEffect("))
+        assertFalse(search.contains(".layerBackdrop("))
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.backgroundIsSeparate()
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.singleGlassRenderer()
     }
 
     @Test fun playgroundCapturesOnlyBackgroundSibling() {
@@ -66,7 +59,6 @@ class GalaxGlassIntegrationTest {
     }
 
     @Test fun existingNavigationAndMiniPlayerUseNewFacade() {
-        assertTrue(source("ui/component/FloatingNavigationToolbar.kt").contains(".galaxGlassEffect("))
-        assertTrue(source("ui/player/visual/PlayerGlassEffect.kt").contains("galaxGlassEffect("))
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.singleGlassRenderer()
     }
 }

@@ -56,14 +56,14 @@ class GalaxPartSevenScreenAtlasTest {
 
     @Test
     fun mainTabNavigationAndPlayerRoutesRemainPreserved() {
-        val screens = source("ui/screens/Screens.kt")
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.routesAndStacks()
         val navigation = source("ui/screens/NavigationBuilder.kt")
+        val adapters = source("ui/original/adapters/ScreenAdapters.kt")
         val layout = source("ui/screens/settings/SettingsLayout.kt")
-        assertTrue(screens.contains("MainScreens = listOf(Home, Search, Library)"))
         assertTrue(navigation.contains("settings/appearance/player_studio"))
         assertTrue(navigation.contains("settings/appearance/galax_liquid"))
-        assertTrue(navigation.contains("UniversalSearchScreen("))
-        assertTrue(navigation.contains("LibraryScreen(") || navigation.contains("GalaxMainPages("))
+        assertTrue(adapters.contains("UniversalSearchScreen("))
+        assertTrue(adapters.contains("LibraryScreen("))
         assertTrue(layout.contains("SettingsProfileHeader()"))
         assertTrue(layout.contains("SettingsGroupCard("))
         assertTrue(source("core/designsystem/liquid/GalaxLiquidModel.kt").contains("LocalGalaxLiquidVariant"))

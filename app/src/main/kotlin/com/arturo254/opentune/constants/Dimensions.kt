@@ -24,8 +24,8 @@ const val CONTENT_TYPE_ARTIST = 3
 const val CONTENT_TYPE_ALBUM = 4
 const val CONTENT_TYPE_PLAYLIST = 5
 
-val FloatingToolbarHeight = 80.dp
-val SlimFloatingToolbarHeight = 80.dp
+val FloatingToolbarHeight = DefaultOpenTuneSizeTokens.floatingToolbarHeight
+val SlimFloatingToolbarHeight = DefaultOpenTuneSizeTokens.slimFloatingToolbarHeight
 val FloatingToolbarHorizontalPadding = DefaultOpenTuneSizeTokens.floatingToolbarHorizontalPadding
 val FloatingToolbarBottomPadding = DefaultOpenTuneSizeTokens.floatingToolbarBottomPadding
 val NavigationBarHeight = FloatingToolbarHeight

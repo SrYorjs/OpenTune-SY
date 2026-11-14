@@ -24,21 +24,17 @@ class GalaxLiquidExpansionTest {
     }
 
     @Test fun navigationSupportsSwipeAndSlidingGlassCapsule() {
-        val toolbar = source("ui/component/FloatingNavigationToolbar.kt")
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.routesAndStacks()
+        val nav = source("ui/original/component/AppNavigation.kt")
+        assertTrue(nav.contains("val slot = size.width / tabCount"))
+        assertTrue(nav.contains("start.animateTo(target"))
+        assertTrue(nav.contains("end.animateTo(target"))
+        assertTrue(nav.contains("tabTapped(lastTap, viewConfiguration.doubleTapTimeoutMillis"))
+        assertFalse(nav.contains("liquidTabDragFeedback"))
         val motion = source("core/designsystem/motion/GalaxMotionEngine.kt")
-        assertTrue(toolbar.contains("detectHorizontalDragGestures("))
-        assertTrue(toolbar.contains("val tabWidth = maxWidth / items.size"))
-        assertTrue(toolbar.contains("pagerState.currentPage + pagerState.currentPageOffsetFraction"))
-        assertTrue(toolbar.contains("pagerState.dispatchRawDelta("))
-        assertTrue(toolbar.contains("pagerState.animateScrollToPage(dragPosition.roundToInt())"))
-        assertFalse(toolbar.contains("val itemBounds = remember(items)"))
-        assertFalse(toolbar.contains("liquidTabDragFeedback"))
-        val pages = source("ui/screens/GalaxMainPages.kt")
-        assertTrue(pages.contains("HorizontalPager(state = pager"))
-        assertTrue(source("ui/screens/Screens.kt").contains("listOf(Home, Search, Library)"))
-        assertTrue(toolbar.contains("haptic(GalaxHapticCue.SELECTION)"))
         assertTrue(motion.contains("if (policy.reducedMotion) return EnterTransition.None"))
         assertTrue(motion.contains("if (policy.reducedMotion) return ExitTransition.None"))
+        assertTrue(source("MainActivity.kt").contains("AppMotion.durationScale"))
     }
 
     @Test fun oldButtonAndChipEntryPointsNowReachNewRenderer() {

@@ -13,12 +13,17 @@ class GalaxMotionIntegrationTest {
         File(root, "com/arturo254/opentune/$path").readText()
 
     @Test fun appNavigationUsesOneSharedMotionSourceForAllTransitions() {
-        val scaffold = source("MainActivityScaffold.kt")
-        assertTrue(scaffold.contains("val galaxMotion = OpenTuneDesignSystem.galaxMotion"))
-        assertTrue(scaffold.contains("animationSpec = galaxMotion.navigationBarSpec"))
-        assertTrue(scaffold.split("galaxEnterTransition(").size == 3)
-        assertTrue(scaffold.split("galaxExitTransition(").size == 3)
-        assertFalse(scaffold.contains("animationSpec = NavigationBarAnimationSpec"))
+        val host = source("MainActivity.kt")
+        val graph = source("ui/original/screens/NavigationBuilder.kt")
+        val motion = source("ui/original/utils/AppMotion.kt")
+        assertTrue(host.contains("createLifecycleAwareWindowRecomposer("))
+        assertTrue(host.contains("AppMotion.durationScale"))
+        assertTrue(host.split("defaultMotionEnter {").size == 3)
+        assertTrue(host.split("defaultMotionExit {").size == 3)
+        assertTrue(graph.split("motionEnter {").size == 3)
+        assertTrue(graph.split("motionExit {").size == 3)
+        assertTrue(motion.contains("if (AppMotion.enabled) transition() else EnterTransition.None"))
+        assertTrue(motion.contains("if (AppMotion.enabled) transition() else ExitTransition.None"))
     }
 
     @Test fun motionPreferenceIsSavedAndMaterialAndGlassRespectIt() {
@@ -41,18 +46,19 @@ class GalaxMotionIntegrationTest {
     }
 
     @Test fun sharedButtonsDispatchThroughExistingAppHapticPreference() {
-        val scaffold = source("MainActivityScaffold.kt")
+        val host = source("ui/original/adapters/ActivityThemeHost.kt")
         val interaction = source("core/designsystem/motion/GalaxInteractions.kt")
         val controls = source("core/designsystem/component/ControlComponents.kt")
-        assertTrue(scaffold.contains("LocalHapticFeedback provides customHaptic"))
-        assertTrue(scaffold.contains("EnableHapticFeedbackKey"))
+        val nav = source("ui/original/component/AppNavigation.kt")
+        assertTrue(host.contains("rememberPreference(EnableHapticFeedbackKey, true)"))
+        assertTrue(host.contains("LocalHapticFeedback provides guardedHaptics"))
+        assertTrue(host.contains("if (hapticsEnabled) platformHaptics.performHapticFeedback"))
         assertTrue(interaction.contains("LocalHapticFeedback.current"))
-        assertTrue(interaction.contains("GalaxHapticCue.SELECTION"))
         assertTrue(controls.contains("galaxPressFeedback(interactionSource, enabled)"))
         assertTrue(controls.contains("rememberGalaxHapticFeedback()"))
-        val toolbar = source("ui/component/FloatingNavigationToolbar.kt")
-        assertTrue(toolbar.contains("haptic(GalaxHapticCue.SELECTION)"))
-        assertTrue(toolbar.contains("onItemClick(screen, selected)"))
+        assertTrue(nav.contains("rememberGalaxHapticFeedback()"))
+        assertTrue(nav.contains("GalaxHapticCue.SELECTION"))
+        assertTrue(nav.contains("onItemClick(screen, isSelected)"))
         assertFalse(interaction.contains("Vibrator("))
     }
 }

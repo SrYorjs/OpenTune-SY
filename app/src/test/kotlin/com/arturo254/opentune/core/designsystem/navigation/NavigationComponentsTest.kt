@@ -22,13 +22,14 @@ class NavigationComponentsTest {
 
     @Test
     fun legacyToolbarUsesSharedLayoutAndRouteCallbacksRemainExternal() {
-        val src = File(root,"com/arturo254/opentune/ui/component/FloatingNavigationToolbar.kt").readText()
-        assertTrue(src.contains("OpenTuneNavigationDimensions.floatingHeight"))
-        assertTrue(src.contains("OpenTuneNavigationDimensions.floatingRadius"))
-        assertTrue(src.contains("onItemClick: (Screens, Boolean) -> Unit"))
-        val components = File(root,"com/arturo254/opentune/core/designsystem/navigation/NavigationComponents.kt").readText()
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.routesAndStacks()
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.singleGlassRenderer()
+        assertEquals(80.dp, com.arturo254.opentune.ui.original.component.OriginalNavigationBarSpace)
+        assertEquals(64.dp, com.arturo254.opentune.ui.original.component.NavBarHeight)
+        val host = File(root, "com/arturo254/opentune/MainActivity.kt").readText()
+        assertTrue(host.contains("OriginalNavigationBarSpace as NavigationBarHeight"))
+        val components = File(root, "com/arturo254/opentune/core/designsystem/navigation/NavigationComponents.kt").readText()
         assertTrue(components.contains("onNavigate: (String) -> Unit"))
-        // Comments/docs can mention NavController; only executable dependency is disallowed.
         assertTrue(!components.contains("import androidx.navigation.NavController"))
         assertTrue(!components.contains("NavController("))
     }

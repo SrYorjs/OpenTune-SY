@@ -21,18 +21,18 @@ class OverlayComponentsTest {
     @Test
     fun existingMenuStateAndContextCallbacksRemainExternal() {
         val menu = source("ui/component/BottomSheetMenu.kt")
-        val nav = source("ui/component/FloatingNavigationToolbar.kt")
         val components = source("core/designsystem/component/OverlayComponents.kt")
         assertTrue(menu.contains("OpenTuneSheet("))
         assertTrue(menu.contains("state.isVisible = false"))
-        // The navigation now has exactly three page targets. Its old overflow
-        // actions live on Home and keep their external playback/navigation owners.
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.singleGlassRenderer()
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.routesAndStacks()
+        val host = source("MainActivity.kt")
+        assertTrue(host.contains("BottomSheetMenu(state = currentMenuState)"))
+        assertTrue(host.contains("LocalMenuState provides currentMenuState"))
         val home = source("ui/screens/HomeScreen.kt")
-        assertTrue(nav.contains("onItemClick(screen, selected)"))
         assertTrue(home.contains("MusicRecognitionRoute"))
         assertTrue(home.contains("player?.playQueue("))
-        listOf("fun OpenTuneSheet(", "fun OpenTuneDialog(", "fun OpenTuneMenu(",
-            "fun OpenTuneContextMenu(", "fun OpenTuneMenuItem(").forEach { assertTrue(components.contains(it)) }
+        listOf("fun OpenTuneSheet(", "fun OpenTuneDialog(", "fun OpenTuneMenu(", "fun OpenTuneContextMenu(", "fun OpenTuneMenuItem(").forEach { assertTrue(components.contains(it)) }
         assertTrue(!components.contains("MusicService"))
         assertTrue(!components.contains("NavController"))
     }

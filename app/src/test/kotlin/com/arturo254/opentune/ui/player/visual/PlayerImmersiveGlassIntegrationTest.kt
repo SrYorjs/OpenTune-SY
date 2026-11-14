@@ -66,14 +66,13 @@ class PlayerImmersiveGlassIntegrationTest {
     }
 
     @Test fun bottomTabsAndPagesShareContinuousPagerPosition() {
-        val toolbar = source("ui/component/FloatingNavigationToolbar.kt")
-        val pages = source("ui/screens/GalaxMainPages.kt")
-        val scaffold = source("MainActivityScaffold.kt")
-        assertTrue(pages.contains("HorizontalPager(state = pager"))
-        assertTrue(toolbar.contains("pagerState.currentPage + pagerState.currentPageOffsetFraction"))
-        assertTrue(toolbar.contains("pagerState.dispatchRawDelta("))
-        assertTrue(toolbar.contains("pagerState.animateScrollToPage("))
-        assertFalse(scaffold.contains("var pageDrag"))
-        assertFalse(toolbar.contains("FloatingNavigationToolbarItem("))
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.routesAndStacks()
+        val nav = source("ui/original/component/AppNavigation.kt")
+        val host = source("MainActivity.kt")
+        assertTrue(nav.contains("TabOwnership("))
+        assertTrue(host.contains("tabOwnership.indexOf(targetState, stack)"))
+        assertTrue(host.contains("tabOwnership.indexOf(initialState, stack)"))
+        assertTrue(nav.contains(".navHighlight(selectedIndex, navigationItems.size)"))
+        assertFalse(source("ui/component/FloatingNavigationToolbar.kt").contains("pagerState.dispatchRawDelta("))
     }
 }

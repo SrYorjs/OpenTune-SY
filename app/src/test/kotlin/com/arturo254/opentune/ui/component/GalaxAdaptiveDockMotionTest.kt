@@ -31,23 +31,15 @@ class GalaxAdaptiveDockMotionTest {
 
     @Test
     fun appShellRetainsSingleGlassEngineAndBothNavigationEntryPoints() {
-        val root = listOf(File("src/main/kotlin"), File("app/src/main/kotlin"))
-            .firstOrNull(File::isDirectory) ?: error("Kotlin sources missing")
-        fun source(name: String) = File(root, "com/arturo254/opentune/$name").readText()
-        val shell = source("MainActivityScaffold.kt")
-        val player = source("ui/player/Player.kt")
-        val navigation = source("MainActivityChrome.kt")
-        val toolbar = source("ui/component/FloatingNavigationToolbar.kt")
-        val mini = source("ui/player/MiniPlayer.kt")
-        assertTrue(shell.contains(".nestedScroll(dockMotion.nestedScrollConnection)"))
-        assertTrue(shell.contains("collapsedDockNavigation = {"))
-        assertTrue(shell.contains("GalaxCompactNavigationOrb("))
-        assertTrue(player.contains("dockMergeProgress = 0f"))
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.singleGlassRenderer()
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.routesAndStacks()
+        val host = com.arturo254.opentune.contracts.OriginalNavigationContracts.source("MainActivity.kt")
+        val player = com.arturo254.opentune.contracts.OriginalNavigationContracts.source("ui/player/Player.kt")
+        assertTrue(host.contains("WideBarTabs("))
+        assertTrue(host.contains("AppNavigationBar("))
+        assertTrue(host.contains("LocalMiniPillFrame provides miniPill"))
+        assertTrue(host.contains("BottomSheetPlayer("))
         assertTrue(player.contains("GalaxCompactMiniPlayer("))
-        assertTrue(mini.contains("1f - dockMergeProgress"))
-        assertTrue(navigation.contains("selectedRoute = selectedNavigationRoute"))
-        assertTrue(toolbar.contains(".galaxGlassEffect("))
-        assertTrue(shell.contains("LocalGalaxLiquidVariant provides liquidVariant"))
-        assertTrue(shell.contains("LocalGalaxLiquidTuning provides liquidTuning"))
+        assertTrue(host.contains("selectedTabRoute = selectedTabRoute"))
     }
 }

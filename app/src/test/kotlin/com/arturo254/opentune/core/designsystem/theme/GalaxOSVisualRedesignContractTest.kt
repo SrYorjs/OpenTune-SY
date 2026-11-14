@@ -57,13 +57,10 @@ class GalaxOSVisualRedesignContractTest {
 
     @Test
     fun navigationAndLiquidTuningRemainUntouchedByVisualChange() {
-        val nav = source("ui/screens/Screens.kt")
-        val liquid = source("core/designsystem/liquid/GalaxLiquidModel.kt")
-        val tabs = source("ui/screens/GalaxMainPages.kt")
-        assertTrue(nav.contains("val MainScreens = listOf(Home, Search, Library)"))
-        assertTrue(tabs.contains("HorizontalPager("))
-        assertTrue(tabs.contains("state = pager"))
-        assertTrue(liquid.contains("LocalGalaxLiquidTuning"))
-        assertTrue(liquid.contains("LocalGalaxLiquidBackdrop"))
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.routesAndStacks()
+        com.arturo254.opentune.contracts.OriginalNavigationContracts.singleGlassRenderer()
+        val host = source("ui/original/adapters/ActivityGlassHost.kt")
+        for (key in listOf("GalaxLiquidCornerRadiusKey", "GalaxLiquidBlurKey", "GalaxLiquidRefractionHeightKey", "GalaxLiquidRefractionAmountKey", "GalaxLiquidChromaticKey", "GalaxLiquidTintKey")) assertTrue(host.contains(key))
+        assertTrue(host.contains(".bounded()"))
     }
 }

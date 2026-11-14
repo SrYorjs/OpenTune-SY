@@ -204,6 +204,8 @@ class TabOwnership(private val navigationItems: List<Screens>) {
 
 /** The bar itself, a stadium the mini player's 64dp matches. */
 internal val NavBarHeight = 64.dp
+internal val NavBarVerticalPadding = 8.dp
+internal val OriginalNavigationBarSpace = NavBarHeight + NavBarVerticalPadding * 2
 internal val NavBarShape = RoundedCornerShape(50)
 
 /** The lit tab's highlight sits this far in from the bar's top, bottom and both ends. */
@@ -247,7 +249,7 @@ fun AppNavigationBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
-                .padding(horizontal = 24.dp, vertical = 8.dp)
+                .padding(horizontal = 24.dp, vertical = NavBarVerticalPadding)
                 .align(Alignment.TopCenter)
                 .height(NavBarHeight)
                 .press3D(maxTilt = 4f, pressedScale = 0.985f)
@@ -363,6 +365,7 @@ internal fun RowScope.NavTab(
     val viewConfiguration = LocalViewConfiguration.current
     val interactionSource = remember { MutableInteractionSource() }
     val lastTap = remember { longArrayOf(0L) }
+    val haptic = com.arturo254.opentune.core.designsystem.motion.rememberGalaxHapticFeedback()
     val lit = animateFloatAsState(
         targetValue = if (isSelected) 1f else 0f,
         animationSpec = tween(200),
@@ -383,6 +386,7 @@ internal fun RowScope.NavTab(
                 interactionSource = interactionSource,
                 indication = RemoteFocus,
                 onClick = {
+                    haptic(com.arturo254.opentune.core.designsystem.motion.GalaxHapticCue.SELECTION)
                     tabTapped(lastTap, viewConfiguration.doubleTapTimeoutMillis, onDoubleTap) {
                         onItemClick(screen, isSelected)
                     }

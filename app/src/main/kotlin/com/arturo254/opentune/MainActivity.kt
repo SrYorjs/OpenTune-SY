@@ -163,8 +163,8 @@ import com.arturo254.opentune.ui.original.fullconstants.EnableHighRefreshRateKey
 import com.arturo254.opentune.constants.MiniPlayerBottomSpacing
 import com.arturo254.opentune.constants.MiniPlayerHeight
 import com.arturo254.opentune.constants.NavigationBarAnimationSpec
-import com.arturo254.opentune.constants.NavigationBarHeight
-import com.arturo254.opentune.constants.SlimNavBarHeight
+import com.arturo254.opentune.ui.original.component.OriginalNavigationBarSpace as NavigationBarHeight
+import com.arturo254.opentune.ui.original.component.OriginalNavigationBarSpace as SlimNavBarHeight
 import com.arturo254.opentune.constants.SlimNavBarKey
 import com.arturo254.opentune.constants.StopMusicOnTaskClearKey
 
