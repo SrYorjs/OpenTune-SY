@@ -33,7 +33,7 @@ fun OriginalPlayerConnection.miniLyrics(translationLanguage: StateFlow<Language?
             val raw = entity?.lyrics?.trim()?.takeUnless { it == LYRICS_NOT_FOUND }
             val lines = withContext(Dispatchers.Default) {
                 if (raw.isNullOrBlank()) emptyList() else if (raw.startsWith("[" ) || raw.startsWith("<")) {
-                    GalaxLyrics.parseLyrics(raw).map { it.toOriginalMiniLine() }
+                    com.arturo254.opentune.ui.original.lyrics.LyricsUtils.parseLyrics(raw)
                 } else listOf(LyricsEntry(0L, raw))
             }
             emit(OriginalMiniLyricsState(metadata?.id, metadata == null || entity != null, lines))

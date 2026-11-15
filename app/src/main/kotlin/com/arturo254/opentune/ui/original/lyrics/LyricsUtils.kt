@@ -3,7 +3,18 @@ import com.arturo254.opentune.ui.original.adapters.toOriginalMiniLine
 object LyricsUtils {
     private val parsed = android.util.LruCache<String, List<LyricsEntry>>(8)
     @Synchronized fun parseLyricsCached(raw: String): List<LyricsEntry> = parsed.get(raw) ?:
-        com.arturo254.opentune.lyrics.LyricsUtils.parseLyrics(raw).map { it.toOriginalMiniLine() }.also { parsed.put(raw, it) }
+        parseLyrics(raw).also { parsed.put(raw, it) }
+
+    /** Keep the same format dispatch as the retained player, including cached TTML bodies. */
+    fun parseLyrics(raw: String): List<LyricsEntry> {
+        val source = raw.trim()
+        val entries = if (com.arturo254.opentune.lyrics.LyricsUtils.isTtml(source)) {
+            com.arturo254.opentune.lyrics.LyricsUtils.parseTtml(source)
+        } else {
+            com.arturo254.opentune.lyrics.LyricsUtils.parseLyrics(source)
+        }
+        return entries.map { it.toOriginalMiniLine() }
+    }
     fun parsePlainLyrics(raw: String): List<LyricsEntry> = raw.lines().filter { it.isNotBlank() }.map { LyricsEntry(0L, it) }
     fun isUnsynced(lines: List<LyricsEntry>): Boolean = lines.isNotEmpty() && lines.all { it.time == lines.first().time && it.words.isNullOrEmpty() }
 
