@@ -31,6 +31,7 @@ class OriginalPlayerConnection(
     val scope: CoroutineScope,
     isPageActiveAndResumed: StateFlow<Boolean>,
 ) {
+    val galaxConnection: PlayerConnection get() = connection
     val player = connection.player
     val service = connection.service
     val currentLyrics = connection.currentLyrics
@@ -60,6 +61,8 @@ class OriginalPlayerConnection(
 
     val database = connection.database
     fun toggleLike() = connection.toggleLike()
+    fun startRadioSeamlessly() = connection.startRadioSeamlessly()
+    fun toggleLibrary() { scope.launch { val song = database.song(mediaMetadata.value?.id).first() ?: return@launch; database.query { update(song.song.toggleLibrary()) } } }
     val infiniteQueueEnabled = service.dataStore.data.map { it[com.arturo254.opentune.constants.AutoLoadMoreKey] ?: true }
         .stateIn(scope, SharingStarted.WhileSubscribed(0), service.dataStore.get(com.arturo254.opentune.constants.AutoLoadMoreKey, true))
     fun setInfiniteQueueEnabled(enabled: Boolean) { scope.launch {

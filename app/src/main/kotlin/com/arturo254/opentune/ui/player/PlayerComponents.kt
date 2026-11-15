@@ -269,7 +269,8 @@ fun PlayerTopActions(
     state: BottomSheetState,
     bottomSheetPageState: BottomSheetPageState,
     context: Context,
-    currentSongLiked: Boolean
+    currentSongLiked: Boolean,
+    onMenuOverride: (() -> Unit)? = null,
 ) {
     val playerActions = rememberPlayerActions(playerConnection)
     when (playerDesignStyle) {
@@ -389,7 +390,7 @@ fun PlayerTopActions(
                 // More menu button - cinematic glass card
                 Surface(
                     onClick = {
-                        menuState.showPlayerPanelMenu(
+                        onMenuOverride?.invoke() ?: menuState.showPlayerPanelMenu(
                             metadata = mediaMetadata,
                             navController = navController,
                             playerBottomSheetState = state,
@@ -446,7 +447,7 @@ fun PlayerTopActions(
                         .clip(RoundedCornerShape(24.dp))
                         .background(textButtonColor)
                         .clickable {
-                            menuState.showPlayerPanelMenu(
+                            onMenuOverride?.invoke() ?: menuState.showPlayerPanelMenu(
                                 metadata = mediaMetadata,
                                 navController = navController,
                                 playerBottomSheetState = state,
@@ -516,7 +517,7 @@ fun PlayerTopActions(
 
                 Surface(
                     onClick = {
-                        menuState.showPlayerPanelMenu(
+                        onMenuOverride?.invoke() ?: menuState.showPlayerPanelMenu(
                             metadata = mediaMetadata,
                             navController = navController,
                             playerBottomSheetState = state,
@@ -550,7 +551,7 @@ fun PlayerTopActions(
                 textBackgroundColor = textBackgroundColor,
                 onToggleFavorite = playerActions::toggleFavorite,
                 onOpenMenu = {
-                    menuState.showPlayerPanelMenu(
+                    onMenuOverride?.invoke() ?: menuState.showPlayerPanelMenu(
                         metadata = mediaMetadata,
                         navController = navController,
                         playerBottomSheetState = state,
@@ -591,7 +592,7 @@ fun PlayerTopActions(
                         .size(42.dp)
                         .clip(CircleShape)
                         .clickable {
-                            menuState.showPlayerPanelMenu(
+                            onMenuOverride?.invoke() ?: menuState.showPlayerPanelMenu(
                                 metadata = mediaMetadata,
                                 navController = navController,
                                 playerBottomSheetState = state,
@@ -1764,6 +1765,7 @@ fun PlayerControlsContent(
     onSliderValueChangeFinished: () -> Unit,
     currentFormat: FormatEntity? = null,
     onResetTimer: () -> Unit = {},
+    onMenuOverride: (() -> Unit)? = null,
 ) {
     val currentSong by playerConnection.currentSong.collectAsState(initial = null)
     val currentSongLiked = currentSong?.song?.liked == true
@@ -1806,7 +1808,8 @@ fun PlayerControlsContent(
             state = state,
             bottomSheetPageState = bottomSheetPageState,
             context = context,
-            currentSongLiked = currentSongLiked
+            currentSongLiked = currentSongLiked,
+            onMenuOverride = onMenuOverride,
         )
     }
 

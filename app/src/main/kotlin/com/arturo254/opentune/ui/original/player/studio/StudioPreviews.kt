@@ -34,7 +34,7 @@ import coil3.request.crossfade
 import com.arturo254.opentune.ui.original.adapters.LocalOriginalPlayerConnection
 import com.arturo254.opentune.ui.original.fullconstants.DefaultPlayerCoverStyle
 import com.arturo254.opentune.ui.original.fullconstants.PlayerBackgroundStyle
-import com.arturo254.opentune.ui.original.fullconstants.PlayerBackgroundStyleKey
+import com.arturo254.opentune.ui.original.adapters.OriginalClassicBackgroundStyleKey as PlayerBackgroundStyleKey
 import com.arturo254.opentune.ui.original.fullconstants.PlayerBottomBarStyle
 import com.arturo254.opentune.ui.original.fullconstants.PlayerBottomBarStyleKey
 import com.arturo254.opentune.ui.original.fullconstants.PlayerCoverStyle

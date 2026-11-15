@@ -264,7 +264,7 @@ private fun PosterPlayerStyle(actions: StyleActions, modifier: Modifier, preview
     val carousel = rememberStyleCarousel(preview)
     val backgroundClock = rememberBackdropClock(running = !preview)
     val backgroundStyle by com.arturo254.opentune.utils.rememberEnumPreference(
-        com.arturo254.opentune.ui.original.fullconstants.PlayerBackgroundStyleKey,
+        com.arturo254.opentune.ui.original.adapters.OriginalClassicBackgroundStyleKey,
         com.arturo254.opentune.ui.original.fullconstants.PlayerBackgroundStyle.COVER_GRADIENT,
     )
     val (visualizer) = com.arturo254.opentune.utils.rememberPreference(com.arturo254.opentune.ui.original.fullconstants.PosterVisualizerKey, defaultValue = false)

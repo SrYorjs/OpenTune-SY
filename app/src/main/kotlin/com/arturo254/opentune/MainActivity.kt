@@ -1097,6 +1097,12 @@ class MainActivity : ComponentActivity() {
                                         }
 
                                         CompositionLocalProvider(com.arturo254.opentune.ui.original.component.LocalMiniPillFrame provides miniPill) {
+                                            com.arturo254.opentune.ui.original.adapters.PlayerMountGate(
+                                                state = playerBottomSheetState,
+                                                navController = navController,
+                                                pureBlack = pureBlack,
+                                                modifier = Modifier.launchRise(order = 3),
+                                            ) {
                                             BottomSheetPlayer(
                                                 state = playerBottomSheetState,
                                                 lyricsSyncOffset = lyricsSyncOffset,
@@ -1104,6 +1110,7 @@ class MainActivity : ComponentActivity() {
                                                 pureBlack = pureBlack,
                                                 modifier = Modifier.launchRise(order = 3),
                                             )
+                                            }
                                         }
 
                                         if (wideBar != null) {

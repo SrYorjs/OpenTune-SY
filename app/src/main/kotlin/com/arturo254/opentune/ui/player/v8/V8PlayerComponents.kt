@@ -209,6 +209,7 @@ fun V8PlayerControlsContent(
     playerVolume: Float,
     onVolumeChange: (Float) -> Unit,
     legacyMain: Boolean = false,
+    onMenuOverride: (() -> Unit)? = null,
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -313,7 +314,7 @@ fun V8PlayerControlsContent(
                     Box(
                         modifier = Modifier.size(38.dp).clip(CircleShape)
                             .clickable {
-                                menuState.showPlayerPanelMenu(
+                                onMenuOverride?.invoke() ?: menuState.showPlayerPanelMenu(
                                     metadata = mediaMetadata,
                                     navController = navController,
                                     playerBottomSheetState = state,
@@ -354,7 +355,7 @@ fun V8PlayerControlsContent(
                 LiquidGlassIconButton(
                     accessibilityLabel = stringResource(R.string.more),
                     onClick = {
-                        menuState.showPlayerPanelMenu(
+                        onMenuOverride?.invoke() ?: menuState.showPlayerPanelMenu(
                             metadata = mediaMetadata,
                             navController = navController,
                             playerBottomSheetState = state,

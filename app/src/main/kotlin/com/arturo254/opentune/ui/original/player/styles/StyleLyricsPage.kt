@@ -115,7 +115,7 @@ private fun StyleOverlayPage(
     val nav = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
 
     val backgroundStyle by com.arturo254.opentune.utils.rememberEnumPreference(
-        com.arturo254.opentune.ui.original.fullconstants.PlayerBackgroundStyleKey,
+        com.arturo254.opentune.ui.original.adapters.OriginalClassicBackgroundStyleKey,
         com.arturo254.opentune.ui.original.fullconstants.PlayerBackgroundStyle.COVER_GRADIENT,
     )
 

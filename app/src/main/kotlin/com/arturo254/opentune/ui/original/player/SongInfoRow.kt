@@ -80,6 +80,7 @@ fun SongInfoRow(
     sideAction: com.arturo254.opentune.ui.original.player.studio.PlayerMenuAction = com.arturo254.opentune.ui.original.player.studio.PlayerMenuAction.LIKE,
     /** [sideAction] is on (repeat on, shuffle on, a sleep timer running...), for its highlight. */
     sideActive: Boolean = false,
+    sideEnabled: Boolean = true,
     onSideAction: (com.arturo254.opentune.ui.original.player.studio.PlayerMenuAction) -> Unit = {},
     /** Where the two round buttons sit, for the editor, which pulls copies of them forward. */
     onSidePlaced: ((androidx.compose.ui.layout.LayoutCoordinates) -> Unit)? = null,
@@ -226,6 +227,7 @@ fun SongInfoRow(
             } else {
                 PressScaleActionButton(
                     icon = sideAction.icon,
+                    enabled = sideEnabled,
                     tint = if (sideActive) Color.White else Color.White.copy(alpha = 0.85f),
                     containerColor = if (sideActive) Color.White.copy(alpha = 0.30f) else Color.White.copy(alpha = 0.15f),
                     onClick = { onSideAction(sideAction) },
@@ -411,6 +413,7 @@ fun PressScaleActionButton(
     badgeText: String? = null,
     hasShadow: Boolean = false,
     size: androidx.compose.ui.unit.Dp = 34.dp,
+    enabled: Boolean = true,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -430,13 +433,14 @@ fun PressScaleActionButton(
             .clickable(
                 indication = RemoteFocus,
                 interactionSource = interactionSource,
-                onClick = onClick
+                onClick = onClick,
+                enabled = enabled,
             )
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer { scaleX = scale; scaleY = scale }
+                .graphicsLayer { scaleX = scale; scaleY = scale; alpha = if (enabled) 1f else 0.35f }
         ) {
             Box(
                 contentAlignment = Alignment.Center,
