@@ -238,6 +238,7 @@ ksp {
 }
 
 dependencies {
+    implementation(libs.compose.material.icons.extended)
     implementation(project(":visual-foundation"))
       implementation(libs.original.splashscreen)
     implementation(libs.original.coil.svg)

@@ -1,0 +1,226 @@
+{
+  "revision": "f8a3593fd0c37edca3da9012c0eb4bc37e907cc7",
+  "files": [
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/PlayerControls.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/PlayerControls.kt",
+      "source_blob": "17fdb0e6e145b94185cb87d44ac4c12f3dd6e982",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/SongInfoRow.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/SongInfoRow.kt",
+      "source_blob": "25d6f8f2c7cfeeb6ea4c5e00c72d706e3b17921c",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/PlayerHandle.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/PlayerHandle.kt",
+      "source_blob": "2e7008dd2695fdd1c16bc26a7ccc034c29c27898",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/PlayerProgressSlider.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/PlayerProgressSlider.kt",
+      "source_blob": "8578e2b5c6d263abfdc15d74181dc17a65c4ba19",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/PlayerVolumeBar.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/PlayerVolumeBar.kt",
+      "source_blob": "bbe3a26456438a29bf2c1b400873959c78bb9992",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/PlayerBottomCardStack.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/PlayerBottomCardStack.kt",
+      "source_blob": "44d54b641e9f2cfb1707b98544103f0f36276d29",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/LikeBurst.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/LikeBurst.kt",
+      "source_blob": "456c9d0449db3f7110ab763f0672f17272898c12",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/LyricsScreen.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/LyricsScreen.kt",
+      "source_blob": "b7f5aa8f2e914da8cee77517463de192c0c5340c",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/QueueScreen.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/QueueScreen.kt",
+      "source_blob": "269664b0e12eb24eabd9aee9b786522e3cd3ae11",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/LyricsSourceFooter.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/LyricsSourceFooter.kt",
+      "source_blob": "8792c99fa373e880960a26fabdcc0b685f68d313",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/LyricsStagger.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/LyricsStagger.kt",
+      "source_blob": "b72ff750756c35b9e264daae853638e1fe577f1a",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/StreamFormatBadge.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/StreamFormatBadge.kt",
+      "source_blob": "cb99add82a9821a4f8b257bb3ffbd0e4a1c1406e",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/PlayerLayoutTweaks.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/PlayerLayoutTweaks.kt",
+      "source_blob": "635811261b0d3e77423dd984771da2721df0ccfa",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/SeamBlur.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/SeamBlur.kt",
+      "source_blob": "eea7416b913c3016162990d8c783da3fa23146f6",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/ChevronMenuLabel.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/ChevronMenuLabel.kt",
+      "source_blob": "712f400cdd1b1d2d556b677437d5d2c1d31495a8",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/flagship/FlagshipTransport.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/flagship/FlagshipTransport.kt",
+      "source_blob": "9f77afb9f9b005ec3dc2609f9a5a651c1e49e492",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/flagship/FlagshipLandscape.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/flagship/FlagshipLandscape.kt",
+      "source_blob": "e65e2874401a42d9cadc64eca027768b7cc4a44d",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/flagship/FlagshipBottomBar.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/flagship/FlagshipBottomBar.kt",
+      "source_blob": "d1dde47eb359b464a92142a660ab17e3fd5bf599",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/flagship/PagesPill.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/flagship/PagesPill.kt",
+      "source_blob": "01d6bc6942373e67a502cccdbfa2e2f6d31b5c41",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/flagship/SpeakerIcons.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/flagship/SpeakerIcons.kt",
+      "source_blob": "fbfb143ad3a68389a606ed8baccb803d76a8dd60",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/flagship/ControlsShade.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/flagship/ControlsShade.kt",
+      "source_blob": "9b35a7f0b92df01a447cb43cf211594d91e1afca",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/flagship/CoverFrost.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/flagship/CoverFrost.kt",
+      "source_blob": "ea720ff7bfa0468c64c0e63b1eaeef53bf5377da",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/studio/PlayerMenuActions.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/studio/PlayerMenuActions.kt",
+      "source_blob": "af18173ce45677a41ee3d065dd284b845d0705bd",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/ButtonStyles.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/ButtonStyles.kt",
+      "source_blob": "258f1cf6f1c93c4a7ac6bb3bf6fb0de494fba738",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/SeekBarStyles.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/SeekBarStyles.kt",
+      "source_blob": "b81999cd14563bf3089b834f201757e82dfa6e21",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/component/DefaultPlayerSeekBarSlider.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/component/DefaultPlayerSeekBarSlider.kt",
+      "source_blob": "4e6861607830e4498e1d85988560fe52e241ec1c",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/playback/StreamFacts.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/playback/StreamFacts.kt",
+      "source_blob": "4d6b0eb169b5ba4c93788feab6b0ec7ffebd8972",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/share/LyricsShareSession.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/share/LyricsShareSession.kt",
+      "source_blob": "127b5b2dd662c53aa1dee23921918ede71f881db",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/share/ShareChoreography.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/share/ShareChoreography.kt",
+      "source_blob": "6ab1a6fb9941e26a58c3ac03dbe609a725017f80",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/theme/ArtworkPalette.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/theme/ArtworkPalette.kt",
+      "source_blob": "684a8475a13cc08b33d6af59e94382dbb506605d",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/MixingNote.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/MixingNote.kt",
+      "source_blob": "ac63ad5ccef2e4fefd11cd26e4c647ef094aed95",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/TvPlayerRemote.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/TvPlayerRemote.kt",
+      "source_blob": "30e2bcc0385eb4f7b9a7b1133980159911e38620",
+      "mode": "complete_with_compatibility_adaptations"
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/styles/StyleKit.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/styles/StyleSongSwipe.kt",
+      "source_blob": "899d602b88d1d115dedaffc282fd100c9681fdc6",
+      "mode": "direct_dependency_extraction",
+      "declarations": [
+        "whileStyleInteractive",
+        "styleSongSwipe",
+        "SwipeFling"
+      ]
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/share/ShareFlight.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/share/ShareBounds.kt",
+      "source_blob": "dabfa671db1c3f9540be8dd51a6441597a7d0967",
+      "mode": "direct_dependency_extraction",
+      "declarations": [
+        "fullBoundsInWindow"
+      ]
+    },
+    {
+      "source": "app/src/main/kotlin/com/mochyy/mochymusic/ui/player/StreamFailureUi.kt",
+      "destination": "app/src/main/kotlin/com/arturo254/opentune/ui/original/player/StreamErrorAdapters.kt",
+      "source_blob": "b7c126db5d94fe4a5d7b6f46271269da90234722",
+      "mode": "direct_dependency_extraction",
+      "declarations": [
+        "streamFailureOverlay"
+      ]
+    }
+  ]
+}

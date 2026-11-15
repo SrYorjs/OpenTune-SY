@@ -12,3 +12,5 @@ val EnableElementBlurAnimatorKey = booleanPreferencesKey("enableElementBlurAnima
 val ElementBlurKey = booleanPreferencesKey("elementBlur")
 val AnimationSpeedKey = floatPreferencesKey("animationSpeed")
 enum class BlurQuality { LOW, HIGH }
+
+val PlayerHorizontalPadding = androidx.compose.ui.unit.Dp(32f)

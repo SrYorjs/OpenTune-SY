@@ -1,5 +1,12 @@
 package com.arturo254.opentune.ui.original.lyrics
+import com.arturo254.opentune.ui.original.adapters.toOriginalMiniLine
 object LyricsUtils {
+    private val parsed = android.util.LruCache<String, List<LyricsEntry>>(8)
+    @Synchronized fun parseLyricsCached(raw: String): List<LyricsEntry> = parsed.get(raw) ?:
+        com.arturo254.opentune.lyrics.LyricsUtils.parseLyrics(raw).map { it.toOriginalMiniLine() }.also { parsed.put(raw, it) }
+    fun parsePlainLyrics(raw: String): List<LyricsEntry> = raw.lines().filter { it.isNotBlank() }.map { LyricsEntry(0L, it) }
+    fun isUnsynced(lines: List<LyricsEntry>): Boolean = lines.isNotEmpty() && lines.all { it.time == lines.first().time && it.words.isNullOrEmpty() }
+
     const val LineLeadInMs = 300L
 
     /**

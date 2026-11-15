@@ -1,5 +1,10 @@
 package com.arturo254.opentune.ui.original.adapters
 
+import androidx.datastore.preferences.core.edit
+import androidx.media3.common.Timeline
+import androidx.media3.exoplayer.source.ShuffleOrder.DefaultShuffleOrder
+import com.arturo254.opentune.ui.original.playback.StreamFacts
+import kotlinx.coroutines.launch
 import androidx.media3.common.Player
 import com.arturo254.opentune.extensions.getCurrentQueueIndex
 import com.arturo254.opentune.extensions.getQueueWindows
@@ -37,6 +42,11 @@ class OriginalPlayerConnection(
         it[com.arturo254.opentune.constants.LyricsSyncOffsetKey] ?: 0
     }.stateIn(scope, SharingStarted.WhileSubscribed(0), service.dataStore.get(com.arturo254.opentune.constants.LyricsSyncOffsetKey, 0))
 
+    fun seekTo(positionMs: Long) {
+        // Same crossfade realignment as GalaxOT PlayerActions: visible metadata can lead Media3.
+        if (mediaMetadata.value?.id != null && mediaMetadata.value?.id != player.currentMediaItem?.mediaId) player.seekToNext()
+        player.seekTo(positionMs)
+    }
     fun seekToNext() = connection.seekToNext()
     fun seekToPrevious() = connection.seekToPrevious()
     fun isCurrentMusicVideo(): Boolean = player.currentMediaItem?.mediaMetadata?.extras
@@ -46,6 +56,62 @@ class OriginalPlayerConnection(
     val shuffleModeEnabled = connection.shuffleModeEnabled
     val repeatMode = connection.repeatMode
     val playbackState = connection.playbackState
+
+    val database = connection.database
+    fun toggleLike() = connection.toggleLike()
+    val infiniteQueueEnabled = service.dataStore.data.map { it[com.arturo254.opentune.constants.AutoLoadMoreKey] ?: true }
+        .stateIn(scope, SharingStarted.WhileSubscribed(0), service.dataStore.get(com.arturo254.opentune.constants.AutoLoadMoreKey, true))
+    fun setInfiniteQueueEnabled(enabled: Boolean) { scope.launch {
+        service.dataStore.edit { it[com.arturo254.opentune.constants.AutoLoadMoreKey] = enabled }
+        if (enabled) service.onInfiniteQueueEnabled() else service.onInfiniteQueueDisabled()
+    } }
+    private fun mediaIndexOf(uid: Int): Int? {
+        val timeline = player.currentTimeline
+        val window = Timeline.Window()
+        // Int UIDs are Mochy's contract. Reject hash collisions rather than edit the wrong item.
+        return (0 until timeline.windowCount).filter { timeline.getWindow(it, window).uid.hashCode() == uid }.singleOrNull()
+    }
+    fun playQueueItem(uid: Int) { val index = mediaIndexOf(uid) ?: return
+        player.seekToDefaultPosition(index)
+        if (player.playbackState == Player.STATE_IDLE || player.playbackState == Player.STATE_ENDED) player.prepare()
+        player.playWhenReady = true
+    }
+    fun moveQueueItem(uid: Int, afterUid: Int) {
+        val from = mediaIndexOf(uid) ?: return
+        val after = mediaIndexOf(afterUid) ?: return
+        if (from == after) return
+        if (!player.shuffleModeEnabled) player.moveMediaItem(from, if (from < after) after else after + 1)
+        else {
+            val timeline = player.currentTimeline
+            val order = mutableListOf<Int>()
+            var index = timeline.getFirstWindowIndex(true)
+            while (index != androidx.media3.common.C.INDEX_UNSET && order.size < timeline.windowCount) {
+                order.add(index); index = timeline.getNextWindowIndex(index, Player.REPEAT_MODE_OFF, true)
+            }
+            order.remove(from); order.add(order.indexOf(after) + 1, from)
+            player.setShuffleOrder(DefaultShuffleOrder(order.toIntArray(), System.currentTimeMillis()))
+        }
+    }
+    fun playQueueItemNext(uid: Int) {
+        val index = mediaIndexOf(uid) ?: return
+        if (index == player.currentMediaItemIndex) return
+        val item = player.getMediaItemAt(index)
+        player.removeMediaItem(index)
+        service.playNext(listOf(item))
+    }
+    fun removeQueueItems(uids: Collection<Int>) {
+        uids.mapNotNull(::mediaIndexOf).distinct().filter { it != player.currentMediaItemIndex }.sortedDescending().forEach(player::removeMediaItem)
+    }
+    fun streamFacts(mediaId: String): Flow<StreamFacts> = combine(database.format(mediaId), callbackFlow {
+        fun publish() { trySend(if (player.currentMediaItem?.mediaId == mediaId) StreamFacts.selectedAudio(player.currentTracks) else null) }
+        val listener = object : Player.Listener { override fun onEvents(player: Player, events: Player.Events) = publish() }
+        player.addListener(listener); publish(); awaitClose { player.removeListener(listener) }
+    }.flowOn(Dispatchers.Main.immediate)) { stored, decoded ->
+        StreamFacts(
+            codec = decoded?.let { StreamFacts.codecOf(it.sampleMimeType, it.codecs) } ?: stored?.let { StreamFacts.of(it).codec },
+            sampleRate = decoded?.sampleRate?.takeIf { it > 0 } ?: stored?.sampleRate?.takeIf { it > 0 },
+        )
+    }
 
     private fun transport() = TransportState(
         isPlaying = player.playWhenReady && player.playbackState != Player.STATE_ENDED,
@@ -90,7 +156,7 @@ class OriginalPlayerConnection(
     )
     val queueSnapshot = snapshots.map { it.second }.stateIn(scope, SharingStarted.WhileSubscribed(0), initialQueueState)
 
-    val isEffectivelyPlaying = snapshots.map { it.first.isPlaying }
+    val isEffectivelyPlaying = snapshots.map { it.first.isPlaying }.stateIn(scope, SharingStarted.WhileSubscribed(0), initialTransportState.isPlaying)
     val canSkipNext = snapshots.map { it.first.canSkipNext }
     val canSkipPrevious = snapshots.map { it.first.canSkipPrevious }
     val queueItems = snapshots.map { it.second.items }
