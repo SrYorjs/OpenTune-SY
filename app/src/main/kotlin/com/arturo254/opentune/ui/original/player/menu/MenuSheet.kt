@@ -190,6 +190,7 @@ fun MenuSheetSurface(
 
     dismissEnabled: Boolean = true,
     revealProvider: ((Float) -> Unit)? = null,
+    ownGlassSource: Boolean = false,
     content: @Composable ColumnScope.(dragHandle: Modifier) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -531,7 +532,9 @@ fun MenuSheetSurface(
             }
 
             CompositionLocalProvider(LocalMenuSheetClose provides closeSheet) {
-                content(dragHandle)
+                if (ownGlassSource) {
+                    com.arturo254.opentune.ui.original.adapters.OriginalStudioGlassScope(background = { Box(Modifier.fillMaxSize().background(MenuSurface)) }, modifier = Modifier.fillMaxWidth()) { Column { content(dragHandle) } }
+                } else content(dragHandle)
             }
         }
     }

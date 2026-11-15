@@ -47,6 +47,7 @@ class OriginalPlayerConnection(
         if (mediaMetadata.value?.id != null && mediaMetadata.value?.id != player.currentMediaItem?.mediaId) player.seekToNext()
         player.seekTo(positionMs)
     }
+    fun playQueue(queue: com.arturo254.opentune.playback.queues.Queue) = connection.playQueue(queue)
     fun seekToNext() = connection.seekToNext()
     fun seekToPrevious() = connection.seekToPrevious()
     fun isCurrentMusicVideo(): Boolean = player.currentMediaItem?.mediaMetadata?.extras
