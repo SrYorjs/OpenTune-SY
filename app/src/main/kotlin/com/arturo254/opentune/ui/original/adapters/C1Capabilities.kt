@@ -3,7 +3,7 @@ package com.arturo254.opentune.ui.original.adapters
 object C1Capabilities {
  const val parallelTranslationAvailable = false
  val unavailable = mapOf(
-  "outputRouting" to "GalaxOT has no Mochy output/Cast backend",
+  "outputRouting" to "Device output and casting are unavailable",
   "providerAttribution" to "LyricsEntity stores only id and lyrics",
   "autoplayProvenance" to "Queue windows do not expose the service's private auto-added set",
   "wordRuby" to "Only whole-line Japanese/Korean romanization exists",

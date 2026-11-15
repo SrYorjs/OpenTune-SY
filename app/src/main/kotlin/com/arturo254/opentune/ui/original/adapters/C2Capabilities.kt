@@ -5,9 +5,9 @@ object C2Capabilities {
   action != com.arturo254.opentune.ui.original.player.studio.PlayerMenuAction.OUTPUT &&
   action != com.arturo254.opentune.ui.original.player.studio.PlayerMenuAction.TRANSLATE_LYRICS
  val unavailable = mapOf(
-  "lookModules" to "GalaxOT has no active Mochy look-module runtime",
-  "audioSpectrum" to "GalaxOT does not expose a PCM spectrum tap",
+  "lookModules" to "Look modules are unavailable",
+  "audioSpectrum" to "Audio spectrum is unavailable",
   "parallelTranslation" to "Pending C6; existing translated lyric bodies remain real",
-  "galaxMochyEditor" to "Mochy layout editor cannot edit V1?V17; selection remains available"
+  "galaxMochyEditor" to "Layout editing is unavailable for V1-V17; selection remains available"
  )
 }

@@ -12,9 +12,9 @@ class OriginalPlayerMountContractTest {
    .first { File(it, "app/src/main/kotlin").isDirectory }
   return File(root, "app/src/main/kotlin/com/arturo254/opentune/" + relative).readText()
  }
- @Test fun safetySwitchKeepsTheCurrentMountByDefault() {
-  assertFalse(USE_ORIGINAL_PLAYER)
-  assertEquals(PlayerMount.CURRENT, playerMount())
+ @Test fun activationSelectsTheOriginalAndRetainsRollback() {
+  assertTrue(USE_ORIGINAL_PLAYER)
+  assertEquals(PlayerMount.ORIGINAL, playerMount())
   assertEquals(PlayerMount.CURRENT, playerMount(false))
  }
  @Test fun oneSwitchSelectsTheOriginalMount() { assertEquals(PlayerMount.ORIGINAL, playerMount(true)) }
@@ -80,6 +80,15 @@ class OriginalPlayerMountContractTest {
    assertTrue(it.contains("onMenuOverride: (() -> Unit)? = null"))
    assertTrue(it.contains("onMenuOverride?.invoke() ?: menuState.showPlayerPanelMenu("))
   }
+ }
+
+ @Test fun unavailableMessagesHaveNoBrandOrBrokenVersionRange() {
+  val messages = C1Capabilities.unavailable.values + C2Capabilities.unavailable.values
+  val brand = Regex("Mochy|GalaxOT", RegexOption.IGNORE_CASE)
+  messages.forEach { assertFalse(it, brand.containsMatchIn(it)); assertFalse(it, it.contains("V1?V17")) }
+ }
+ @Test fun ipodRootHasAnUnbrandedVisibleTitle() {
+  assertEquals("Music", com.arturo254.opentune.ui.original.player.ipod.IpodPage.Main.title)
  }
 
 }

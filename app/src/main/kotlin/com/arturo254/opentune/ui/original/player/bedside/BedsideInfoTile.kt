@@ -96,11 +96,12 @@ private fun LyricsTile(ink: BedsideInk, padding: BedsideInsets, modifier: Modifi
 // the day over the hours over the minutes, as big as the tile allows
 @Composable
 private fun StackedTile(time: BedsideTime, ink: BedsideInk, modifier: Modifier) {
+    val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
     BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
         val line = minOf(maxHeight * 0.3f, maxWidth * 0.36f)
         val style = clockStyle(line, FontWeight.ExtraBold, lineHeight = 0.86f)
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            BasicText(time.shortDate.lowercase(Locale.getDefault()), style = labelStyle(line * 0.17f, FontWeight.Bold), color = ink.main)
+            BasicText(time.shortDate.lowercase(locale), style = labelStyle(line * 0.17f, FontWeight.Bold), color = ink.main)
             Spacer(Modifier.height(line * 0.1f))
             FlipDigits(time.hours.padStart(2, '0'), style, ink.main)
             FlipDigits(time.minutes, style, ink.main)

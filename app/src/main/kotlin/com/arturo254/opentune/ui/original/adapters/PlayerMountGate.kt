@@ -5,8 +5,8 @@ import androidx.navigation.NavController
 import com.arturo254.opentune.LocalPlayerConnection
 import com.arturo254.opentune.ui.original.component.BottomSheetState
 import kotlinx.coroutines.flow.MutableStateFlow
-/** C4 switches only this constant. False never evaluates/mounts the new tree. */
-internal const val USE_ORIGINAL_PLAYER = false
+/** Active original mount. Set false to restore the retained current mount without mounting this tree. */
+internal const val USE_ORIGINAL_PLAYER = true
 internal enum class PlayerMount { CURRENT, ORIGINAL }
 internal fun playerMount(original: Boolean = USE_ORIGINAL_PLAYER) = if (original) PlayerMount.ORIGINAL else PlayerMount.CURRENT
 @Composable fun PlayerMountGate(
