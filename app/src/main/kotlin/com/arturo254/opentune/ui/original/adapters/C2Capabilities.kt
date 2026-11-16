@@ -7,7 +7,6 @@ object C2Capabilities {
  val unavailable = mapOf(
   "lookModules" to "Look modules are unavailable",
   "audioSpectrum" to "Audio spectrum is unavailable",
-  "parallelTranslation" to "Pending C6; existing translated lyric bodies remain real",
-  "galaxMochyEditor" to "Layout editing is unavailable for V1-V17; selection remains available"
+  "parallelTranslation" to "Pending C6; existing translated lyric bodies remain real"
  )
 }

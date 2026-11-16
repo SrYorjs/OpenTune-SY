@@ -324,6 +324,7 @@ private fun PlayerSheet(
     var coverStyle by rememberEnumPreference(PlayerCoverStyleKey, DefaultPlayerCoverStyle)
     val store = androidx.compose.ui.platform.LocalContext.current.dataStore
     val storedPreferences by store.data.collectAsState(initial = null)
+    LaunchedEffect(store) { store.edit { OriginalStyleCatalog.migrate(it) } }
     val savedChoice = storedPreferences?.let(OriginalStyleCatalog::read) ?: return
     var pickedChoice by remember { mutableStateOf<OriginalStyleChoice?>(null) }
     val currentChoice = pickedChoice ?: savedChoice
@@ -1016,7 +1017,7 @@ private fun PlayerSheet(
                         com.arturo254.opentune.ui.original.player.styles.LocalStyleInteractive provides styleInteractive,
                         com.arturo254.opentune.ui.original.player.styles.LocalStyleCovered provides styleCoveredNow,
                     ) {
-                        if (currentChoice.galax != null) GalaxPlayerSurface(currentChoice.galax, navController, state, styleActions = styleActions) else com.arturo254.opentune.ui.original.player.styles.AlternatePlayerStyle(
+                        com.arturo254.opentune.ui.original.player.styles.AlternatePlayerStyle(
                             style = playerStyle,
                             actions = styleActions,
                             // under a lyrics page that fills the screen it needn't be drawn
@@ -1779,7 +1780,6 @@ private fun PlayerSheet(
         PlayerSelectorOverlay(
             studio = studio,
             styles = playerStyles,
-            galaxPreview = { design -> GalaxPlayerSurface(design, navController, state, preview = true, styleActions = styleActions) },
             onSet = { index, velocity ->
                 val choice = playerStyles[index]
                 val restyled = choice != currentChoice

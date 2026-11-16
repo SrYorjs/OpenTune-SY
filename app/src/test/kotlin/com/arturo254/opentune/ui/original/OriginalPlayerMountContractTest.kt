@@ -18,13 +18,11 @@ class OriginalPlayerMountContractTest {
   assertEquals(PlayerMount.CURRENT, playerMount(false))
  }
  @Test fun oneSwitchSelectsTheOriginalMount() { assertEquals(PlayerMount.ORIGINAL, playerMount(true)) }
- @Test fun allSeventeenRouteToTheirRealSceneFamilies() {
-  val counts = PlayerDesignStyle.entries.groupingBy(::galaxSceneFamily).eachCount()
-  assertEquals(mapOf(GalaxSceneFamily.LEGACY to 7, GalaxSceneFamily.APPLE to 1,
-   GalaxSceneFamily.STUDIO to 7, GalaxSceneFamily.IMMERSIVE to 1, GalaxSceneFamily.VINJAX to 1), counts)
-  assertEquals(GalaxSceneFamily.APPLE, galaxSceneFamily(PlayerDesignStyle.V8))
-  assertEquals(GalaxSceneFamily.IMMERSIVE, galaxSceneFamily(PlayerDesignStyle.V16))
-  assertEquals(GalaxSceneFamily.VINJAX, galaxSceneFamily(PlayerDesignStyle.V17))
+ @Test fun removedThemeRenderersAreAbsentFromOriginalHost() {
+  val root = source("ui/original/player/BottomSheetPlayer.kt")
+  val selector = source("ui/original/player/studio/PlayerSelector.kt")
+  assertFalse(root.contains("GalaxPlayerSurface")); assertFalse(selector.contains("galaxPreview"))
+  assertTrue(root.contains("OriginalStyleCatalog.migrate(it)"))
  }
  @Test fun originalEditorCannotOverwriteTheSavedGalaxBackground() {
   assertEquals("playerBackgroundStyle", PlayerBackgroundStyleKey.name)
@@ -41,27 +39,17 @@ class OriginalPlayerMountContractTest {
   assertTrue(gate.contains("PlayerMount.CURRENT -> current()"))
   assertTrue(gate.contains("ui.original.player.BottomSheetPlayer("))
  }
- @Test fun unifiedSelectorUsesNativeRenderersAndBlocksPreviewInput() {
+ @Test fun selectorDisposesOffscreenPreviewsAndKeepsCapabilityFilters() {
   val root = source("ui/original/player/BottomSheetPlayer.kt")
-  val renderer = source("ui/original/adapters/GalaxPlayerSurface.kt")
-  assertTrue(root.contains("styles = playerStyles"))
-  assertTrue(root.contains("galaxPreview = { design -> GalaxPlayerSurface("))
-  assertTrue(renderer.contains("if (preview) Modifier.inert()"))
-  listOf("StudioVisualScene(", "StudioThemeV16(", "VinJaxPlayerScene(", "V8PlayerScene(",
-   "V8PlayerControlsContent(", "PlayerControlsContent(", "PlayerLayout(").forEach { assertTrue(it, renderer.contains(it)) }
+  val selector = source("ui/original/player/studio/PlayerSelector.kt")
+  assertTrue(selector.contains("if (composed) {"))
   assertTrue(root.contains(".filter(C2Capabilities::actionAvailable)"))
   assertTrue(root.contains("sideEnabled = C2Capabilities.actionAvailable(menuLayout.side)"))
  }
- @Test fun videoReturnKeepsEveryGalaxThemeAndBothPreferenceNamespaces() {
-  OriginalStyleCatalog.galax.forEach { choice ->
-   val preferences = mutablePreferencesOf(com.arturo254.opentune.constants.PlayerDesignStyleKey to choice.galax!!.name)
-   val returnId = choice.id
-   OriginalStyleCatalog.select(preferences, OriginalStyleChoice(mochy = com.arturo254.opentune.ui.original.fullconstants.PlayerStyle.VIDEO))
-   assertEquals(choice.galax!!.name, preferences[com.arturo254.opentune.constants.PlayerDesignStyleKey])
-   val restored = resolveOriginalVideoReturn(returnId)
-   assertEquals(choice, restored)
-   OriginalStyleCatalog.select(preferences, restored!!)
-   assertEquals(choice, OriginalStyleCatalog.read(preferences))
+ @Test fun oldVideoReturnIdsCannotRestoreRemovedThemes() {
+  PlayerDesignStyle.entries.forEach { assertNull(resolveOriginalVideoReturn("galax:" + it.name)) }
+  OriginalStyleCatalog.choices.filter { it.mochy != com.arturo254.opentune.ui.original.fullconstants.PlayerStyle.VIDEO }.forEach {
+   assertEquals(it, resolveOriginalVideoReturn(it.id))
   }
  }
  @Test fun legacyVideoReturnAliasesRemainReadable() {
@@ -72,10 +60,8 @@ class OriginalPlayerMountContractTest {
  }
 
  @Test fun nativeMenusKeepTheirDefaultButAcceptTheOriginalFilteredHost() {
-  val renderer = source("ui/original/adapters/GalaxPlayerSurface.kt")
   val legacy = source("ui/player/PlayerComponents.kt")
   val apple = source("ui/player/v8/V8PlayerComponents.kt")
-  assertEquals(2, renderer.split("onMenuOverride = styleActions.onOtherMenu").size - 1)
   listOf(legacy, apple).forEach {
    assertTrue(it.contains("onMenuOverride: (() -> Unit)? = null"))
    assertTrue(it.contains("onMenuOverride?.invoke() ?: menuState.showPlayerPanelMenu("))

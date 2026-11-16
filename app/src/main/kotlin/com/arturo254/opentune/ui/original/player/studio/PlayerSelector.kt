@@ -60,7 +60,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.arturo254.opentune.foundation.R
 import com.arturo254.opentune.ui.original.adapters.OriginalStyleChoice
-import com.arturo254.opentune.constants.PlayerDesignStyle
 import com.arturo254.opentune.ui.original.fullconstants.PlayerStyle
 import com.arturo254.opentune.ui.original.player.styles.AlternatePlayerStyle
 import com.arturo254.opentune.ui.original.player.styles.StyleActions
@@ -147,7 +146,6 @@ fun Modifier.studioSheetLayer(studio: PlayerStudioState): Modifier = graphicsLay
 fun PlayerSelectorOverlay(
     studio: PlayerStudioState,
     styles: List<OriginalStyleChoice>,
-    galaxPreview: @Composable (PlayerDesignStyle) -> Unit,
     // a style index, and how fast the cards were sinking when a swipe down set it
     onSet: (Int, Float) -> Unit,
     /** the editor for the focused style (its index) */
@@ -319,6 +317,14 @@ fun PlayerSelectorOverlay(
                 key(style.id) {
                     val column = studio.columnOf(index)
                     val row = studio.rowOf(index)
+                    val composed by remember(studio, index, w, h) { derivedStateOf {
+                        val g = geometry()
+                        val rows = studio.rows(column).value
+                        g.visible(column, studio.page.value) && g.visibleY(row, rows) &&
+                            rowLeaving(row, rows) * variantFade(column, row, studio, g.e) > 0f &&
+                            (index != studio.livePage || studio.handoff.value > 0.001f)
+                    } }
+                    if (composed) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -344,15 +350,15 @@ fun PlayerSelectorOverlay(
                             }
                             .background(Color.Black),
                     ) {
-                        // every card built, the live one too: picking a style hands over to its
-                        // card, which mustn't be built in the frame it has to cover the player
-                        if (style.galax != null) galaxPreview(style.galax) else when (style.mochy) {
+                        // Only intersecting cards are composed; disposal stops their preview effects.
+                        when (style.mochy) {
                             PlayerStyle.FLAGSHIP -> FlagshipPreview(flagship = true)
                             PlayerStyle.CLASSIC -> FlagshipPreview()
                             PlayerStyle.TURNTABLE -> FlagshipPreview(turntable = true)
                             else -> AlternatePlayerStyle(style = style.mochy!!, actions = previewActions, preview = true, modifier = Modifier.fillMaxSize())
                         }
                     }
+                }
                 }
             }
 
