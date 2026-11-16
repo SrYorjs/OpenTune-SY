@@ -1191,7 +1191,7 @@ class MainActivity : ComponentActivity() {
                                     val settingsPane = isWideLayout() &&
                                         com.arturo254.opentune.ui.original.adapters.showsSettingsPane(backStack, currentRoute)
                                     // one glass capture for both panes so the bar frosts what's under it, clear of a sideways phone's side nav bar (its shown size, so hiding it moves nothing)
-                                    Row(
+                                    com.arturo254.opentune.ui.original.adapters.ActivityGlassSourceRow(
                                         Modifier
                                             .fillMaxSize()
                                             .windowInsetsPadding(WindowInsets.stableSystemBars.only(WindowInsetsSides.Horizontal))

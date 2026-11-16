@@ -33,7 +33,7 @@ fun ActivityThemeHost(darkTheme: Boolean, pureBlack: Boolean, content: @Composab
         CompositionLocalProvider(LocalHapticFeedback provides guardedHaptics) {
         ProvideOpenTuneDesignSystem(artworkRadiusDp = radius, reduceMotion = reduceMotion) {
             OriginalVisualHost(reduceMotion) {
-                MeasuredWindowLayout { ActivityGlassHost(pureBlack, content) }
+                MeasuredWindowLayout { ActivityGlassHost(pureBlack, routeSource = true, content = content) }
             }
         }
         }
