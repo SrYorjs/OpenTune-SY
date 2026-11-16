@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from urllib.parse import parse_qs, urlparse
 from concurrent.futures import ThreadPoolExecutor
 from upstream_security import public_addresses, upstream_transport
+from youtube_auth import configure_cookiefile, extract_youtube_info
 
 import httpx
 import yt_dlp
@@ -101,12 +102,11 @@ def ydl_options(flat: bool = False) -> dict:
     }
     if PROXY_URL:
         result["proxy"] = PROXY_URL
-    return result
+    return configure_cookiefile(result)
 
 
 def ydl_info(url: str, flat: bool = False) -> dict:
-    with yt_dlp.YoutubeDL(ydl_options(flat)) as ydl:
-        return ydl.extract_info(url, download=False) or {}
+    return extract_youtube_info(url, ydl_options(flat), yt_dlp.YoutubeDL)
 
 
 def youtube_search(query: str, limit: int, kind: str) -> list[dict]:
@@ -238,6 +238,7 @@ def video_info(provider: str, item_id: str, kind: str, quality: str) -> Stream:
             continue
         formats.append(form)
     if not formats:
+        logging.getLogger(__name__).warning("stage=format category=no_formats")
         raise HTTPException(status_code=422, detail="No hay formato progresivo compatible; use DASH local para video HD")
     target = ({"low": 800_000, "high": 2_500_000} if kind == "video" else {"low": 96_000, "high": 192_000}).get(quality)
     def bitrate(item):
@@ -370,6 +371,7 @@ async def stream(provider: str, item_id: str, request: Request, kind: str = "aud
         except httpx.HTTPError:
             raise HTTPException(status_code=502, detail="Error de transporte")
         if response.status_code in (403, 410) and attempt == 0:
+            logging.getLogger(__name__).warning("stage=stream category=http_%d", response.status_code)
             await response.aclose()
             continue
         break
@@ -381,6 +383,7 @@ async def stream(provider: str, item_id: str, request: Request, kind: str = "aud
         return Response(status_code=416, headers=out)
     if response.status_code >= 400:
         status = response.status_code
+        logging.getLogger(__name__).warning("stage=stream category=http_%d", status)
         await response.aclose()
         raise HTTPException(status_code=502, detail=f"Origen HTTP {status}")
     out = {"Cache-Control": "private, no-store"}

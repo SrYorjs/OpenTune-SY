@@ -45,6 +45,7 @@ from dataclasses import dataclass
 from urllib.parse import parse_qs, urlparse
 from concurrent.futures import ThreadPoolExecutor
 from upstream_security import public_addresses, upstream_transport
+from youtube_auth import configure_cookiefile, extract_youtube_info
 
 import httpx
 import yt_dlp
@@ -135,12 +136,11 @@ def ydl_options(flat: bool = False) -> dict:
     }
     if PROXY_URL:
         result["proxy"] = PROXY_URL
-    return result
+    return configure_cookiefile(result)
 
 
 def ydl_info(url: str, flat: bool = False) -> dict:
-    with yt_dlp.YoutubeDL(ydl_options(flat)) as ydl:
-        return ydl.extract_info(url, download=False) or {}
+    return extract_youtube_info(url, ydl_options(flat), yt_dlp.YoutubeDL)
 
 
 def youtube_search(query: str, limit: int, kind: str) -> list[dict]:
@@ -272,6 +272,7 @@ def video_info(provider: str, item_id: str, kind: str, quality: str) -> Stream:
             continue
         formats.append(form)
     if not formats:
+        logging.getLogger(__name__).warning("stage=format category=no_formats")
         raise HTTPException(status_code=422, detail="No hay formato progresivo compatible; use DASH local para video HD")
     target = ({"low": 800_000, "high": 2_500_000} if kind == "video" else {"low": 96_000, "high": 192_000}).get(quality)
     def bitrate(item):
@@ -404,6 +405,7 @@ async def stream(provider: str, item_id: str, request: Request, kind: str = "aud
         except httpx.HTTPError:
             raise HTTPException(status_code=502, detail="Error de transporte")
         if response.status_code in (403, 410) and attempt == 0:
+            logging.getLogger(__name__).warning("stage=stream category=http_%d", response.status_code)
             await response.aclose()
             continue
         break
@@ -415,6 +417,7 @@ async def stream(provider: str, item_id: str, request: Request, kind: str = "aud
         return Response(status_code=416, headers=out)
     if response.status_code >= 400:
         status = response.status_code
+        logging.getLogger(__name__).warning("stage=stream category=http_%d", status)
         await response.aclose()
         raise HTTPException(status_code=502, detail=f"Origen HTTP {status}")
     out = {"Cache-Control": "private, no-store"}
@@ -489,6 +492,176 @@ def upstream_transport(proxy=None):
     transport._pool._network_backend = PublicNetworkBackend()
     return transport
 OPENTUNE_V2_SOURCE
+cat > youtube_auth.py <<'OPENTUNE_AUTH_SOURCE'
+import logging
+import os
+import re
+from contextlib import ExitStack, contextmanager
+
+
+log = logging.getLogger("opentune-resolver.youtube")
+MAX_COOKIE_BYTES = 1024 * 1024
+
+
+class CookieConfigurationError(Exception):
+    pass
+
+
+class YouTubeExtractionError(Exception):
+    def __init__(self, category):
+        self.category = category
+        super().__init__(category)
+
+
+def youtube_error_category(error):
+    if isinstance(error, YouTubeExtractionError):
+        return error.category
+    text = str(error).lower()
+    for fragments, category in (
+        (("confirm your age", "age-restricted"), "age_verification_required"),
+        (("not a bot",), "bot_verification_required"),
+        (("cookies are no longer valid", "invalid cookie", "expired cookie"), "cookies_invalid"),
+        (("http error 429", "status code 429"), "http_429"),
+        (("http error 403", "status code 403"), "http_403"),
+        (("private video", "members-only", "not authorized"), "not_authorized"),
+        (("sign in", "login required", "authentication required"), "session_required"),
+        (("no video formats", "requested format", "no formats"), "no_formats"),
+        (("javascript runtime", "challenge solving failed"), "javascript_challenge"),
+        (("timed out", "timeout"), "timeout"),
+    ):
+        if any(fragment in text for fragment in fragments):
+            return category
+    return "extraction_failed"
+
+
+def configure_cookiefile(options):
+    source = os.environ.get("COOKIES_FILE", "").strip()
+    if not source:
+        return options
+    if not os.path.isfile(source):
+        log.warning("stage=cookies category=file_absent")
+    elif not os.access(source, os.R_OK):
+        log.warning("stage=cookies category=file_unreadable")
+    else:
+        options["cookiefile"] = source
+    return options
+
+
+def validate_netscape(payload):
+    try:
+        lines = payload.decode("utf-8-sig").splitlines()
+        if not lines or lines[0] not in ("# Netscape HTTP Cookie File", "# HTTP Cookie File"):
+            raise ValueError()
+        count = 0
+        normalized = [lines[0]]
+        for line in lines[1:]:
+            prefix = ""
+            if line.startswith("#HttpOnly_"):
+                prefix = "#HttpOnly_"
+                line = line[len("#HttpOnly_"):]
+            elif not line.strip() or line.startswith("#"):
+                normalized.append(line)
+                continue
+            fields = line.split("\t")
+            if len(fields) != 7:
+                raise ValueError()
+            domain, subdomains, path, secure, expires, name, value = fields
+            if not domain or any(char.isspace() for char in domain) or not path.startswith("/"):
+                raise ValueError()
+            if subdomains not in ("TRUE", "FALSE") or secure not in ("TRUE", "FALSE"):
+                raise ValueError()
+            if (subdomains == "TRUE") != domain.startswith(".") or (expires and not re.fullmatch(r"[0-9]{1,20}(?:\.[0-9]{1,9})?", expires)):
+                raise ValueError()
+            fields[4] = expires.partition(".")[0]
+            normalized.append(prefix + "\t".join(fields))
+            count += 1
+        if not count:
+            raise ValueError()
+        return ("\n".join(normalized) + "\n").encode("utf-8")
+    except (UnicodeError, ValueError):
+        raise CookieConfigurationError("file_invalid") from None
+
+
+@contextmanager
+def memory_cookiefile(source):
+    if not hasattr(os, "memfd_create"):
+        raise CookieConfigurationError("memory_unavailable")
+    try:
+        with open(source, "rb") as original:
+            payload = original.read(MAX_COOKIE_BYTES + 1)
+        if len(payload) > MAX_COOKIE_BYTES:
+            raise CookieConfigurationError("file_too_large")
+        payload = validate_netscape(payload)
+    except OSError:
+        raise CookieConfigurationError("file_unreadable") from None
+    try:
+        descriptor = os.memfd_create("youtube-session", os.MFD_CLOEXEC)
+    except OSError:
+        raise CookieConfigurationError("memory_unavailable") from None
+    try:
+        os.fchmod(descriptor, 0o600)
+        with os.fdopen(os.dup(descriptor), "wb") as target:
+            target.write(payload)
+        yield f"/proc/self/fd/{descriptor}"
+    finally:
+        os.close(descriptor)
+
+
+@contextmanager
+def private_cookie_options(options):
+    configured = dict(options)
+    source = configured.pop("cookiefile", None)
+    with ExitStack() as stack:
+        if source:
+            try:
+                configured["cookiefile"] = stack.enter_context(memory_cookiefile(source))
+            except (CookieConfigurationError, OSError) as error:
+                category = str(error) if isinstance(error, CookieConfigurationError) else "memory_unavailable"
+                log.warning("stage=cookies category=%s", category)
+        yield configured
+
+
+def extract_youtube_info(url, options, factory):
+    for attempt in range(2):
+        requested = dict(options)
+        if attempt:
+            requested.pop("cookiefile", None)
+        with private_cookie_options(requested) as configured:
+            try:
+                with factory(configured) as extractor:
+                    info = extractor.extract_info(url, download=False) or {}
+                log.info("stage=extract category=%s", "cookiejar_used" if "cookiefile" in configured else "anonymous_ok")
+                return info
+            except Exception as error:
+                category = youtube_error_category(error)
+                log.warning("stage=extract category=%s", category)
+                if not attempt and "cookiefile" in configured and category in ("cookies_invalid", "session_required", "bot_verification_required"):
+                    continue
+                raise YouTubeExtractionError(category) from None
+OPENTUNE_AUTH_SOURCE
+cat > .dockerignore <<'OPENTUNE_DOCKER_IGNORE'
+*
+!Dockerfile
+!requirements.txt
+!main.py
+!multisource.py
+!upstream_security.py
+!youtube_auth.py
+!run.sh
+OPENTUNE_DOCKER_IGNORE
+cat > docker-compose.cookies.yml <<'OPENTUNE_COOKIES_COMPOSE'
+services:
+  opentune-resolver:
+    environment:
+      COOKIES_FILE: /run/secrets/youtube-cookies
+    volumes:
+      - type: bind
+        source: ${YOUTUBE_COOKIES_PATH:?indica una ruta privada absoluta fuera del repositorio}
+        target: /run/secrets/youtube-cookies
+        read_only: true
+        bind:
+          create_host_path: false
+OPENTUNE_COOKIES_COMPOSE
 cat > main.py <<'OPENTUNE_EOF_main_py'
 """
 OpenTune Resolver
@@ -526,12 +699,12 @@ import httpx
 import yt_dlp
 from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
+from youtube_auth import configure_cookiefile, extract_youtube_info, youtube_error_category
 
 log = logging.getLogger("opentune-resolver")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 API_KEY = os.environ.get("API_KEY", "")
-COOKIES_FILE = os.environ.get("COOKIES_FILE") or None
 PROXY_URL = os.environ.get("PROXY_URL") or None
 URL_TTL_SECS = min(900, max(60, int(os.environ.get("URL_TTL_SECS", "240"))))
 
@@ -592,17 +765,14 @@ def _ydl_opts() -> dict:
         "socket_timeout": 15,
         "retries": 2,
     }
-    if COOKIES_FILE and os.path.exists(COOKIES_FILE):
-        opts["cookiefile"] = COOKIES_FILE
     if PROXY_URL:
         opts["proxy"] = PROXY_URL
-    return opts
+    return configure_cookiefile(opts)
 
 
 def _extract_sync(video_id: str) -> Resolved:
     url = f"https://music.youtube.com/watch?v={video_id}"
-    with yt_dlp.YoutubeDL(_ydl_opts()) as ydl:
-        info = ydl.extract_info(url, download=False)
+    info = extract_youtube_info(url, _ydl_opts(), yt_dlp.YoutubeDL)
 
     formats: list[AudioFormat] = []
     for f in info.get("formats") or []:
@@ -679,7 +849,7 @@ async def resolve(video_id: str, force: bool = False) -> Resolved:
         try:
             res = await run_provider_blocking(_extract_sync, video_id)
         except Exception as e:  # yt-dlp lanza DownloadError, etc.
-            log.warning("fallo al resolver %s: type=%s", video_id, type(e).__name__)
+            log.warning("stage=extract category=%s", youtube_error_category(e))
             raise HTTPException(status_code=502, detail="no se pudo resolver")
         _cache[video_id] = res
         if len(_cache) > 500:  # limpieza básica
@@ -768,7 +938,7 @@ async def audio(
 
         if upstream.status_code in (403, 410) and attempt == 0:
             await upstream.aclose()
-            log.info("URL caducada/denegada para %s, re-resolviendo", video_id)
+            log.info("stage=stream category=http_%d", upstream.status_code)
             continue
         break
 
@@ -830,7 +1000,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY main.py multisource.py upstream_security.py run.sh ./
+COPY main.py multisource.py upstream_security.py youtube_auth.py run.sh ./
 RUN chmod +x run.sh
 
 EXPOSE 8787
@@ -870,6 +1040,7 @@ services:
       AUDIUS_API_KEY: "${AUDIUS_API_KEY:-}"
       PEERTUBE_INSTANCE: "${PEERTUBE_INSTANCE:-https://video.blender.org}"
       AUDIUS_R2_HOSTS: "${AUDIUS_R2_HOSTS:-}"
+      COOKIES_FILE: "${COOKIES_FILE:-}"
       HOME: /tmp
       XDG_CACHE_HOME: /tmp
       DENO_DIR: /tmp/deno

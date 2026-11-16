@@ -878,6 +878,7 @@ class MusicService :
     override fun onPlayerError(
         error: PlaybackException,
     ) {
+        Timber.tag("PlaybackDiagnostic").w("stage=media3 code=%d category=%s", error.errorCode, error.errorCodeName)
         val failedId = player.currentMediaItem?.mediaId
         if (failedId != null && error.errorCode in 2000..2999 && StreamFallbacks.available(failedId)) {
             scope.launch {

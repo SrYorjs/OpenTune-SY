@@ -50,7 +50,7 @@ object OwnResolverClient {
         }
         apiKey = effectiveKey.trim()
         blockedUntilMs = 0L
-        v2BlockedUntilMs = 0L
+        v2Backoff.reset()
         Timber.tag(TAG).i("Configured=%s", isConfigured())
     }
 
@@ -61,11 +61,11 @@ object OwnResolverClient {
     fun isUsable(): Boolean = isConfigured() && System.currentTimeMillis() >= blockedUntilMs
 
 
-    @Volatile private var v2BlockedUntilMs = 0L
+    private val v2Backoff = ResolverProviderBackoff()
 
     private fun v2Request(path: String, parameters: Map<String,String>): Request? {
         val root = base ?: return null
-        if (!isConfigured() || System.currentTimeMillis() < v2BlockedUntilMs) return null
+        if (!isConfigured() || v2Backoff.isBlocked(resolverProviderScope(path, parameters))) return null
         val url = root.newBuilder().addPathSegments("v2/" + path)
             .apply { parameters.forEach { (name,value) -> addQueryParameter(name,value) } }.build()
         return Request.Builder().url(url).header("X-API-Key",apiKey).build()
@@ -75,7 +75,11 @@ object OwnResolverClient {
         val request = v2Request(path,parameters) ?: return null
         return try { http.newCall(request).awaitText() }
         catch (cancelled: CancellationException) { throw cancelled }
-        catch (_: Exception) { v2BlockedUntilMs = System.currentTimeMillis() + 15000L; null }
+        catch (error: Exception) {
+            Timber.tag(TAG).w("stage=resolver operation=%s category=%s", path.substringBefore('/'), resolverFailureCategory(error))
+            v2Backoff.block(resolverProviderScope(path, parameters))
+            null
+        }
     }
 
     suspend fun searchV2(provider: String, query: String, kind: String, limit: Int): List<SourceVariant>? {
@@ -135,7 +139,7 @@ object OwnResolverClient {
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (e: IOException) {
-            Timber.tag(TAG).w("Server unreachable type=%s", e.javaClass.simpleName)
+            Timber.tag(TAG).w("stage=resolver operation=legacy category=%s", resolverFailureCategory(e))
             blockedUntilMs = System.currentTimeMillis() + UNREACHABLE_BACKOFF_MS
             return null
         } catch (e: Exception) {
@@ -186,4 +190,20 @@ object OwnResolverClient {
             streamExpiresInSeconds = json.optInt("expiresInSeconds", 3600),
         )
     }
+}
+
+internal fun resolverFailureCategory(error: Exception): String =
+    Regex("^HTTP ([1-5][0-9]{2})$").matchEntire(error.message.orEmpty())
+        ?.groupValues?.get(1)?.let { "http_$it" }
+        ?: if (error is java.net.SocketTimeoutException || error is java.io.InterruptedIOException) "timeout" else "transport"
+
+internal fun resolverProviderScope(path: String, parameters: Map<String, String>): String =
+    (if (path.startsWith("resolve/")) path.split('/').getOrNull(1) else parameters["provider"])
+        ?.let { if (it == "youtube_music") "youtube" else it } ?: "all"
+
+internal class ResolverProviderBackoff(private val now: () -> Long = System::currentTimeMillis) {
+    private val blockedUntil = java.util.concurrent.ConcurrentHashMap<String, Long>()
+    fun isBlocked(provider: String): Boolean = now() < (blockedUntil[provider] ?: 0L)
+    fun block(provider: String) { blockedUntil[provider] = now() + 15_000L }
+    fun reset() { blockedUntil.clear() }
 }

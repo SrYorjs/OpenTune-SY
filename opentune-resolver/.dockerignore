@@ -1,0 +1,8 @@
+*
+!Dockerfile
+!requirements.txt
+!main.py
+!multisource.py
+!upstream_security.py
+!youtube_auth.py
+!run.sh

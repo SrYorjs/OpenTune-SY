@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY main.py multisource.py upstream_security.py run.sh ./
+COPY main.py multisource.py upstream_security.py youtube_auth.py run.sh ./
 RUN chmod +x run.sh
 
 EXPOSE 8787

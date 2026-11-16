@@ -5,6 +5,29 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ResolverV2Test {
+    @Test fun youtubeFailuresDoNotBlockIndependentProvidersAndExpire() {
+        var now = 1000L
+        val backoff = ResolverProviderBackoff { now }
+        val youtube = resolverProviderScope("resolve/youtube/Mcj75l2gJcY", emptyMap())
+        assertEquals("youtube", youtube)
+        backoff.block(youtube)
+        assertTrue(backoff.isBlocked(resolverProviderScope("search", mapOf("provider" to "youtube"))))
+        assertTrue(backoff.isBlocked(resolverProviderScope("search", mapOf("provider" to "youtube_music"))))
+        assertFalse(backoff.isBlocked(resolverProviderScope("resolve/audius/fixture", emptyMap())))
+        assertFalse(backoff.isBlocked(resolverProviderScope("search", mapOf("provider" to "peertube"))))
+        now += 15_000L
+        assertFalse(backoff.isBlocked(youtube))
+        backoff.block("audius")
+        backoff.reset()
+        assertFalse(backoff.isBlocked("audius"))
+    }
+    @Test fun failureDiagnosticsExposeOnlyStatusOrCategory() {
+        for (code in listOf(401, 403, 404, 429, 502)) {
+            assertEquals("http_$code", resolverFailureCategory(java.io.IOException("HTTP $code")))
+        }
+        assertEquals("timeout", resolverFailureCategory(java.net.SocketTimeoutException("not-for-logs")))
+        assertEquals("transport", resolverFailureCategory(java.io.IOException("https://invalid.test/?token=not-for-logs")))
+    }
     @Test fun actualV2SearchContractDoesNotCreateAnotherYoutubeCatalog() {
         val raw = """{"results":[{"provider":"youtube","id":"abcdefghijk","title":"Exact title","artist":"Exact artist","durationSeconds":123.5,"kind":"video","thumbnail":null},{"provider":"audius","id":"abc","title":"Other","artist":"Other","kind":"audio"}],"partial":false}"""
         val rows = parseResolverSearch(raw,"youtube")!!

@@ -1,0 +1,11 @@
+services:
+  opentune-resolver:
+    environment:
+      COOKIES_FILE: /run/secrets/youtube-cookies
+    volumes:
+      - type: bind
+        source: ${YOUTUBE_COOKIES_PATH:?indica una ruta privada absoluta fuera del repositorio}
+        target: /run/secrets/youtube-cookies
+        read_only: true
+        bind:
+          create_host_path: false

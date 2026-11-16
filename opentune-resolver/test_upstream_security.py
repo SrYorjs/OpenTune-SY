@@ -172,7 +172,7 @@ def test_timeout_returns_transport_error_without_secret(monkeypatch):
     assert "private-upstream-value" not in response.text
 
 
-@pytest.mark.parametrize("copy", ["COPY main.py run.sh ./", "COPY main.py multisource.py run.sh ./", "COPY main.py multisource.py upstream_security.py run.sh ./"])
+@pytest.mark.parametrize("copy", ["COPY main.py run.sh ./", "COPY main.py multisource.py run.sh ./", "COPY main.py multisource.py upstream_security.py run.sh ./", "COPY main.py multisource.py upstream_security.py youtube_auth.py run.sh ./"])
 def test_upgrade_accepts_legacy_and_current_dockerfiles(tmp_path, monkeypatch, copy):
     from pathlib import Path
     script = (Path(__file__).parent / "upgrade-v2.sh").read_text()
@@ -182,5 +182,5 @@ def test_upgrade_accepts_legacy_and_current_dockerfiles(tmp_path, monkeypatch, c
     (tmp_path / "docker-compose.yml").write_text('    restart: unless-stopped\n      API_KEY: "test"\n')
     monkeypatch.chdir(tmp_path)
     exec(compile(program, "upgrade-v2", "exec"), {})
-    assert (tmp_path / "Dockerfile").read_text() == "COPY main.py multisource.py upstream_security.py run.sh ./"
+    assert (tmp_path / "Dockerfile").read_text() == "COPY main.py multisource.py upstream_security.py youtube_auth.py run.sh ./"
     assert "read_only: true" in (tmp_path / "docker-compose.yml").read_text()

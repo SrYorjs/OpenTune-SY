@@ -81,7 +81,7 @@ def test_installer_writes_exact_sources_inside_installation_only():
     root = Path(__file__).parent
     script = (root / "setup-opentune-public.sh").read_text(encoding="utf-8")
     position = script.index("cd /opt/opentune-resolver")
-    for name, tag in [("main.py", "OPENTUNE_EOF_main_py"), ("multisource.py", "OPENTUNE_V2_SOURCE"), ("upstream_security.py", "OPENTUNE_V2_SOURCE"), ("requirements.txt", "OPENTUNE_EOF_requirements_txt"), ("Dockerfile", "OPENTUNE_EOF_Dockerfile"), ("run.sh", "OPENTUNE_EOF_run_sh")]:
+    for name, tag in [("main.py", "OPENTUNE_EOF_main_py"), ("multisource.py", "OPENTUNE_V2_SOURCE"), ("upstream_security.py", "OPENTUNE_V2_SOURCE"), ("youtube_auth.py", "OPENTUNE_AUTH_SOURCE"), (".dockerignore", "OPENTUNE_DOCKER_IGNORE"), ("docker-compose.cookies.yml", "OPENTUNE_COOKIES_COMPOSE"), ("requirements.txt", "OPENTUNE_EOF_requirements_txt"), ("Dockerfile", "OPENTUNE_EOF_Dockerfile"), ("run.sh", "OPENTUNE_EOF_run_sh")]:
         marker = f"cat > {name} <<'{tag}'\n"
         assert script.index(marker) > position
         embedded = script.split(marker, 1)[1].split(f"\n{tag}", 1)[0]

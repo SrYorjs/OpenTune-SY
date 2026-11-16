@@ -13,11 +13,9 @@ services:
       AUDIUS_API_KEY: "${AUDIUS_API_KEY:-}"
       PEERTUBE_INSTANCE: "${PEERTUBE_INSTANCE:-https://video.blender.org}"
       AUDIUS_R2_HOSTS: "${AUDIUS_R2_HOSTS:-}"
+      COOKIES_FILE: "${COOKIES_FILE:-}"
       HOME: /tmp
       XDG_CACHE_HOME: /tmp
       DENO_DIR: /tmp/deno
       PYTHONDONTWRITEBYTECODE: "1"
       API_KEY: "${API_KEY:?define API_KEY en el archivo .env}"
-      # COOKIES_FILE: /data/cookies.txt     # opcional (cuenta Premium)
-    # volumes:
-    #   - ./data:/data

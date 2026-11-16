@@ -34,12 +34,12 @@ import httpx
 import yt_dlp
 from fastapi import FastAPI, Header, HTTPException, Query, Request
 from fastapi.responses import JSONResponse, Response, StreamingResponse
+from youtube_auth import configure_cookiefile, extract_youtube_info, youtube_error_category
 
 log = logging.getLogger("opentune-resolver")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 API_KEY = os.environ.get("API_KEY", "")
-COOKIES_FILE = os.environ.get("COOKIES_FILE") or None
 PROXY_URL = os.environ.get("PROXY_URL") or None
 URL_TTL_SECS = min(900, max(60, int(os.environ.get("URL_TTL_SECS", "240"))))
 
@@ -100,17 +100,14 @@ def _ydl_opts() -> dict:
         "socket_timeout": 15,
         "retries": 2,
     }
-    if COOKIES_FILE and os.path.exists(COOKIES_FILE):
-        opts["cookiefile"] = COOKIES_FILE
     if PROXY_URL:
         opts["proxy"] = PROXY_URL
-    return opts
+    return configure_cookiefile(opts)
 
 
 def _extract_sync(video_id: str) -> Resolved:
     url = f"https://music.youtube.com/watch?v={video_id}"
-    with yt_dlp.YoutubeDL(_ydl_opts()) as ydl:
-        info = ydl.extract_info(url, download=False)
+    info = extract_youtube_info(url, _ydl_opts(), yt_dlp.YoutubeDL)
 
     formats: list[AudioFormat] = []
     for f in info.get("formats") or []:
@@ -187,7 +184,7 @@ async def resolve(video_id: str, force: bool = False) -> Resolved:
         try:
             res = await run_provider_blocking(_extract_sync, video_id)
         except Exception as e:  # yt-dlp lanza DownloadError, etc.
-            log.warning("fallo al resolver %s: type=%s", video_id, type(e).__name__)
+            log.warning("stage=extract category=%s", youtube_error_category(e))
             raise HTTPException(status_code=502, detail="no se pudo resolver")
         _cache[video_id] = res
         if len(_cache) > 500:  # limpieza básica
@@ -276,7 +273,7 @@ async def audio(
 
         if upstream.status_code in (403, 410) and attempt == 0:
             await upstream.aclose()
-            log.info("URL caducada/denegada para %s, re-resolviendo", video_id)
+            log.info("stage=stream category=http_%d", upstream.status_code)
             continue
         break
 

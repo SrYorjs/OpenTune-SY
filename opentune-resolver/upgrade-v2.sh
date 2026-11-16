@@ -7,8 +7,8 @@ if [[ "$release_dir" == "$target_dir" ]]; then
   printf 'Ejecuta la actualización desde una copia de la revisión, separada de la instalación.\n' >&2
   exit 1
 fi
-files=(main.py multisource.py upstream_security.py requirements.txt Dockerfile run.sh docker-compose.yml)
-for file in main.py multisource.py upstream_security.py requirements.txt Dockerfile run.sh; do
+files=(main.py multisource.py upstream_security.py youtube_auth.py requirements.txt Dockerfile run.sh .dockerignore docker-compose.yml)
+for file in main.py multisource.py upstream_security.py youtube_auth.py requirements.txt Dockerfile run.sh .dockerignore; do
   test -f "$release_dir/$file"
 done
 cd -- "$target_dir"
@@ -36,7 +36,7 @@ restore() {
   printf 'Restaurada la revisión y la imagen anterior. Respaldo: %s\n' "$backup" >&2
 }
 trap restore ERR
-for file in main.py multisource.py upstream_security.py requirements.txt Dockerfile run.sh; do
+for file in main.py multisource.py upstream_security.py youtube_auth.py requirements.txt Dockerfile run.sh .dockerignore; do
   cp -- "$release_dir/$file" "$file"
 done
 python3 - <<'PY'
@@ -52,8 +52,10 @@ source = source.replace('"Cache-Control": "private, max-age=3600"', '"Cache-Cont
 main.write_text(source)
 
 dockerfile = Path("Dockerfile")
-contents = dockerfile.read_text().replace("COPY main.py run.sh ./", "COPY main.py multisource.py upstream_security.py run.sh ./").replace("COPY main.py multisource.py run.sh ./", "COPY main.py multisource.py upstream_security.py run.sh ./")
-if "COPY main.py multisource.py upstream_security.py run.sh ./" not in contents:
+contents = dockerfile.read_text()
+for previous in ("COPY main.py run.sh ./", "COPY main.py multisource.py run.sh ./", "COPY main.py multisource.py upstream_security.py run.sh ./"):
+    contents = contents.replace(previous, "COPY main.py multisource.py upstream_security.py youtube_auth.py run.sh ./")
+if "COPY main.py multisource.py upstream_security.py youtube_auth.py run.sh ./" not in contents:
     raise RuntimeError("Dockerfile sin COPY esperado")
 dockerfile.write_text(contents)
 
@@ -69,6 +71,7 @@ if "read_only: true" not in contents:
         raise RuntimeError("Servicio resolver no encontrado en compose")
     contents = contents.replace(anchor, anchor + "    read_only: true\n    tmpfs:\n      - /tmp:size=64m,mode=1777\n", 1)
 values = {
+    "COOKIES_FILE": "\"${COOKIES_FILE:-}\"",
     "AUDIUS_API_KEY": "\"${AUDIUS_API_KEY:-}\"",
     "PEERTUBE_INSTANCE": "\"${PEERTUBE_INSTANCE:-https://video.blender.org}\"",
     "AUDIUS_R2_HOSTS": "\"${AUDIUS_R2_HOSTS:-}\"",
@@ -90,7 +93,7 @@ PY
 python3 - <<'PY'
 import ast
 from pathlib import Path
-for name in ("main.py", "multisource.py", "upstream_security.py"):
+for name in ("main.py", "multisource.py", "upstream_security.py", "youtube_auth.py"):
     ast.parse(Path(name).read_text())
 PY
 chmod +x run.sh
