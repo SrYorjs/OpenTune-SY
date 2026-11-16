@@ -25,11 +25,9 @@ import java.util.concurrent.TimeUnit
  */
 object OwnResolverClient {
     private const val TAG = "OwnResolver"
-    private const val UNREACHABLE_BACKOFF_MS = 45_000L
 
     @Volatile private var base: HttpUrl? = null
     @Volatile private var apiKey: String = ""
-    @Volatile private var blockedUntilMs = 0L
 
     private val http = OkHttpClient.Builder()
         .followRedirects(false)
@@ -49,7 +47,6 @@ object OwnResolverClient {
             withScheme.toHttpUrlOrNull()?.takeIf { it.isHttps && it.username.isEmpty() && it.password.isEmpty() }
         }
         apiKey = effectiveKey.trim()
-        blockedUntilMs = 0L
         v2Backoff.reset()
         Timber.tag(TAG).i("Configured=%s", isConfigured())
     }
@@ -58,7 +55,7 @@ object OwnResolverClient {
 
     fun isConfigured(): Boolean = base != null && apiKey.isNotEmpty()
 
-    fun isUsable(): Boolean = isConfigured() && System.currentTimeMillis() >= blockedUntilMs
+    fun isUsable(): Boolean = isConfigured()
 
 
     private val v2Backoff = ResolverProviderBackoff()
@@ -77,7 +74,7 @@ object OwnResolverClient {
         catch (cancelled: CancellationException) { throw cancelled }
         catch (error: Exception) {
             Timber.tag(TAG).w("stage=resolver operation=%s category=%s", path.substringBefore('/'), resolverFailureCategory(error))
-            v2Backoff.block(resolverProviderScope(path, parameters))
+            if (resolverShouldBackoff(error)) v2Backoff.block(resolverProviderScope(path, parameters))
             null
         }
     }
@@ -111,7 +108,6 @@ object OwnResolverClient {
         quality: AudioQuality,
         avoidCodecs: Set<String> = emptySet(),
     ): YTPlayerUtils.PlaybackData? {
-        val root = base ?: return null
         if (!isUsable()) return null
         val q = qualityParam(quality)
         resolveV2("youtube",videoId,"audio",q)?.takeIf { avoidCodecs.isEmpty() || it.codecs != null }?.let { resolved ->
@@ -129,6 +125,17 @@ object OwnResolverClient {
             }
         }
 
+        return null
+    }
+
+    suspend fun resolveLegacy(
+        videoId: String,
+        quality: AudioQuality,
+        avoidCodecs: Set<String> = emptySet(),
+    ): YTPlayerUtils.PlaybackData? {
+        val root = base ?: return null
+        if (!isUsable() || v2Backoff.isBlocked("youtube")) return null
+        val q = qualityParam(quality)
         val resolveUrl = root.newBuilder()
             .addPathSegments("resolve/$videoId")
             .addQueryParameter("quality", q)
@@ -140,7 +147,6 @@ object OwnResolverClient {
             throw cancelled
         } catch (e: IOException) {
             Timber.tag(TAG).w("stage=resolver operation=legacy category=%s", resolverFailureCategory(e))
-            blockedUntilMs = System.currentTimeMillis() + UNREACHABLE_BACKOFF_MS
             return null
         } catch (e: Exception) {
             Timber.tag(TAG).w("Invalid server response type=%s", e.javaClass.simpleName)
@@ -207,3 +213,7 @@ internal class ResolverProviderBackoff(private val now: () -> Long = System::cur
     fun block(provider: String) { blockedUntil[provider] = now() + 15_000L }
     fun reset() { blockedUntil.clear() }
 }
+
+internal fun resolverShouldBackoff(error: Exception): Boolean =
+    error is java.net.UnknownHostException || error is java.net.ConnectException ||
+        resolverFailureCategory(error) in setOf("http_401", "http_429", "http_503")

@@ -1,7 +1,6 @@
 package com.arturo254.opentune.playback
 
 internal object StreamRequestPolicy {
-    const val CHUNK_LENGTH = 512 * 1024L
 
     fun isDirectHttpStream(uri: String): Boolean =
         runCatching { java.net.URI(uri) }.getOrNull()?.let { address ->
@@ -9,10 +8,6 @@ internal object StreamRequestPolicy {
                 !address.host.isNullOrBlank()
         } ?: false
 
-    fun boundedLength(requestedLength: Long): Long =
-        if (requestedLength >= 0L) {
-            minOf(requestedLength, CHUNK_LENGTH)
-        } else {
-            CHUNK_LENGTH
-        }
+    fun resolveDataSpec(spec: androidx.media3.datasource.DataSpec, uri: android.net.Uri): androidx.media3.datasource.DataSpec =
+        spec.withUri(uri)
 }

@@ -15,6 +15,7 @@ import com.arturo254.opentune.constants.PlayerStreamClient
 import com.arturo254.opentune.innertube.NewPipeUtils
 import com.arturo254.opentune.playback.OwnResolverClient
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import com.arturo254.opentune.innertube.YouTube
 import com.arturo254.opentune.innertube.models.YouTubeClient
@@ -185,41 +186,49 @@ object YTPlayerUtils {
         // if provided, this preference overrides ConnectivityManager.isActiveNetworkMetered
         networkMetered: Boolean? = null,
         avoidCodecs: Set<String> = emptySet(),
-    ): Result<PlaybackData> = runCatching {
-        // 1) Servidor propio (yt-dlp). Si no está configurado o falla, seguimos con la resolución en el dispositivo.
-        if (OwnResolverClient.isUsable()) {
-            val own = withContext(Dispatchers.IO) {
-                OwnResolverClient.resolve(videoId, audioQuality, avoidCodecs)
-            }
-            if (own != null) return@runCatching own
-            Timber.tag(logTag).w("Own resolver unavailable for $videoId, falling back to on-device resolution")
-        }
-
-        val attempts =
-            when (audioQuality) {
-                AudioQuality.HIGHEST -> listOf(AudioQuality.HIGHEST, AudioQuality.HIGH)
-                AudioQuality.AUTO -> listOf(AudioQuality.AUTO, AudioQuality.HIGH)
-                else -> listOf(audioQuality)
-            }.distinct()
-
-        var lastError: Throwable? = null
-        for (attempt in attempts) {
-            val attemptResult =
-                runCatching {
-                    playerResponseForPlaybackOnce(
-                        videoId = videoId,
-                        playlistId = playlistId,
-                        audioQuality = attempt,
-                        connectivityManager = connectivityManager,
-                        preferredStreamClient = preferredStreamClient,
-                        networkMetered = networkMetered,
-                        avoidCodecs = avoidCodecs,
-                    )
-                }
-            if (attemptResult.isSuccess) return@runCatching attemptResult.getOrThrow()
-            lastError = attemptResult.exceptionOrNull()
-        }
-        throw lastError ?: IllegalStateException("Failed to resolve stream")
+    ): Result<PlaybackData> = try {
+        var legacyUseful = true
+        val resolved = com.arturo254.opentune.playback.resolvePlaybackStages(
+            stages = listOf(
+                com.arturo254.opentune.playback.ResolutionStage("resolver_v2", 8_000L) {
+                    if (OwnResolverClient.isUsable()) OwnResolverClient.resolve(videoId, audioQuality, avoidCodecs) else null
+                },
+                com.arturo254.opentune.playback.ResolutionStage("legacy", 3_000L) {
+                    if (legacyUseful && OwnResolverClient.isUsable()) OwnResolverClient.resolveLegacy(videoId, audioQuality, avoidCodecs) else null
+                },
+                com.arturo254.opentune.playback.ResolutionStage("innertube", 20_000L) {
+                    val attempts = when (audioQuality) {
+                        AudioQuality.HIGHEST -> listOf(AudioQuality.HIGHEST, AudioQuality.HIGH)
+                        AudioQuality.AUTO -> listOf(AudioQuality.AUTO, AudioQuality.HIGH)
+                        else -> listOf(audioQuality)
+                    }.distinct()
+                    var result: PlaybackData? = null
+                    var failure: Exception? = null
+                    for (attempt in attempts) {
+                        kotlinx.coroutines.currentCoroutineContext().ensureActive()
+                        try {
+                            result = playerResponseForPlaybackOnce(videoId, playlistId, attempt, connectivityManager, preferredStreamClient, networkMetered, avoidCodecs)
+                            break
+                        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                            throw cancelled
+                        } catch (error: Exception) {
+                            failure = error
+                        }
+                    }
+                    result ?: throw failure ?: java.io.IOException("No playable InnerTube stream")
+                },
+            ),
+            observe = { event ->
+                if (event.stage == "resolver_v2" && event.outcome == "timeout") legacyUseful = false
+                Timber.tag(logTag).i("id=%s provider=youtube stage=%s elapsed_ms=%d category=%s root=%s",
+                    videoId, event.stage, event.elapsedMs, event.outcome, event.rootType ?: "none")
+            },
+        )
+        Result.success(resolved)
+    } catch (cancelled: kotlinx.coroutines.CancellationException) {
+        throw cancelled
+    } catch (error: Exception) {
+        Result.failure(error)
     }
 
     private suspend fun playerResponseForPlaybackOnce(
@@ -232,8 +241,16 @@ object YTPlayerUtils {
         avoidCodecs: Set<String>,
     ): PlaybackData {
         Timber.tag(logTag).i("Fetching player response for videoId: $videoId, playlistId: $playlistId")
-        val signatureTimestamp = getSignatureTimestampOrNull(videoId)
-        Timber.tag(logTag).v("Signature timestamp: $signatureTimestamp")
+        var signatureTimestamp: Int? = null
+        var signatureLoaded = false
+        suspend fun signatureFor(client: YouTubeClient): Int? {
+            if (!client.useSignatureTimestamp) return null
+            if (!signatureLoaded) {
+                signatureTimestamp = getSignatureTimestampOrNull(videoId)
+                signatureLoaded = true
+            }
+            return signatureTimestamp
+        }
 
         val isLoggedIn = YouTube.cookie != null
         val sessionId = if (isLoggedIn) YouTube.dataSyncId else YouTube.visitorData
@@ -267,7 +284,7 @@ object YTPlayerUtils {
 
         Timber.tag(logTag).i("Fetching metadata response using client: ${metadataClient.clientName}")
         val metadataPlayerResponse =
-            YouTube.player(videoId, playlistId, metadataClient, signatureTimestamp).getOrThrow()
+            YouTube.player(videoId, playlistId, metadataClient, signatureFor(metadataClient)).getOrThrow()
         val audioConfig = metadataPlayerResponse.playerConfig?.audioConfig
         val videoDetails = metadataPlayerResponse.videoDetails
         val playbackTracking = metadataPlayerResponse.playbackTracking
@@ -309,7 +326,7 @@ object YTPlayerUtils {
                     metadataPlayerResponse
                 } else {
                     Timber.tag(logTag).i("Fetching player response for fallback client: ${client.clientName}")
-                    YouTube.player(videoId, playlistId, client, signatureTimestamp).getOrNull()
+                    YouTube.player(videoId, playlistId, client, signatureFor(client)).getOrNull().also { kotlinx.coroutines.currentCoroutineContext().ensureActive() }
                 }
 
             if (streamPlayerResponse == null) continue
@@ -614,7 +631,7 @@ object YTPlayerUtils {
      * If this returns true the url is likely to work.
      * If this returns false the url might cause an error during playback.
      */
-    private fun validateStatus(url: String, userAgent: String): Boolean {
+    private suspend fun validateStatus(url: String, userAgent: String): Boolean {
         Timber.tag(logTag).v("Validating stream URL status")
         try {
             val httpUrl = url.toHttpUrlOrNull()
@@ -642,30 +659,30 @@ object YTPlayerUtils {
                         }.url(url)
                         .build()
 
-                val code = currentStreamClient().newCall(rangeRequest).execute().use { response -> response.code }
+                val code = currentStreamClient().newCall(rangeRequest).awaitCode()
                 if (code == 403) return false
                 if (code !in 200..399 && code != 416) return false
             }
 
             return true
+        } catch (cancelled: kotlinx.coroutines.CancellationException) {
+            throw cancelled
         } catch (e: Exception) {
-            Timber.tag(logTag).e(e, "Stream URL validation failed with exception")
-            reportException(e)
+            Timber.tag(logTag).w("stage=http_validation category=failed root=%s", e.javaClass.simpleName)
         }
         return false
     }
     /**
      * Wrapper around the [NewPipeUtils.getSignatureTimestamp] function which reports exceptions
      */
-    private fun getSignatureTimestampOrNull(
+    private suspend fun getSignatureTimestampOrNull(
         videoId: String
     ): Int? {
         Timber.tag(logTag).i("Getting signature timestamp for videoId: $videoId")
-        return NewPipeUtils.getSignatureTimestamp(videoId)
+        return NewPipeUtils.cancellable { NewPipeUtils.getSignatureTimestamp(videoId) }
             .onSuccess { Timber.tag(logTag).i("Signature timestamp obtained: $it") }
             .onFailure {
-                Timber.tag(logTag).e(it, "Failed to get signature timestamp")
-                reportException(it)
+                Timber.tag(logTag).w("stage=signature category=failed root=%s", it.javaClass.simpleName)
             }
             .getOrNull()
     }
@@ -673,17 +690,16 @@ object YTPlayerUtils {
      * Wrapper around the [NewPipeUtils.getStreamUrl] function which reports exceptions.
      * Also patches cver to match the client version.
      */
-    private fun findUrlOrNull(
+    private suspend fun findUrlOrNull(
         format: PlayerResponse.StreamingData.Format,
         videoId: String,
         client: YouTubeClient? = null,
     ): String? {
         Timber.tag(logTag).i("Finding stream URL for format: ${format.mimeType}, videoId: $videoId")
-        var url = NewPipeUtils.getStreamUrl(format, videoId, client)
+        var url = NewPipeUtils.cancellable { NewPipeUtils.getStreamUrl(format, videoId, client) }
             .onSuccess { Timber.tag(logTag).i("Stream URL obtained successfully") }
             .onFailure {
-                Timber.tag(logTag).e(it, "Failed to get stream URL")
-                reportException(it)
+                Timber.tag(logTag).w("stage=url_transform category=failed root=%s", it.javaClass.simpleName)
             }
             .getOrNull() ?: return null
 

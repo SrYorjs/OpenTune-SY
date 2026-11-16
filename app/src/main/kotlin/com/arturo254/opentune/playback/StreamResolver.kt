@@ -54,6 +54,17 @@ internal class StreamResolver(
     private val promptLoginRecovery: (String, String) -> Unit,
 ) {
     private var warmupJob: kotlinx.coroutines.Job? = null
+    private val resolutionRequests = PlaybackResolutionRequests()
+
+    fun onMediaItemTransition(mediaId: String?) {
+        resolutionRequests.cancelExcept(mediaId)
+        warmupJob?.cancel()
+    }
+
+    fun cancelResolutions() {
+        resolutionRequests.cancelExcept(null)
+        warmupJob?.cancel()
+    }
 
     private fun playerCacheKey(mediaId: String) = audioPlayerCacheKey(playerCache, mediaId)
 
@@ -68,52 +79,7 @@ internal class StreamResolver(
     }
 
     private val mediaOkHttpClient: OkHttpClient by lazy {
-        OkHttpClient
-            .Builder()
-            .proxy(com.arturo254.opentune.innertube.YouTube.streamProxy)
-            .addNetworkInterceptor(OwnResolverClient.credentialInterceptor())
-            .followRedirects(true)
-            .followSslRedirects(true)
-            .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
-            .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-            .writeTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-            .callTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-            .retryOnConnectionFailure(true)
-            .addInterceptor { chain ->
-                val request = chain.request()
-                val host = request.url.host
-                val isYouTubeMediaHost =
-                    host.endsWith("googlevideo.com") ||
-                        host.endsWith("googleusercontent.com") ||
-                        host.endsWith("youtube.com") ||
-                        host.endsWith("youtube-nocookie.com") ||
-                        host.endsWith("ytimg.com")
-
-                if (!isYouTubeMediaHost) {
-                    return@addInterceptor chain.proceed(request)
-                }
-
-                val clientParam =
-                    request.url.queryParameter("c")?.trim().orEmpty()
-                val userAgent =
-                    StreamClientUtils.resolveUserAgent(clientParam)
-                val originReferer =
-                    StreamClientUtils.resolveOriginReferer(clientParam)
-
-                val builder =
-                    request
-                        .newBuilder()
-                        .header("User-Agent", userAgent)
-
-                originReferer.origin?.let {
-                    builder.header("Origin", it)
-                }
-                originReferer.referer?.let {
-                    builder.header("Referer", it)
-                }
-
-                chain.proceed(builder.build())
-            }.build()
+        playbackHttpClient(com.arturo254.opentune.innertube.YouTube.streamProxy, OwnResolverClient.credentialInterceptor())
     }
 
     fun createDataSourceFactory(): DataSource.Factory =
@@ -134,12 +100,7 @@ internal class StreamResolver(
                     scopeProvider().launch(Dispatchers.IO) {
                         recoverSong(mediaId, null)
                     }
-                    return@Factory dataSpec
-                        .withUri(cached.first.toUri())
-                        .subrange(
-                            dataSpec.uriPositionOffset,
-                            StreamRequestPolicy.boundedLength(dataSpec.length),
-                        )
+                    return@Factory StreamRequestPolicy.resolveDataSpec(dataSpec, cached.first.toUri())
                 }
 
             val requiredCachedLength =
@@ -194,60 +155,20 @@ internal class StreamResolver(
                 )
             }
 
+            val resolutionStarted = System.nanoTime()
             try {
                 val playbackData =
-                    runBlocking(Dispatchers.IO) {
-                        withTimeout(PLAYBACK_RESOLUTION_TIMEOUT_MS) {
-                            YTPlayerUtils.playerResponseForPlayback(
-                                mediaId,
-                                audioQuality = audioQualityProvider(),
-                                connectivityManager = connectivityManager,
-                                preferredStreamClient =
-                                    preferredStreamClientProvider(),
-                                avoidCodecs = avoidStreamCodecs,
-                            )
-                        }
+                    resolutionRequests.resolve(mediaId, scopeProvider().coroutineContext[kotlinx.coroutines.Job]) {
+                        YTPlayerUtils.playerResponseForPlayback(
+                            mediaId, audioQuality = audioQualityProvider(), connectivityManager = connectivityManager,
+                            preferredStreamClient = preferredStreamClientProvider(), avoidCodecs = avoidStreamCodecs,
+                        )
                     }.getOrElse { throwable ->
-                        when (throwable) {
-                            is YTPlayerUtils.LoginRequiredForPlaybackException -> {
-                                if (!PlaybackGateClassifier.requiresAgeVerification(throwable.message)) {
-                                    promptLoginRecovery(
-                                        mediaId,
-                                        throwable.targetUrl,
-                                    )
-                                }
-                                throw PlaybackException(
-                                    context.getString(
-                                        R.string.playback_requires_youtube_music_confirmation,
-                                    ),
-                                    throwable,
-                                    PlaybackException.ERROR_CODE_REMOTE_ERROR,
-                                )
-                            }
-
-                            is PlaybackException -> throw throwable
-
-                            is java.net.ConnectException,
-                            is java.net.UnknownHostException -> throw PlaybackException(
-                                context.getString(R.string.error_no_internet),
-                                throwable,
-                                PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
-                            )
-
-                            is java.net.SocketTimeoutException ->
-                                throw PlaybackException(
-                                    context.getString(R.string.error_timeout),
-                                    throwable,
-                                    PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT,
-                                )
-
-                            else ->
-                                throw PlaybackException(
-                                    context.getString(R.string.error_unknown),
-                                    throwable,
-                                    PlaybackException.ERROR_CODE_REMOTE_ERROR,
-                                )
+                        if (throwable is YTPlayerUtils.LoginRequiredForPlaybackException &&
+                            !PlaybackGateClassifier.requiresAgeVerification(throwable.message)) {
+                            promptLoginRecovery(mediaId, throwable.targetUrl)
                         }
+                        throw PlaybackResolutionDataSourceException(mediaId, throwable, dataSpec, (System.nanoTime() - resolutionStarted) / 1_000_000L)
                     }
 
                 val nonNullPlayback =
@@ -271,17 +192,13 @@ internal class StreamResolver(
                             nonNullPlayback.streamExpiresInSeconds * 1000L,
                 )
 
-                return@Factory dataSpec
-                    .withUri(streamUrl.toUri())
-                    .subrange(
-                        dataSpec.uriPositionOffset,
-                        StreamRequestPolicy.boundedLength(dataSpec.length),
-                    )
+                return@Factory StreamRequestPolicy.resolveDataSpec(dataSpec, streamUrl.toUri())
             } catch (originalError: Exception) {
-                Timber.e(
-                    originalError,
-                    "YouTube playback error for $mediaId, trying JossRed as fallback",
-                )
+                if (originalError is PlaybackLoadCancelledException) throw originalError
+                val diagnostic = playbackFailureDiagnostic(mediaId, originalError)
+                Timber.tag("PlaybackDiagnostic").w("id=%s provider=%s stage=%s root=%s category=%s",
+                    diagnostic.mediaId, diagnostic.provider, diagnostic.stage, diagnostic.rootType, diagnostic.category)
+                if (diagnostic.category == "timeout" || diagnostic.cancelled) throw originalError
 
                 val useAlternativeSource =
                     runBlocking(Dispatchers.IO) {
@@ -369,14 +286,7 @@ internal class StreamResolver(
                             }
                         }
 
-                        return@Factory dataSpec
-                            .withUri(alternativeUrl.toUri())
-                            .subrange(
-                                dataSpec.uriPositionOffset,
-                                StreamRequestPolicy.boundedLength(
-                                    dataSpec.length,
-                                ),
-                            )
+                        return@Factory StreamRequestPolicy.resolveDataSpec(dataSpec, alternativeUrl.toUri())
                     }
                 } catch (fallbackError: Exception) {
                     when (fallbackError) {
@@ -400,7 +310,7 @@ internal class StreamResolver(
                     throw originalError
                 }
             }
-        }
+        }.let { factory -> DataSource.Factory { PlaybackDiagnosticDataSource(factory.createDataSource()) } }
 
     fun scheduleNextStreamWarmup() {
         warmupJob?.cancel()
@@ -445,7 +355,10 @@ internal class StreamResolver(
                         System.currentTimeMillis() +
                             playbackData.streamExpiresInSeconds * 1000L,
                 )
-            } catch (_: Exception) {
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                Timber.tag("PlaybackDiagnostic").w("id=%s provider=youtube stage=warmup category=failed root=%s", mediaId, error.javaClass.simpleName)
             } finally {
                 recovery.finishWarmup(mediaId)
             }
@@ -508,23 +421,9 @@ internal class StreamResolver(
         }
     }
 
-    private fun createCacheDataSource(): CacheDataSource.Factory =
-        CacheDataSource
-            .Factory()
-            .setCache(downloadCache)
-            .setUpstreamDataSourceFactory(
-                CacheDataSource
-                    .Factory()
-                    .setCache(playerCache)
-                    .setCacheKeyFactory { spec -> spec.key?.let(::playerCacheKey) ?: spec.uri.toString() }
-                    .setUpstreamDataSourceFactory(
-                        DefaultDataSource.Factory(
-                            context,
-                            OkHttpDataSource.Factory(mediaOkHttpClient),
-                        ),
-                    ).setFlags(FLAG_IGNORE_CACHE_ON_ERROR),
-            ).setCacheWriteDataSinkFactory(null)
-            .setFlags(FLAG_IGNORE_CACHE_ON_ERROR)
+    private fun createCacheDataSource(): CacheDataSource.Factory = playbackAudioCacheFactory(
+        playerCache, downloadCache, DefaultDataSource.Factory(context, OkHttpDataSource.Factory(mediaOkHttpClient)),
+    )
 
     private fun persistResolvedFormat(
         mediaId: String,
@@ -565,9 +464,6 @@ internal class StreamResolver(
             }
         }.getOrDefault(false)
 
-    private companion object {
-        const val PLAYBACK_RESOLUTION_TIMEOUT_MS = 20_000L
-    }
 }
 
 internal fun persistablePlaybackFormat(mediaId: String, playback: YTPlayerUtils.PlaybackData): FormatEntity? {
@@ -591,3 +487,51 @@ internal fun rememberAudioPlayerCacheKey(cache: Cache, mediaId: String, playback
     cache.applyContentMetadataMutations(key, androidx.media3.datasource.cache.ContentMetadataMutations().set("opentune.media.id", mediaId))
     cache.applyContentMetadataMutations(mediaId, androidx.media3.datasource.cache.ContentMetadataMutations().set("opentune.audio.variant", key))
 }
+
+internal fun playbackHttpClient(proxy: java.net.Proxy?, credentials: okhttp3.Interceptor): OkHttpClient =
+        OkHttpClient
+            .Builder()
+            .proxy(proxy)
+            .addNetworkInterceptor(credentials)
+            .followRedirects(true)
+            .followSslRedirects(true)
+            .connectTimeout(PLAYBACK_STREAM_CONNECT_TIMEOUT_MS, java.util.concurrent.TimeUnit.MILLISECONDS)
+            .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+            .callTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .addInterceptor { chain ->
+                val request = chain.request()
+                val host = request.url.host
+                val isYouTubeMediaHost =
+                    host.endsWith("googlevideo.com") ||
+                        host.endsWith("googleusercontent.com") ||
+                        host.endsWith("youtube.com") ||
+                        host.endsWith("youtube-nocookie.com") ||
+                        host.endsWith("ytimg.com")
+
+                if (!isYouTubeMediaHost) {
+                    return@addInterceptor chain.proceed(request)
+                }
+
+                val clientParam =
+                    request.url.queryParameter("c")?.trim().orEmpty()
+                val userAgent =
+                    StreamClientUtils.resolveUserAgent(clientParam)
+                val originReferer =
+                    StreamClientUtils.resolveOriginReferer(clientParam)
+
+                val builder =
+                    request
+                        .newBuilder()
+                        .header("User-Agent", userAgent)
+
+                originReferer.origin?.let {
+                    builder.header("Origin", it)
+                }
+                originReferer.referer?.let {
+                    builder.header("Referer", it)
+                }
+
+                chain.proceed(builder.build())
+            }.build()

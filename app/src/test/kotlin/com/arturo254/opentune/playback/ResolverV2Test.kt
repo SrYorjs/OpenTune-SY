@@ -5,6 +5,13 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ResolverV2Test {
+    @Test fun songSpecificErrorsDoNotBlockTheFollowingSong() {
+        assertFalse(resolverShouldBackoff(java.io.IOException("HTTP 502")))
+        assertFalse(resolverShouldBackoff(java.io.IOException("HTTP 403")))
+        assertFalse(resolverShouldBackoff(java.net.SocketTimeoutException()))
+        assertTrue(resolverShouldBackoff(java.net.ConnectException()))
+        assertTrue(resolverShouldBackoff(java.io.IOException("HTTP 429")))
+    }
     @Test fun youtubeFailuresDoNotBlockIndependentProvidersAndExpire() {
         var now = 1000L
         val backoff = ResolverProviderBackoff { now }

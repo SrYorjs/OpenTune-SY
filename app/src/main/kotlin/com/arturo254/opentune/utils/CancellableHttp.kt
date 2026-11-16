@@ -8,7 +8,14 @@ import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
 
-suspend fun Call.awaitText(): String = suspendCancellableCoroutine { continuation ->
+suspend fun Call.awaitText(): String = awaitResponse {
+    if (!it.isSuccessful) throw IOException("HTTP ${it.code}")
+    it.body.string()
+}
+
+suspend fun Call.awaitCode(): Int = awaitResponse { it.code }
+
+private suspend fun <T> Call.awaitResponse(read: (Response) -> T): T = suspendCancellableCoroutine { continuation ->
     continuation.invokeOnCancellation { cancel() }
     enqueue(object : Callback {
         override fun onFailure(call: Call, e: IOException) {
@@ -17,9 +24,8 @@ suspend fun Call.awaitText(): String = suspendCancellableCoroutine { continuatio
         override fun onResponse(call: Call, response: Response) {
             response.use {
                 try {
-                    if (!it.isSuccessful) throw IOException("HTTP ${it.code}")
-                    val text = it.body.string()
-                    if (continuation.isActive) continuation.resume(text)
+                    val value = read(it)
+                    if (continuation.isActive) continuation.resume(value)
                 } catch (error: Exception) {
                     if (continuation.isActive) continuation.resumeWithException(error)
                 }

@@ -19,6 +19,13 @@ interface PlaybackCacheAccess {
     @DownloadCache fun downloadCache(): Cache
 }
 
+internal fun playbackAudioCacheFactory(player: Cache, downloads: Cache, upstream: DataSource.Factory): CacheDataSource.Factory =
+    CacheDataSource.Factory().setCache(downloads).setCacheWriteDataSinkFactory(null)
+        .setUpstreamDataSourceFactory(CacheDataSource.Factory().setCache(player)
+            .setCacheKeyFactory { spec -> spec.key?.let { audioPlayerCacheKey(player, it) } ?: spec.uri.toString() }
+            .setUpstreamDataSourceFactory(upstream).setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR))
+        .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
+
 fun videoCacheKey(mediaId: String, track: VideoTrack): String =
     "video:$mediaId:${track.itag}:${track.width}x${track.height}:${track.codecs}:${track.bitrate}"
 

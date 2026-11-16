@@ -213,6 +213,7 @@ class MusicService :
     private val togetherController
         get() = components.togetherController
 
+    private var sourceFallbackJob: kotlinx.coroutines.Job? = null
     private val nextItemPreloader by lazy { NextItemPreloader(this, ioScope) }
     private var scopeJob = Job()
     private var scope = CoroutineScope(Dispatchers.Main + scopeJob)
@@ -823,6 +824,8 @@ class MusicService :
         reason: Int,
     ) {
         nextItemPreloader.cancel()
+        sourceFallbackJob?.cancel()
+        streamResolver.onMediaItemTransition(mediaItem?.mediaId)
         super.onMediaItemTransition(
             mediaItem,
             reason,
@@ -878,10 +881,15 @@ class MusicService :
     override fun onPlayerError(
         error: PlaybackException,
     ) {
-        Timber.tag("PlaybackDiagnostic").w("stage=media3 code=%d category=%s", error.errorCode, error.errorCodeName)
+        val diagnostic = playbackFailureDiagnostic(player.currentMediaItem?.mediaId, error, error.errorCode)
+        Timber.tag("PlaybackDiagnostic").w("id=%s provider=%s stage=%s code=%d root=%s http=%s category=%s recovery=%s elapsed_ms=%s",
+            diagnostic.mediaId, diagnostic.provider, diagnostic.stage, diagnostic.code, diagnostic.rootType,
+            diagnostic.httpCode?.toString() ?: "none", diagnostic.category, if (diagnostic.stale) "stale" else if (diagnostic.cancelled) "cancelled" else "pending", diagnostic.elapsedMs?.toString() ?: "unavailable")
+        if (diagnostic.stale) return
         val failedId = player.currentMediaItem?.mediaId
         if (failedId != null && error.errorCode in 2000..2999 && StreamFallbacks.available(failedId)) {
-            scope.launch {
+            sourceFallbackJob?.cancel()
+            sourceFallbackJob = scope.launch {
                 val replacement = kotlinx.coroutines.withContext(Dispatchers.IO) { StreamFallbacks.resolve(failedId) }
                 if (player.currentMediaItem?.mediaId != failedId || player.playerError !== error) return@launch
                 if (replacement != null) {
@@ -919,6 +927,8 @@ class MusicService :
 
     override fun onDestroy() {
         nextItemPreloader.cancel()
+        sourceFallbackJob?.cancel()
+        if (::components.isInitialized) streamResolver.cancelResolutions()
         super.onDestroy()
         try {
             scope.launch { togetherController.stop() }

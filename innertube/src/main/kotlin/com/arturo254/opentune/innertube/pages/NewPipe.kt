@@ -25,6 +25,52 @@ import java.io.IOException
 import java.net.Proxy
 import java.net.SocketTimeoutException
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+
+private val activeNewPipeCancellation = ThreadLocal<NewPipeCancellation?>()
+
+private class NewPipeCancellation(private val thread: Thread) {
+    private var cancelled = false
+    private var finished = false
+    private var active: okhttp3.Call? = null
+
+    @Synchronized fun register(call: okhttp3.Call) {
+        active = call
+        if (cancelled) {
+            call.cancel()
+            throw java.io.InterruptedIOException("NewPipe request cancelled")
+        }
+    }
+
+    @Synchronized fun clear() { active = null }
+
+    @Synchronized fun cancel() {
+        if (finished) return
+        cancelled = true
+        active?.cancel()
+        thread.interrupt()
+    }
+
+    @Synchronized fun finish() {
+        finished = true
+        active = null
+        if (cancelled) Thread.interrupted()
+    }
+}
+
+internal fun <T> executeNewPipeCall(call: okhttp3.Call, read: (okhttp3.Response) -> T): T {
+    val cancellation = activeNewPipeCancellation.get()
+    cancellation?.register(call)
+    try {
+        return call.execute().use(read)
+    } finally {
+        cancellation?.clear()
+    }
+}
 
 private class NewPipeDownloaderImpl(proxy: Proxy?) : Downloader() {
 
@@ -67,23 +113,34 @@ private class NewPipeDownloaderImpl(proxy: Proxy?) : Downloader() {
             requestBuilder.header("User-Agent", YouTubeClient.USER_AGENT_WEB)
         }
 
-        val response = client.newCall(requestBuilder.build()).execute()
-
-        if (response.code == 429) {
-            response.close()
-
-            throw ReCaptchaException("reCaptcha Challenge requested", url)
+        return executeNewPipeCall(client.newCall(requestBuilder.build())) { response ->
+            if (response.code == 429) throw ReCaptchaException("reCaptcha Challenge requested", url)
+            val responseBodyToReturn = response.body.string()
+            val latestUrl = response.request.url.toString()
+            Response(response.code, response.message, response.headers.toMultimap(), responseBodyToReturn, latestUrl)
         }
-
-        val responseBodyToReturn = response.body.string()
-
-        val latestUrl = response.request.url.toString()
-        return Response(response.code, response.message, response.headers.toMultimap(), responseBodyToReturn, latestUrl)
     }
 
 }
 
 object NewPipeUtils {
+
+    suspend fun <T> cancellable(block: () -> T): T = withContext(Dispatchers.IO) {
+        suspendCancellableCoroutine { continuation ->
+            val cancellation = NewPipeCancellation(Thread.currentThread())
+            activeNewPipeCancellation.set(cancellation)
+            continuation.invokeOnCancellation { cancellation.cancel() }
+            try {
+                val value = block()
+                if (continuation.isActive) continuation.resume(value)
+            } catch (error: Exception) {
+                if (continuation.isActive) continuation.resumeWithException(error)
+            } finally {
+                cancellation.finish()
+                activeNewPipeCancellation.remove()
+            }
+        }
+    }
 
     init {
         NewPipe.init(NewPipeDownloaderImpl(YouTube.proxy))

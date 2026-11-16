@@ -11,9 +11,8 @@ import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.SilenceSkippingAudioProcessor
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.extractor.ExtractorsFactory
-import androidx.media3.extractor.mkv.MatroskaExtractor
-import androidx.media3.extractor.mp4.FragmentedMp4Extractor
-import androidx.media3.extractor.mp4.Mp4Extractor
+import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy
+import androidx.media3.exoplayer.upstream.LoadErrorHandlingPolicy
 import com.arturo254.opentune.extensions.setOffloadEnabled
 
 internal class PlaybackEngine(
@@ -118,14 +117,8 @@ internal class PlaybackEngine(
     private fun createMediaSourceFactory() =
         DefaultMediaSourceFactory(
             streamResolver.createDataSourceFactory(),
-            ExtractorsFactory {
-                arrayOf(
-                    Mp4Extractor(),
-                    FragmentedMp4Extractor(),
-                    MatroskaExtractor(),
-                )
-            },
-        )
+            playbackExtractorsFactory(),
+        ).setLoadErrorHandlingPolicy(PlaybackLoadErrorHandlingPolicy())
 
     private fun createRenderersFactory() =
         object : DefaultRenderersFactory(context) {
@@ -158,4 +151,13 @@ internal class PlaybackEngine(
             .setUsage(C.USAGE_MEDIA)
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
             .build()
+}
+
+internal fun playbackExtractorsFactory(): ExtractorsFactory = androidx.media3.extractor.DefaultExtractorsFactory()
+
+internal class PlaybackLoadErrorHandlingPolicy : DefaultLoadErrorHandlingPolicy() {
+    override fun getRetryDelayMsFor(info: LoadErrorHandlingPolicy.LoadErrorInfo): Long =
+        if (generateSequence<Throwable>(info.exception) { it.cause }.take(32).any {
+            it is PlaybackResolutionDataSourceException || it is PlaybackLoadCancelledException
+        }) C.TIME_UNSET else super.getRetryDelayMsFor(info)
 }

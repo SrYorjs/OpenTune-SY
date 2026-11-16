@@ -45,8 +45,7 @@ internal class ErrorRecoveryController(
         ConcurrentHashMap<String, Pair<String, Long>>()
     private val playbackWarmupInFlight =
         ConcurrentHashMap.newKeySet<String>()
-    private val streamRecoveryState =
-        ConcurrentHashMap<String, Pair<Int, Long>>()
+    private val recoveryAttempts = TrackRecoveryAttempts()
 
     @Volatile
     private var pendingStreamRefreshValidationMediaId: String? = null
@@ -84,6 +83,8 @@ internal class ErrorRecoveryController(
 
         val currentMediaId = player.currentMediaItem?.mediaId
         val httpStatusCode = error.httpStatusCodeOrNull()
+        val diagnostic = playbackFailureDiagnostic(currentMediaId, error, error.errorCode)
+        val resumeWhenReady = player.playWhenReady
 
         if (
             currentMediaId != null &&
@@ -99,7 +100,7 @@ internal class ErrorRecoveryController(
             removeCachedStream(currentMediaId)
             pendingStreamRefreshValidationMediaId = currentMediaId
             player.prepare()
-            player.playWhenReady = true
+            player.playWhenReady = resumeWhenReady
             return
         }
 
@@ -117,6 +118,7 @@ internal class ErrorRecoveryController(
                             error.errorCode ==
                                 PlaybackException.ERROR_CODE_IO_READ_POSITION_OUT_OF_RANGE,
                         httpStatusCode = httpStatusCode,
+                        resolutionTimeoutError = diagnostic.category == "timeout" && diagnostic.stage == "resolver",
                     ),
                 )
 
@@ -134,7 +136,8 @@ internal class ErrorRecoveryController(
         if (
             shouldAttemptStreamRefresh &&
             currentMediaId != null &&
-            shouldSkipRedundantStreamRefresh(currentMediaId)
+            shouldSkipRedundantStreamRefresh(currentMediaId) &&
+            markAndCheckRecoveryAllowance(currentMediaId)
         ) {
             Timber
                 .tag(TAG)
@@ -143,7 +146,7 @@ internal class ErrorRecoveryController(
                 )
             refreshValidatedPlayingMediaId = null
             player.prepare()
-            player.playWhenReady = true
+            player.playWhenReady = resumeWhenReady
             return
         }
 
@@ -188,7 +191,7 @@ internal class ErrorRecoveryController(
             removeCachedStream(currentMediaId)
             pendingStreamRefreshValidationMediaId = currentMediaId
             player.prepare()
-            player.playWhenReady = true
+            player.playWhenReady = resumeWhenReady
             return
         }
 
@@ -237,12 +240,14 @@ internal class ErrorRecoveryController(
     }
 
     fun onMediaItemTransition(activeMediaId: String?) {
+        recoveryAttempts.transition(activeMediaId)
         clearStreamRefreshGuards(activeMediaId)
     }
 
     fun onPlaybackStateChanged(playbackState: Int) {
         val activeMediaId = player.currentMediaItem?.mediaId
         clearStreamRefreshGuards(activeMediaId)
+        if (playbackState == Player.STATE_READY && player.playWhenReady) consecutivePlaybackErrors = 0
 
         if (
             playbackState == Player.STATE_READY &&
@@ -253,7 +258,6 @@ internal class ErrorRecoveryController(
         ) {
             refreshValidatedPlayingMediaId = activeMediaId
             pendingStreamRefreshValidationMediaId = null
-            streamRecoveryState.remove(activeMediaId)
             Timber
                 .tag(TAG)
                 .i(
@@ -274,6 +278,7 @@ internal class ErrorRecoveryController(
 
     fun resetForPlaybackStop() {
         clearStreamRefreshGuards()
+        recoveryAttempts.transition(null)
         waitingForNetworkConnection.value = false
         consecutivePlaybackErrors = 0
     }
@@ -357,18 +362,7 @@ internal class ErrorRecoveryController(
         return null
     }
 
-    private fun markAndCheckRecoveryAllowance(mediaId: String): Boolean {
-        val now = System.currentTimeMillis()
-        val (count, lastAt) =
-            streamRecoveryState[mediaId] ?: (0 to 0L)
-        val nextCount =
-            if (now - lastAt > RECOVERY_WINDOW_MS) 1 else count + 1
-
-        if (nextCount > MAX_STREAM_RECOVERY_ATTEMPTS) return false
-
-        streamRecoveryState[mediaId] = nextCount to now
-        return true
-    }
+    private fun markAndCheckRecoveryAllowance(mediaId: String): Boolean = recoveryAttempts.allow(mediaId)
 
     private fun shouldSkipRedundantStreamRefresh(mediaId: String): Boolean {
         if (refreshValidatedPlayingMediaId != mediaId) return false
@@ -405,7 +399,5 @@ internal class ErrorRecoveryController(
 
     private companion object {
         const val TAG = "ErrorRecoveryController"
-        const val RECOVERY_WINDOW_MS = 45_000L
-        const val MAX_STREAM_RECOVERY_ATTEMPTS = 2
     }
 }

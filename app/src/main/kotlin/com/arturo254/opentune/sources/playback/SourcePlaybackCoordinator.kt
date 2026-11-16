@@ -292,7 +292,8 @@ constructor(
     }
 
     private companion object {
-        const val PLAYBACK_START_TIMEOUT_MS = 16_000L
+        const val PLAYBACK_START_TIMEOUT_MS = com.arturo254.opentune.playback.PLAYBACK_RESOLUTION_BUDGET_MS +
+            com.arturo254.opentune.playback.PLAYBACK_STREAM_CONNECT_TIMEOUT_MS
         const val RESOLVE_ITEM_TIMEOUT_MS = 8_000L
     }
 

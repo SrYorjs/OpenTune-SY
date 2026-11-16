@@ -22,9 +22,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import java.io.FileOutputStream
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
 import java.io.Serializable
 import kotlin.time.Duration.Companion.seconds
 import timber.log.Timber
@@ -43,7 +40,7 @@ internal class PlaybackPersistenceController(
 ) {
     val queueRestoreCompleted = MutableStateFlow(false)
 
-    private val persistentStateLock = Any()
+    private val fileStore by lazy { PersistentPlaybackStore(context.filesDir) }
 
     fun start() {
         scopeProvider().launch(Dispatchers.IO) {
@@ -262,92 +259,17 @@ internal class PlaybackPersistenceController(
         )
     }
 
-    private inline fun <reified T> readPersistentObject(
-        fileName: String,
-    ): T? {
-        val persistentFile =
-            context.filesDir.resolve(fileName)
+    private inline fun <reified T> readPersistentObject(fileName: String): T? =
+        runCatching { fileStore.read(fileName) as? T }.onFailure {
+            Timber.tag(TAG).w("stage=persistence category=read_failed root=%s", it.javaClass.simpleName)
+        }.getOrNull()
 
-        if (
-            !persistentFile.exists() ||
-            !persistentFile.isFile
-        ) {
-            return null
-        }
-
-        return synchronized(persistentStateLock) {
-            runCatching {
-                persistentFile
-                    .inputStream()
-                    .use { inputStream ->
-                        ObjectInputStream(
-                            inputStream,
-                        ).use { input ->
-                            input.readObject() as? T
-                        }
-                    }
-            }.onFailure { error ->
-                Timber
-                    .tag(TAG)
-                    .w(
-                        error,
-                        "Failed to read persistent file: $fileName",
-                    )
-                runCatching {
-                    persistentFile.delete()
-                }
-            }.getOrNull()
-        }
-    }
-
-    private fun writePersistentObject(
-        fileName: String,
-        payload: Serializable,
-    ) {
-        val persistentFile =
-            context.filesDir.resolve(fileName)
-        val tempFile =
-            context.filesDir.resolve(
-                "$fileName.tmp",
-            )
-
-        synchronized(persistentStateLock) {
-            runCatching {
-                FileOutputStream(tempFile)
-                    .use { outputStream ->
-                        ObjectOutputStream(
-                            outputStream,
-                        ).use { output ->
-                            output.writeObject(payload)
-                            output.flush()
-                        }
-                        outputStream.fd.sync()
-                    }
-
-                if (
-                    persistentFile.exists() &&
-                    !persistentFile.delete()
-                ) {
-                    error(
-                        "Could not replace $fileName",
-                    )
-                }
-
-                if (
-                    !tempFile.renameTo(
-                        persistentFile,
-                    )
-                ) {
-                    error(
-                        "Could not atomically move $fileName",
-                    )
-                }
-            }.onFailure { error ->
-                runCatching {
-                    tempFile.delete()
-                }
-                onError(error)
-            }
+    private fun writePersistentObject(fileName: String, payload: Serializable) {
+        try {
+            fileStore.write(fileName, payload)
+        } catch (error: Exception) {
+            Timber.tag(TAG).w("stage=persistence category=write_failed root=%s", error.javaClass.simpleName)
+            onError(error)
         }
     }
 

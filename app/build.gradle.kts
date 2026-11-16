@@ -343,6 +343,9 @@ dependencies {
 
     implementation(libs.timber)
     testImplementation(libs.junit)
+    testImplementation("org.robolectric:robolectric:4.16.1")
+    testImplementation("com.squareup.okhttp3:okhttp-tls:${libs.versions.okhttp.get()}")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${libs.versions.coroutinesGuava.get()}")
     implementation("com.github.therealbush:translator:1.1.1")
     implementation("androidx.lifecycle:lifecycle-process:2.10.0")
 }
@@ -369,4 +372,14 @@ configurations.configureEach {
         "androidx.compose.animation:animation-graphics:${libs.versions.compose.get()}",
         "org.jetbrains.kotlin:kotlin-metadata-jvm:${libs.versions.kotlin.get()}",
     )
+}
+
+val playbackUnitTestTemp = layout.buildDirectory.dir("tmp/playback-unit-tests")
+tasks.withType<Test>().configureEach {
+    val playbackTestDirectory = playbackUnitTestTemp.get().asFile
+    systemProperty("java.io.tmpdir", playbackTestDirectory.absolutePath)
+    systemProperty("robolectric.dependency.repo.url", "https://repo.maven.apache.org/maven2")
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED")
+    maxHeapSize = "2g"
+    doFirst { playbackTestDirectory.mkdirs() }
 }

@@ -5,6 +5,7 @@ internal data class StreamRefreshSignals(
     val fileNotFoundError: Boolean = false,
     val readPositionOutOfRangeError: Boolean = false,
     val httpStatusCode: Int? = null,
+    val resolutionTimeoutError: Boolean = false,
 )
 
 internal object ErrorRecoveryPolicy {
@@ -15,6 +16,7 @@ internal object ErrorRecoveryPolicy {
 
     fun shouldAttemptStreamRefresh(signals: StreamRefreshSignals): Boolean =
         signals.badHttpStatusError ||
+            signals.resolutionTimeoutError ||
             signals.fileNotFoundError ||
             signals.readPositionOutOfRangeError ||
             signals.httpStatusCode in refreshableHttpStatuses
@@ -36,4 +38,28 @@ internal object ErrorRecoveryPolicy {
         hasNextItem: Boolean,
     ): Boolean =
         nextConsecutiveErrorCount <= MAX_CONSECUTIVE_ERRORS && hasNextItem
+}
+
+internal class TrackRecoveryAttempts(private val now: () -> Long = System::currentTimeMillis) {
+    private var activeId: String? = null
+    private var attempts = 0
+    private var lastAt = 0L
+
+    fun transition(mediaId: String?) {
+        if (activeId != mediaId) {
+            activeId = mediaId
+            attempts = 0
+            lastAt = 0L
+        }
+    }
+
+    fun allow(mediaId: String): Boolean {
+        transition(mediaId)
+        val current = now()
+        if (current - lastAt > 45_000L) attempts = 0
+        if (attempts >= 2) return false
+        attempts++
+        lastAt = current
+        return true
+    }
 }
