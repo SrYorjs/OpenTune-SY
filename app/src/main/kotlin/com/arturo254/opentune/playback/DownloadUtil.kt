@@ -106,6 +106,7 @@ constructor(
             .readTimeout(0, TimeUnit.MILLISECONDS)
             .retryOnConnectionFailure(true)
             .proxy(YouTube.streamProxy)
+            .addNetworkInterceptor(OwnResolverClient.credentialInterceptor())
             .followRedirects(true)
             .followSslRedirects(true)
             .addInterceptor { chain ->

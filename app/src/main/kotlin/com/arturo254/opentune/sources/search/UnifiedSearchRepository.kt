@@ -16,6 +16,8 @@ import com.arturo254.opentune.sources.resolution.SourceResolutionPreferences
 import com.arturo254.opentune.sources.resolution.SourceResolver
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.channels.Channel
@@ -42,6 +44,8 @@ constructor(
     private val trackMatcher: TrackMatcher,
     private val sourceResolver: SourceResolver,
 ) {
+    private val searchPermits = Semaphore(3)
+
     suspend fun search(
         request: UnifiedSearchRequest,
         onPartial: (suspend (UnifiedSearchResult) -> Unit)? = null,
@@ -216,13 +220,13 @@ constructor(
     ): RawSourceSearchResult {
         val result =
             runCatching {
-                withTimeoutOrNull(searchTimeoutMs(source.id)) { source.searchTracks(
+                withTimeoutOrNull(searchTimeoutMs(source.id)) { searchPermits.withPermit { source.searchTracks(
                     TrackSearchRequest(
                         query = query,
                         limit = limit,
                         continuationToken = continuationToken,
                     ),
-                ) } ?: Result.failure(java.util.concurrent.TimeoutException("Search source timed out"))
+                ) } } ?: Result.failure(java.util.concurrent.TimeoutException("Search source timed out"))
             }.fold(
                 onSuccess = { it },
                 onFailure = { throwable ->

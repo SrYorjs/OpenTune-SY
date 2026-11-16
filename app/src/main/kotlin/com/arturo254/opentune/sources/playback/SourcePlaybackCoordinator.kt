@@ -98,6 +98,7 @@ constructor(
             }
 
             SourcePlaybackRoute.AUDIUS_DIRECT,
+            SourcePlaybackRoute.PROVIDER_DIRECT,
             SourcePlaybackRoute.UNSUPPORTED -> {
                 val item = (sourceRegistry[variant.provider] as? StreamMusicSource)
                     ?.resolvePlayback(variant)
@@ -125,7 +126,7 @@ constructor(
                 resolver = ::resolveMediaItem,
             ),
         )
-        return awaitPlaybackStart(connection, requested.sourceId)
+        return awaitPlaybackStart(connection, "audius:" + requested.sourceId)
     }
 
     suspend fun playSearchResults(
@@ -169,7 +170,7 @@ constructor(
             // The canonical Media3 YouTube source resolves its stream on demand.
             // Do not resolve that same URL here before dispatching playback.
             if (variant.playbackRoute() == SourcePlaybackRoute.YOUTUBE_QUEUE) {
-                variant.toOpenTuneMetadata().toMediaItem()
+                variant.toPlayableMediaItem()
             } else {
                 val direct = (sourceRegistry[variant.provider] as? StreamMusicSource)
                     ?.resolvePlayback(variant)
@@ -179,6 +180,7 @@ constructor(
                     SourcePlaybackRoute.CATALOG_BRIDGE ->
                         CatalogPlaybackResolver.resolveToMediaItem(variant.toCatalogPlaybackReference())
                     SourcePlaybackRoute.AUDIUS_DIRECT,
+            SourcePlaybackRoute.PROVIDER_DIRECT,
                     SourcePlaybackRoute.UNSUPPORTED -> null
                 }
             }
@@ -191,11 +193,20 @@ constructor(
     internal suspend fun resolveTrack(
         variants: List<SourceVariant>,
     ): MediaItem? {
-        for (variant in variants.distinctBy { it.provider to it.sourceId }) {
+        val choices = variants.distinctBy { it.provider to it.sourceId }
+        for ((index,variant) in choices.withIndex()) {
             val item = withTimeoutOrNull(RESOLVE_ITEM_TIMEOUT_MS) {
                 resolveMediaItem(variant)
             }
-            if (item != null) return item
+            if (item != null) {
+                val reference = com.arturo254.opentune.core.model.TrackIdentity(variant.title,
+                    variant.artists.map { com.arturo254.opentune.core.model.ArtistIdentity(it) },
+                    durationMs=variant.durationMs,isrc=variant.isrc,version=variant.version)
+                val matcher = com.arturo254.opentune.sources.matching.TrackMatcher()
+                val remaining = choices.drop(index+1).filter { matcher.match(reference,it).isAccepted }
+                if (remaining.isNotEmpty()) com.arturo254.opentune.playback.StreamFallbacks.register(item.mediaId) { resolveTrack(remaining) }
+                return item
+            }
         }
         return null
     }
@@ -229,7 +240,7 @@ constructor(
         val expectedMediaId = if (variant.playbackRoute() == SourcePlaybackRoute.CATALOG_BRIDGE) {
             connection.player.currentMediaItem?.mediaId ?: return false
         } else {
-            variant.sourceId
+            if (variant.provider == ProviderId.AUDIUS || variant.provider == ProviderId.PEERTUBE) variant.provider.value + ":" + variant.sourceId else variant.sourceId
         }
         return awaitPlaybackStart(connection, expectedMediaId)
     }
@@ -316,6 +327,7 @@ enum class SourcePlaybackRoute {
     YOUTUBE_QUEUE,
     LOCAL_OR_OFFLINE,
     AUDIUS_DIRECT,
+    PROVIDER_DIRECT,
     CATALOG_BRIDGE,
     UNSUPPORTED,
 }
@@ -325,6 +337,7 @@ fun SourceVariant.playbackRoute(): SourcePlaybackRoute =
         ProviderId.YOUTUBE_MUSIC -> SourcePlaybackRoute.YOUTUBE_QUEUE
         ProviderId.LOCAL, ProviderId.OPEN_TUNE_OFFLINE -> SourcePlaybackRoute.LOCAL_OR_OFFLINE
         ProviderId.AUDIUS -> SourcePlaybackRoute.AUDIUS_DIRECT
+        ProviderId.PEERTUBE -> SourcePlaybackRoute.PROVIDER_DIRECT
         ProviderId.DEEZER,
         ProviderId.SPOTIFY,
         ProviderId.TIDAL,

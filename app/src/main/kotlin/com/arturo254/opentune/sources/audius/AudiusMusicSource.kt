@@ -1,5 +1,6 @@
 package com.arturo254.opentune.sources.audius
 
+import com.arturo254.opentune.utils.awaitText
 import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata.MEDIA_TYPE_MUSIC
@@ -70,7 +71,7 @@ class AudiusHttpGateway @Inject constructor() : AudiusCatalogGateway {
         .connectTimeout(8, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
         .callTimeout(20, TimeUnit.SECONDS)
-        .followRedirects(true)
+        .followRedirects(false)
         .followSslRedirects(true)
         .retryOnConnectionFailure(true)
         .build()
@@ -117,7 +118,7 @@ class AudiusHttpGateway @Inject constructor() : AudiusCatalogGateway {
     override fun downloadUrl(id: String): String =
         endpoint("/tracks/${encodeSegment(id)}/download").toString()
 
-    private fun fetch(
+    private suspend fun fetch(
         path: String,
         parameters: List<Pair<String, String>> = emptyList(),
     ): JsonObject {
@@ -125,14 +126,10 @@ class AudiusHttpGateway @Inject constructor() : AudiusCatalogGateway {
         val request = Request.Builder()
             .url(requestUrl)
             .header("Accept", "application/json")
+            .apply { BuildConfig.AUDIUS_API_KEY.takeIf { it.isNotBlank() }?.let { header("Authorization", "Bearer $it") } }
             .get()
             .build()
-        return client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                error("Audius API HTTP ${response.code}")
-            }
-            json.parseToJsonElement(response.body.string()).jsonObject
-        }
+        return json.parseToJsonElement(client.newCall(request).awaitText()).jsonObject
     }
 
     private fun endpoint(
@@ -140,8 +137,6 @@ class AudiusHttpGateway @Inject constructor() : AudiusCatalogGateway {
         parameters: List<Pair<String, String>> = emptyList(),
     ): HttpUrl {
         val builder = API_BASE.newBuilder().addPathSegments(path.trimStart('/'))
-        val key = BuildConfig.AUDIUS_API_KEY.trim()
-        if (key.isNotEmpty()) builder.addQueryParameter("api_key", key)
         parameters.forEach { (name, value) -> builder.addQueryParameter(name, value) }
         return builder.build()
     }
@@ -241,6 +236,11 @@ class AudiusMusicSource @Inject constructor(
     override suspend fun searchTracks(request: TrackSearchRequest): Result<TrackSearchPage> {
         val query = request.query.trim()
         if (query.isEmpty()) return Result.success(TrackSearchPage(emptyList()))
+        if (request.continuationToken == null) {
+            com.arturo254.opentune.playback.OwnResolverClient.searchV2("audius",query,"audio",request.limit)?.let { items ->
+                return Result.success(TrackSearchPage(items, if (items.size >= 25) "audius-offset:25" else null))
+            }
+        }
         val offset = runCatching {
             if (request.continuationToken == null) 0 else {
                 require(request.continuationToken.startsWith(CONTINUATION_PREFIX))
@@ -263,10 +263,11 @@ class AudiusMusicSource @Inject constructor(
 
     override suspend fun resolvePlayback(variant: SourceVariant): MediaItem? {
         if (variant.provider != ProviderId.AUDIUS) return null
+        val resolved = com.arturo254.opentune.playback.OwnResolverClient.resolveV2("audius",variant.sourceId)
         val artist = variant.artists.joinToString()
         return MediaItem.Builder()
-            .setMediaId(variant.sourceId)
-            .setUri(gateway.streamUrl(variant.sourceId))
+            .setMediaId("audius:" + variant.sourceId)
+            .setUri(resolved?.url ?: gateway.streamUrl(variant.sourceId))
             .setMimeType(MimeTypes.AUDIO_MPEG)
             .setCustomCacheKey("audius:" + variant.sourceId)
             .setTag(variant.toMediaMetadata())
@@ -293,7 +294,7 @@ class AudiusMusicSource @Inject constructor(
 
     private fun SourceVariant.toMediaMetadata(): MediaMetadata =
         MediaMetadata(
-            id = sourceId,
+            id = "audius:" + sourceId,
             title = title,
             artists = artists.map { MediaMetadata.Artist(id = null, name = it) },
             duration = durationMs?.div(1_000L)?.coerceAtMost(Int.MAX_VALUE.toLong())?.toInt()

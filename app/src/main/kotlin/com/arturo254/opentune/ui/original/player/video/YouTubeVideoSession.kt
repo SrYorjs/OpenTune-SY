@@ -11,6 +11,7 @@ import android.view.Surface
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -72,6 +73,7 @@ private object YouTubeVideoHttp {
     val client: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .followAppProxy()
+            .addNetworkInterceptor(com.arturo254.opentune.playback.OwnResolverClient.credentialInterceptor())
             .build()
     }
 }
@@ -80,6 +82,9 @@ private object YouTubeVideoHttp {
 @Stable
 class YouTubeVideoSession internal constructor(context: Context, val videoId: String) {
     // the first picture is up, so the view can fade in
+    var durationMs by mutableLongStateOf(0L)
+        private set
+
     var hasFrame by mutableStateOf(false)
         private set
 
@@ -136,6 +141,7 @@ class YouTubeVideoSession internal constructor(context: Context, val videoId: St
                 seekLatencyMs = seekLatencyMs * 0.6 + took * 0.4
                 seekStartedAt = 0L
             }
+            player?.duration?.takeIf { it > 0L }?.let { duration -> main.post { durationMs = duration } }
             publishStall()
         }
 
@@ -271,7 +277,10 @@ class YouTubeVideoSession internal constructor(context: Context, val videoId: St
     }
 
     private fun mediaSourceFor(s: VideoStreams): MediaSource {
-        val dataSource = OkHttpDataSource.Factory(YouTubeVideoHttp.client).setDefaultRequestProperties(s.headers)
+        val dataSource = com.arturo254.opentune.playback.cachedVideoFactory(appContext,
+            androidx.media3.datasource.DefaultDataSource.Factory(appContext,
+                OkHttpDataSource.Factory(YouTubeVideoHttp.client).setDefaultRequestProperties(s.headers)),
+            s.videoId, s.tracks + s.sharpTracks)
         val family = s.tracksFor(capShortSide())
         loadedFamily = family
         val manifest = VideoDash.manifest(family, s.durationMs)?.let { xml ->
@@ -287,7 +296,8 @@ class YouTubeVideoSession internal constructor(context: Context, val videoId: St
         val track = s.trackFor(capShortSide()) ?: s.tracks.first()
         wholeFileSide = track.shortSide
         Timber.tag("YouTubeVideoSession").d("videoId=%s source=progressive itag=%d", videoId, track.itag)
-        return ProgressiveMediaSource.Factory(dataSource).createMediaSource(MediaItem.fromUri(track.url))
+        return ProgressiveMediaSource.Factory(dataSource).createMediaSource(MediaItem.Builder().setUri(track.url)
+            .setCustomCacheKey(com.arturo254.opentune.playback.videoCacheKey(s.videoId, track)).build())
     }
 
     private fun syncNow(targetMs: Long?, songSpeed: Float, playing: Boolean, sampledAt: Long) {

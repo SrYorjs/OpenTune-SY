@@ -1,4 +1,5 @@
-fastapi>=0.115
-uvicorn[standard]>=0.30
-httpx[socks]>=0.27
-yt-dlp[default]
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+httpx[socks]==0.28.1
+httpcore==1.0.9
+yt-dlp[default]==2026.10.26

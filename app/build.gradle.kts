@@ -125,6 +125,7 @@ android {
             localProperties.getProperty("OWN_RESOLVER_KEY")
                 ?: System.getenv("OWN_RESOLVER_KEY")
                 ?: ""
+        buildConfigField("String", "PEERTUBE_URL", "\"${localProperties.getProperty("PEERTUBE_URL") ?: System.getenv("PEERTUBE_URL") ?: "https://video.blender.org/"}\"")
         buildConfigField("String", "OWN_RESOLVER_URL", "\"$ownResolverUrl\"")
         buildConfigField("String", "OWN_RESOLVER_KEY", "\"$ownResolverKey\"")
     }

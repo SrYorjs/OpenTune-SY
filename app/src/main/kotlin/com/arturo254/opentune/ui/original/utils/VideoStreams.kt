@@ -20,7 +20,7 @@ data class VideoStreams(
     val isExpired: Boolean get() = System.currentTimeMillis() > expiresAtMs - 60_000L
 
     // every size there is, biggest first
-    val sizes: List<Int> get() = (tracks + sharpTracks).map { it.shortSide }.distinct().sortedDescending()
+    val sizes: List<Int> get() = (tracks + sharpTracks).map { it.shortSide }.filter { it > 0 }.distinct().sortedDescending()
 
     // h264 for anything it has, the sharper family only once a size past it is picked
     fun tracksFor(shortSide: Int): List<VideoTrack> =

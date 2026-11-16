@@ -213,6 +213,7 @@ class MusicService :
     private val togetherController
         get() = components.togetherController
 
+    private val nextItemPreloader by lazy { NextItemPreloader(this, ioScope) }
     private var scopeJob = Job()
     private var scope = CoroutineScope(Dispatchers.Main + scopeJob)
     private var ioScope = CoroutineScope(Dispatchers.IO + scopeJob)
@@ -821,6 +822,7 @@ class MusicService :
         mediaItem: MediaItem?,
         reason: Int,
     ) {
+        nextItemPreloader.cancel()
         super.onMediaItemTransition(
             mediaItem,
             reason,
@@ -835,6 +837,9 @@ class MusicService :
     override fun onPlaybackStateChanged(
         @Player.State playbackState: Int,
     ) {
+        if (playbackState == Player.STATE_READY && player.hasNextMediaItem()) {
+            nextItemPreloader.prepare(player.getMediaItemAt(player.nextMediaItemIndex)) { streamResolver.createDataSourceFactory() }
+        }
         super.onPlaybackStateChanged(
             playbackState,
         )
@@ -873,6 +878,23 @@ class MusicService :
     override fun onPlayerError(
         error: PlaybackException,
     ) {
+        val failedId = player.currentMediaItem?.mediaId
+        if (failedId != null && error.errorCode in 2000..2999 && StreamFallbacks.available(failedId)) {
+            scope.launch {
+                val replacement = kotlinx.coroutines.withContext(Dispatchers.IO) { StreamFallbacks.resolve(failedId) }
+                if (player.currentMediaItem?.mediaId != failedId || player.playerError !== error) return@launch
+                if (replacement != null) {
+                    val index = player.currentMediaItemIndex
+                    val position = player.currentPosition
+                    val playing = player.playWhenReady
+                    player.replaceMediaItem(index,replacement)
+                    player.seekTo(index,position)
+                    player.prepare()
+                    player.playWhenReady = playing
+                } else playbackEventCoordinator.onPlayerError(error)
+            }
+            return
+        }
         super.onPlayerError(error)
         playbackEventCoordinator
             .onPlayerError(error)
@@ -895,6 +917,7 @@ class MusicService :
     }
 
     override fun onDestroy() {
+        nextItemPreloader.cancel()
         super.onDestroy()
         try {
             scope.launch { togetherController.stop() }

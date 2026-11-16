@@ -93,7 +93,7 @@ fun DriveYouTubeVideo(
     LaunchedEffect(video.streams) { if (!video.streams.isExpired) streams = video.streams }
 
     fun target(songMs: Long): Long? {
-        val duration = streams.durationMs
+        val duration = streams.durationMs.takeIf { it > 0L } ?: session.durationMs
         return positionAt?.invoke(songMs) ?: if (duration > 0L) songMs % duration else null
     }
 

@@ -57,6 +57,8 @@ internal fun videoTailServed(code: Int, contentRange: String?, offset: Long, len
 object MiniVideoResolver {
     suspend fun resolveVideoStreams(videoId: String): Result<VideoStreams> = withContext(Dispatchers.IO) {
         try {
+            if (videoId.startsWith("peertube:")) return@withContext Result.success(
+                com.arturo254.opentune.sources.peertube.PeerTubeClient.streams(videoId))
             if (YouTube.cookie == null) {
                 YouTube.visitorData().onSuccess { YouTube.visitorData = it }
                     .onFailure { Timber.tag(VideoLog).w("visitorData refresh failed type=%s", it.javaClass.simpleName) }
@@ -71,6 +73,12 @@ object MiniVideoResolver {
             throw cancelled
         } catch (failure: Exception) {
             Timber.tag(VideoLog).e("Resolution failed videoId=%s type=%s", videoId, failure.javaClass.simpleName)
+            com.arturo254.opentune.playback.OwnResolverClient.resolveV2("youtube",videoId,"video")?.let { stream ->
+                val track = VideoTrack(-1, stream.url, stream.mimeType, stream.codecs.orEmpty(),
+                    stream.width ?: -1, stream.height ?: -1, stream.fps ?: -1, stream.bitrate ?: -1, null, null, stream.length)
+                return@withContext Result.success(VideoStreams(videoId,listOf(track),emptyMap(),
+                    System.currentTimeMillis() + stream.expires * 1000L, 0L))
+            }
             Result.failure(failure)
         }
     }

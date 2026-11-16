@@ -41,7 +41,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 API_KEY = os.environ.get("API_KEY", "")
 COOKIES_FILE = os.environ.get("COOKIES_FILE") or None
 PROXY_URL = os.environ.get("PROXY_URL") or None
-URL_TTL_SECS = int(os.environ.get("URL_TTL_SECS", str(4 * 3600)))
+URL_TTL_SECS = min(900, max(60, int(os.environ.get("URL_TTL_SECS", "240"))))
 
 VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 QUALITIES = {"auto", "low", "high", "highest"}
@@ -91,6 +91,7 @@ def _ydl_opts() -> dict:
         "quiet": True,
         "no_warnings": True,
         "skip_download": True,
+        "cachedir": False,
         "noplaylist": True,
         "format": "bestaudio/best",
         # yt-dlp necesita un runtime JS para resolver los desafíos de YouTube.
@@ -183,7 +184,7 @@ async def resolve(video_id: str, force: bool = False) -> Resolved:
         if cached and not force and time.time() - cached.created_at < 30:
             return cached  # otro request acaba de resolver
         try:
-            res = await asyncio.to_thread(_extract_sync, video_id)
+            res = await run_provider_blocking(_extract_sync, video_id)
         except Exception as e:  # yt-dlp lanza DownloadError, etc.
             log.warning("fallo al resolver %s: %s", video_id, e)
             raise HTTPException(status_code=502, detail=f"no se pudo resolver: {str(e)[:300]}")
@@ -191,6 +192,10 @@ async def resolve(video_id: str, force: bool = False) -> Resolved:
         if len(_cache) > 500:  # limpieza básica
             for k in sorted(_cache, key=lambda k: _cache[k].created_at)[:100]:
                 _cache.pop(k, None)
+        if len(_locks) > 500:
+            for old in list(_locks):
+                if old not in _cache and not _locks[old].locked():
+                    _locks.pop(old, None)
         return res
 
 
@@ -241,13 +246,6 @@ async def resolve_endpoint(
     )
 
 
-_client = httpx.AsyncClient(
-    timeout=httpx.Timeout(connect=10, read=30, write=10, pool=10),
-    follow_redirects=True,
-    proxy=PROXY_URL,
-)
-
-
 @app.api_route("/audio/{video_id}", methods=["GET", "HEAD"])
 async def audio(
     video_id: str,
@@ -267,8 +265,7 @@ async def audio(
         rng = request.headers.get("range")
         headers["Range"] = rng if rng else "bytes=0-"
 
-        upstream_req = _client.build_request("GET", fmt.url, headers=headers)
-        upstream = await _client.send(upstream_req, stream=True)
+        upstream = await open_upstream("youtube", fmt.url, headers)
 
         if upstream.status_code in (403, 410) and attempt == 0:
             await upstream.aclose()
@@ -280,7 +277,7 @@ async def audio(
         await upstream.aclose()
         raise HTTPException(status_code=502, detail=f"googlevideo respondió {upstream.status_code}")
 
-    out_headers = {"Accept-Ranges": "bytes", "Cache-Control": "private, max-age=3600"}
+    out_headers = {"Accept-Ranges": "bytes", "Cache-Control": "private, no-store"}
     for h in ("content-length", "content-range", "content-type"):
         if h in upstream.headers:
             out_headers[h.title()] = upstream.headers[h]
@@ -306,3 +303,10 @@ async def audio(
             await upstream.aclose()
 
     return StreamingResponse(body(), status_code=status, headers=out_headers)
+
+from multisource import router, open_upstream, run_provider_blocking, close_clients
+app.include_router(router)
+
+@app.on_event("shutdown")
+async def shutdown():
+    await close_clients()

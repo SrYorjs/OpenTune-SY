@@ -34,6 +34,10 @@ import dagger.multibindings.IntoSet
 abstract class MusicSourceModule {
     @Binds
     @IntoSet
+    abstract fun bindPeerTubeMusicSource(source: com.arturo254.opentune.sources.peertube.PeerTubeMusicSource): MusicSource
+
+    @Binds
+    @IntoSet
     abstract fun bindYouTubeMusicSource(source: YouTubeMusicSource): MusicSource
 
     @Binds

@@ -16,6 +16,7 @@ import com.arturo254.opentune.sources.matching.TrackMatcher
 import com.arturo254.opentune.sources.resolution.SourceResolver
 import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
@@ -24,6 +25,27 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class UnifiedSearchRepositoryTest {
+    @Test fun boundsConcurrentSourcesAndReleasesPermitsAfterCancellation() = runBlocking {
+        val inFlight = AtomicInteger()
+        val peak = AtomicInteger()
+        val sources = (1..8).map { index ->
+            FakeSearchSource(ProviderId("bounded_$index"), onSearch = {
+                val active = inFlight.incrementAndGet()
+                peak.updateAndGet { maxOf(it,active) }
+                try { kotlinx.coroutines.delay(20); page(variant(ProviderId("bounded_$index"),"$index")) }
+                finally { inFlight.decrementAndGet() }
+            })
+        }
+        val repo = repository(*sources.toTypedArray())
+        assertEquals(8,repo.search(UnifiedSearchRequest("test")).successfulSourceCount)
+        assertTrue(peak.get() in 2..3)
+        val job = kotlinx.coroutines.CoroutineScope(coroutineContext).launch { repo.search(UnifiedSearchRequest("cancel")) }
+        kotlinx.coroutines.delay(5)
+        job.cancel()
+        job.join()
+        assertEquals(0,inFlight.get())
+        assertEquals(8,repo.search(UnifiedSearchRequest("again")).successfulSourceCount)
+    }
     @Test
     fun searchTimeoutRemainsConsistentAcrossActiveCatalogs() {
         assertEquals(8_000L, searchTimeoutMs(ProviderId.AUDIUS))

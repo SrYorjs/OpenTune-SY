@@ -143,13 +143,16 @@ fun rememberSongVideoLookup(
     isVideoSong: Boolean,
     enabled: Boolean,
 ): SongVideoLookup {
+    val activeItem = LocalOriginalPlayerConnection.current?.player?.currentMediaItem
+    val localUri = activeItem?.takeIf { it.mediaId == mediaId }?.localConfiguration?.uri
+        ?.takeIf { it.scheme in setOf("file","content") && (isVideoSong || activeItem.localConfiguration?.mimeType?.startsWith("video/") == true) }
     // the first song takes its video straight from the cache, so the cover's video turning into the full video mode never gaps; later songs settle first
     val firstId = remember { mediaId }
     var found by remember(mediaId) {
         mutableStateOf(if (enabled && mediaId == firstId) cachedVideo(mediaId, isVideoSong) else null)
     }
     var searching by remember(mediaId) { mutableStateOf(enabled && found == null) }
-    LaunchedEffect(mediaId, title, artist, enabled, isVideoSong) {
+    LaunchedEffect(mediaId, title, artist, enabled, isVideoSong, localUri) {
         if (!enabled || mediaId.isBlank()) {
             found = null
             searching = false

@@ -53,6 +53,7 @@ internal class StreamResolver(
     private val recoverSong: suspend (String, YTPlayerUtils.PlaybackData?) -> Unit,
     private val promptLoginRecovery: (String, String) -> Unit,
 ) {
+    private val playerCacheKeys = java.util.concurrent.ConcurrentHashMap<String,String>()
     private val connectivityManager: ConnectivityManager =
         context.getSystemService<ConnectivityManager>()!!
 
@@ -64,6 +65,7 @@ internal class StreamResolver(
         OkHttpClient
             .Builder()
             .proxy(com.arturo254.opentune.innertube.YouTube.streamProxy)
+            .addNetworkInterceptor(OwnResolverClient.credentialInterceptor())
             .followRedirects(true)
             .followSslRedirects(true)
             .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
@@ -121,6 +123,7 @@ internal class StreamResolver(
 
             recovery
                 .validCachedStream(mediaId)
+                ?.takeIf { playerCacheKeys.containsKey(mediaId) }
                 ?.let { cached ->
                     scopeProvider().launch(Dispatchers.IO) {
                         recoverSong(mediaId, null)
@@ -246,6 +249,7 @@ internal class StreamResolver(
                         context.getString(R.string.error_unknown)
                     }
 
+                playerCacheKeys[mediaId] = "audio:youtube:$mediaId:${nonNullPlayback.format.itag}:${nonNullPlayback.format.mimeType}:${nonNullPlayback.format.bitrate}:${nonNullPlayback.format.contentLength}"
                 persistResolvedFormat(mediaId, nonNullPlayback)
 
                 scopeProvider().launch(Dispatchers.IO) {
@@ -517,6 +521,7 @@ internal class StreamResolver(
                 CacheDataSource
                     .Factory()
                     .setCache(playerCache)
+                    .setCacheKeyFactory { spec -> spec.key?.let { playerCacheKeys[it] ?: it } ?: spec.uri.toString() }
                     .setUpstreamDataSourceFactory(
                         DefaultDataSource.Factory(
                             context,

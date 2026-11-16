@@ -13,6 +13,11 @@ import com.arturo254.opentune.sources.SourceCapability
 import com.arturo254.opentune.sources.TrackSearchPage
 import com.arturo254.opentune.sources.TrackSearchRequest
 import com.arturo254.opentune.sources.TrackSearchSource
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
+import kotlin.coroutines.coroutineContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -51,29 +56,26 @@ constructor() : TrackSearchSource {
             return Result.success(TrackSearchPage(items = emptyList()))
         }
 
-        val result =
-            if (continuation != null) {
-                YouTube.searchContinuation(continuation)
-            } else {
-                YouTube.search(
-                    query = request.query.trim(),
-                    filter = YouTube.SearchFilter.FILTER_SONG,
-                )
-            }
-
-        return result.map { page ->
-            TrackSearchPage(
-                items =
-                    page.items
-                        .filterIsInstance<SongItem>()
-                        .take(request.limit)
-                        .map(SongItem::toYouTubeSourceVariant),
-                continuationToken = page.continuation,
-            )
+        if (continuation != null) return YouTube.searchContinuation(continuation).map { page ->
+            TrackSearchPage(page.items.filterIsInstance<SongItem>().take(request.limit).map(SongItem::toYouTubeSourceVariant), page.continuation)
+        }
+        return coroutineScope {
+            val music = async { withTimeoutOrNull(6500) { YouTube.search(request.query.trim(), filter = YouTube.SearchFilter.FILTER_SONG) } ?: Result.failure(java.io.IOException("Search timed out")) }
+            val video = async { withTimeoutOrNull(6500) { YouTube.search(request.query.trim(), filter = YouTube.SearchFilter.FILTER_VIDEO) } ?: Result.failure(java.io.IOException("Search timed out")) }
+            val server = async { com.arturo254.opentune.playback.OwnResolverClient.searchV2("youtube",request.query,"video",request.limit) }
+            val songs = music.await()
+            val videos = video.await()
+            coroutineContext.ensureActive()
+            val remote = server.await()
+            if (songs.isFailure && videos.isFailure && remote.isNullOrEmpty()) return@coroutineScope Result.failure(songs.exceptionOrNull()!!)
+            val a = songs.getOrNull()?.items.orEmpty().filterIsInstance<SongItem>()
+            val b = videos.getOrNull()?.items.orEmpty().filterIsInstance<SongItem>()
+            val combined = (0 until maxOf(a.size,b.size)).flatMap { listOfNotNull(a.getOrNull(it),b.getOrNull(it)) }
+                .distinctBy { it.id }.take(request.limit).map(SongItem::toYouTubeSourceVariant)
+            Result.success(TrackSearchPage((combined + remote.orEmpty()).distinctBy { it.sourceId }, songs.getOrNull()?.continuation))
         }
     }
 }
-
 internal fun SongItem.toYouTubeSourceVariant(): SourceVariant {
     val musicVideoType =
         endpoint
