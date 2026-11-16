@@ -68,7 +68,12 @@ data class PlayerResponse(
             val lastModified: Long?,
             val signatureCipher: String?,
             val cipher: String?,
+            val initRange: ByteRange? = null,
+            val indexRange: ByteRange? = null,
         ) {
+            @Serializable
+            data class ByteRange(val start: String, val end: String)
+
             val isAudio: Boolean
                 get() = width == null
         }

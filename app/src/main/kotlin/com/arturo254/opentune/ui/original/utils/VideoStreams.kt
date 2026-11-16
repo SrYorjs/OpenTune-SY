@@ -100,7 +100,9 @@ internal fun pickSharpFamily(
 }
 
 private fun List<PlayerResponse.StreamingData.Format>.pictures() =
-    filter { !it.isAudio && (it.width ?: 0) > 0 && (it.height ?: 0) > 0 && it.bitrate > 0 }
+    filter { !it.isAudio && it.mimeType.startsWith("video/") && !it.codecs().contains(',') &&
+        it.audioChannels == null && it.audioQuality == null &&
+        (it.width ?: 0) > 0 && (it.height ?: 0) > 0 && it.bitrate > 0 }
 
 private fun List<PlayerResponse.StreamingData.Format>.onePerSize() =
     groupBy { minOf(it.width!!, it.height!!) }

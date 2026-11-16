@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
+import timber.log.Timber
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import com.arturo254.opentune.innertube.YouTube
@@ -81,7 +82,10 @@ suspend fun findOfficialMusicVideoId(title: String, artist: String): String? {
     if (OfficialVideoIdCache.contains(key)) return OfficialVideoIdCache.get(key)
 
     val results = YouTube.search(query = "$title $artist", filter = YouTube.SearchFilter.FILTER_VIDEO)
-        .getOrElse { return null }.items
+        .getOrElse {
+            Timber.tag("YouTubeVideoLookup").w("Search failed type=%s", it.javaClass.simpleName)
+            return null
+        }.items
 
     val normalizedTitle = normalizeCanvasSongTitle(title)
     val normalizedArtist = normalizeCanvasArtistName(artist)
@@ -95,6 +99,7 @@ suspend fun findOfficialMusicVideoId(title: String, artist: String): String? {
             (candidateTitle.contains(normalizedTitle, ignoreCase = true) || normalizedTitle.contains(candidateTitle, ignoreCase = true)) &&
                 (candidateArtist.contains(normalizedArtist, ignoreCase = true) || normalizedArtist.contains(candidateArtist, ignoreCase = true))
         }
+    Timber.tag("YouTubeVideoLookup").d("Search candidates=%d matchedVideoId=%s", results.size, match?.id ?: "none")
     OfficialVideoIdCache.put(key, match?.id)
     return match?.id
 }
@@ -185,6 +190,7 @@ internal suspend fun lookUpVideo(mediaId: String, title: String, artist: String,
         if (YouTubeVideoUrlCache.contains(key)) return@withLock YouTubeVideoUrlCache.get(key)
         if (!isVideoSong && (title.isBlank() || artist.isBlank())) return@withLock null
         val resolved = if (isVideoSong) ownMusicVideo(mediaId) else findOfficialMusicVideo(title, artist)
-        YouTubeVideoUrlCache.put(key, resolved)
+        // A transport/decipher failure must be retryable when the user reopens video mode.
+        if (resolved != null) YouTubeVideoUrlCache.put(key, resolved)
         resolved
     }

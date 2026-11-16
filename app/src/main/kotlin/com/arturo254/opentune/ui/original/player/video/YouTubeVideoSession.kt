@@ -33,6 +33,7 @@ import com.arturo254.opentune.ui.original.utils.VideoTrack
 import com.arturo254.opentune.ui.original.adapters.followAppProxy
 import okhttp3.OkHttpClient
 import kotlin.math.abs
+import timber.log.Timber
 
 // further off than this and the picture jumps to the song instead of catching up
 private const val HardSyncMs = 1_200L
@@ -155,6 +156,8 @@ class YouTubeVideoSession internal constructor(context: Context, val videoId: St
         }
 
         override fun onPlayerError(error: PlaybackException) {
+            Timber.tag("YouTubeVideoSession").e("videoId=%s ExoPlayer=%s cause=%s",
+                videoId, error.errorCodeName, error.cause?.javaClass?.simpleName ?: "none")
             main.post { failures += 1 }
         }
     }
@@ -272,7 +275,8 @@ class YouTubeVideoSession internal constructor(context: Context, val videoId: St
         val family = s.tracksFor(capShortSide())
         loadedFamily = family
         val manifest = VideoDash.manifest(family, s.durationMs)?.let { xml ->
-            runCatching { DashManifestParser().parse(ManifestUri, xml.byteInputStream()) }.getOrNull()
+            runCatching { DashManifestParser().parse(ManifestUri, xml.byteInputStream()) }
+                .onFailure { Timber.tag("YouTubeVideoSession").w("MPD parse failed type=%s", it.javaClass.simpleName) }.getOrNull()
         }
         if (manifest != null) {
             wholeFileSide = 0
@@ -282,6 +286,7 @@ class YouTubeVideoSession internal constructor(context: Context, val videoId: St
         // youtube only serves this one whole: one size, picked by the quality setting
         val track = s.trackFor(capShortSide()) ?: s.tracks.first()
         wholeFileSide = track.shortSide
+        Timber.tag("YouTubeVideoSession").d("videoId=%s source=progressive itag=%d", videoId, track.itag)
         return ProgressiveMediaSource.Factory(dataSource).createMediaSource(MediaItem.fromUri(track.url))
     }
 
