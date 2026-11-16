@@ -1,7 +1,6 @@
 package com.arturo254.opentune.ui.screens.settings
 
 import android.annotation.SuppressLint
-import android.util.Log
 import android.view.ViewGroup
 import android.webkit.*
 import androidx.activity.compose.BackHandler
@@ -80,7 +79,6 @@ fun DiscordLoginScreen(navController: NavController) {
                 addJavascriptInterface(object {
                     @JavascriptInterface
                     fun onRetrieveToken(token: String) {
-                        Log.d("DiscordWebView", "Token: $token")
                         scope.launch(Dispatchers.Main) { completeLogin(token) }
                     }
                 }, "Android")

@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
 # Instalador PÚBLICO de OpenTune Resolver (Ubuntu 24.04, como root). Sin Tailscale.
 #   Con dominio (HTTPS automático):  bash setup-opentune-public.sh midominio.duckdns.org
-#   Solo con IP (HTTP, sin cifrar):  bash setup-opentune-public.sh
 set -euo pipefail
 DOMAIN="${1:-}"
+if [[ ! "$DOMAIN" =~ ^[a-zA-Z0-9]([a-zA-Z0-9.-]*[a-zA-Z0-9])?$ || "$DOMAIN" != *.* ]]; then
+  echo "Indica un dominio para HTTPS; no se instala un endpoint público sin cifrar." >&2; exit 1
+fi
+if [[ -e /opt/opentune-resolver/main.py || -e /opt/opentune-resolver/.env ]]; then
+  echo "Ya existe una instalación; usa una actualización con respaldo." >&2; exit 1
+fi
 if [ "$(id -u)" -ne 0 ]; then echo "Ejecuta como root (sudo -i)"; exit 1; fi
 
 echo "==> Actualizando sistema"
@@ -12,11 +17,26 @@ apt-get update -y && apt-get upgrade -y
 apt-get install -y ca-certificates curl openssl ufw unattended-upgrades dnsutils
 
 PUBLIC_IP="$(curl -4 -fsS https://api.ipify.org || true)"
+
+if [ -n "$DOMAIN" ]; then
+  RESOLVED="$(dig +short "$DOMAIN" A | tail -n1 || true)"
+  if [ "$RESOLVED" != "$PUBLIC_IP" ]; then
+    echo "AVISO: $DOMAIN apunta a '$RESOLVED' pero este servidor es '$PUBLIC_IP'."
+    echo "Corrige el DNS (en duckdns.org pon la IP $PUBLIC_IP) y vuelve a ejecutar."; exit 1
+  fi
+fi
+
+echo "==> Instalando Docker"
+if ! command -v docker >/dev/null; then curl -fsSL https://get.docker.com | sh; fi
+
+echo "==> Escribiendo archivos en /opt/opentune-resolver"
+mkdir -p /opt/opentune-resolver && cd /opt/opentune-resolver
 cat > multisource.py <<'OPENTUNE_V2_SOURCE'
 from __future__ import annotations
 
 import asyncio
 import hmac
+import logging
 import os
 import re
 import time
@@ -54,6 +74,19 @@ AUDIUS_HOSTS.update(h.strip().lower() for h in os.getenv("AUDIUS_R2_HOSTS", "").
 RAM: OrderedDict[tuple, tuple[float, dict]] = OrderedDict()
 SEARCH_RAM: OrderedDict[tuple, tuple[float, dict]] = OrderedDict()
 CLIENT = httpx.AsyncClient(timeout=httpx.Timeout(connect=4, read=30, write=10, pool=4), follow_redirects=False, transport=upstream_transport(PROXY_URL))
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+
+
+class ExtractionLogger:
+    def debug(self, message):
+        logging.getLogger(__name__).debug("Extractor diagnostic")
+
+    def warning(self, message):
+        logging.getLogger(__name__).warning("Extractor warning")
+
+    def error(self, message):
+        logging.getLogger(__name__).error("Extractor error")
 
 
 async def run_provider_blocking(function, *args):
@@ -81,6 +114,8 @@ def validate(provider: str, item_id: str, kind: str, quality: str) -> None:
         raise HTTPException(status_code=400, detail="Tipo o calidad inválidos")
     if (provider in {"youtube", "youtube_music"} and not VIDEO_ID.fullmatch(item_id)) or (provider == "audius" and not TRACK_ID.fullmatch(item_id)) or (provider == "peertube" and not PEERTUBE_ID.fullmatch(item_id)):
         raise HTTPException(status_code=400, detail="Identificador inválido")
+    if provider == "peertube" and kind == "audio":
+        raise HTTPException(status_code=422, detail="PeerTube ofrece video progresivo")
     if provider == "audius" and kind == "video":
         raise HTTPException(status_code=422, detail="Audius solo ofrece audio")
 
@@ -88,6 +123,7 @@ def validate(provider: str, item_id: str, kind: str, quality: str) -> None:
 def ydl_options(flat: bool = False) -> dict:
     result = {
         "quiet": True,
+        "logger": ExtractionLogger(),
         "no_warnings": True,
         "skip_download": True,
         "noplaylist": not flat,
@@ -246,7 +282,8 @@ def video_info(provider: str, item_id: str, kind: str, quality: str) -> Stream:
     args = parse_qs(urlparse(url).query)
     expiry = int(args.get("expire", [int(time.time()) + URL_TTL])[0])
     length = chosen.get("filesize") or chosen.get("filesize_approx") or args.get("clen", [None])[0]
-    mime = "audio/webm" if chosen.get("ext") == "webm" else "audio/mp4" if kind == "audio" else "video/mp4" if chosen.get("ext") == "mp4" else "video/webm"
+    container = "webm" if chosen.get("ext") == "webm" else "mp4"
+    mime = f"{kind}/{container}"
     return Stream(url=url, headers=chosen.get("http_headers") or {}, content_type=mime, content_length=int(length) if length else None, bitrate=bitrate(chosen), expires_at=min(expiry - 60, time.time() + URL_TTL), title=info.get("title"))
 
 
@@ -452,19 +489,6 @@ def upstream_transport(proxy=None):
     transport._pool._network_backend = PublicNetworkBackend()
     return transport
 OPENTUNE_V2_SOURCE
-if [ -n "$DOMAIN" ]; then
-  RESOLVED="$(dig +short "$DOMAIN" A | tail -n1 || true)"
-  if [ "$RESOLVED" != "$PUBLIC_IP" ]; then
-    echo "AVISO: $DOMAIN apunta a '$RESOLVED' pero este servidor es '$PUBLIC_IP'."
-    echo "Corrige el DNS (en duckdns.org pon la IP $PUBLIC_IP) y vuelve a ejecutar."; exit 1
-  fi
-fi
-
-echo "==> Instalando Docker"
-if ! command -v docker >/dev/null; then curl -fsSL https://get.docker.com | sh; fi
-
-echo "==> Escribiendo archivos en /opt/opentune-resolver"
-mkdir -p /opt/opentune-resolver && cd /opt/opentune-resolver
 cat > main.py <<'OPENTUNE_EOF_main_py'
 """
 OpenTune Resolver
@@ -557,6 +581,7 @@ _locks: dict[str, asyncio.Lock] = {}
 def _ydl_opts() -> dict:
     opts: dict = {
         "quiet": True,
+        "logger": ExtractionLogger(),
         "no_warnings": True,
         "skip_download": True,
         "cachedir": False,
@@ -654,8 +679,8 @@ async def resolve(video_id: str, force: bool = False) -> Resolved:
         try:
             res = await run_provider_blocking(_extract_sync, video_id)
         except Exception as e:  # yt-dlp lanza DownloadError, etc.
-            log.warning("fallo al resolver %s: %s", video_id, e)
-            raise HTTPException(status_code=502, detail=f"no se pudo resolver: {str(e)[:300]}")
+            log.warning("fallo al resolver %s: type=%s", video_id, type(e).__name__)
+            raise HTTPException(status_code=502, detail="no se pudo resolver")
         _cache[video_id] = res
         if len(_cache) > 500:  # limpieza básica
             for k in sorted(_cache, key=lambda k: _cache[k].created_at)[:100]:
@@ -725,15 +750,21 @@ async def audio(
     check_key(x_api_key, key)
     q = _validate(video_id, quality)
 
+    rng = request.headers.get("range")
+    if rng and not re.fullmatch(r"bytes=(?:\d+-\d*|-\d+)", rng):
+        raise HTTPException(status_code=416, detail="Rango inválido")
     for attempt in (0, 1):
         res = await resolve(video_id, force=(attempt == 1))
         fmt = pick_format(res.formats, q)
 
         headers = {k: v for k, v in fmt.headers.items() if k.lower() in ("user-agent", "accept", "accept-language", "referer", "origin")}
-        rng = request.headers.get("range")
-        headers["Range"] = rng if rng else "bytes=0-"
+        if rng:
+            headers["Range"] = rng
 
-        upstream = await open_upstream("youtube", fmt.url, headers)
+        try:
+            upstream = await open_upstream("youtube", fmt.url, headers)
+        except httpx.HTTPError:
+            raise HTTPException(status_code=502, detail="Error de transporte")
 
         if upstream.status_code in (403, 410) and attempt == 0:
             await upstream.aclose()
@@ -741,24 +772,25 @@ async def audio(
             continue
         break
 
+    if upstream.status_code == 416:
+        out = {"Cache-Control": "private, no-store"}
+        if "content-range" in upstream.headers:
+            out["Content-Range"] = upstream.headers["content-range"]
+        await upstream.aclose()
+        return Response(status_code=416, headers=out)
     if upstream.status_code >= 400:
         await upstream.aclose()
         raise HTTPException(status_code=502, detail=f"googlevideo respondió {upstream.status_code}")
 
-    out_headers = {"Accept-Ranges": "bytes", "Cache-Control": "private, no-store"}
+    out_headers = {"Cache-Control": "private, no-store"}
+    if upstream.status_code == 206 or upstream.headers.get("accept-ranges") == "bytes":
+        out_headers["Accept-Ranges"] = "bytes"
     for h in ("content-length", "content-range", "content-type"):
         if h in upstream.headers:
             out_headers[h.title()] = upstream.headers[h]
     out_headers.setdefault("Content-Type", fmt.mime_type)
 
     status = upstream.status_code
-    if not rng and status == 206:
-        # El cliente no pidió Range: respondemos 200 con la longitud total.
-        status = 200
-        total = (out_headers.pop("Content-Range", "").rsplit("/", 1) + [""])[-1]
-        if total.isdigit():
-            out_headers["Content-Length"] = total
-
     if request.method == "HEAD":
         await upstream.aclose()
         return Response(status_code=status, headers=out_headers)
@@ -772,7 +804,7 @@ async def audio(
 
     return StreamingResponse(body(), status_code=status, headers=out_headers)
 
-from multisource import router, open_upstream, run_provider_blocking, close_clients
+from multisource import router, open_upstream, run_provider_blocking, close_clients, ExtractionLogger
 app.include_router(router)
 
 @app.on_event("shutdown")
@@ -802,7 +834,6 @@ COPY main.py multisource.py upstream_security.py run.sh ./
 RUN chmod +x run.sh
 
 EXPOSE 8787
-# run.sh actualiza yt-dlp en cada arranque (YouTube cambia a menudo)
 CMD ["./run.sh"]
 OPENTUNE_EOF_Dockerfile
 cat > run.sh <<'OPENTUNE_EOF_run_sh'
@@ -838,6 +869,7 @@ services:
       API_KEY: "${API_KEY:?falta API_KEY}"
       AUDIUS_API_KEY: "${AUDIUS_API_KEY:-}"
       PEERTUBE_INSTANCE: "${PEERTUBE_INSTANCE:-https://video.blender.org}"
+      AUDIUS_R2_HOSTS: "${AUDIUS_R2_HOSTS:-}"
       HOME: /tmp
       XDG_CACHE_HOME: /tmp
       DENO_DIR: /tmp/deno
@@ -862,20 +894,6 @@ volumes:
 COMPOSE_EOF
   ufw allow OpenSSH >/dev/null; ufw allow 80/tcp >/dev/null; ufw allow 443/tcp >/dev/null
   URL="https://$DOMAIN"
-else
-cat > docker-compose.yml <<'COMPOSE_EOF'
-services:
-  opentune-resolver:
-    build: .
-    container_name: opentune-resolver
-    restart: unless-stopped
-    ports:
-      - "8787:8787"
-    environment:
-      API_KEY: "${API_KEY:?falta API_KEY}"
-COMPOSE_EOF
-  ufw allow OpenSSH >/dev/null; ufw allow 8787/tcp >/dev/null
-  URL="http://$PUBLIC_IP:8787"
 fi
 ufw --force enable >/dev/null
 

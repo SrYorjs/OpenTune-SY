@@ -13,5 +13,4 @@ COPY main.py multisource.py upstream_security.py run.sh ./
 RUN chmod +x run.sh
 
 EXPOSE 8787
-# run.sh actualiza yt-dlp en cada arranque (YouTube cambia a menudo)
 CMD ["./run.sh"]

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import hmac
+import logging
 import os
 import re
 import time
@@ -39,6 +40,19 @@ AUDIUS_HOSTS.update(h.strip().lower() for h in os.getenv("AUDIUS_R2_HOSTS", "").
 RAM: OrderedDict[tuple, tuple[float, dict]] = OrderedDict()
 SEARCH_RAM: OrderedDict[tuple, tuple[float, dict]] = OrderedDict()
 CLIENT = httpx.AsyncClient(timeout=httpx.Timeout(connect=4, read=30, write=10, pool=4), follow_redirects=False, transport=upstream_transport(PROXY_URL))
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+
+
+class ExtractionLogger:
+    def debug(self, message):
+        logging.getLogger(__name__).debug("Extractor diagnostic")
+
+    def warning(self, message):
+        logging.getLogger(__name__).warning("Extractor warning")
+
+    def error(self, message):
+        logging.getLogger(__name__).error("Extractor error")
 
 
 async def run_provider_blocking(function, *args):
@@ -66,6 +80,8 @@ def validate(provider: str, item_id: str, kind: str, quality: str) -> None:
         raise HTTPException(status_code=400, detail="Tipo o calidad inválidos")
     if (provider in {"youtube", "youtube_music"} and not VIDEO_ID.fullmatch(item_id)) or (provider == "audius" and not TRACK_ID.fullmatch(item_id)) or (provider == "peertube" and not PEERTUBE_ID.fullmatch(item_id)):
         raise HTTPException(status_code=400, detail="Identificador inválido")
+    if provider == "peertube" and kind == "audio":
+        raise HTTPException(status_code=422, detail="PeerTube ofrece video progresivo")
     if provider == "audius" and kind == "video":
         raise HTTPException(status_code=422, detail="Audius solo ofrece audio")
 
@@ -73,6 +89,7 @@ def validate(provider: str, item_id: str, kind: str, quality: str) -> None:
 def ydl_options(flat: bool = False) -> dict:
     result = {
         "quiet": True,
+        "logger": ExtractionLogger(),
         "no_warnings": True,
         "skip_download": True,
         "noplaylist": not flat,
@@ -231,7 +248,8 @@ def video_info(provider: str, item_id: str, kind: str, quality: str) -> Stream:
     args = parse_qs(urlparse(url).query)
     expiry = int(args.get("expire", [int(time.time()) + URL_TTL])[0])
     length = chosen.get("filesize") or chosen.get("filesize_approx") or args.get("clen", [None])[0]
-    mime = "audio/webm" if chosen.get("ext") == "webm" else "audio/mp4" if kind == "audio" else "video/mp4" if chosen.get("ext") == "mp4" else "video/webm"
+    container = "webm" if chosen.get("ext") == "webm" else "mp4"
+    mime = f"{kind}/{container}"
     return Stream(url=url, headers=chosen.get("http_headers") or {}, content_type=mime, content_length=int(length) if length else None, bitrate=bitrate(chosen), expires_at=min(expiry - 60, time.time() + URL_TTL), title=info.get("title"))
 
 

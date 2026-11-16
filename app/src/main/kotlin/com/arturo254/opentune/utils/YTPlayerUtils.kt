@@ -237,7 +237,7 @@ object YTPlayerUtils {
 
         val isLoggedIn = YouTube.cookie != null
         val sessionId = if (isLoggedIn) YouTube.dataSyncId else YouTube.visitorData
-        Timber.tag(logTag).v("Session authentication status: ${if (isLoggedIn) "Logged in" else "Not logged in"} (sessionId=${sessionId.orEmpty()})")
+        Timber.tag(logTag).v("Session authentication status: ${if (isLoggedIn) "Logged in" else "Not logged in"}")
 
         var format: PlayerResponse.StreamingData.Format? = null
         var streamUrl: String? = null

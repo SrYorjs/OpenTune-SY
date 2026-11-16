@@ -89,6 +89,7 @@ _locks: dict[str, asyncio.Lock] = {}
 def _ydl_opts() -> dict:
     opts: dict = {
         "quiet": True,
+        "logger": ExtractionLogger(),
         "no_warnings": True,
         "skip_download": True,
         "cachedir": False,
@@ -186,8 +187,8 @@ async def resolve(video_id: str, force: bool = False) -> Resolved:
         try:
             res = await run_provider_blocking(_extract_sync, video_id)
         except Exception as e:  # yt-dlp lanza DownloadError, etc.
-            log.warning("fallo al resolver %s: %s", video_id, e)
-            raise HTTPException(status_code=502, detail=f"no se pudo resolver: {str(e)[:300]}")
+            log.warning("fallo al resolver %s: type=%s", video_id, type(e).__name__)
+            raise HTTPException(status_code=502, detail="no se pudo resolver")
         _cache[video_id] = res
         if len(_cache) > 500:  # limpieza básica
             for k in sorted(_cache, key=lambda k: _cache[k].created_at)[:100]:
@@ -257,15 +258,21 @@ async def audio(
     check_key(x_api_key, key)
     q = _validate(video_id, quality)
 
+    rng = request.headers.get("range")
+    if rng and not re.fullmatch(r"bytes=(?:\d+-\d*|-\d+)", rng):
+        raise HTTPException(status_code=416, detail="Rango inválido")
     for attempt in (0, 1):
         res = await resolve(video_id, force=(attempt == 1))
         fmt = pick_format(res.formats, q)
 
         headers = {k: v for k, v in fmt.headers.items() if k.lower() in ("user-agent", "accept", "accept-language", "referer", "origin")}
-        rng = request.headers.get("range")
-        headers["Range"] = rng if rng else "bytes=0-"
+        if rng:
+            headers["Range"] = rng
 
-        upstream = await open_upstream("youtube", fmt.url, headers)
+        try:
+            upstream = await open_upstream("youtube", fmt.url, headers)
+        except httpx.HTTPError:
+            raise HTTPException(status_code=502, detail="Error de transporte")
 
         if upstream.status_code in (403, 410) and attempt == 0:
             await upstream.aclose()
@@ -273,24 +280,25 @@ async def audio(
             continue
         break
 
+    if upstream.status_code == 416:
+        out = {"Cache-Control": "private, no-store"}
+        if "content-range" in upstream.headers:
+            out["Content-Range"] = upstream.headers["content-range"]
+        await upstream.aclose()
+        return Response(status_code=416, headers=out)
     if upstream.status_code >= 400:
         await upstream.aclose()
         raise HTTPException(status_code=502, detail=f"googlevideo respondió {upstream.status_code}")
 
-    out_headers = {"Accept-Ranges": "bytes", "Cache-Control": "private, no-store"}
+    out_headers = {"Cache-Control": "private, no-store"}
+    if upstream.status_code == 206 or upstream.headers.get("accept-ranges") == "bytes":
+        out_headers["Accept-Ranges"] = "bytes"
     for h in ("content-length", "content-range", "content-type"):
         if h in upstream.headers:
             out_headers[h.title()] = upstream.headers[h]
     out_headers.setdefault("Content-Type", fmt.mime_type)
 
     status = upstream.status_code
-    if not rng and status == 206:
-        # El cliente no pidió Range: respondemos 200 con la longitud total.
-        status = 200
-        total = (out_headers.pop("Content-Range", "").rsplit("/", 1) + [""])[-1]
-        if total.isdigit():
-            out_headers["Content-Length"] = total
-
     if request.method == "HEAD":
         await upstream.aclose()
         return Response(status_code=status, headers=out_headers)
@@ -304,7 +312,7 @@ async def audio(
 
     return StreamingResponse(body(), status_code=status, headers=out_headers)
 
-from multisource import router, open_upstream, run_provider_blocking, close_clients
+from multisource import router, open_upstream, run_provider_blocking, close_clients, ExtractionLogger
 app.include_router(router)
 
 @app.on_event("shutdown")

@@ -53,7 +53,13 @@ internal class StreamResolver(
     private val recoverSong: suspend (String, YTPlayerUtils.PlaybackData?) -> Unit,
     private val promptLoginRecovery: (String, String) -> Unit,
 ) {
-    private val playerCacheKeys = java.util.concurrent.ConcurrentHashMap<String,String>()
+    private var warmupJob: kotlinx.coroutines.Job? = null
+
+    private fun playerCacheKey(mediaId: String) = audioPlayerCacheKey(playerCache, mediaId)
+
+    private fun rememberPlayerCacheKey(mediaId: String, playback: YTPlayerUtils.PlaybackData) =
+        rememberAudioPlayerCacheKey(playerCache, mediaId, playback)
+
     private val connectivityManager: ConnectivityManager =
         context.getSystemService<ConnectivityManager>()!!
 
@@ -123,7 +129,7 @@ internal class StreamResolver(
 
             recovery
                 .validCachedStream(mediaId)
-                ?.takeIf { playerCacheKeys.containsKey(mediaId) }
+                ?.takeIf { playerCacheKey(mediaId) != mediaId }
                 ?.let { cached ->
                     scopeProvider().launch(Dispatchers.IO) {
                         recoverSong(mediaId, null)
@@ -142,7 +148,7 @@ internal class StreamResolver(
                 } else {
                     val contentLength =
                         runBlocking(Dispatchers.IO) {
-                            database.format(mediaId).first()?.contentLength
+                            database.format(mediaId).first()?.contentLength?.takeIf { it > 0L }
                         } ?: runCatching {
                             downloadCache
                                 .getContentMetadata(mediaId)
@@ -150,7 +156,7 @@ internal class StreamResolver(
                         }.getOrNull()?.takeIf { it > 0L }
                             ?: runCatching {
                                 playerCache
-                                    .getContentMetadata(mediaId)
+                                    .getContentMetadata(playerCacheKey(mediaId))
                                     .get(ContentMetadata.KEY_CONTENT_LENGTH, -1L)
                             }.getOrNull()?.takeIf { it > 0L }
 
@@ -169,7 +175,7 @@ internal class StreamResolver(
                         requiredCachedLength,
                     ) ||
                         playerCache.isCached(
-                            mediaId,
+                            playerCacheKey(mediaId),
                             dataSpec.position,
                             requiredCachedLength,
                         )
@@ -249,7 +255,7 @@ internal class StreamResolver(
                         context.getString(R.string.error_unknown)
                     }
 
-                playerCacheKeys[mediaId] = "audio:youtube:$mediaId:${nonNullPlayback.format.itag}:${nonNullPlayback.format.mimeType}:${nonNullPlayback.format.bitrate}:${nonNullPlayback.format.contentLength}"
+                rememberPlayerCacheKey(mediaId, nonNullPlayback)
                 persistResolvedFormat(mediaId, nonNullPlayback)
 
                 scopeProvider().launch(Dispatchers.IO) {
@@ -342,7 +348,7 @@ internal class StreamResolver(
                         }
 
                         Timber.i(
-                            "Using JossRed URL as fallback for $mediaId: $alternativeUrl",
+                            "Using JossRed fallback for $mediaId",
                         )
 
                         recovery.cacheStream(
@@ -397,29 +403,17 @@ internal class StreamResolver(
         }
 
     fun scheduleNextStreamWarmup() {
+        warmupJob?.cancel()
         if (connectivityManager.isActiveNetworkMetered) return
-
-        scopeProvider().launch(Dispatchers.IO + SilentHandler) {
+        val player = playerProvider()
+        if (!player.hasNextMediaItem()) return
+        val next = player.getMediaItemAt(player.nextMediaItemIndex)
+        if (StreamRequestPolicy.isDirectHttpStream(next.localConfiguration?.uri.toString()) ||
+            !next.mediaId.matches(Regex("[A-Za-z0-9_-]{11}"))) return
+        val mediaId = next.mediaId
+        warmupJob = scopeProvider().launch(Dispatchers.IO + SilentHandler) {
             delay(1_200L)
-
-            if (connectivityManager.isActiveNetworkMetered) {
-                return@launch
-            }
-
-            val player = playerProvider()
-            val nextIndex = player.currentMediaItemIndex + 1
-            if (nextIndex !in 0 until player.mediaItemCount) {
-                return@launch
-            }
-
-            val mediaId =
-                player
-                    .getMediaItemAt(nextIndex)
-                    .mediaId
-                    .trim()
-                    .takeIf { it.isNotBlank() }
-                    ?: return@launch
-
+            if (connectivityManager.isActiveNetworkMetered) return@launch
             val recovery = errorRecoveryControllerProvider()
             val now = System.currentTimeMillis()
 
@@ -443,6 +437,7 @@ internal class StreamResolver(
                         )
                     }.getOrNull() ?: return@launch
 
+                rememberPlayerCacheKey(mediaId, playbackData)
                 recovery.cacheStream(
                     mediaId = mediaId,
                     url = playbackData.streamUrl,
@@ -521,7 +516,7 @@ internal class StreamResolver(
                 CacheDataSource
                     .Factory()
                     .setCache(playerCache)
-                    .setCacheKeyFactory { spec -> spec.key?.let { playerCacheKeys[it] ?: it } ?: spec.uri.toString() }
+                    .setCacheKeyFactory { spec -> spec.key?.let(::playerCacheKey) ?: spec.uri.toString() }
                     .setUpstreamDataSourceFactory(
                         DefaultDataSource.Factory(
                             context,
@@ -535,7 +530,7 @@ internal class StreamResolver(
         mediaId: String,
         playback: YTPlayerUtils.PlaybackData,
     ) {
-        val format = playback.format
+        val entity = persistablePlaybackFormat(mediaId, playback) ?: return
         val loudnessDb = playback.audioConfig?.loudnessDb
         val perceptualLoudnessDb =
             playback.audioConfig?.perceptualLoudnessDb
@@ -554,29 +549,7 @@ internal class StreamResolver(
                 )
         }
 
-        database.query {
-            upsert(
-                FormatEntity(
-                    id = mediaId,
-                    itag = format.itag,
-                    mimeType = format.mimeType.split(";")[0],
-                    codecs =
-                        format.mimeType
-                            .split("codecs=")[1]
-                            .removeSurrounding("\""),
-                    bitrate = format.bitrate,
-                    sampleRate = format.audioSampleRate,
-                    contentLength = format.contentLength!!,
-                    loudnessDb = loudnessDb,
-                    perceptualLoudnessDb = perceptualLoudnessDb,
-                    playbackUrl =
-                        playback
-                            .playbackTracking
-                            ?.videostatsPlaybackUrl
-                            ?.baseUrl,
-                ),
-            )
-        }
+        database.query { upsert(entity) }
     }
 
     private fun deviceSupportsMimeType(mimeType: String): Boolean =
@@ -595,4 +568,26 @@ internal class StreamResolver(
     private companion object {
         const val PLAYBACK_RESOLUTION_TIMEOUT_MS = 20_000L
     }
+}
+
+internal fun persistablePlaybackFormat(mediaId: String, playback: YTPlayerUtils.PlaybackData): FormatEntity? {
+    val format = playback.format
+    val length = format.contentLength?.takeIf { it > 0 } ?: return null
+    val codecs = Regex("(?:^|;)\\s*codecs=\"([^\"]+)\"").find(format.mimeType)?.groupValues?.get(1) ?: return null
+    return FormatEntity(mediaId, format.itag, format.mimeType.substringBefore(';').trim(), codecs,
+        format.bitrate, format.audioSampleRate, length, playback.audioConfig?.loudnessDb,
+        playback.audioConfig?.perceptualLoudnessDb, playback.playbackTracking?.videostatsPlaybackUrl?.baseUrl)
+}
+
+internal fun audioPlayerCacheKey(cache: Cache, mediaId: String): String =
+    cache.getContentMetadata(mediaId).get("opentune.audio.variant", "")?.takeIf { it.isNotEmpty() }
+        ?: cache.keys.filter { it.startsWith("audio:youtube:$mediaId:") }
+            .maxByOrNull { key -> cache.getCachedSpans(key).maxOfOrNull { it.lastTouchTimestamp } ?: Long.MIN_VALUE }
+        ?: mediaId
+
+internal fun rememberAudioPlayerCacheKey(cache: Cache, mediaId: String, playback: YTPlayerUtils.PlaybackData) {
+    val format = playback.format
+    val key = "audio:youtube:$mediaId:${format.itag}:${format.mimeType}:${format.bitrate}:${format.contentLength}"
+    cache.applyContentMetadataMutations(key, androidx.media3.datasource.cache.ContentMetadataMutations().set("opentune.media.id", mediaId))
+    cache.applyContentMetadataMutations(mediaId, androidx.media3.datasource.cache.ContentMetadataMutations().set("opentune.audio.variant", key))
 }

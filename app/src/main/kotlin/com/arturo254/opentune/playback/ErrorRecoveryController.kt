@@ -126,6 +126,7 @@ internal class ErrorRecoveryController(
         ) {
             scopeProvider().launch(Dispatchers.IO + SilentHandler) {
                 runCatching { downloadCache.removeResource(currentMediaId) }
+                runCatching { playerCache.removeResource(audioPlayerCacheKey(playerCache, currentMediaId)) }
                 runCatching { playerCache.removeResource(currentMediaId) }
             }
         }

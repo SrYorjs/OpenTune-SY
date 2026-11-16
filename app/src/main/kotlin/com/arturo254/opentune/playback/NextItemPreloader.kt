@@ -20,12 +20,13 @@ internal class NextItemPreloader(private val context: Context, private val scope
         job?.cancel()
         key = null
         val old = active.getAndSet(null)
-        if (old != null) scope.launch(Dispatchers.IO) { runCatching { old.close() } }
+        if (old != null) Dispatchers.IO.dispatch(kotlin.coroutines.EmptyCoroutineContext, Runnable { runCatching { old.close() } })
     }
 
     fun prepare(item: MediaItem?, factory: () -> DataSource.Factory) {
         val config = item?.localConfiguration ?: return
         if (item.mediaId == key) return
+        val previous = job
         cancel()
         val network = context.getSystemService(ConnectivityManager::class.java)
         val capabilities = network?.getNetworkCapabilities(network.activeNetwork) ?: return
@@ -37,10 +38,13 @@ internal class NextItemPreloader(private val context: Context, private val scope
         if (config.uri.scheme !in setOf("https", "http")) return
         key = item.mediaId
         job = scope.launch(Dispatchers.IO) {
+            previous?.join()
+            ensureActive()
             val source = factory().createDataSource()
-            active.set(source)
             val deadline = launch { delay(5000); runCatching { source.close() } }
             try {
+                active.set(source)
+                ensureActive()
                 source.open(DataSpec.Builder().setUri(config.uri).setKey(config.customCacheKey ?: item.mediaId)
                     .setLength(262144).build())
                 val buffer = ByteArray(32768)

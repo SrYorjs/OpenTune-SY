@@ -33,7 +33,6 @@ import com.arturo254.opentune.core.model.ProviderId
 import com.arturo254.opentune.core.model.TrackVersion
 import com.arturo254.opentune.core.model.TrackVersionTrait
 import com.arturo254.opentune.db.MusicDatabase
-import com.arturo254.opentune.db.entities.FormatEntity
 import com.arturo254.opentune.db.entities.LyricsEntity
 import com.arturo254.opentune.db.entities.LyricsEntity.Companion.LYRICS_NOT_FOUND
 import com.arturo254.opentune.db.entities.SongEntity
@@ -178,23 +177,10 @@ constructor(
                     avoidCodecs = avoidStreamCodecs,
                 )
             }.getOrThrow()
-            val format = playbackData.format
+            val format = persistablePlaybackFormat(mediaId, playbackData)
 
             database.query {
-                upsert(
-                    FormatEntity(
-                        id = mediaId,
-                        itag = format.itag,
-                        mimeType = format.mimeType.split(";")[0],
-                        codecs = format.mimeType.split("codecs=")[1].removeSurrounding("\""),
-                        bitrate = format.bitrate,
-                        sampleRate = format.audioSampleRate,
-                        contentLength = format.contentLength!!,
-                        loudnessDb = playbackData.audioConfig?.loudnessDb,
-                        perceptualLoudnessDb = playbackData.audioConfig?.perceptualLoudnessDb,
-                        playbackUrl = playbackData.playbackTracking?.videostatsPlaybackUrl?.baseUrl
-                    ),
-                )
+                format?.let { upsert(it) }
 
                 val now = LocalDateTime.now()
                 val existing = getSongByIdBlocking(mediaId)?.song

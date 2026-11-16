@@ -1,4 +1,4 @@
-﻿# Resolver v2
+# Resolver v2
 
 Base: ZIP `galaxot_vps_resolver_v2.zip` suministrado por el propietario. Se incorpora el destino Audius verificado `validator.eeba4a6ca56a0d87af802270217c2a51.r2.cloudflarestorage.com`. No se dispone de una copia completa de cambios posteriores del servidor desplegado.
 
@@ -12,7 +12,7 @@ Los scripts de instalación y actualización son herramientas manuales, no se ej
 
 YouTube y YouTube Music comparten identidad de catálogo. La búsqueda combina InnerTube con v2; la resolución conserva la ruta InnerTube y el video F5 (clientes, firmas, visitorData y DASH) antes del fallback progresivo v2. Audius usa búsqueda/resolución v2 y conserva su gateway alternativo. PeerTube tiene búsqueda y reproducción directa de MP4 públicos desde la instancia configurada; no depende de que el VPS actual habilite PeerTube. La navegación original consume estos resultados mediante UnifiedSearchRepository y SourcePlaybackCoordinator. No hay selector técnico de proveedores.
 
-El APK local incorpora `OWN_RESOLVER_URL`, `OWN_RESOLVER_KEY` y `AUDIUS_API_KEY` desde `local.properties`; sus valores no se publican. `PEERTUBE_URL` es opcional y usa la instancia anterior. Las compilaciones de CI necesitan suministrar sus propios secretos.
+El APK local incorpora `OWN_RESOLVER_URL`, `OWN_RESOLVER_KEY` y `AUDIUS_API_KEY` desde `local.properties`; sus valores no se publican. Las claves de BuildConfig son extraíbles del APK: no constituyen secretos seguros para distribución pública. Una distribución futura debe usar credenciales revocables por instalación, tokens de corta duración y cuotas del servidor; la clave compartida actual se conserva para la instalación privada. Ofuscación o cifrado con una clave incluida en el APK no resuelven esta limitación. `PEERTUBE_URL` es opcional y usa la instancia anterior. Las compilaciones de CI necesitan suministrar sus propios secretos.
 
 ## Caché y seguridad
 
@@ -22,6 +22,15 @@ Android reutiliza los SimpleCache existentes de reproducción y descargas: `file
 
 ## Validación local y límites
 
-40 pruebas Python cubren proveedores, autenticación, redirecciones, SSRF, respuestas parciales, errores, cancelación y actualización desde Dockerfiles anteriores. Ejecutar `python -m pytest opentune-resolver -q` con las dependencias del servidor y pytest. Android: 616 pruebas de app y 5 de InnerTube, APK universal debug y lint vital correctos; lint completo conserva los mismos 113 errores anteriores, 0 nuevos y 0 Fatal. No se modificaron reglas ni contratos visuales.
+51 pruebas Python cubren proveedores, autenticación, redirecciones, SSRF, respuestas parciales, errores, cancelación y actualización desde Dockerfiles anteriores. Ejecutar `python -m pytest opentune-resolver -q` con las dependencias del servidor y pytest. Android: la auditoría pasó 618 pruebas de app y 5 de InnerTube y generó el APK universal debug, incluidas regresiones de formatos v2 incompletos y claves de caché. No se repitió lint en esta auditoría: la referencia `3ed590dc` pasó lint vital y conservó los mismos 113 errores anteriores, 0 nuevos y 0 Fatal. No se modificaron reglas ni contratos visuales.
 
 Las lecturas HTTP reales comprobaron búsquedas de YouTube/Audius y PeerTube; YouTube audio/video y PeerTube devolvieron 206 y 1024 bytes. La muestra Audius devolvió 200 y 1024 bytes con firma MP3 (el propietario había comprobado otra muestra 206); su MIME genérico se corrige en el proxy de esta revisión. Primer byte observado: YouTube audio 797 ms, video 673 ms, PeerTube 580 ms, Audius 4823 ms. Búsqueda inicial/repetida del servidor existente: Audius 1192/467 ms, YouTube 1223/532 ms. Son mediciones previas al despliegue, no una comparación antes/después de estos cambios ni tiempo hasta audio audible. Faltan reproducción, recuperación, navegación y comportamiento offline reales en dispositivo, y comprobación del backend actualizado tras un despliegue autorizado.
+
+## Actualización posterior con respaldo y rollback
+
+1. Preparar una copia completa de esta revisión en una carpeta distinta de la instalación. No copiar el ZIP inicial sobre los archivos corregidos ni sustituir el .env o Caddyfile existentes. El instalador público ahora exige dominio HTTPS y rechaza una instalación existente; usar el actualizador para la VPS anterior.
+2. Tras la autorización del propietario y un snapshot, ejecutar desde esa copia `sudo bash /ruta/de/la/revision/opentune-resolver/upgrade-v2.sh`. El destino predeterminado es /opt/opentune-resolver; RESOLVER_DIR permite indicar otro. El script conserva el compose existente, añade solo variables ausentes y guarda archivos y una etiqueta de la imagen anterior en backup-v2-FECHA, con acceso restringido. Copia todos los módulos y dependencias de la revisión; no actualiza paquetes en cada arranque ni cambia firewall, credenciales o Caddy.
+3. El actualizador valida sintaxis y compose, construye solo el resolver, arranca sin reconstruir Caddy y prueba /health dentro del contenedor. Ante error, repone archivos y la imagen guardada sin reconstruirla. Después comprobar externamente sobre el HTTPS existente /health, /resolve y /audio y las búsquedas, resolución y stream v2: YouTube audio/video, Audius y PeerTube configurado. Pedir bytes=0-1023 y comprobar 206 con Content-Range o el 200 real si el origen ignora Range, además de 416 para un rango inválido. No pegar claves en URLs, comandos compartidos o registros.
+4. Si esas pruebas externas fallan, desde /opt/opentune-resolver usar `docker compose --project-directory /opt/opentune-resolver -f /opt/opentune-resolver/backup-v2-FECHA/docker-compose.yml -f /opt/opentune-resolver/backup-v2-FECHA/rollback.yml up -d --no-build --no-deps opentune-resolver`. Esto vuelve a la imagen y configuración guardadas, sin tocar Caddy ni sus volúmenes. Restaurar también los archivos de código respaldados antes de una reconstrucción futura. Mantener el respaldo hasta verificar audio y video en el teléfono.
+
+La auditoría de esta revisión no ejecutó Docker, SSH ni despliegues. El código coincide con el ZIP inicial en sus endpoints públicos y añade las correcciones documentadas, pero no certifica cambios desconocidos de la instalación real. Las pruebas de scripts cubren plantillas, sintaxis y adaptación de compose; la ejecución Docker y el rollback real siguen pendientes del despliegue autorizado.

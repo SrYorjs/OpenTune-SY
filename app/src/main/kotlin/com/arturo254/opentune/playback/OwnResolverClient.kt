@@ -95,14 +95,6 @@ object OwnResolverClient {
         return runCatching { parseResolverStream(raw,provider,id,kind,url) }.getOrNull()
     }
 
-    private fun resolveV2Blocking(id: String, quality: String): ResolverStream? {
-        val request = v2Request("resolve/youtube/$id",mapOf("kind" to "audio","quality" to quality)) ?: return null
-        return try { http.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) { v2BlockedUntilMs = System.currentTimeMillis() + 15000L; return null }
-            parseResolverStream(response.body.string(),"youtube",id,"audio",streamV2Url("youtube",id,"audio",quality) ?: return null)
-        } } catch (_: Exception) { v2BlockedUntilMs = System.currentTimeMillis() + 15000L; null }
-    }
-
     private fun qualityParam(q: AudioQuality) = when (q) {
         AudioQuality.AUTO -> "auto"
         AudioQuality.LOW -> "low"
@@ -110,8 +102,7 @@ object OwnResolverClient {
         AudioQuality.HIGHEST -> "highest"
     }
 
-    /** Bloqueante: llamar desde Dispatchers.IO. Devuelve null si no se pudo usar el servidor. */
-    fun resolve(
+    suspend fun resolve(
         videoId: String,
         quality: AudioQuality,
         avoidCodecs: Set<String> = emptySet(),
@@ -119,7 +110,7 @@ object OwnResolverClient {
         val root = base ?: return null
         if (!isUsable()) return null
         val q = qualityParam(quality)
-        resolveV2Blocking(videoId,q)?.takeIf { avoidCodecs.isEmpty() || it.codecs != null }?.let { resolved ->
+        resolveV2("youtube",videoId,"audio",q)?.takeIf { avoidCodecs.isEmpty() || it.codecs != null }?.let { resolved ->
             if (avoidCodecs.none { resolved.codecs?.contains(it,ignoreCase=true) == true }) {
                 val format = PlayerResponse.StreamingData.Format(
                     itag = -1, url = resolved.url,
@@ -140,14 +131,9 @@ object OwnResolverClient {
             .build()
 
         val json = try {
-            http.newCall(Request.Builder().url(resolveUrl).header("X-API-Key", apiKey).build())
-                .execute().use { resp ->
-                    if (!resp.isSuccessful) {
-                        Timber.tag(TAG).w("resolve $videoId -> HTTP ${resp.code}")
-                        return null
-                    }
-                    JSONObject(resp.body.string())
-                }
+            JSONObject(http.newCall(Request.Builder().url(resolveUrl).header("X-API-Key", apiKey).build()).awaitText())
+        } catch (cancelled: CancellationException) {
+            throw cancelled
         } catch (e: IOException) {
             Timber.tag(TAG).w("Server unreachable type=%s", e.javaClass.simpleName)
             blockedUntilMs = System.currentTimeMillis() + UNREACHABLE_BACKOFF_MS
