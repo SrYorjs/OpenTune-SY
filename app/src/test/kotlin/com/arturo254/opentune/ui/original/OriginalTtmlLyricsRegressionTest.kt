@@ -22,7 +22,9 @@ class OriginalTtmlLyricsRegressionTest {
         assertEquals("Yo quiero hacértelo bien high", actual.text)
         assertEquals("v1", actual.agent)
         assertEquals(oldPlayer.text, actual.text)
-        val pieces = actual.words!!
+        // Word layouts use whole words; the sweep must still receive every source syllable.
+        val pieces = actual.syllables ?: actual.words!!
+        assertEquals(listOf("Yo", "quiero", "hacértelo", "bien", "high"), actual.words!!.map { it.text })
         assertEquals(listOf("Yo ", "quiero ", "hacérte", "lo ", "bi", "en ", "high"), pieces.map { it.text })
         val starts = listOf(175.579, 175.856, 176.276, 176.984, 177.365, 177.376, 177.615)
         val ends = listOf(175.856, 176.276, 176.984, 177.365, 177.376, 177.615, 180.271)

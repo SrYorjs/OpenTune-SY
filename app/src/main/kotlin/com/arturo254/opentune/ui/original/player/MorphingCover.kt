@@ -1380,7 +1380,7 @@ private fun MiniSongLines(title: String, artist: String, album: String, modifier
         )
         val subtitle = listOf(artist, album)
             .filter { it.isNotBlank() }
-            .joinToString(" â€” ")
+            .joinToString(" \u2014 ")
         if (subtitle.isNotBlank()) {
             Text(
                 text = subtitle,

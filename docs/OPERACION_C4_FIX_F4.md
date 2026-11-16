@@ -1,0 +1,17 @@
+# C4-fix F4: fidelidad del mini y letras
+
+Referencia comprobada: build/mochy-reference f8a3593f. No hay capturas adjuntas disponibles en este turno; comparacion de codigo, no validacion visual en telefono.
+
+| Aspecto | Evidencia/comparacion | Clasificacion y accion |
+| --- | --- | --- |
+| Portada mini | MorphingCover conserva 48x48 dp (16:9 solo para video), mini 64 dp, inset 8 dp, separacion titulo 12 dp. radio se interpola desde ThumbnailCornerRadius hasta el expandido y 12 dp en cabecera de letras. MainActivity y referencia usan r*0.35 limitado a 16 dp con el mismo default de coverRadius=25. | Original/configuracion real: no cambiar forma/tamano sin evidencia; no sustituir por otra geometria. |
+| Sombra/animacion | MorphingCover conserva AnimatedCornerShape, pauseScale/saturation, resorte/morph y transicion de ancho 350 ms FastOutSlowInEasing. | Original. Se conservan tiempos, sombra y respiracion de portada; reduced motion y ciclo de vida siguen siendo adaptaciones necesarias. |
+| Subtitulo mini | Traslado tenia el separador U+2014 recodificado como tres caracteres corruptos. | Adaptacion incorrecta: se restaura con escape Unicode en el literal visible. |
+| Tipografia/espaciado letras | LyricsGlowLine y referencia: Inter heredado del tema, 32 sp/40 sp, Bold activa/SemiBold otras. LyricsScreen conserva espacios, scrolling y viewport medidos. | Original: sin cambiar tipografia o imponer alturas fijas. |
+| Resaltado activo | Misma restingAlpha (activa 1, proxima .5, pasada .24), escala activa 1.06, shader y barrido de segmentos. F1 restituyo los tiempos que lo alimentan. | Original; ya no se degrada TTML a texto plano. |
+| Palabras vs silabas | La referencia mergeWordPieces mantiene silabas en entry.syllables y palabras completas en words; la adaptacion conservaba solo piezas en words, asi algunos estilos/ticker separaban visualmente 'hace rte lo'. | Adaptacion incompleta: withOriginalWordSpacing agrupa unicamente segmentos contiguos en el texto real, preserva espacios del texto, tiempos inicial/final de cada palabra y TODOS los tiempos originales en syllables. No aplica la heuristica upstream de inventar espacios ausentes. No fusiona chino/japones/tailandes. |
+| Ruby/traduccion/procedencia | No hay lecturas alineadas ni motor paralelo conectado en esta fase; Room guarda id y cuerpo, no proveedor. La romanizacion por linea existente se conserva. | Datos no entregados al renderer: se mantienen ausentes; no se simulan ni se atribuye proveedor inventado. No cambia Room. |
+
+Regresion: se conserva la fixture F1 exacta y sus siete pares de tiempos, ahora comprobados en syllables; se exige ademas words=[Yo,quiero,hacertelo,bien,high] con el acento de la fuente. No es debilitamiento: representacion de datos refinada, mismos tiempos mas contrato de palabras completas. Clasificacion 04-A: la ubicacion de piezas en words deja de ser la representacion final exclusiva. OriginalWordPiecesTest comprueba palabras repetidas por offset, tiempos completos, fuentes sin espacios y segmentos no encontrados sin inferir lecturas. El contrato LRC y todas las comprobaciones F1 permanecen.
+
+Verificacion: :innertube:test :app:testUniversalDebugUnitTest :app:assembleUniversalDebug correctos, intento 1/3; 601 pruebas app y 5 innertube, 0 fallos. Sin lint en F4; logs locales excluidos, lectura cada 600s o al finalizar. Falta comparacion visual en dispositivo Android 16; no se afirma que se vea igual.

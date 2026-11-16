@@ -13,7 +13,7 @@ object LyricsUtils {
         } else {
             com.arturo254.opentune.lyrics.LyricsUtils.parseLyrics(source)
         }
-        return entries.map { it.toOriginalMiniLine() }
+        return entries.map { it.toOriginalMiniLine().withOriginalWordSpacing() }
     }
     fun parsePlainLyrics(raw: String): List<LyricsEntry> = raw.lines().filter { it.isNotBlank() }.map { LyricsEntry(0L, it) }
     fun isUnsynced(lines: List<LyricsEntry>): Boolean = lines.isNotEmpty() && lines.all { it.time == lines.first().time && it.words.isNullOrEmpty() }
