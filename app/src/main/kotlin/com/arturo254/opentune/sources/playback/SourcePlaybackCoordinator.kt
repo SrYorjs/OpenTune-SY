@@ -143,6 +143,8 @@ constructor(
         var ageRestricted = false
         for (choice in choices) {
             if (ageRestricted && choice.playbackRoute() == SourcePlaybackRoute.CATALOG_BRIDGE) continue
+            val traceId = if (choice.provider in setOf(ProviderId.AUDIUS, ProviderId.PEERTUBE)) choice.provider.value + ":" + choice.sourceId else choice.sourceId
+            com.arturo254.opentune.playback.PlaybackStartupTrace.begin(traceId)
             if (choice.provider == ProviderId.YOUTUBE_MUSIC && choice.sourceId.matches(Regex("[A-Za-z0-9_-]{11}"))) {
                 timber.log.Timber.tag("SourcePlayback").i("stage=selection provider=youtube id=%s", choice.sourceId)
             }
@@ -159,6 +161,7 @@ constructor(
             val firstItem = withContext(Dispatchers.IO) {
                 queue.getInitialStatus().items.firstOrNull()
             } ?: continue
+            com.arturo254.opentune.playback.PlaybackStartupTrace.mark(firstItem.mediaId, "initial_queue")
             connection.playQueue(queue)
             if (awaitPlaybackStart(connection, firstItem.mediaId)) return true
             if (choice.provider == ProviderId.YOUTUBE_MUSIC) {

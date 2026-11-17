@@ -824,6 +824,7 @@ class MusicService :
         reason: Int,
     ) {
         nextItemPreloader.cancel()
+        mediaItem?.mediaId?.let { PlaybackStartupTrace.transition(it) }
         sourceFallbackJob?.cancel()
         streamResolver.onMediaItemTransition(mediaItem?.mediaId)
         super.onMediaItemTransition(
@@ -840,9 +841,12 @@ class MusicService :
     override fun onPlaybackStateChanged(
         @Player.State playbackState: Int,
     ) {
-        if (playbackState == Player.STATE_READY && player.hasNextMediaItem()) {
-            nextItemPreloader.prepare(player.getMediaItemAt(player.nextMediaItemIndex)) { streamResolver.createDataSourceFactory() }
-        }
+        PlaybackStartupTrace.mark(player.currentMediaItem?.mediaId, when (playbackState) {
+            Player.STATE_READY -> "ready"
+            Player.STATE_BUFFERING -> "buffering"
+            Player.STATE_ENDED -> "ended"
+            else -> "idle"
+        })
         super.onPlaybackStateChanged(
             playbackState,
         )
@@ -856,6 +860,12 @@ class MusicService :
         player: Player,
         events: Player.Events,
     ) {
+        if ((events.contains(Player.EVENT_IS_PLAYING_CHANGED) || events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)) && player.isPlaying) {
+            PlaybackStartupTrace.mark(player.currentMediaItem?.mediaId, "playing")
+        }
+        if (player.isPlaying && player.hasNextMediaItem()) {
+            nextItemPreloader.prepare(player.getMediaItemAt(player.nextMediaItemIndex)) { streamResolver.createDataSourceFactory() }
+        }
         playbackEventCoordinator
             .onEvents(events)
     }

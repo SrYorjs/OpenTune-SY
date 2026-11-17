@@ -30,12 +30,15 @@ object OwnResolverClient {
     @Volatile private var apiKey: String = ""
 
     private val http = OkHttpClient.Builder()
+        .eventListenerFactory { PlaybackHttpTimingListener() }
         .followRedirects(false)
         .followSslRedirects(false)
         .connectTimeout(4, TimeUnit.SECONDS)
         .readTimeout(25, TimeUnit.SECONDS) // yt-dlp puede tardar unos segundos en resolver
         .callTimeout(30, TimeUnit.SECONDS)
         .build()
+
+    internal fun httpTransport(): OkHttpClient = http
 
     /** Si los ajustes están vacíos se usan los valores incluidos en el APK (local.properties). */
     fun configure(url: String, key: String) {

@@ -59,7 +59,7 @@ class PlaybackHttpRegressionTest {
         server.httpsConfigurator = HttpsConfigurator(serverTls.sslContext())
         server.executor = executor
         root = "https://localhost:${server.address.port}/private/".toHttpUrl()
-        client = playbackHttpClient(null, ResolverCredentialInterceptor({ root }, { key })).newBuilder()
+        client = playbackHttpClient(null, ResolverCredentialInterceptor({ root }, { key }), OkHttpClient()).newBuilder()
             .sslSocketFactory(clientTls.sslSocketFactory(), clientTls.trustManager).build()
         server.createContext("/") { exchange ->
             val path = exchange.requestURI.path
@@ -208,6 +208,10 @@ class PlaybackHttpRegressionTest {
             player = SimpleCache(folder.resolve("player"), LeastRecentlyUsedCacheEvictor(4L * payload.size))
             downloads = SimpleCache(folder.resolve("downloads"), NoOpCacheEvictor())
             val reopened = playbackAudioCacheFactory(player, downloads, OkHttpDataSource.Factory(client))
+            assertEquals(payload.size.toLong(), cachedAudioLength(downloads, player, id) { fail("Warm cache must not wait for Room"); null })
+            var databaseCalls = 0
+            assertEquals(123L, cachedAudioLength(downloads, player, "not-cached") { databaseCalls++; 123L })
+            assertEquals(1, databaseCalls)
             failureStatus = 403
             assertArrayEquals(payload, read(reopened.createDataSource(), spec.withUri(uri("v2/stream/youtube/$id?expired=fixture"))).second)
             assertEquals(count, requests.size)
@@ -216,6 +220,43 @@ class PlaybackHttpRegressionTest {
             assertArrayEquals(payload, read(reopened.createDataSource(), another).second)
             assertTrue(requests.size > count)
         } finally { player.release(); downloads.release(); folder.deleteRecursively() }
+    }
+
+    @Test fun startupBenchmarkReusesMetadataConnectionForAuthenticatedFirstAudioBytes() {
+        val before = mutableListOf<Long>()
+        val after = mutableListOf<Long>()
+        val connections = java.util.concurrent.atomic.AtomicInteger()
+        fun trial(shared: Boolean): Long {
+            val metadata = client.newBuilder().connectionPool(ConnectionPool())
+                .eventListenerFactory { object : EventListener() {
+                    override fun secureConnectStart(call: Call) { connections.incrementAndGet() }
+                } }.build()
+            val transport = if (shared) metadata else metadata.newBuilder().connectionPool(ConnectionPool()).build()
+            val media = playbackHttpClient(null, ResolverCredentialInterceptor({ root }, { key }), transport)
+            assertSame(metadata.dispatcher, media.dispatcher)
+            if (shared) assertSame(metadata.connectionPool, media.connectionPool)
+            val started = System.nanoTime()
+            try {
+                metadata.newCall(Request.Builder().url(uri("v2/resolve/youtube/$id?kind=audio").toString()).build()).execute().use {
+                    assertEquals(200, it.code)
+                    it.body!!.bytes()
+                }
+                val bytes = read(OkHttpDataSource.Factory(media).createDataSource(), DataSpec.Builder().setUri(uri()).setKey(id).setLength(1024).build()).second
+                assertEquals(1024, bytes.size)
+                assertEquals(key, requests.last().second)
+                assertEquals("bytes=0-1023", requests.last().third)
+                return (System.nanoTime() - started) / 1_000_000L
+            } finally {
+                metadata.connectionPool.evictAll()
+                media.connectionPool.evictAll()
+            }
+        }
+        repeat(5) { before += trial(false) }
+        assertEquals(10, connections.get())
+        connections.set(0)
+        repeat(5) { after += trial(true) }
+        assertEquals(5, connections.get())
+        println("PlaybackStartupBenchmark local_https trials=5 before_median_ms=${before.sorted()[2]} after_median_ms=${after.sorted()[2]} tls_per_start_before=2 tls_per_start_after=1")
     }
 
     @Test fun realExtractorsRecognizeGeneratedAacAndMp3WithoutDroppingExistingContainers() {

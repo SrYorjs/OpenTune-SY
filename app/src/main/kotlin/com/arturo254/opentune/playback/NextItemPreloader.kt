@@ -28,39 +28,51 @@ internal class NextItemPreloader(private val context: Context, private val scope
         if (item.mediaId == key) return
         val previous = job
         cancel()
-        val network = context.getSystemService(ConnectivityManager::class.java)
-        val capabilities = network?.getNetworkCapabilities(network.activeNetwork) ?: return
-        if (!capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED) ||
-            !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) return
-        if (context.getSystemService(PowerManager::class.java)?.isPowerSaveMode != false) return
-        val battery = context.getSystemService(BatteryManager::class.java) ?: return
-        if (!battery.isCharging && battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) < 25) return
-        if (config.uri.scheme !in setOf("https", "http")) return
+        if (!permitted()) return
+        if (!canPreloadAudio(item.mediaId, config.uri.scheme)) return
         key = item.mediaId
         job = scope.launch(Dispatchers.IO) {
+            delay(1_200L)
             previous?.join()
             ensureActive()
+            if (!permitted()) return@launch
             val source = factory().createDataSource()
-            val deadline = launch { delay(5000); runCatching { source.close() } }
             try {
                 active.set(source)
                 ensureActive()
-                source.open(DataSpec.Builder().setUri(config.uri).setKey(config.customCacheKey ?: item.mediaId)
-                    .setLength(262144).build())
-                val buffer = ByteArray(32768)
-                var left = 262144
-                while (left > 0) {
-                    ensureActive()
-                    val read = source.read(buffer, 0, minOf(left, buffer.size))
-                    if (read < 0) break
-                    left -= read
-                }
+                preloadAudioPrefix(source, DataSpec.Builder().setUri(config.uri).setKey(config.customCacheKey ?: item.mediaId).build())
             } catch (cancelled: CancellationException) { throw cancelled } catch (_: Exception) {
             } finally {
-                deadline.cancel()
                 active.compareAndSet(source, null)
                 runCatching { source.close() }
             }
+        }
+    }
+
+    private fun permitted(): Boolean {
+        val network = context.getSystemService(ConnectivityManager::class.java) ?: return false
+        val capabilities = network.getNetworkCapabilities(network.activeNetwork) ?: return false
+        val battery = context.getSystemService(BatteryManager::class.java) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED) &&
+            capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) &&
+            context.getSystemService(PowerManager::class.java)?.isPowerSaveMode == false &&
+            (battery.isCharging || battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) >= 25)
+    }
+}
+
+internal fun canPreloadAudio(mediaId: String, scheme: String?): Boolean =
+    scheme in setOf("https", "http") ||
+        (scheme == null && mediaId.matches(Regex("[A-Za-z0-9_-]{11}")))
+
+internal suspend fun preloadAudioPrefix(source: DataSource, spec: DataSpec) = withTimeout(5_000L) {
+    runInterruptible(Dispatchers.IO) {
+        source.open(spec.buildUpon().setLength(262144).build())
+        val buffer = ByteArray(32768)
+        var left = 262144
+        while (left > 0 && !Thread.currentThread().isInterrupted) {
+            val read = source.read(buffer, 0, minOf(left, buffer.size))
+            if (read < 0) break
+            left -= read
         }
     }
 }

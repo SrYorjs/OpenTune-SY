@@ -14,7 +14,6 @@ import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR
 import androidx.media3.datasource.cache.ContentMetadata
 import androidx.media3.datasource.okhttp.OkHttpDataSource
-import androidx.media3.exoplayer.ExoPlayer
 import com.arturo254.jossredconnect.JossRedClient
 import com.arturo254.opentune.R
 import com.arturo254.opentune.constants.AudioQuality
@@ -22,7 +21,6 @@ import com.arturo254.opentune.constants.JossRedMultimediaKey
 import com.arturo254.opentune.constants.PlayerStreamClient
 import com.arturo254.opentune.db.MusicDatabase
 import com.arturo254.opentune.db.entities.FormatEntity
-import com.arturo254.opentune.extensions.SilentHandler
 import com.arturo254.opentune.extensions.directorySizeBytes
 import com.arturo254.opentune.utils.StreamClientUtils
 import com.arturo254.opentune.utils.YTPlayerUtils
@@ -30,7 +28,6 @@ import com.arturo254.opentune.utils.dataStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -46,24 +43,20 @@ internal class StreamResolver(
     private val playerCache: Cache,
     private val downloadCache: Cache,
     private val scopeProvider: () -> CoroutineScope,
-    private val playerProvider: () -> ExoPlayer,
     private val audioQualityProvider: () -> AudioQuality,
     private val preferredStreamClientProvider: () -> PlayerStreamClient,
     private val errorRecoveryControllerProvider: () -> ErrorRecoveryController,
     private val recoverSong: suspend (String, YTPlayerUtils.PlaybackData?) -> Unit,
     private val promptLoginRecovery: (String, String) -> Unit,
 ) {
-    private var warmupJob: kotlinx.coroutines.Job? = null
     private val resolutionRequests = PlaybackResolutionRequests()
 
     fun onMediaItemTransition(mediaId: String?) {
         resolutionRequests.cancelExcept(mediaId)
-        warmupJob?.cancel()
     }
 
     fun cancelResolutions() {
         resolutionRequests.cancelExcept(null)
-        warmupJob?.cancel()
     }
 
     private fun playerCacheKey(mediaId: String) = audioPlayerCacheKey(playerCache, mediaId)
@@ -107,19 +100,11 @@ internal class StreamResolver(
                 if (dataSpec.length >= 0L) {
                     dataSpec.length
                 } else {
-                    val contentLength =
-                        runBlocking(Dispatchers.IO) {
-                            database.format(mediaId).first()?.contentLength?.takeIf { it > 0L }
-                        } ?: runCatching {
-                            downloadCache
-                                .getContentMetadata(mediaId)
-                                .get(ContentMetadata.KEY_CONTENT_LENGTH, -1L)
-                        }.getOrNull()?.takeIf { it > 0L }
-                            ?: runCatching {
-                                playerCache
-                                    .getContentMetadata(playerCacheKey(mediaId))
-                                    .get(ContentMetadata.KEY_CONTENT_LENGTH, -1L)
-                            }.getOrNull()?.takeIf { it > 0L }
+                    val cacheStarted = System.nanoTime()
+                    val contentLength = cachedAudioLength(downloadCache, playerCache, mediaId) {
+                        runBlocking(Dispatchers.IO) { database.format(mediaId).first()?.contentLength }
+                    }
+                    PlaybackStartupTrace.record(mediaId, "cache_lookup", (System.nanoTime() - cacheStarted) / 1_000_000L)
 
                     contentLength?.let {
                         (it - dataSpec.position).takeIf { remaining ->
@@ -142,6 +127,7 @@ internal class StreamResolver(
                         )
 
                 if (isFullyCached) {
+                    PlaybackStartupTrace.mark(mediaId, "cache_complete")
                     scopeProvider().launch(Dispatchers.IO) {
                         recoverSong(mediaId, null)
                     }
@@ -312,59 +298,6 @@ internal class StreamResolver(
             }
         }.let { factory -> DataSource.Factory { PlaybackDiagnosticDataSource(factory.createDataSource()) } }
 
-    fun scheduleNextStreamWarmup() {
-        warmupJob?.cancel()
-        if (connectivityManager.isActiveNetworkMetered) return
-        val player = playerProvider()
-        if (!player.hasNextMediaItem()) return
-        val next = player.getMediaItemAt(player.nextMediaItemIndex)
-        if (StreamRequestPolicy.isDirectHttpStream(next.localConfiguration?.uri.toString()) ||
-            !next.mediaId.matches(Regex("[A-Za-z0-9_-]{11}"))) return
-        val mediaId = next.mediaId
-        warmupJob = scopeProvider().launch(Dispatchers.IO + SilentHandler) {
-            delay(1_200L)
-            if (connectivityManager.isActiveNetworkMetered) return@launch
-            val recovery = errorRecoveryControllerProvider()
-            val now = System.currentTimeMillis()
-
-            if (recovery.hasValidCachedStream(mediaId, now)) {
-                return@launch
-            }
-            if (!recovery.tryBeginWarmup(mediaId)) {
-                return@launch
-            }
-
-            try {
-                val playbackData =
-                    withTimeout(8_000L) {
-                        YTPlayerUtils.playerResponseForPlayback(
-                            mediaId,
-                            audioQuality = audioQualityProvider(),
-                            connectivityManager = connectivityManager,
-                            preferredStreamClient =
-                                preferredStreamClientProvider(),
-                            avoidCodecs = avoidStreamCodecs,
-                        )
-                    }.getOrNull() ?: return@launch
-
-                rememberPlayerCacheKey(mediaId, playbackData)
-                recovery.cacheStream(
-                    mediaId = mediaId,
-                    url = playbackData.streamUrl,
-                    expiresAtMs =
-                        System.currentTimeMillis() +
-                            playbackData.streamExpiresInSeconds * 1000L,
-                )
-            } catch (cancelled: kotlinx.coroutines.CancellationException) {
-                throw cancelled
-            } catch (error: Exception) {
-                Timber.tag("PlaybackDiagnostic").w("id=%s provider=youtube stage=warmup category=failed root=%s", mediaId, error.javaClass.simpleName)
-            } finally {
-                recovery.finishWarmup(mediaId)
-            }
-        }
-    }
-
     suspend fun trimPlayerCacheToBytes(limitBytes: Long) {
         if (limitBytes <= 0L) return
 
@@ -421,9 +354,9 @@ internal class StreamResolver(
         }
     }
 
-    private fun createCacheDataSource(): CacheDataSource.Factory = playbackAudioCacheFactory(
+    private fun createCacheDataSource(): DataSource.Factory = playbackAudioCacheFactory(
         playerCache, downloadCache, DefaultDataSource.Factory(context, OkHttpDataSource.Factory(mediaOkHttpClient)),
-    )
+    ).let { cache -> DataSource.Factory { PlaybackDiagnosticDataSource(cache.createDataSource(), "cache_open", false) } }
 
     private fun persistResolvedFormat(
         mediaId: String,
@@ -488,9 +421,8 @@ internal fun rememberAudioPlayerCacheKey(cache: Cache, mediaId: String, playback
     cache.applyContentMetadataMutations(mediaId, androidx.media3.datasource.cache.ContentMetadataMutations().set("opentune.audio.variant", key))
 }
 
-internal fun playbackHttpClient(proxy: java.net.Proxy?, credentials: okhttp3.Interceptor): OkHttpClient =
-        OkHttpClient
-            .Builder()
+internal fun playbackHttpClient(proxy: java.net.Proxy?, credentials: okhttp3.Interceptor, transport: OkHttpClient = OwnResolverClient.httpTransport()): OkHttpClient =
+        transport.newBuilder()
             .proxy(proxy)
             .addNetworkInterceptor(credentials)
             .followRedirects(true)

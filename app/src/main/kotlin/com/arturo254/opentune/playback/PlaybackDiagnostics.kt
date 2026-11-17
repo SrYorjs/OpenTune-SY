@@ -74,17 +74,28 @@ internal fun playbackFailureDiagnostic(selectedId: String?, error: Throwable, co
 
 private class PlaybackIoContext(val mediaId: String?, val elapsedMs: Long) : IOException("Playback I/O context")
 
-internal class PlaybackDiagnosticDataSource(private val source: DataSource) : DataSource by source {
+internal class PlaybackDiagnosticDataSource(private val source: DataSource, private val openStage: String = "data_source_open", private val traceReads: Boolean = true) : DataSource by source {
     private var mediaId: String? = null
     private var openedAt = 0L
+    private var firstByte = false
 
     override fun open(spec: DataSpec): Long {
         mediaId = spec.key
         openedAt = System.nanoTime()
-        return measured(spec.key) { source.open(spec) }
+        firstByte = false
+        return measured(spec.key) { source.open(spec) }.also {
+            PlaybackStartupTrace.record(mediaId, openStage, (System.nanoTime() - openedAt) / 1_000_000L)
+            if (traceReads) PlaybackStartupTrace.mark(mediaId, "data_source_open_total")
+        }
     }
 
-    override fun read(buffer: ByteArray, offset: Int, length: Int): Int = measured(mediaId) { source.read(buffer, offset, length) }
+    override fun read(buffer: ByteArray, offset: Int, length: Int): Int = measured(mediaId) { source.read(buffer, offset, length) }.also {
+        if (it > 0 && !firstByte && traceReads) {
+            firstByte = true
+            PlaybackStartupTrace.record(mediaId, "first_audio_bytes", (System.nanoTime() - openedAt) / 1_000_000L)
+            PlaybackStartupTrace.mark(mediaId, "first_audio_bytes_total")
+        }
+    }
 
     private inline fun <T> measured(id: String?, block: () -> T): T = try {
         block()

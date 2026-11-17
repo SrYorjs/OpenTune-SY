@@ -43,8 +43,6 @@ internal class ErrorRecoveryController(
 
     private val playbackUrlCache =
         ConcurrentHashMap<String, Pair<String, Long>>()
-    private val playbackWarmupInFlight =
-        ConcurrentHashMap.newKeySet<String>()
     private val recoveryAttempts = TrackRecoveryAttempts()
 
     @Volatile
@@ -293,12 +291,6 @@ internal class ErrorRecoveryController(
         playbackUrlCache[mediaId]
             ?.takeIf { (_, expiresAt) -> expiresAt > nowMs }
 
-    fun hasValidCachedStream(
-        mediaId: String,
-        nowMs: Long = System.currentTimeMillis(),
-    ): Boolean =
-        validCachedStream(mediaId, nowMs) != null
-
     fun cacheStream(
         mediaId: String,
         url: String,
@@ -309,13 +301,6 @@ internal class ErrorRecoveryController(
 
     fun removeCachedStream(mediaId: String) {
         playbackUrlCache.remove(mediaId)
-    }
-
-    fun tryBeginWarmup(mediaId: String): Boolean =
-        playbackWarmupInFlight.add(mediaId)
-
-    fun finishWarmup(mediaId: String) {
-        playbackWarmupInFlight.remove(mediaId)
     }
 
     private fun applyTerminalErrorPolicy() {

@@ -103,9 +103,6 @@ internal object MusicServiceComposition {
                 downloadCache =
                     service.downloadCache,
                 scopeProvider = scopeProvider,
-                playerProvider = {
-                    requireNotNull(playerRef)
-                },
                 audioQualityProvider =
                     audioQualityProvider,
                 preferredStreamClientProvider =
@@ -141,6 +138,12 @@ internal object MusicServiceComposition {
             )
 
         player.apply {
+            addAnalyticsListener(object : androidx.media3.exoplayer.analytics.AnalyticsListener {
+                override fun onAudioPositionAdvancing(eventTime: androidx.media3.exoplayer.analytics.AnalyticsListener.EventTime, playoutStartSystemTimeMs: Long) {
+                    val id = eventTime.timeline.takeUnless { it.isEmpty }?.getWindow(eventTime.windowIndex, androidx.media3.common.Timeline.Window())?.mediaItem?.mediaId
+                    PlaybackStartupTrace.mark(id, "audio_position_advancing")
+                }
+            })
             addListener(service)
             addListener(sleepTimer)
             addAnalyticsListener(
@@ -491,8 +494,6 @@ internal object MusicServiceComposition {
                     playbackRuntimeController
                         .lyricsPreloadManager
                 },
-                streamResolver =
-                    streamResolver,
                 togetherController =
                     togetherController,
                 automixRadioController =

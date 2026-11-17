@@ -26,6 +26,13 @@ internal fun playbackAudioCacheFactory(player: Cache, downloads: Cache, upstream
             .setUpstreamDataSourceFactory(upstream).setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR))
         .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
 
+internal fun cachedAudioLength(downloads: Cache, player: Cache, id: String, databaseLength: () -> Long?): Long? =
+    runCatching { downloads.getContentMetadata(id).get(androidx.media3.datasource.cache.ContentMetadata.KEY_CONTENT_LENGTH, -1L) }
+        .getOrNull()?.takeIf { it > 0L }
+        ?: runCatching { player.getContentMetadata(audioPlayerCacheKey(player, id)).get(androidx.media3.datasource.cache.ContentMetadata.KEY_CONTENT_LENGTH, -1L) }
+            .getOrNull()?.takeIf { it > 0L }
+        ?: databaseLength()?.takeIf { it > 0L }
+
 fun videoCacheKey(mediaId: String, track: VideoTrack): String =
     "video:$mediaId:${track.itag}:${track.width}x${track.height}:${track.codecs}:${track.bitrate}"
 

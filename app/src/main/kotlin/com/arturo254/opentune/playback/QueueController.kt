@@ -107,6 +107,7 @@ internal class QueueController(
         clearAuxiliaryQueueState()
 
         queue.preloadItem?.let { preload ->
+            PlaybackStartupTrace.begin(preload.id)
             player.setMediaItem(preload.toMediaItem())
             player.prepare()
             player.playWhenReady = playWhenReady

@@ -33,8 +33,6 @@ internal class PlaybackEventCoordinator(
         () -> CrossfadeAudio?,
     private val lyricsPreloadManagerProvider:
         () -> LyricsPreloadManager?,
-    private val streamResolver:
-        StreamResolver,
     private val togetherController:
         TogetherController,
     private val automixRadioController:
@@ -95,10 +93,6 @@ internal class PlaybackEventCoordinator(
                     queue,
                 )
         }
-
-        streamResolver
-            .scheduleNextStreamWarmup()
-
         if (
             togetherController
                 .onMediaItemTransition(
@@ -166,7 +160,7 @@ internal class PlaybackEventCoordinator(
         }
 
         if (!queueController.initialQueueReady ||
-            player.playbackState == Player.STATE_IDLE ||
+            !player.isPlaying ||
             player.currentTimeline.isEmpty ||
             nextPageLoadJob?.isActive == true
         ) return
@@ -186,7 +180,7 @@ internal class PlaybackEventCoordinator(
                 if (paginationQueue !== requestedQueue ||
                     queueController.currentQueue !== requestedQueue ||
                     !queueController.initialQueueReady ||
-                    player.playbackState == Player.STATE_IDLE ||
+                    !player.isPlaying ||
                     !shouldLoad()
                 ) return@launch
 
@@ -245,6 +239,7 @@ internal class PlaybackEventCoordinator(
     fun onEvents(
         events: Player.Events,
     ) {
+        if (events.contains(Player.EVENT_IS_PLAYING_CHANGED) && player.isPlaying) requestNextQueuePageIfNeeded()
         if (events.contains(Player.EVENT_TIMELINE_CHANGED)) requestNextQueuePageIfNeeded()
         if (
             events.contains(
