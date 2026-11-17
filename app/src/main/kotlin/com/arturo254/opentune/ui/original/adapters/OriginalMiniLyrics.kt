@@ -3,7 +3,6 @@ package com.arturo254.opentune.ui.original.adapters
 import com.arturo254.opentune.constants.LyricsRomanizeJapaneseKey
 import com.arturo254.opentune.constants.LyricsRomanizeKoreanKey
 import com.arturo254.opentune.db.entities.LyricsEntity.Companion.LYRICS_NOT_FOUND
-import com.arturo254.opentune.lyrics.LyricsUtils as GalaxLyrics
 import com.arturo254.opentune.ui.original.lyrics.LyricsEntry
 import com.arturo254.opentune.ui.original.lyrics.WordTimestamp
 import com.arturo254.opentune.utils.dataStore
@@ -38,16 +37,12 @@ fun OriginalPlayerConnection.miniLyrics(translationLanguage: StateFlow<Language?
             }
             emit(OriginalMiniLyricsState(metadata?.id, metadata == null || entity != null, lines))
             val translator = if (language != null) Translator() else null
+            val japaneseBody = lines.any { hasJapaneseKana(it.text) }
             for (entry in lines) {
                 try {
-                    val romanized = withContext(Dispatchers.Default) {
-                        when {
-                            preferences[LyricsRomanizeJapaneseKey] == true && GalaxLyrics.isJapanese(entry.text) && !GalaxLyrics.isChinese(entry.text) -> GalaxLyrics.romanizeJapanese(entry.text)
-                            preferences[LyricsRomanizeKoreanKey] == true && GalaxLyrics.isKorean(entry.text) -> GalaxLyrics.romanizeKorean(entry.text)
-                            else -> null
-                        }
+                    withContext(Dispatchers.Default) {
+                        applyOriginalReading(entry, japaneseBody, preferences[LyricsRomanizeJapaneseKey] != false, preferences[LyricsRomanizeKoreanKey] != false)
                     }
-                    entry.romanizedTextFlow.value = romanized
                     if (translator != null && language != null && entry.text.isNotBlank()) {
                         entry.translatedTextFlow.value = withContext(Dispatchers.IO) {
                             translator.translateBlocking(entry.text, language).translatedText

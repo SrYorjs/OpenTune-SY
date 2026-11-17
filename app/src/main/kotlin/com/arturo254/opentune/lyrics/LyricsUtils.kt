@@ -24,6 +24,10 @@ data class LyricsRomanizationPreferences(
         get() = romanizeJapanese || romanizeKorean
 }
 
+data class JapaneseTokenReading(val position: Int, val surface: String, val reading: String?) {
+    val end: Int get() = position + surface.length
+}
+
 @Suppress("RegExpRedundantEscape")
 object LyricsUtils {
     val LINE_REGEX = "((\\[\\d\\d:\\d\\d\\.\\d{2,3}\\] ?)+)(.+)".toRegex()
@@ -311,15 +315,15 @@ object LyricsUtils {
         return romajiBuilder.toString().lowercase()
     }
 
-    /**
-     * Romanizes Japanese text using Kuromoji Tokenizer and the optimized katakanaToRomaji function.
-     * Runs on Dispatchers.Default for CPU-intensive work.
-     * Expected impact: Faster tokenization due to reused Tokenizer instance and faster
-     * per-token romanization.
-     */
+    suspend fun japaneseTokenReadings(text: String): List<JapaneseTokenReading> = withContext(Dispatchers.Default) {
+        kuromojiTokenizer.tokenize(text).map { token ->
+            JapaneseTokenReading(token.position, token.surface, token.reading?.takeIf { it.isNotBlank() && it != "*" })
+        }
+    }
+
     suspend fun romanizeJapanese(text: String): String = withContext(Dispatchers.Default) {
         // Use the lazily initialized tokenizer
-        val tokens = kuromojiTokenizer.tokenize(text)
+        val tokens = japaneseTokenReadings(text)
 
         val romanizedTokens = tokens.mapIndexed { index, token ->
             val currentReading = if (token.reading.isNullOrEmpty() || token.reading == "*") {
