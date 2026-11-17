@@ -7,6 +7,17 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PlaybackResolutionTest {
+    @Test fun unavailableInnertubeDoesNotCancelPendingResolver() = runTest {
+        var completed = false
+        val result = resolvePreferredPlayback(
+            primary = { delay(12_000); completed = true; "resolver" },
+            fallback = { delay(1_000); throw IOException("Unavailable") },
+        )
+        assertEquals("resolver", result)
+        assertTrue(completed)
+        assertEquals(12_000L, testScheduler.currentTime)
+    }
+
     @Test fun resolverThatFinishesAfterEightSecondsCanStillBeatUnavailableInnertube() = runTest {
         var requests = 0
         var alternativeCancelled = false
@@ -23,13 +34,13 @@ class PlaybackResolutionTest {
         assertTrue(alternativeCancelled)
     }
 
-    @Test fun hedgedFallbackDoesNotExtendFailureOrTheTwentySecondDeadline() = runTest {
+    @Test fun failedFallbackKeepsResolverAliveOnlyUntilTheTwentySecondDeadline() = runTest {
         var cancelled = false
         try {
             resolvePreferredPlayback(primary = { try { awaitCancellation() } finally { cancelled = true } },
                 fallback = { delay(7_000); throw IOException("Unavailable") })
             fail("failure lost")
-        } catch (_: IOException) { assertEquals(15_000L, testScheduler.currentTime) }
+        } catch (_: PlaybackResolutionTimeoutException) { assertEquals(20_000L, testScheduler.currentTime) }
         assertTrue(cancelled)
         val started = testScheduler.currentTime
         try {

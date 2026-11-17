@@ -60,7 +60,12 @@ internal suspend fun <T : Any> resolvePreferredPlayback(
                     preferred.onAwait { true to it }
                     alternative.onAwait { false to it }
                 }
-                if (!first.first) return@coroutineScope first.second.getOrThrow() ?: throw java.io.IOException("No playable fallback")
+                if (!first.first) {
+                    first.second.getOrNull()?.let { return@coroutineScope it }
+                    val remaining = preferred.await()
+                    remaining.getOrNull()?.let { return@coroutineScope it }
+                    throw remaining.exceptionOrNull() ?: first.second.exceptionOrNull() ?: java.io.IOException("No playable source")
+                }
                 first.second.getOrNull() ?: alternative.await().getOrThrow()
             } finally { alternative.cancel() }
         } finally { preferred.cancel() }
