@@ -505,7 +505,7 @@ fun MorphingCover(
         val miniArtHeight = 48.dp
         // 8dp in from the pill's edge, as from its top and bottom, so the cover lines up with the
         // nav bar's first tab highlight right under it
-        val miniArtX = pillFrame.start + 8.dp
+        val miniArtX = pillFrame.start + 12.dp
         val miniArtY = (miniHeight - miniArtHeight) / 2
 
         val miniPlaySize = 36.dp
@@ -516,7 +516,7 @@ fun MorphingCover(
         val miniPlayY = (miniHeight - miniPlaySize) / 2
         val miniPrevX = miniPlayX - 8.dp - miniSkipSize
 
-        val miniTextX = miniArtX + miniArtWidth + 12.dp
+        val miniTextX = miniArtX + miniArtWidth + 8.dp
         val firstButtonX = if (pillFrame.withPrevious) miniPrevX else miniPlayX
         val miniTextWidth = (firstButtonX - 10.dp - miniTextX).coerceAtLeast(0.dp)
 
