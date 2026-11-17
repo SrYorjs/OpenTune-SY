@@ -502,6 +502,15 @@ fun LyricsScreen(
     // the lines' blur by their distance from the sung one is an element blur, the glass blur switch doesn't touch it
     val (lineBlurAllowed) = rememberPreference(com.arturo254.opentune.ui.original.fullconstants.ElementBlurKey, defaultValue = true)
     val (lyricsHighBloom) = rememberPreference(LyricsHighBloomKey, defaultValue = true)
+    val glowView = androidx.compose.ui.platform.LocalView.current
+    LaunchedEffect(lines, motionStyle, lyricsHighBloom, suppressEffects) {
+        timber.log.Timber.tag("LyricsGlow").i(
+            "style=%s shaded=%s high_bloom=%s suppressed=%s sdk=%d hardware=%s timed_lines=%d syllable_lines=%d",
+            motionStyle.name, motionStyle.shaded, lyricsHighBloom, suppressEffects,
+            android.os.Build.VERSION.SDK_INT, glowView.isHardwareAccelerated,
+            lines.count { !it.words.isNullOrEmpty() }, lines.count { !it.syllables.isNullOrEmpty() },
+        )
+    }
 
     // Drives the per-line loading dots and lifts the readings out of the way. The button that
     // starts a translation lives in the translation sheet, not here.
