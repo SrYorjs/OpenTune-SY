@@ -5,21 +5,28 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.HttpDataSource
+import androidx.media3.datasource.DataSourceException
 import androidx.media3.datasource.cache.Cache
 import java.io.IOException
 import java.net.SocketTimeoutException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
 
-internal class PlaybackResolutionDataSourceException(val selectedId: String, error: Throwable, spec: DataSpec, val elapsedMs: Long = 0L) :
-    HttpDataSource.HttpDataSourceException(
-        error as? IOException ?: IOException("Playback resolution failed", error), spec,
-        when (error) {
-            is SocketTimeoutException -> PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT
-            is java.net.ConnectException, is java.net.UnknownHostException -> PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
-            else -> PlaybackException.ERROR_CODE_IO_UNSPECIFIED
-        }, TYPE_OPEN,
+internal class PlaybackResolutionDataSourceException(val selectedId: String, error: Throwable, val dataSpec: DataSpec, val elapsedMs: Long = 0L) :
+    DataSourceException(
+        error as? IOException ?: IOException("Playback resolution failed", error), resolutionErrorCode(error),
     )
+
+private fun resolutionErrorCode(error: Throwable): Int {
+    val chain = generateSequence(error) { it.cause }.take(32).toList()
+    return when {
+        chain.any { it is SocketTimeoutException || it is TimeoutCancellationException } -> PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT
+        chain.any { it is java.net.ConnectException || it is java.net.UnknownHostException } -> PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
+        else -> chain.filterIsInstance<PlaybackException>().firstOrNull()?.errorCode
+            ?: chain.filterIsInstance<DataSourceException>().firstOrNull()?.reason
+            ?: PlaybackException.ERROR_CODE_IO_UNSPECIFIED
+    }
+}
 
 internal data class PlaybackFailureDiagnostic(
     val mediaId: String, val provider: String, val stage: String, val rootType: String,

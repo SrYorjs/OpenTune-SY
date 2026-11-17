@@ -897,7 +897,7 @@ class MusicService :
             diagnostic.httpCode?.toString() ?: "none", diagnostic.category, if (diagnostic.stale) "stale" else if (diagnostic.cancelled) "cancelled" else "pending", diagnostic.elapsedMs?.toString() ?: "unavailable")
         if (diagnostic.stale) return
         val failedId = player.currentMediaItem?.mediaId
-        if (failedId != null && error.errorCode in 2000..2999 && StreamFallbacks.available(failedId)) {
+        if (failedId != null && (error.errorCode in 2000..2999 || diagnostic.stage == "resolver") && StreamFallbacks.available(failedId)) {
             sourceFallbackJob?.cancel()
             sourceFallbackJob = scope.launch {
                 val replacement = kotlinx.coroutines.withContext(Dispatchers.IO) { StreamFallbacks.resolve(failedId) }

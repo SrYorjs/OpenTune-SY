@@ -7,6 +7,57 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PlaybackResolutionTest {
+    @Test fun resolverThatFinishesAfterEightSecondsCanStillBeatUnavailableInnertube() = runTest {
+        var requests = 0
+        var alternativeCancelled = false
+        assertEquals("resolver", resolvePreferredPlayback(
+            primary = { requests++; delay(9_000); "resolver" },
+            fallback = { pending ->
+                assertTrue(pending)
+                try { delay(7_000); throw IOException("Unavailable") }
+                finally { alternativeCancelled = true }
+            },
+        ))
+        assertEquals(9_000L, testScheduler.currentTime)
+        assertEquals(1, requests)
+        assertTrue(alternativeCancelled)
+    }
+
+    @Test fun hedgedFallbackDoesNotExtendFailureOrTheTwentySecondDeadline() = runTest {
+        var cancelled = false
+        try {
+            resolvePreferredPlayback(primary = { try { awaitCancellation() } finally { cancelled = true } },
+                fallback = { delay(7_000); throw IOException("Unavailable") })
+            fail("failure lost")
+        } catch (_: IOException) { assertEquals(15_000L, testScheduler.currentTime) }
+        assertTrue(cancelled)
+        val started = testScheduler.currentTime
+        try {
+            resolvePreferredPlayback(primary = { delay(30_000); "late" }, fallback = { delay(30_000); "also late" })
+            fail("deadline ignored")
+        } catch (_: PlaybackResolutionTimeoutException) { assertEquals(20_000L, testScheduler.currentTime - started) }
+    }
+
+    @Test fun fastResolverSkipsFallbackAndParentCancellationCancelsBothRequests() = runTest {
+        var alternatives = 0
+        assertEquals("ready", resolvePreferredPlayback(primary = { "ready" }, fallback = { alternatives++; "wrong" }))
+        assertEquals(0, alternatives)
+        val primaryStopped = CompletableDeferred<Unit>()
+        val fallbackStarted = CompletableDeferred<Unit>()
+        val fallbackStopped = CompletableDeferred<Unit>()
+        val job = launch {
+            resolvePreferredPlayback<String>(
+                primary = { try { awaitCancellation() } finally { primaryStopped.complete(Unit) } },
+                fallback = { try { fallbackStarted.complete(Unit); awaitCancellation() } finally { fallbackStopped.complete(Unit) } },
+            )
+        }
+        fallbackStarted.await()
+        job.cancelAndJoin()
+        assertTrue(primaryStopped.isCompleted)
+        assertTrue(fallbackStopped.isCompleted)
+        assertTrue(job.isCancelled)
+    }
+
     @Test fun slowResolverLeavesTimeForFallbackAndRecordsStageTimes() = runTest {
         val observed = mutableListOf<ResolutionObservation>()
         val result = resolvePlaybackStages(listOf(

@@ -44,14 +44,10 @@ object OwnResolverClient {
     fun configure(url: String, key: String) {
         val effectiveUrl = url.ifBlank { BuildConfig.OWN_RESOLVER_URL }
         val effectiveKey = key.ifBlank { BuildConfig.OWN_RESOLVER_KEY }
-        val trimmed = effectiveUrl.trim().trimEnd('/')
-        base = if (trimmed.isEmpty()) null else {
-            val withScheme = if ("://" in trimmed) trimmed else "http://$trimmed"
-            withScheme.toHttpUrlOrNull()?.takeIf { it.isHttps && it.username.isEmpty() && it.password.isEmpty() }
-        }
+        base = resolverHttpsOrigin(effectiveUrl)
         apiKey = effectiveKey.trim()
         v2Backoff.reset()
-        Timber.tag(TAG).i("Configured=%s", isConfigured())
+        Timber.tag(TAG).i("stage=configuration category=%s", configurationCategory())
     }
 
     fun credentialInterceptor() = ResolverCredentialInterceptor({ base }, { apiKey })
@@ -59,6 +55,12 @@ object OwnResolverClient {
     fun isConfigured(): Boolean = base != null && apiKey.isNotEmpty()
 
     fun isUsable(): Boolean = isConfigured()
+
+    private fun configurationCategory(): String = when {
+        base == null -> "missing_or_invalid_https_origin"
+        apiKey.isEmpty() -> "missing_key"
+        else -> "configured"
+    }
 
 
     private val v2Backoff = ResolverProviderBackoff()
@@ -71,14 +73,22 @@ object OwnResolverClient {
         return Request.Builder().url(url).header("X-API-Key",apiKey).build()
     }
 
-    private suspend fun getV2(path: String, parameters: Map<String,String>): String? {
-        val request = v2Request(path,parameters) ?: return null
-        return try { http.newCall(request).awaitText() }
-        catch (cancelled: CancellationException) { throw cancelled }
+    private suspend fun getV2(path: String, parameters: Map<String,String>, transport: OkHttpClient = http): String? {
+        val started = System.nanoTime()
+        val request = v2Request(path,parameters)
+        if (request == null) {
+            Timber.tag(TAG).i("stage=resolver_v2 operation=%s category=%s elapsed_ms=0", path.substringBefore('/'), if (isConfigured()) "provider_backoff" else configurationCategory())
+            return null
+        }
+        var category = "http_success"
+        return try { transport.newCall(request).awaitText() }
+        catch (cancelled: CancellationException) { category = if (cancelled is kotlinx.coroutines.TimeoutCancellationException) "timeout" else "cancelled"; throw cancelled }
         catch (error: Exception) {
-            Timber.tag(TAG).w("stage=resolver operation=%s category=%s", path.substringBefore('/'), resolverFailureCategory(error))
+            category = resolverFailureCategory(error)
             if (resolverShouldBackoff(error)) v2Backoff.block(resolverProviderScope(path, parameters))
             null
+        } finally {
+            Timber.tag(TAG).i("stage=resolver_v2 operation=%s provider=%s category=%s elapsed_ms=%d", path.substringBefore('/'), resolverProviderScope(path, parameters), category, (System.nanoTime() - started) / 1_000_000L)
         }
     }
 
@@ -93,10 +103,21 @@ object OwnResolverClient {
             ?.addQueryParameter("kind",kind)?.addQueryParameter("quality",quality)?.build()?.toString()
 
     suspend fun resolveV2(provider: String, id: String, kind: String = "audio", quality: String = "auto"): ResolverStream? {
+        return resolveV2Using(provider, id, kind, quality, http)
+    }
+
+    private suspend fun resolveV2Using(provider: String, id: String, kind: String, quality: String, transport: OkHttpClient): ResolverStream? {
         if (!id.matches(Regex("[A-Za-z0-9_-]{1,80}")) || provider !in setOf("youtube","audius")) return null
-        val raw = getV2("resolve/$provider/$id",mapOf("kind" to kind,"quality" to quality)) ?: return null
+        val raw = getV2("resolve/$provider/$id",mapOf("kind" to kind,"quality" to quality), transport) ?: return null
         val url = streamV2Url(provider,id,kind,quality) ?: return null
-        return runCatching { parseResolverStream(raw,provider,id,kind,url) }.getOrNull()
+        return try {
+            parseResolverStream(raw,provider,id,kind,url).also {
+                if (it == null) Timber.tag(TAG).w("stage=resolver_v2 provider=%s category=invalid_stream_contract", provider)
+            }
+        } catch (error: Exception) {
+            Timber.tag(TAG).w("stage=resolver_v2 provider=%s category=invalid_json root=%s", provider, error.javaClass.simpleName)
+            null
+        }
     }
 
     private fun qualityParam(q: AudioQuality) = when (q) {
@@ -111,10 +132,14 @@ object OwnResolverClient {
         quality: AudioQuality,
         avoidCodecs: Set<String> = emptySet(),
     ): YTPlayerUtils.PlaybackData? {
-        if (!isUsable()) return null
+        return resolveUsing(videoId, quality, avoidCodecs, http)
+    }
+
+    internal suspend fun resolveUsing(videoId: String, quality: AudioQuality, avoidCodecs: Set<String>, transport: OkHttpClient): YTPlayerUtils.PlaybackData? {
         val q = qualityParam(quality)
-        resolveV2("youtube",videoId,"audio",q)?.takeIf { avoidCodecs.isEmpty() || it.codecs != null }?.let { resolved ->
+        resolveV2Using("youtube",videoId,"audio",q,transport)?.let { resolved ->
             if (avoidCodecs.none { resolved.codecs?.contains(it,ignoreCase=true) == true }) {
+                Timber.tag(TAG).i("stage=resolver_v2 provider=youtube category=%s", if (resolved.codecs == null) "ready_codec_unspecified" else "ready")
                 val format = PlayerResponse.StreamingData.Format(
                     itag = -1, url = resolved.url,
                     mimeType = resolved.mimeType + (resolved.codecs?.let { "; codecs=\"$it\"" } ?: ""),
@@ -126,6 +151,7 @@ object OwnResolverClient {
 
                 return YTPlayerUtils.PlaybackData(null,null,null,format,resolved.url,resolved.expires)
             }
+            Timber.tag(TAG).w("stage=resolver_v2 provider=youtube category=unsupported_codec")
         }
 
         return null
@@ -199,6 +225,13 @@ object OwnResolverClient {
             streamExpiresInSeconds = json.optInt("expiresInSeconds", 3600),
         )
     }
+}
+
+internal fun resolverHttpsOrigin(value: String): HttpUrl? {
+    val trimmed = value.trim().trimEnd('/')
+    if (trimmed.isEmpty()) return null
+    return (if ("://" in trimmed) trimmed else "https://$trimmed").toHttpUrlOrNull()
+        ?.takeIf { it.isHttps && it.username.isEmpty() && it.password.isEmpty() }
 }
 
 internal fun resolverFailureCategory(error: Exception): String =

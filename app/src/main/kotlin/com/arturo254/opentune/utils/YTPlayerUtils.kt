@@ -187,42 +187,44 @@ object YTPlayerUtils {
         networkMetered: Boolean? = null,
         avoidCodecs: Set<String> = emptySet(),
     ): Result<PlaybackData> = try {
-        var legacyUseful = true
-        val resolved = com.arturo254.opentune.playback.resolvePlaybackStages(
-            stages = listOf(
-                com.arturo254.opentune.playback.ResolutionStage("resolver_v2", 8_000L) {
-                    if (OwnResolverClient.isUsable()) OwnResolverClient.resolve(videoId, audioQuality, avoidCodecs) else null
-                },
-                com.arturo254.opentune.playback.ResolutionStage("legacy", 3_000L) {
-                    if (legacyUseful && OwnResolverClient.isUsable()) OwnResolverClient.resolveLegacy(videoId, audioQuality, avoidCodecs) else null
-                },
-                com.arturo254.opentune.playback.ResolutionStage("innertube", 20_000L) {
-                    val attempts = when (audioQuality) {
-                        AudioQuality.HIGHEST -> listOf(AudioQuality.HIGHEST, AudioQuality.HIGH)
-                        AudioQuality.AUTO -> listOf(AudioQuality.AUTO, AudioQuality.HIGH)
-                        else -> listOf(audioQuality)
-                    }.distinct()
-                    var result: PlaybackData? = null
-                    var failure: Exception? = null
-                    for (attempt in attempts) {
-                        kotlinx.coroutines.currentCoroutineContext().ensureActive()
-                        try {
-                            result = playerResponseForPlaybackOnce(videoId, playlistId, attempt, connectivityManager, preferredStreamClient, networkMetered, avoidCodecs)
-                            break
-                        } catch (cancelled: kotlinx.coroutines.CancellationException) {
-                            throw cancelled
-                        } catch (error: Exception) {
-                            failure = error
-                        }
-                    }
-                    result ?: throw failure ?: java.io.IOException("No playable InnerTube stream")
-                },
-            ),
-            observe = { event ->
-                if (event.stage == "resolver_v2" && event.outcome == "timeout") legacyUseful = false
-                Timber.tag(logTag).i("id=%s provider=youtube stage=%s elapsed_ms=%d category=%s root=%s",
-                    videoId, event.stage, event.elapsedMs, event.outcome, event.rootType ?: "none")
+        val observer: (com.arturo254.opentune.playback.ResolutionObservation) -> Unit = { event ->
+            Timber.tag(logTag).i("id=%s provider=youtube stage=%s elapsed_ms=%d category=%s root=%s",
+                videoId, event.stage, event.elapsedMs, event.outcome, event.rootType ?: "none")
+        }
+        val resolved = com.arturo254.opentune.playback.resolvePreferredPlayback(
+            primary = { OwnResolverClient.resolve(videoId, audioQuality, avoidCodecs) },
+            fallback = { primaryPending ->
+                com.arturo254.opentune.playback.resolvePlaybackStages(
+                    stages = listOf(
+                        com.arturo254.opentune.playback.ResolutionStage("legacy", 3_000L) {
+                            if (!primaryPending && OwnResolverClient.isUsable()) OwnResolverClient.resolveLegacy(videoId, audioQuality, avoidCodecs) else null
+                        },
+                        com.arturo254.opentune.playback.ResolutionStage("innertube", 20_000L) {
+                            val attempts = when (audioQuality) {
+                                AudioQuality.HIGHEST -> listOf(AudioQuality.HIGHEST, AudioQuality.HIGH)
+                                AudioQuality.AUTO -> listOf(AudioQuality.AUTO, AudioQuality.HIGH)
+                                else -> listOf(audioQuality)
+                            }.distinct()
+                            var result: PlaybackData? = null
+                            var failure: Exception? = null
+                            for (attempt in attempts) {
+                                kotlinx.coroutines.currentCoroutineContext().ensureActive()
+                                try {
+                                    result = playerResponseForPlaybackOnce(videoId, playlistId, attempt, connectivityManager, preferredStreamClient, networkMetered, avoidCodecs)
+                                    break
+                                } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                                    throw cancelled
+                                } catch (error: Exception) {
+                                    failure = error
+                                }
+                            }
+                            result ?: throw failure ?: java.io.IOException("No playable InnerTube stream")
+                        },
+                    ),
+                    observe = observer,
+                )
             },
+            observe = observer,
         )
         Result.success(resolved)
     } catch (cancelled: kotlinx.coroutines.CancellationException) {

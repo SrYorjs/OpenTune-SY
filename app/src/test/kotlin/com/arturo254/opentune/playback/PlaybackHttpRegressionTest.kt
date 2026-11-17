@@ -49,6 +49,9 @@ class PlaybackHttpRegressionTest {
     private val requests = ConcurrentLinkedQueue<Triple<String, String?, String?>>()
     private var ignoreRange = false
     private var failureStatus: Int? = null
+    private var resolverStatus = 200
+    private var resolverBody: String? = null
+    private var resolverDelayMs = 0L
 
     @Before fun start() {
         val certificate = HeldCertificate.Builder().commonName("unit-local")
@@ -59,6 +62,7 @@ class PlaybackHttpRegressionTest {
         server.httpsConfigurator = HttpsConfigurator(serverTls.sslContext())
         server.executor = executor
         root = "https://localhost:${server.address.port}/private/".toHttpUrl()
+        OwnResolverClient.configure(root.toString(), key)
         client = playbackHttpClient(null, ResolverCredentialInterceptor({ root }, { key }), OkHttpClient()).newBuilder()
             .sslSocketFactory(clientTls.sslSocketFactory(), clientTls.trustManager).build()
         server.createContext("/") { exchange ->
@@ -73,8 +77,9 @@ class PlaybackHttpRegressionTest {
                 Thread.sleep(5000)
                 exchange.sendResponseHeaders(200, -1)
             } else if (path.contains("resolve")) {
-                val body = """{"provider":"youtube","id":"$id","kind":"audio","mimeType":"audio/mp4","bitrate":96000,"contentLength":${payload.size},"expiresInSeconds":240}""".toByteArray()
-                exchange.sendResponseHeaders(if (authentication == key) 200 else 401, body.size.toLong())
+                if (resolverDelayMs > 0) Thread.sleep(resolverDelayMs)
+                val body = (resolverBody ?: """{"provider":"youtube","id":"${path.substringAfterLast('/')}","kind":"audio","mimeType":"audio/mp4","bitrate":96000,"contentLength":${payload.size},"expiresInSeconds":240}""").toByteArray()
+                exchange.sendResponseHeaders(if (authentication == key) resolverStatus else 401, body.size.toLong())
                 exchange.responseBody.use { it.write(body) }
             } else if (failureStatus != null) {
                 exchange.sendResponseHeaders(failureStatus!!, -1)
@@ -101,6 +106,7 @@ class PlaybackHttpRegressionTest {
     }
 
     @After fun stop() {
+        OwnResolverClient.configure("https://resolver.invalid", "unit-disabled")
         server.stop(0)
         executor.shutdownNow()
         client.connectionPool.evictAll()
@@ -121,6 +127,100 @@ class PlaybackHttpRegressionTest {
             }
             return length to output.toByteArray()
         } finally { source.close() }
+    }
+
+    @Test fun actualYoutubeResolverAcceptsV2WithoutCodecsAndReachesAuthenticated206BeforeLocalFallback() = runBlocking {
+        for (selected in listOf("ENXLhu3UYto", "a2LENAZ58lA", "Mcj75l2gJcY", "-bcDxhoX6Go")) {
+            var fallbacks = 0
+            val playback = resolvePreferredPlayback(
+                primary = { OwnResolverClient.resolveUsing(selected, com.arturo254.opentune.constants.AudioQuality.AUTO, setOf("opus"), client) },
+                fallback = { fallbacks++; throw PlaybackException("Video unavailable", null, PlaybackException.ERROR_CODE_REMOTE_ERROR) },
+            )
+            assertEquals(0, fallbacks)
+            assertEquals("audio/mp4", playback.format.mimeType)
+            assertFalse(playback.format.mimeType.contains("codecs="))
+            val spec = StreamRequestPolicy.resolveDataSpec(DataSpec.Builder().setUri(selected).setKey(selected).setPosition(7).setLength(1024).build(), Uri.parse(playback.streamUrl))
+            assertArrayEquals(payload.copyOfRange(7, 1031), read(source(), spec).second)
+            assertEquals(key, requests.last().second)
+            assertEquals("bytes=7-1030", requests.last().third)
+            assertEquals("auto", Uri.parse(playback.streamUrl).getQueryParameter("quality"))
+        }
+    }
+
+    @Test fun pendingResolverResponseReachesAudioWhileLocalFallbackIsStillRunning() = runBlocking {
+        resolverDelayMs = 120
+        var requestsStarted = 0
+        val playback = resolvePreferredPlayback(
+            primary = { requestsStarted++; OwnResolverClient.resolveUsing(id, com.arturo254.opentune.constants.AudioQuality.AUTO, setOf("opus"), client) },
+            fallback = { pending -> assertTrue(pending); delay(5_000); throw PlaybackException("Unavailable", null, PlaybackException.ERROR_CODE_REMOTE_ERROR) },
+            hedgeAfterMs = 30,
+        )
+        assertEquals(1, requestsStarted)
+        assertArrayEquals(payload.copyOfRange(0, 1024), read(source(), DataSpec.Builder().setUri(playback.streamUrl).setKey(id).setLength(1024).build()).second)
+    }
+
+    @Test fun explicitUnsupportedCodecAndInvalidJsonAreRejectedWithoutInventingFormats() = runBlocking {
+        resolverBody = """{"provider":"youtube","id":"$id","kind":"audio","mimeType":"audio/webm","codecs":"opus","expiresInSeconds":240}"""
+        assertNull(OwnResolverClient.resolveUsing(id, com.arturo254.opentune.constants.AudioQuality.AUTO, setOf("opus"), client))
+        resolverBody = "not-json"
+        assertNull(OwnResolverClient.resolveUsing(id, com.arturo254.opentune.constants.AudioQuality.AUTO, emptySet(), client))
+        resolverBody = null
+        assertNotNull(OwnResolverClient.resolveUsing(id, com.arturo254.opentune.constants.AudioQuality.AUTO, setOf("opus"), client))
+    }
+
+    @Test fun unauthorizedResolverIsBackedOffAndNewConfigurationRestoresAccess() = runBlocking {
+        resolverStatus = 401
+        assertNull(OwnResolverClient.resolveUsing(id, com.arturo254.opentune.constants.AudioQuality.AUTO, emptySet(), client))
+        val count = requests.size
+        assertEquals(key, requests.last().second)
+        assertNull(OwnResolverClient.resolveUsing(id, com.arturo254.opentune.constants.AudioQuality.AUTO, emptySet(), client))
+        assertEquals(count, requests.size)
+        resolverStatus = 200
+        OwnResolverClient.configure(root.toString(), key)
+        assertNotNull(OwnResolverClient.resolveUsing(id, com.arturo254.opentune.constants.AudioQuality.AUTO, emptySet(), client))
+    }
+
+    @Test fun failedConnectionAndUnavailableVideoKeepDifferentMedia3ReasonsAndFallbackWorks() = runBlocking {
+        val rejecting = client.newBuilder().dns(object : Dns {
+            override fun lookup(hostname: String): List<java.net.InetAddress> = throw java.net.UnknownHostException("private-diagnostic")
+        }).connectionPool(ConnectionPool()).build()
+        OwnResolverClient.configure("https://resolver.unit.invalid", key)
+        var fallbackCalls = 0
+        assertEquals("fallback", resolvePlaybackStages(listOf(
+            ResolutionStage("resolver_v2", 8_000) { OwnResolverClient.resolveUsing(id, com.arturo254.opentune.constants.AudioQuality.AUTO, emptySet(), rejecting)?.streamUrl },
+            ResolutionStage("innertube", 1_000) { fallbackCalls++; "fallback" },
+        )))
+        assertEquals(1, fallbackCalls)
+        val spec = DataSpec.Builder().setUri(id).setKey(id).build()
+        val unavailable = PlaybackException("Video unavailable", null, PlaybackException.ERROR_CODE_REMOTE_ERROR)
+        assertEquals(PlaybackException.ERROR_CODE_REMOTE_ERROR, PlaybackResolutionDataSourceException(id, unavailable, spec).reason)
+        assertEquals(PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED, PlaybackResolutionDataSourceException(id, java.net.ConnectException(), spec).reason)
+        assertEquals(PlaybackException.ERROR_CODE_IO_UNSPECIFIED, PlaybackResolutionDataSourceException(id, java.io.IOException(), spec).reason)
+    }
+
+    @Test fun unavailableResolverAndSlowResolverFallBackWithoutConsumingTheWholeBudget() = runBlocking {
+        resolverStatus = 404
+        resolverBody = """{"detail":"unavailable"}"""
+        val events = mutableListOf<ResolutionObservation>()
+        val unavailable = PlaybackException("Video unavailable", null, PlaybackException.ERROR_CODE_REMOTE_ERROR)
+        try {
+            resolvePlaybackStages(listOf(
+                ResolutionStage("resolver_v2", 8_000) { OwnResolverClient.resolveUsing(id, com.arturo254.opentune.constants.AudioQuality.AUTO, emptySet(), client) },
+                ResolutionStage("innertube", 1_000) { throw unavailable },
+            ), observe = events::add)
+            fail("Unavailable video must not produce playback data")
+        } catch (error: PlaybackException) { assertSame(unavailable, error) }
+        assertEquals(listOf("unavailable", "failed"), events.map { it.outcome })
+        resolverDelayMs = 200
+        resolverStatus = 200
+        resolverBody = null
+        assertEquals("fallback", resolvePlaybackStages(listOf(
+            ResolutionStage("resolver_v2", 30) { OwnResolverClient.resolveUsing(id, com.arturo254.opentune.constants.AudioQuality.AUTO, emptySet(), client)?.streamUrl },
+            ResolutionStage("innertube", 1_000) { "fallback" },
+        ), observe = events::add))
+        assertEquals("timeout", events[2].outcome)
+        resolverDelayMs = 0
+        assertNotNull(OwnResolverClient.resolveUsing(id, com.arturo254.opentune.constants.AudioQuality.AUTO, emptySet(), client))
     }
 
     @Test fun actualStreamClientAuthenticatesResolveAndStreamAndPreservesWholeFile() = runBlocking {

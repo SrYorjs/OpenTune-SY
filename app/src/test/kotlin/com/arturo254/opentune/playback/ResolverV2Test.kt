@@ -5,6 +5,12 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ResolverV2Test {
+    @Test fun configurationUsesHttpsForBareHostsAndRejectsCredentialsAndCleartext() {
+        assertEquals("https://resolver.invalid/base", resolverHttpsOrigin(" resolver.invalid/base/ ")?.toString()?.trimEnd('/'))
+        assertNull(resolverHttpsOrigin("http://resolver.invalid"))
+        assertNull(resolverHttpsOrigin("https://user:private@resolver.invalid"))
+        assertNull(resolverHttpsOrigin(""))
+    }
     @Test fun songSpecificErrorsDoNotBlockTheFollowingSong() {
         assertFalse(resolverShouldBackoff(java.io.IOException("HTTP 502")))
         assertFalse(resolverShouldBackoff(java.io.IOException("HTTP 403")))
